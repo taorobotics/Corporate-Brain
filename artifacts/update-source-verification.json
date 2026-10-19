@@ -1,0 +1,17 @@
+{
+  "verifiedAt": "2026-10-19T04:13:17.417Z",
+  "releaseVersion": "0.2.0",
+  "repository": "taorobotics/Corporate-Brain",
+  "runtime": "Native updater module on Node, authenticated disposable company HTTP service, real private GitHub API and complete release asset",
+  "workflow": "https://github.com/taorobotics/Corporate-Brain/actions/runs/39198317109",
+  "emulatedClientVersion": "0.0.0",
+  "target": "win32-x64",
+  "bytes": 118405780,
+  "sha256": "6d163e298a702106e483c1f9d0ec536a914151d31b89f25b0dc40fe6b14a1a97",
+  "metadataRead": true,
+  "packageDownloadedAndVerified": true,
+  "installerExecuted": false,
+  "database": "disposable in-memory",
+  "credentialBundled": false,
+  "employeeDeviceInstallTested": false
+}

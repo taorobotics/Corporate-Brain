@@ -1,0 +1,79 @@
+{
+  "version": "0.2.0",
+  "tag": "v0.2.0",
+  "sourceCommit": "40620fa0e5e0e765af8481a31cd521e219368f52",
+  "verifiedAt": "2026-10-19T04:08:19.334Z",
+  "release": "https://github.com/taorobotics/Corporate-Brain/releases/tag/v0.2.0",
+  "workflow": "https://github.com/taorobotics/Corporate-Brain/actions/runs/39197837717",
+  "buildWorkflow": "https://github.com/taorobotics/Corporate-Brain/actions/runs/39197040580",
+  "buildReuseReason": "All four builds passed; publication tooling was repaired to retain the newly created draft response and reused the same tagged artifacts",
+  "assets": [
+    {
+      "name": "Corporate-Brain-Setup-0.2.0-x64.exe",
+      "bytes": 118405780,
+      "sha256": "6d163e298a702106e483c1f9d0ec536a914151d31b89f25b0dc40fe6b14a1a97",
+      "url": "https://github.com/taorobotics/Corporate-Brain/releases/download/v0.2.0/Corporate-Brain-Setup-0.2.0-x64.exe"
+    },
+    {
+      "name": "Corporate-Brain-0.2.0-macOS-arm64.dmg",
+      "bytes": 135926432,
+      "sha256": "1a7ad5cc1749c2447ace11f8ad1d4b95b34f51bf67ac17340cf3eb98e4b0ceb2",
+      "url": "https://github.com/taorobotics/Corporate-Brain/releases/download/v0.2.0/Corporate-Brain-0.2.0-macOS-arm64.dmg"
+    },
+    {
+      "name": "Corporate-Brain-0.2.0-macOS-x64.dmg",
+      "bytes": 141440580,
+      "sha256": "b9834d85fb5fb3bb77945053ee48c371d2146b1dd439b6a489f5b98e148d6c9a",
+      "url": "https://github.com/taorobotics/Corporate-Brain/releases/download/v0.2.0/Corporate-Brain-0.2.0-macOS-x64.dmg"
+    },
+    {
+      "name": "Corporate-Brain-Server-0.2.0.zip",
+      "bytes": 15917708,
+      "sha256": "965a16c23f11be70b2914f27eaa9c7708ef18d02fbe0ada994c1647a40ceca1e",
+      "url": "https://github.com/taorobotics/Corporate-Brain/releases/download/v0.2.0/Corporate-Brain-Server-0.2.0.zip"
+    }
+  ],
+  "verification": {
+    "windows-verification-x64.json": {
+      "platform": "win32",
+      "architecture": "x64",
+      "desktopChecks": 21,
+      "signing": "NotSigned",
+      "notarized": false,
+      "archiveIntegrity": null
+    },
+    "macos-verification-arm64.json": {
+      "platform": "darwin",
+      "architecture": "arm64",
+      "desktopChecks": 20,
+      "signing": "ad-hoc",
+      "notarized": false,
+      "archiveIntegrity": null
+    },
+    "macos-verification-x64.json": {
+      "platform": "darwin",
+      "architecture": "x64",
+      "desktopChecks": 20,
+      "signing": "ad-hoc",
+      "notarized": false,
+      "archiveIntegrity": null
+    },
+    "server-verification.json": {
+      "platform": "server",
+      "architecture": null,
+      "desktopChecks": 0,
+      "signing": null,
+      "notarized": false,
+      "archiveIntegrity": "passed"
+    }
+  },
+  "checksumsVerified": true,
+  "latestReleaseVerified": true,
+  "physicalEmployeeInstallUpgradeUninstallTested": false,
+  "privateUpdateDownload": {
+    "report": "https://github.com/taorobotics/Corporate-Brain/releases/download/v0.2.0/update-source-verification.json",
+    "workflow": "https://github.com/taorobotics/Corporate-Brain/actions/runs/39198317109",
+    "packageDownloadedAndVerified": true,
+    "installerExecuted": false
+  }
+}
