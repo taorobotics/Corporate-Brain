@@ -1,0 +1,184 @@
+{
+  "verifiedAt": "2026-10-19T08:25:56.170Z",
+  "releaseVersion": "0.2.2",
+  "sourceCommit": "a4b0edf4b04ea441e7bc40a97dc8cd6c12a5352d",
+  "repository": "taorobotics/Corporate-Brain",
+  "repositoryVisibility": "private",
+  "githubDetectedLicense": "MIT",
+  "originalLicense": "MIT",
+  "thirdParty": {
+    "lockedPackages": 1152,
+    "frontendDependencyNotices": 15,
+    "licenseTextIncluded": true,
+    "upstreamLicensesReplaced": false,
+    "electronChromiumNoticesRetainedInNativePackages": true,
+    "inventoryIsDeclaredLicenseMetadata": true
+  },
+  "historyScan": {
+    "tool": "Gitleaks 8.30.1",
+    "binarySha256": "d29144deff3a68aa93ced33dddf84b7fdc26070add4aa0f4513094c8332afc4e",
+    "scannedThroughCommit": "a4b0edf4b04ea441e7bc40a97dc8cd6c12a5352d",
+    "reachableCommits": 15,
+    "findings": 0,
+    "redacted": true,
+    "ci": "https://github.com/taorobotics/Corporate-Brain/actions/runs/39220943628"
+  },
+  "trackedPrivatePaths": [],
+  "historicalReleaseEvidence": {
+    "scope": "Published verification reports, installer digest correspondence and file manifests. Historical binaries were not re-extracted during this review.",
+    "reports": [
+      {
+        "release": "v0.2.0",
+        "report": "macos-verification-arm64.json",
+        "artifact": "Corporate-Brain-0.2.0-macOS-arm64.dmg",
+        "digestVerified": true,
+        "fileManifestReviewed": true,
+        "files": 11
+      },
+      {
+        "release": "v0.2.0",
+        "report": "macos-verification-x64.json",
+        "artifact": "Corporate-Brain-0.2.0-macOS-x64.dmg",
+        "digestVerified": true,
+        "fileManifestReviewed": true,
+        "files": 11
+      },
+      {
+        "release": "v0.2.0",
+        "report": "server-verification.json",
+        "artifact": "Corporate-Brain-Server-0.2.0.zip",
+        "digestVerified": true,
+        "fileManifestReviewed": true,
+        "files": 28
+      },
+      {
+        "release": "v0.2.0",
+        "report": "windows-verification-x64.json",
+        "artifact": "Corporate-Brain-Setup-0.2.0-x64.exe",
+        "digestVerified": true,
+        "fileManifestReviewed": true,
+        "files": 11
+      },
+      {
+        "release": "v0.1.1",
+        "report": "macos-verification-arm64.json",
+        "artifact": "Corporate-Brain-0.1.1-macOS-arm64.dmg",
+        "digestVerified": true,
+        "fileManifestReviewed": true,
+        "files": 10
+      },
+      {
+        "release": "v0.1.1",
+        "report": "macos-verification-x64.json",
+        "artifact": "Corporate-Brain-0.1.1-macOS-x64.dmg",
+        "digestVerified": true,
+        "fileManifestReviewed": true,
+        "files": 10
+      },
+      {
+        "release": "v0.1.1",
+        "report": "server-verification.json",
+        "artifact": "Corporate-Brain-Server-0.1.1.zip",
+        "digestVerified": true,
+        "fileManifestReviewed": true,
+        "files": 26
+      },
+      {
+        "release": "v0.1.1",
+        "report": "windows-verification-x64.json",
+        "artifact": "Corporate-Brain-Setup-0.1.1-x64.exe",
+        "digestVerified": true,
+        "fileManifestReviewed": true,
+        "files": 10
+      },
+      {
+        "release": "v0.1.0",
+        "report": "macos-verification-arm64.json",
+        "artifact": "Corporate-Brain-0.1.0-macOS-arm64.dmg",
+        "digestVerified": true,
+        "fileManifestReviewed": true,
+        "files": 10
+      },
+      {
+        "release": "v0.1.0",
+        "report": "macos-verification-x64.json",
+        "artifact": "Corporate-Brain-0.1.0-macOS-x64.dmg",
+        "digestVerified": true,
+        "fileManifestReviewed": true,
+        "files": 10
+      }
+    ],
+    "initialWindowsRecord": {
+      "source": "artifacts/windows-package.json",
+      "version": "0.1.0",
+      "digestMatchesGithub": true,
+      "companyDataIncluded": false
+    }
+  },
+  "releaseVerification": "artifacts/releases/v0.2.2.json",
+  "privacyEntry": {
+    "preLogin": true,
+    "offlineCompanyConnection": true,
+    "desktopChecks": {
+      "windows-verification-x64.json": {
+        "platform": "win32",
+        "architecture": "x64",
+        "desktopChecks": 22,
+        "signing": "NotSigned",
+        "notarized": false,
+        "archiveIntegrity": null
+      },
+      "macos-verification-arm64.json": {
+        "platform": "darwin",
+        "architecture": "arm64",
+        "desktopChecks": 21,
+        "signing": "ad-hoc",
+        "notarized": false,
+        "archiveIntegrity": null
+      },
+      "macos-verification-x64.json": {
+        "platform": "darwin",
+        "architecture": "x64",
+        "desktopChecks": 21,
+        "signing": "ad-hoc",
+        "notarized": false,
+        "archiveIntegrity": null
+      },
+      "server-verification.json": {
+        "platform": "server",
+        "architecture": null,
+        "desktopChecks": 0,
+        "signing": null,
+        "notarized": false,
+        "archiveIntegrity": "passed"
+      }
+    }
+  },
+  "publicUpdateSource": {
+    "configuredBy": "BRAIN_UPDATE_SOURCE=public",
+    "anonymousHttpFixtureTest": "passed",
+    "liveAnonymousReadOfThisRepository": "pending actual repository publication"
+  },
+  "pendingOwnerActions": [
+    "Confirm publication rights for original source and design/demo material, including existing history and Release assets",
+    "Confirm GitHub MFA and enable MFA on all relevant SignPath accounts",
+    "Confirm switching the reviewed repository from Private to Public",
+    "Create verified SignPath account and submit the prepared application"
+  ],
+  "externalConditions": [
+    "Foundation admission and verifiable project reputation evaluation",
+    "Assigned service organization/project/artifact/policy IDs and CI origin verification after admission",
+    "Human approval for every production signing request"
+  ],
+  "signpathApplication": "not submitted",
+  "signpathApproval": "not granted",
+  "githubMfa": "not verifiable through current OAuth response",
+  "windowsTrustedSignature": false,
+  "macDeveloperIdAndNotarization": false,
+  "limitations": [
+    "No independent full vulnerability audit",
+    "Historical binaries not re-extracted in this review; existing verified reports and GitHub digests checked",
+    "Secret scanning does not establish ownership or confidentiality of all design/screenshots",
+    "Employee-device upgrade/uninstall and trusted signing remain separate acceptance steps"
+  ]
+}
