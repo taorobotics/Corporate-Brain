@@ -1,0 +1,31 @@
+{
+  "Documents": 8,
+  "Requirements": 86,
+  "FullReleaseAcceptanceTargets": 26,
+  "DesktopChecks": 13,
+  "ArchivedDesigns": 11,
+  "DesktopArchive": {
+    "files": 10,
+    "dependencyFiles": 0,
+    "sourceMatches": true
+  },
+  "Failures": [],
+  "Font": {
+    "reference": "https://marvis.qq.com/",
+    "fallback": "Noto Sans SC",
+    "bundled": true,
+    "woff2Bytes": 7782216,
+    "unicodeCharacters": 30890,
+    "renderedFromApp": true,
+    "macTested": false
+  },
+  "WindowCorners": {
+    "nativeRoundedCorners": true,
+    "windowedBorderRadiusPx": 8,
+    "maximizedAndFullScreenBorderRadiusPx": 0,
+    "stateTransitionsVerified": true,
+    "preview": "artifacts/screenshots/desktop-rounded-preview.png",
+    "previewIsDesktopCompositorCapture": false,
+    "macTested": false
+  }
+}

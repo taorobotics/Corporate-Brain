@@ -1,0 +1,91 @@
+{
+  "source": "https://marvis.qq.com/",
+  "inspectedAt": "2026-10-16T09:21:44.294Z",
+  "platform": "win32",
+  "samples": [
+    {
+      "selector": "body",
+      "text": "下载\nMarvis\n马维斯 你的24小时AI管家\nWindows\nmacOS\nAndroid\niOS\nHarmonyOS\n更懂你的AI管家\n本地大模型，本地模式",
+      "fontFamily": "\"Noto Sans SC\"",
+      "weight": "400",
+      "size": "16px",
+      "lineHeight": "normal",
+      "letterSpacing": "normal",
+      "smoothing": "auto",
+      "actualFonts": []
+    },
+    {
+      "selector": "[class*=\"HeroSection_slogan\"]",
+      "text": "马维斯 你的24小时AI管家",
+      "fontFamily": "\"PingFang SC\", sans-serif",
+      "weight": "400",
+      "size": "24px",
+      "lineHeight": "33.6px",
+      "letterSpacing": "-0.6px",
+      "smoothing": "auto",
+      "actualFonts": [
+        {
+          "familyName": "Noto Sans SC",
+          "glyphCount": 14,
+          "isCustomFont": false,
+          "postScriptName": "Noto-Sans-SC"
+        }
+      ]
+    },
+    {
+      "selector": "[class*=\"Nav_downloadBtnText\"]",
+      "text": "下载",
+      "fontFamily": "\"PingFang SC\", sans-serif",
+      "weight": "400",
+      "size": "12.96px",
+      "lineHeight": "normal",
+      "letterSpacing": "normal",
+      "smoothing": "auto",
+      "actualFonts": [
+        {
+          "familyName": "Noto Sans SC",
+          "glyphCount": 2,
+          "isCustomFont": false,
+          "postScriptName": "Noto-Sans-SC"
+        }
+      ]
+    },
+    {
+      "selector": "[class*=\"CapabilitiesSection_title\"]",
+      "text": "照顾你的方方面面",
+      "fontFamily": "\"Noto Sans SC\"",
+      "weight": "400",
+      "size": "16px",
+      "lineHeight": "normal",
+      "letterSpacing": "normal",
+      "smoothing": "auto",
+      "actualFonts": [
+        {
+          "familyName": "Noto Sans SC",
+          "glyphCount": 8,
+          "isCustomFont": false,
+          "postScriptName": "Noto-Sans-SC-Bold"
+        }
+      ]
+    },
+    {
+      "selector": "[class*=\"HeroSection_logoText\"]",
+      "text": "Marvis",
+      "fontFamily": "Gilroy, Inter, sans-serif",
+      "weight": "700",
+      "size": "62px",
+      "lineHeight": "62px",
+      "letterSpacing": "normal",
+      "smoothing": "auto",
+      "actualFonts": [
+        {
+          "familyName": "Gilroy",
+          "glyphCount": 6,
+          "isCustomFont": true,
+          "postScriptName": "Gilroy-Bold"
+        }
+      ]
+    }
+  ],
+  "note": "Font identity is based on the actual rendered platform fonts, not document.fonts.check."
+}

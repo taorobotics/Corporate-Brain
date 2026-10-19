@@ -1,0 +1,108 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; object-src 'none'"
+    />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>连接公司大脑</title>
+    <link rel="stylesheet" href="./fonts.css" />
+    <style>
+      body {
+        margin: 0;
+        background: #f4f2ed;
+        color: #30322c;
+        font: 14px var(--font-ui);
+        font-synthesis: none;
+        display: flex;
+        min-height: 100vh;
+        align-items: center;
+        justify-content: center;
+      }
+      main {
+        background: #fff;
+        border: 1px solid #e5e2dc;
+        border-radius: 16px;
+        padding: 32px;
+        width: 380px;
+        box-shadow: 0 6px 28px #33332208;
+      }
+      h1 {
+        font-size: 25px;
+        margin: 0 0 15px;
+      }
+      p {
+        color: #85877c;
+        line-height: 1.8;
+        font-size: 13px;
+      }
+      label {
+        display: block;
+        font-size: 13px;
+        margin: 25px 0 10px;
+      }
+      input {
+        box-sizing: border-box;
+        width: 100%;
+        padding: 12px;
+        border: 1px solid #dddcd5;
+        border-radius: 7px;
+        outline: none;
+        font: inherit;
+      }
+      input:focus {
+        border-color: #b76c4e;
+      }
+      button {
+        margin-top: 22px;
+        background: #b76c4e;
+        border: 0;
+        color: #fff;
+        border-radius: 7px;
+        padding: 12px;
+        width: 100%;
+        font: inherit;
+        cursor: pointer;
+      }
+      button:disabled {
+        opacity: 0.5;
+      }
+      .error {
+        color: #a34a34;
+        min-height: 20px;
+      }
+      small {
+        display: block;
+        color: #919487;
+        font-size: 11px;
+        line-height: 1.7;
+        margin-top: 22px;
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <h1>连接公司大脑</h1>
+      <p>
+        填写管理员提供的公司服务地址。连接后，使用分配给你的部门员工账号登录。
+      </p>
+      <form>
+        <label for="server-url">公司服务器地址</label
+        ><input
+          id="server-url"
+          type="url"
+          placeholder="https://brain.example.com"
+          required
+        />
+        <p class="error" role="alert"></p>
+        <button type="submit">连接工作空间</button>
+      </form>
+      <small
+        >对话保存在此电脑，按公司与账号隔离。可在客户端“文件”菜单中切换公司服务器。</small
+      >
+    </main>
+    <script src="server-setup.js"></script>
+  </body>
+</html>

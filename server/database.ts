@@ -1,0 +1,85 @@
+import { DatabaseSync } from "node:sqlite";
+import {
+  randomBytes,
+  scryptSync,
+  timingSafeEqual,
+  createHash,
+  createCipheriv,
+  createDecipheriv,
+} from "node:crypto";
+import { mkdirSync, existsSync, readFileSync, writeFileSync } from "node:fs";
+import { dirname, join } from "node:path";
+
+export function passwordHash(password: string) {
+  const salt = randomBytes(16).toString("hex");
+  return `${salt}:${scryptSync(password, salt, 64).toString("hex")}`;
+}
+export function passwordMatches(password: string, stored: string) {
+  const [salt, hash] = stored.split(":");
+  const actual = scryptSync(password, salt, 64);
+  const expected = Buffer.from(hash, "hex");
+  return expected.length === actual.length && timingSafeEqual(actual, expected);
+}
+export const tokenHash = (token: string) =>
+  createHash("sha256").update(token).digest("hex");
+export function createStore(file: string) {
+  if (file !== ":memory:") mkdirSync(dirname(file), { recursive: true });
+  const db = new DatabaseSync(file);
+  db.exec(`PRAGMA foreign_keys=ON; PRAGMA journal_mode=WAL;
+    CREATE TABLE IF NOT EXISTS departments(id TEXT PRIMARY KEY, name TEXT NOT NULL UNIQUE, enabled INTEGER NOT NULL DEFAULT 1);
+    CREATE TABLE IF NOT EXISTS users(id TEXT PRIMARY KEY, username TEXT UNIQUE NOT NULL COLLATE NOCASE, name TEXT NOT NULL, department_id TEXT NOT NULL REFERENCES departments(id), role TEXT NOT NULL, password_hash TEXT NOT NULL, enabled INTEGER NOT NULL DEFAULT 1, must_change INTEGER NOT NULL DEFAULT 1, auth_version INTEGER NOT NULL DEFAULT 1, distributed INTEGER NOT NULL DEFAULT 0, initial_expires_at INTEGER NOT NULL DEFAULT 0);
+    CREATE TABLE IF NOT EXISTS sessions(token_hash TEXT PRIMARY KEY, user_id TEXT NOT NULL REFERENCES users(id), auth_version INTEGER NOT NULL, expires_at INTEGER NOT NULL);
+    CREATE TABLE IF NOT EXISTS skills(id TEXT PRIMARY KEY, name TEXT NOT NULL, description TEXT NOT NULL, version TEXT NOT NULL, instructions TEXT NOT NULL, examples TEXT NOT NULL, test_summary TEXT NOT NULL, required_tools TEXT NOT NULL, author_id TEXT NOT NULL REFERENCES users(id), owner_department_id TEXT NOT NULL REFERENCES departments(id), audience TEXT NOT NULL, targets TEXT NOT NULL, status TEXT NOT NULL, review_note TEXT NOT NULL DEFAULT '', created_at TEXT NOT NULL, previous_id TEXT REFERENCES skills(id));
+    CREATE TABLE IF NOT EXISTS connections(id TEXT PRIMARY KEY, name TEXT NOT NULL, base_url TEXT NOT NULL, model TEXT NOT NULL, kind TEXT NOT NULL, departments TEXT NOT NULL, secret TEXT NOT NULL, enabled INTEGER NOT NULL DEFAULT 1);
+    CREATE TABLE IF NOT EXISTS audit(id INTEGER PRIMARY KEY AUTOINCREMENT, actor_id TEXT, action TEXT NOT NULL, resource_id TEXT NOT NULL, at TEXT NOT NULL);
+  `);
+  if (
+    !(db.prepare("PRAGMA table_info(users)").all() as { name: string }[]).some(
+      (column) => column.name === "initial_expires_at",
+    )
+  )
+    db.exec(
+      "ALTER TABLE users ADD COLUMN initial_expires_at INTEGER NOT NULL DEFAULT 0",
+    );
+  // No server-side conversation, message, draft, or transcript table.
+  const keyFile =
+    file === ":memory:" ? undefined : join(dirname(file), "secrets.key");
+  const key =
+    keyFile && existsSync(keyFile) ? readFileSync(keyFile) : randomBytes(32);
+  if (keyFile && !existsSync(keyFile))
+    writeFileSync(keyFile, key, { mode: 0o600 });
+  return {
+    db,
+    encrypt(value: string) {
+      const iv = randomBytes(12);
+      const cipher = createCipheriv("aes-256-gcm", key, iv);
+      const data = Buffer.concat([
+        cipher.update(value, "utf8"),
+        cipher.final(),
+      ]);
+      return Buffer.concat([iv, cipher.getAuthTag(), data]).toString("base64");
+    },
+    decrypt(value: string) {
+      const bytes = Buffer.from(value, "base64");
+      const cipher = createDecipheriv(
+        "aes-256-gcm",
+        key,
+        bytes.subarray(0, 12),
+      );
+      cipher.setAuthTag(bytes.subarray(12, 28));
+      return Buffer.concat([
+        cipher.update(bytes.subarray(28)),
+        cipher.final(),
+      ]).toString("utf8");
+    },
+    audit(actor: string | null, action: string, resource: string) {
+      db.prepare(
+        "INSERT INTO audit(actor_id,action,resource_id,at) VALUES(?,?,?,?)",
+      ).run(actor, action, resource, new Date().toISOString());
+    },
+    close() {
+      db.close();
+    },
+  };
+}
+export type Store = ReturnType<typeof createStore>;

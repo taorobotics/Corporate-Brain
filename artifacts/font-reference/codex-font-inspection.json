@@ -1,0 +1,93 @@
+{
+  "source": "Installed Codex 26.1013.3656.0 static font configuration",
+  "comparison": "Default configuration, not the currently running Codex window",
+  "platform": "win32",
+  "samples": [
+    {
+      "selector": ".marvis .sample-cn",
+      "family": "\"PingFang SC\", \"Company Noto\", \"Microsoft YaHei\", \"Segoe UI\", Arial, sans-serif",
+      "size": "23px",
+      "weight": "600",
+      "actualFonts": [
+        {
+          "familyName": "Noto Sans SC Thin",
+          "glyphCount": 12,
+          "isCustomFont": true,
+          "postScriptName": "NotoSansSC-SemiBold"
+        }
+      ]
+    },
+    {
+      "selector": ".marvis .latin",
+      "family": "\"PingFang SC\", \"Company Noto\", \"Microsoft YaHei\", \"Segoe UI\", Arial, sans-serif",
+      "size": "16px",
+      "weight": "400",
+      "actualFonts": [
+        {
+          "familyName": "Noto Sans SC Thin",
+          "glyphCount": 41,
+          "isCustomFont": true,
+          "postScriptName": "NotoSansSC"
+        }
+      ]
+    },
+    {
+      "selector": ".codex .sample-cn",
+      "family": "-apple-system-body, ui-sans-serif, -apple-system, system-ui, \"Segoe UI\", Helvetica, \"Apple Color Emoji\", Arial, sans-serif, \"Segoe UI Emoji\", \"Segoe UI Symbol\"",
+      "size": "23px",
+      "weight": "600",
+      "actualFonts": [
+        {
+          "familyName": "Microsoft YaHei UI",
+          "glyphCount": 12,
+          "isCustomFont": false,
+          "postScriptName": "MicrosoftYaHeiUI-Bold"
+        }
+      ]
+    },
+    {
+      "selector": ".codex .latin",
+      "family": "-apple-system-body, ui-sans-serif, -apple-system, system-ui, \"Segoe UI\", Helvetica, \"Apple Color Emoji\", Arial, sans-serif, \"Segoe UI Emoji\", \"Segoe UI Symbol\"",
+      "size": "16px",
+      "weight": "400",
+      "actualFonts": [
+        {
+          "familyName": "Microsoft YaHei UI",
+          "glyphCount": 41,
+          "isCustomFont": false,
+          "postScriptName": "MicrosoftYaHeiUI"
+        }
+      ]
+    },
+    {
+      "selector": ".openai",
+      "family": "\"Installed OpenAI Sans\", -apple-system-body, ui-sans-serif, -apple-system, system-ui, \"Segoe UI\", Helvetica, \"Apple Color Emoji\", Arial, sans-serif, \"Segoe UI Emoji\", \"Segoe UI Symbol\"",
+      "size": "24px",
+      "weight": "400",
+      "actualFonts": [
+        {
+          "familyName": "OpenAI Sans",
+          "glyphCount": 46,
+          "isCustomFont": true,
+          "postScriptName": "OpenAISans-Regular"
+        }
+      ]
+    },
+    {
+      "selector": ".code",
+      "family": "ui-monospace, SFMono-Regular, \"SF Mono\", Menlo, Consolas, \"Liberation Mono\", monospace",
+      "size": "14px",
+      "weight": "400",
+      "actualFonts": [
+        {
+          "familyName": "Consolas",
+          "glyphCount": 51,
+          "isCustomFont": false,
+          "postScriptName": "Consolas"
+        }
+      ]
+    }
+  ],
+  "productChanged": false,
+  "installedFontsCopiedToProduct": false
+}

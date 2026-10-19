@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Noto Sans SC · 公司大脑字体参考</title>
+  <style>
+    @font-face { font-family: 'Noto Preview'; src: url('./NotoSansSC-preview.woff2') format('woff2'); font-weight: 100 900; font-style: normal; font-display: block; }
+    * { box-sizing: border-box; }
+    body { margin: 0; color: #292a28; background: #f5f4f0; font-family: 'Noto Preview', sans-serif; font-synthesis: none; }
+    main { width: 1280px; padding: 48px 56px 40px; }
+    .eyebrow { color: #74766f; font-size: 13px; letter-spacing: 1px; }
+    h1 { font-size: 42px; font-weight: 500; margin: 12px 0 10px; letter-spacing: -.6px; }
+    .intro { font-size: 15px; color: #74766f; margin: 0 0 30px; }
+    .sheet { background: #fffefa; border: 1px solid #e3e2dc; border-radius: 18px; overflow: hidden; }
+    .weight { padding: 23px 28px; display: grid; grid-template-columns: 160px 1fr; align-items: center; border-bottom: 1px solid #eeede7; }
+    .label { font-size: 13px; color: #7b7d75; line-height: 1.9; }
+    .label b { display: block; color: #41433d; font-weight: 500; }
+    .sample { font-size: 31px; line-height: 1.5; }
+    .nav { font-size: 15px; margin-top: 6px; line-height: 1.7; }
+    .w400 { font-weight: 400; } .w500 { font-weight: 500; } .w600 { font-weight: 600; }
+    .reading { padding: 24px 28px 27px; }
+    .reading .label { margin-bottom: 10px; }
+    .reading p { font-size: 16px; line-height: 1.85; margin: 0; font-weight: 400; }
+    .comparison { margin-top: 24px; display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+    .card { background: #fffefa; border: 1px solid #e3e2dc; border-radius: 14px; padding: 22px 25px; }
+    .card .label { margin-bottom: 12px; }
+    .current { font-family: 'Microsoft YaHei UI', 'Microsoft YaHei', sans-serif; }
+    .card h2 { font-size: 20px; line-height: 1.5; font-weight: 500; margin: 0 0 9px; }
+    .card p { font-size: 15px; line-height: 1.85; margin: 0; font-weight: 400; }
+    .latin { font-size: 14px; margin-top: 12px; color: #676a60; }
+    footer { margin-top: 22px; font-size: 12px; line-height: 1.8; color: #82847c; }
+    @media (max-width: 800px) { main { width: 100%; padding: 24px; } h1 { font-size: 32px; } .weight { grid-template-columns: 1fr; gap: 12px; } .sample { font-size: 25px; } .comparison { grid-template-columns: 1fr; } }
+  </style>
+</head>
+<body>
+  <main>
+    <div class="eyebrow">公司大脑 / 中文字体参考</div>
+    <h1>Noto Sans SC</h1>
+    <p class="intro">真实字体渲染 · 看中文笔画、阅读效果，以及不同粗细的层次</p>
+    <section class="sheet">
+      <div class="weight">
+        <div class="label"><b>Regular · 400</b>对话正文 / 说明文字</div>
+        <div class="w400"><div class="sample">让经验成为公司的共同能力</div><div class="nav">新建对话　项目　公司知识　技能中心　个人设置</div></div>
+      </div>
+      <div class="weight">
+        <div class="label"><b>Medium · 500</b>菜单 / 按钮 / 小标题</div>
+        <div class="w500"><div class="sample">让经验成为公司的共同能力</div><div class="nav">新建对话　项目　公司知识　技能中心　个人设置</div></div>
+      </div>
+      <div class="weight">
+        <div class="label"><b>SemiBold · 600</b>页面标题 / 重点内容</div>
+        <div class="w600"><div class="sample">让经验成为公司的共同能力</div><div class="nav">新建对话　项目　公司知识　技能中心　个人设置</div></div>
+      </div>
+      <div class="reading">
+        <div class="label"><b>对话阅读参考 · 16 px / 400</b></div>
+        <p>你可以整理自己的工作经验，将选中的对话内容制作成技能。<br>审核发布后，同部门的同事就能下载使用，让一次解决问题的经验被更多人用上。</p>
+      </div>
+    </section>
+    <div class="comparison">
+      <section class="card">
+        <div class="label"><b>当前 Windows 字体 · 微软雅黑 UI</b></div>
+        <div class="current"><h2>公司知识与技能中心</h2><p>搜索项目资料，整理工作经验。<br>把常用流程保存为技能，分享给同事。</p><div class="latin">Skills / NAS / Model　0123456789</div></div>
+      </section>
+      <section class="card">
+        <div class="label"><b>建议字体 · Noto Sans SC</b></div>
+        <div><h2>公司知识与技能中心</h2><p>搜索项目资料，整理工作经验。<br>把常用流程保存为技能，分享给同事。</p><div class="latin">Skills / NAS / Model　0123456789</div></div>
+      </section>
+    </div>
+    <footer>字体来源：Google Fonts 官方 Noto Sans SC；本页仅展示字体，未修改产品界面。<br>当前截图使用 Windows 渲染；不同系统的显示细节可能略有差异。</footer>
+  </main>
+</body>
+</html>

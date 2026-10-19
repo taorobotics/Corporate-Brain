@@ -1,0 +1,16 @@
+{
+  "Version": "0.1.0",
+  "Platform": "Windows x64",
+  "Installer": "D:\\Open_Source_Project\\Corporate Brain\\release\\公司大脑 Setup 0.1.0.exe",
+  "Bytes": 119361346,
+  "SHA256": "17d61a70187d92dd47a6db056c63076ae53a10aef8fb375975e4f1944a1ea8cb",
+  "Signature": "NotSigned",
+  "Build": "passed",
+  "InstallUpgradeUninstall": "not yet exercised on a separate employee device",
+  "Mac": "not built or verified",
+  "BackendIncluded": false,
+  "CompanyDataIncluded": false,
+  "Font": "Local PingFang SC preferred; bundled Noto Sans SC fallback",
+  "FontLicenseIncluded": true,
+  "RoundedWindowCorners": true
+}

@@ -1,0 +1,8 @@
+{
+  "version": "0.2.0-rc.2",
+  "profile": "sdk-minimal",
+  "home": "D:\\Open_Source_Project\\Corporate Brain\\.cache\\dsh-smoke-home",
+  "workspace": "D:\\Open_Source_Project\\Corporate Brain\\.cache\\dsh-smoke-workspace",
+  "initialize": "passed",
+  "modelTurn": "not run; no production model credential supplied"
+}

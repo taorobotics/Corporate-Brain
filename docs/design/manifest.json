@@ -1,0 +1,75 @@
+{
+  "product": "Corporate Brain",
+  "archived_date": "2026-10-16",
+  "timezone": "Asia/Shanghai",
+  "kind": "approved-design-reference",
+  "implemented": false,
+  "assets": [
+    {
+      "file": "approved/employee-chat-collapsed.png",
+      "source": "D:\\CodexData\\generated_images\\01a123c4-aed8-7eb2-ae68-fe7657afb81e\\exec-bc89e731-396a-4a9d-986f-d680561b22c0.png",
+      "sha256": "78b3fd12b9ce40ee86b41fe662b4d611058bc021a4e6e65b0a16bb35ba269c9c",
+      "note": "收起状态参考，顶部菜单沿用最终稿"
+    },
+    {
+      "file": "approved/employee-chat-preview.png",
+      "source": "D:\\CodexData\\generated_images\\01a123c4-aed8-7eb2-ae68-fe7657afb81e\\exec-a1950bc6-b8e6-4614-b3dd-f5eb81e2eeb6.png",
+      "sha256": "c203fb9abf20e907398570ad49d59bdcd0b3c0d01611b02432f03a2ec17c97b9",
+      "note": "最终对话、预览与桌面菜单"
+    },
+    {
+      "file": "approved/employee-projects.png",
+      "source": "D:\\CodexData\\generated_images\\01a123c4-aed8-7eb2-ae68-fe7657afb81e\\exec-37e984b6-e6f4-4a31-b899-b05f371d2629.png",
+      "sha256": "314b41024e75e23f1a2690f165e5ba02f83192cf86ad8f1bcd5507db9038b57d",
+      "note": "完整主内容区，无右侧面板"
+    },
+    {
+      "file": "approved/employee-knowledge.png",
+      "source": "D:\\CodexData\\generated_images\\01a123c4-aed8-7eb2-ae68-fe7657afb81e\\exec-6fb85c20-8ef2-4719-9a62-20deee8fe3c3.png",
+      "sha256": "509db2fa5ae4eafe62853d38bcab1c3f7dbcabac9a8b4568b328542333a5a2a0",
+      "note": "完整主内容区，无右侧面板"
+    },
+    {
+      "file": "approved/employee-skills.png",
+      "source": "D:\\CodexData\\generated_images\\01a123c4-aed8-7eb2-ae68-fe7657afb81e\\exec-b9acbb7c-7bd5-4676-b731-98933600941a.png",
+      "sha256": "89d50bcf812fe899b89bdb6a9279903b81666e51bc17bffe0905262f516c3ecd",
+      "note": "完整主内容区，无右侧面板"
+    },
+    {
+      "file": "approved/employee-settings.png",
+      "source": "D:\\CodexData\\generated_images\\01a123c4-aed8-7eb2-ae68-fe7657afb81e\\exec-0f80c209-ec8c-4971-914b-14ff756a60e1.png",
+      "sha256": "c9cdf35fb81e50414f3830a94125d21ebdc92ef87890e5489e75f005ed538582",
+      "note": "个人设置"
+    },
+    {
+      "file": "approved/employee-models.png",
+      "source": "D:\\CodexData\\generated_images\\01a123c4-aed8-7eb2-ae68-fe7657afb81e\\exec-4a992236-f6cf-4e71-bf7b-0fa53a635245.png",
+      "sha256": "d54b41f6534261ce1c140c40f630fb48c9ccd4f8cabfd4e8ba0ddf957f3c353a",
+      "note": "个人模型配置"
+    },
+    {
+      "file": "approved/employee-account-menu.png",
+      "source": "D:\\CodexData\\generated_images\\01a123c4-aed8-7eb2-ae68-fe7657afb81e\\exec-67411eb3-9b44-4098-a7d1-8deb7785356d.png",
+      "sha256": "a2cf5a12d991932a86ca88c405cef5f33be8c3f1170c9fba1644a45ae6ca1f35",
+      "note": "头像姓名触发的账号菜单"
+    },
+    {
+      "file": "approved/admin-users.png",
+      "source": "D:\\CodexData\\generated_images\\01a123c4-aed8-7eb2-ae68-fe7657afb81e\\exec-5fb52e4e-8efd-470a-a0a9-04676d84dcef.png",
+      "sha256": "e6996632d7e2055a9739d5b556e417031759e2710cb4273df3ba7b9882f4ab53",
+      "note": "管理后台员工权限"
+    },
+    {
+      "file": "approved/admin-models.png",
+      "source": "D:\\CodexData\\generated_images\\01a123c4-aed8-7eb2-ae68-fe7657afb81e\\exec-3d89dadb-d4a6-4e6e-8424-edf2cf459597.png",
+      "sha256": "6c1cbcebe59f10a84eba5de167bb79c078435093ec2b984498461c70456ff30b",
+      "note": "管理后台公司模型配置"
+    },
+    {
+      "file": "approved/admin-skill-review.png",
+      "source": "D:\\CodexData\\generated_images\\01a123c4-aed8-7eb2-ae68-fe7657afb81e\\exec-beccca24-fd4c-43cf-a583-0bb2e21d342d.png",
+      "sha256": "1899c969fdb9e594bed3e800849104d791e1741932f8877b7f2f1e5c5a69de73",
+      "note": "管理后台技能审核"
+    }
+  ]
+}

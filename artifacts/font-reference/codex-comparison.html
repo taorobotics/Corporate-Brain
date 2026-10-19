@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>公司大脑 · Codex 字体对比</title>
+  <style>
+    @font-face { font-family: 'Company Noto'; src: url('../../public/fonts/NotoSansSC-VF.woff2') format('woff2'); font-weight: 100 900; font-display: block; }
+    * { box-sizing: border-box; }
+    :root { --system: -apple-system-body, ui-sans-serif, -apple-system, system-ui, 'Segoe UI', Helvetica, 'Apple Color Emoji', Arial, sans-serif, 'Segoe UI Emoji', 'Segoe UI Symbol'; }
+    body { margin: 0; color: #292a28; background: #f5f4f0; font-family: 'Company Noto', sans-serif; font-synthesis: none; }
+    main { width: 1280px; padding: 40px 48px; }
+    .eyebrow { font-size: 13px; color: #85867f; }
+    h1 { margin: 12px 0; font-size: 30px; font-weight: 600; }
+    .intro { margin: 0 0 26px; color: #74766f; font-size: 14px; line-height: 1.8; }
+    .columns { display: grid; grid-template-columns: 1fr 1fr; gap: 22px; }
+    .panel { border: 1px solid #e1e0da; background: #fffefa; border-radius: 16px; overflow: hidden; }
+    .caption { padding: 17px 22px; border-bottom: 1px solid #eeede7; }
+    .caption strong { font-size: 15px; font-weight: 500; }
+    .caption span { display: block; color: #85867f; font-size: 12px; margin-top: 5px; }
+    .demo { padding: 25px 24px 24px; }
+    .marvis { font-family: 'PingFang SC', 'Company Noto', 'Microsoft YaHei', 'Segoe UI', Arial, sans-serif; }
+    .codex { font-family: var(--system); }
+    .nav { display: flex; gap: 20px; padding-bottom: 21px; border-bottom: 1px solid #eeede7; font-size: 14px; font-weight: 400; }
+    .demo h2 { margin: 24px 0 13px; font-size: 23px; font-weight: 600; line-height: 1.5; }
+    .demo p { margin: 0; font-size: 16px; line-height: 1.8; font-weight: 400; }
+    .latin { font-size: 16px; line-height: 1.6; margin-top: 20px; }
+    .composer { border: 1px solid #e3e2dc; border-radius: 13px; padding: 15px; margin-top: 25px; }
+    .placeholder { color: #8d8e87; font-size: 14px; }
+    .actions { display: flex; align-items: center; gap: 14px; margin-top: 23px; font-size: 12px; color: #777970; }
+    .send { margin-left: auto; color: #fff; background: #30322c; border-radius: 20px; padding: 5px 12px; }
+    .extra { border: 1px solid #e1e0da; background: #fffefa; border-radius: 16px; margin-top: 22px; padding: 21px 24px; }
+    .extra .label { font-size: 13px; color: #74766f; margin-bottom: 12px; }
+    .openai { font-family: 'Installed OpenAI Sans', var(--system); font-weight: 400; font-size: 24px; line-height: 1.5; }
+    .code { margin-top: 13px; font: 14px/1.6 ui-monospace, 'SFMono-Regular', 'SF Mono', Menlo, Consolas, 'Liberation Mono', monospace; color: #74766f; }
+    footer { color: #85867f; font-size: 12px; line-height: 1.9; margin-top: 21px; }
+    @media(max-width: 800px) { main { width: 100%; padding: 24px; } .columns { grid-template-columns: 1fr; } }
+  </style>
+</head>
+<body>
+  <main>
+    <div class="eyebrow">公司大脑 / 字体方案对比</div>
+    <h1>当前方案与 Codex 默认界面字体</h1>
+    <p class="intro">两边使用相同字号、字重和间距，方便单独比较字形。中文的最终字形取决于系统后备字体。</p>
+    <div class="columns">
+      <section class="panel">
+        <div class="caption"><strong>当前方案 · 参考 Marvis</strong><span>苹方优先 / 随产品提供 Noto Sans SC</span></div>
+        <div class="demo marvis">
+          <div class="nav">新建对话　 公司知识　 技能中心</div>
+          <h2 class="sample-cn">让经验成为公司的共同能力</h2>
+          <p>整理项目资料，记录工作方法。<br>把自己的对话内容制作成技能，<br>经过审核后，分享给同事使用。</p>
+          <div class="latin">Company Brain / Skills / Model 0123456789</div>
+          <div class="composer"><div class="placeholder">描述你想完成的工作，或选择一个技能</div><div class="actions"><span>＋</span><span>技能</span><span>对话</span><span class="send">发送</span></div></div>
+        </div>
+      </section>
+      <section class="panel">
+        <div class="caption"><strong>Codex 参考 · 默认系统界面字体</strong><span>跟随系统 / 此图在 Windows 上渲染</span></div>
+        <div class="demo codex">
+          <div class="nav">新建对话　 公司知识　 技能中心</div>
+          <h2 class="sample-cn">让经验成为公司的共同能力</h2>
+          <p>整理项目资料，记录工作方法。<br>把自己的对话内容制作成技能，<br>经过审核后，分享给同事使用。</p>
+          <div class="latin">Company Brain / Skills / Model 0123456789</div>
+          <div class="composer"><div class="placeholder">描述你想完成的工作，或选择一个技能</div><div class="actions"><span>＋</span><span>技能</span><span>对话</span><span class="send">发送</span></div></div>
+        </div>
+      </section>
+    </div>
+    <section class="extra">
+      <div class="label">Codex 安装包中的 OpenAI Sans · 单独查看英文正文效果</div>
+      <div class="openai">Company Brain / Skills / Projects / 0123456789</div>
+      <div class="code">Code font: const skills = await brain.listSkills();</div>
+    </section>
+    <footer>参考：本机 Codex 26.1013.3656.0 的字体配置；此图展示默认方案，不代表读取了当前窗口的字体覆盖设置。<br>OpenAI Sans 仅从本机已安装 Codex 临时加载用于预览，没有复制到公司大脑的字体目录或安装包。</footer>
+  </main>
+</body>
+</html>

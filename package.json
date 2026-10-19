@@ -1,0 +1,78 @@
+{
+  "name": "corporate-brain",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "公司大脑：本地记录、部门账号和公司技能平台",
+  "main": "desktop/main.cjs",
+  "engines": {
+    "node": ">=24.13.0"
+  },
+  "scripts": {
+    "dev": "node scripts/dev.mjs",
+    "dev:web": "vite --host 127.0.0.1 --port 4173 --strictPort",
+    "dev:server": "tsx watch server/index.ts",
+    "desktop": "electron .",
+    "build": "tsc --noEmit && vite build",
+    "start": "tsx server/index.ts",
+    "test": "tsx --test server/platform.test.ts",
+    "test:desktop": "electron desktop/verify.cjs",
+    "test:dsh": "node scripts/verify-dsh.mjs",
+    "package:win": "npm run build && node scripts/package-desktop.mjs --win nsis",
+    "package:win:dir": "npm run build && node scripts/package-desktop.mjs --win --dir",
+    "package:mac": "npm run build && node scripts/package-desktop.mjs --mac dmg"
+  },
+  "dependencies": {
+    "@deepseek-ai/dsh": "0.2.0-rc.2",
+    "@deepseek-ai/dsh-sdk-client": "0.2.0-rc.2",
+    "@phosphor-icons/react": "^2.1.10",
+    "cookie-parser": "^1.4.7",
+    "express": "^5.3.0",
+    "react": "^19.3.1",
+    "react-dom": "^19.3.1",
+    "zod": "^4.6.7"
+  },
+  "build": {
+    "appId": "com.corporatebrain.desktop",
+    "productName": "公司大脑",
+    "directories": {
+      "app": "desktop",
+      "output": "release"
+    },
+    "files": [
+      "main.cjs",
+      "preload.cjs",
+      "server-preload.cjs",
+      "server-setup.html",
+      "server-setup.js",
+      "fonts.css",
+      "fonts/**/*",
+      "package.json",
+      "!node_modules/**/*"
+    ],
+    "win": {
+      "target": "nsis",
+      "signAndEditExecutable": false
+    },
+    "mac": {
+      "target": "dmg",
+      "identity": null,
+      "category": "public.app-category.productivity"
+    }
+  },
+  "devDependencies": {
+    "@types/cookie-parser": "^1.4.10",
+    "@types/express": "^5.0.6",
+    "@types/node": "^26.6.5",
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
+    "@vitejs/plugin-react": "^6.1.2",
+    "electron": "^44.8.0",
+    "electron-builder": "^26.15.3",
+    "prettier": "^3.9.10",
+    "rea-agents": "6.5.0",
+    "tsx": "^4.23.15",
+    "typescript": "^7.0.2",
+    "vite": "^8.3.4"
+  }
+}

@@ -1,0 +1,18 @@
+{
+  "height": 1061.25,
+  "fontFaces": [
+    {
+      "family": "Noto Preview",
+      "weight": "100 900",
+      "status": "loaded"
+    }
+  ],
+  "actualFonts": [
+    {
+      "familyName": "Noto Sans SC Thin",
+      "glyphCount": 12,
+      "isCustomFont": true,
+      "postScriptName": "Noto-Sans-SC-Thin"
+    }
+  ]
+}

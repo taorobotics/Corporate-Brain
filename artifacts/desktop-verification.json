@@ -1,0 +1,23 @@
+{
+  "result": "passed",
+  "runtime": "Electron real window + real preload bridge",
+  "productionModelsCalled": false,
+  "database": "disposable in-memory",
+  "checks": [
+    "First administrator setup and login through UI",
+    "Native maximize and fullscreen use straight edges; restored windows recover small corners",
+    "Unconfigured generation is explicit; message persisted on the local disk",
+    "Local history restored after reloading",
+    "Conversation preview defaults closed, opens from an image, resizes with keyboard and closes",
+    "UI source selection, local draft and package preview submit workflow",
+    "Company-scope review through the real UI",
+    "Published package downloaded and installed locally",
+    "First login change; second employee isolated; IPC rejects another employee profile",
+    "Another employee installs the shared Skill without author history",
+    "Non-conversation screens do not open the far-right preview",
+    "900px desktop viewport has no document overflow",
+    "Native company server setup rejects insecure remote HTTP and connects to the verified company API"
+  ],
+  "consoleErrors": [],
+  "screenshots": "D:\\Open_Source_Project\\Corporate Brain\\artifacts\\screenshots"
+}

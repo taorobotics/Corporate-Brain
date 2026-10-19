@@ -1,0 +1,60 @@
+{
+  "result": "completed with recorded integrity limitations",
+  "tool": "rea-agents@6.5.0",
+  "evidenceId": "ev_6f9e16d4bb72cfca2121880500a9b464de1afc4891b2f19fb2af25e9856e455b",
+  "operation": "analyze_javascript_application",
+  "selectedSource": ".vite/build/preload.js",
+  "source": "Codex 26.1013.3656.0 packaged application",
+  "rawEvidenceSha256": "f64bfdb034576daf460f506c835f22982e5761c5d1a9ea97bb320bc2aaea0a17",
+  "confidence": "derived",
+  "statistics": {
+    "relevant_files": 16277,
+    "nested_asar_containers": 0,
+    "text_bytes_read": 6909,
+    "invalid_utf8_files": 0,
+    "parsed_javascript_files": 1,
+    "visited_ast_nodes": 1813,
+    "findings": 31,
+    "modules": 0,
+    "parse_failures": 0
+  },
+  "summary": {
+    "browser_windows": 0,
+    "explicit_web_preferences": 0,
+    "preload_entrypoints": 0,
+    "context_bridge_apis": 3,
+    "exposed_api_members": 0,
+    "ipc": {
+      "operations": 25,
+      "literal_channels": 1,
+      "dynamic_channel_operations": 24,
+      "renderer_transmissions": 20,
+      "renderer_listeners": 5,
+      "main_handlers": 0,
+      "paired_renderer_transmissions": 0,
+      "ambiguous_renderer_transmissions": 0,
+      "unpaired_literal_renderer_transmissions": 1
+    },
+    "sender_validation_observations": 0,
+    "utility_processes": 0,
+    "resolved_utility_entrypoints": 0,
+    "native_addon_bindings": 0,
+    "resolved_native_addon_bindings": 0
+  },
+  "limitations": [
+    "Artifact integrity metadata contradicts observed bytes at node_modules/@worklouder/device-kit-oai/node_modules/@serialport/bindings-cpp/build/Release/bindings.node; the observed bytes are untrusted.",
+    "Artifact integrity metadata contradicts observed bytes at node_modules/@worklouder/device-kit-oai/node_modules/node-hid/build/Release/HID.node; the observed bytes are untrusted.",
+    "Artifact integrity metadata contradicts observed bytes at node_modules/better-sqlite3/build/Release/better_sqlite3.node; the observed bytes are untrusted.",
+    "Artifact integrity metadata contradicts observed bytes at node_modules/node-pty/build/Release/conpty.node; the observed bytes are untrusted.",
+    "Artifact integrity metadata contradicts observed bytes at node_modules/node-pty/build/Release/conpty_console_list.node; the observed bytes are untrusted.",
+    "Artifact integrity metadata contradicts observed bytes at node_modules/node-pty/build/Release/pty.node; the observed bytes are untrusted.",
+    "Artifact integrity metadata contradicts observed bytes at node_modules/node-pty/build/Release/winpty-agent.exe; the observed bytes are untrusted.",
+    "Artifact integrity metadata contradicts observed bytes at node_modules/node-pty/build/Release/winpty.dll; the observed bytes are untrusted.",
+    "Caller-selected source analysis leaves 16276 inventoried files outside analysis scope. Inventory identity covers the complete artifact; relationships through unselected sources remain unknown.",
+    "CommonJS and ESM binding relationships were recovered from inert syntax and resolved only within the inventoried artifact container.",
+    "Dynamic IPC channel expressions remain unresolved and are never paired by textual similarity.",
+    "Electron API identity follows proven lexical module aliases and structurally verified module-namespace interop. Other reassignments, dynamic selections, and visibly overwritten namespace members are unresolved; missing findings do not establish absence. Arbitrary call side effects and runtime registration are not evaluated."
+  ],
+  "runtimeCapture": false,
+  "claudeDesktopAnalysis": "not performed: no matching application package identified"
+}
