@@ -1,0 +1,108 @@
+name: macOS installers
+
+on:
+  workflow_dispatch:
+    inputs:
+      release_tag:
+        description: Existing release tag matching the app version
+        required: true
+        default: v0.1.0
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: macos-release-${{ inputs.release_tag }}
+  cancel-in-progress: false
+
+jobs:
+  build:
+    name: macOS ${{ matrix.arch }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - arch: arm64
+            runner: macos-15
+          - arch: x64
+            runner: macos-15-intel
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 25
+    env:
+      RELEASE_TAG: ${{ inputs.release_tag }}
+      TARGET_ARCH: ${{ matrix.arch }}
+    steps:
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v5
+        with:
+          node-version: '24'
+          cache: npm
+      - name: Validate version, source and native architecture
+        shell: bash
+        run: |
+          node --input-type=module -e 'import p from "./package.json" with {type:"json"}; import d from "./desktop/package.json" with {type:"json"}; if (process.env.RELEASE_TAG !== `v${p.version}` || p.version !== d.version || process.arch !== process.env.TARGET_ARCH) process.exit(1);'
+          git rev-parse --verify "refs/tags/$RELEASE_TAG"
+          git diff --exit-code "$RELEASE_TAG" HEAD -- desktop src server shared public package-lock.json index.html tsconfig.json vite.config.ts
+      - run: npm ci
+      - run: npm test
+      - run: npm run build
+      - name: Native desktop interaction checks
+        run: npm run test:desktop
+      - name: Build ad-hoc signed test DMG
+        run: node scripts/package-desktop.mjs --mac dmg --${{ matrix.arch }} --publish never
+      - name: Mount DMG and verify packaged application
+        run: node scripts/verify-macos-package.mjs
+      - name: Save installer and verification results
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: macOS-${{ matrix.arch }}
+          path: |
+            release/*.dmg
+            release/SHA256SUMS-macOS-*.txt
+            release/macos-verification-*.json
+          if-no-files-found: error
+          retention-days: 14
+          compression-level: 0
+      - name: Save diagnostic reports
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: macOS-diagnostics-${{ matrix.arch }}
+          path: |
+            artifacts/desktop-verification.json
+            artifacts/ui-fonts.json
+            artifacts/screenshots/
+            release/macos-first-launch-*.png
+          retention-days: 14
+
+  publish:
+    name: Add both Mac installers to Releases
+    needs: build
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: write
+    env:
+      GH_TOKEN: ${{ github.token }}
+      GH_REPO: ${{ github.repository }}
+      RELEASE_TAG: ${{ inputs.release_tag }}
+    steps:
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
+        with:
+          pattern: macOS-*
+          path: downloaded
+      - name: Verify and upload both architectures
+        shell: bash
+        run: |
+          gh release view "$RELEASE_TAG"
+          for arch in arm64 x64; do
+            (
+              cd "downloaded/macOS-$arch"
+              sha256sum --check "SHA256SUMS-macOS-$arch.txt"
+              gh release upload "$RELEASE_TAG" ./*.dmg ./SHA256SUMS-macOS-*.txt ./macos-verification-*.json
+            )
+          done

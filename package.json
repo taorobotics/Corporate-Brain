@@ -56,7 +56,10 @@
     },
     "mac": {
       "target": "dmg",
-      "identity": null,
+      "identity": "-",
+      "hardenedRuntime": false,
+      "notarize": false,
+      "artifactName": "Corporate-Brain-${version}-macOS-${arch}.${ext}",
       "category": "public.app-category.productivity"
     }
   },
