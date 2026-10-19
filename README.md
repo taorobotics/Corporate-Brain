@@ -11,16 +11,25 @@
 - [最新版下载页](https://github.com/taorobotics/Corporate-Brain/releases/latest)：后续新版本继续使用这个入口。
 - [全部版本与更新说明](https://github.com/taorobotics/Corporate-Brain/releases)：保留各版本独立的安装包和说明。
 
-- [Windows x64 安装包 v0.1.0](https://github.com/taorobotics/Corporate-Brain/releases/download/v0.1.0/Corporate-Brain-Setup-0.1.0-x64.exe)
-- [Mac Apple 芯片安装包 v0.1.0](https://github.com/taorobotics/Corporate-Brain/releases/download/v0.1.0/Corporate-Brain-0.1.0-macOS-arm64.dmg)
-- [Mac Intel 安装包 v0.1.0](https://github.com/taorobotics/Corporate-Brain/releases/download/v0.1.0/Corporate-Brain-0.1.0-macOS-x64.dmg)
-- SHA-256 校验文件：[Windows](https://github.com/taorobotics/Corporate-Brain/releases/download/v0.1.0/SHA256SUMS.txt)、[Mac Apple 芯片](https://github.com/taorobotics/Corporate-Brain/releases/download/v0.1.0/SHA256SUMS-macOS-arm64.txt)、[Mac Intel](https://github.com/taorobotics/Corporate-Brain/releases/download/v0.1.0/SHA256SUMS-macOS-x64.txt)。
+最新已发布版本以 Releases/latest 为准，在 Assets 选择以下文件；文件名中的 X.Y.Z 为对应版本：
+
+| 电脑或用途 | 下载文件 |
+| --- | --- |
+| Windows x64 | Corporate-Brain-Setup-X.Y.Z-x64.exe |
+| Mac Apple 芯片 | Corporate-Brain-X.Y.Z-macOS-arm64.dmg |
+| Mac Intel | Corporate-Brain-X.Y.Z-macOS-x64.dmg |
+| 公司服务器更新 | Corporate-Brain-Server-X.Y.Z.zip |
+| 安装与更新包校验 | SHA256SUMS.txt |
+
+服务器更新包从 v0.1.1 开始提供。客户端从公司服务器加载界面，界面或业务服务更新还需由管理员同步部署服务器包，不能只重新安装客户端。
 
 这些是开发测试版。Windows 尚未签名；Mac 使用 ad-hoc 签名，尚无 Apple Developer ID 签名和公证，下载后可能出现系统安全提示。Mac 打开 DMG 后将“公司大脑”拖入 Applications（应用程序），安装和检查范围见 [macOS 分发说明](docs/MACOS-RELEASE.md)。仓库当前为私有，访问源码和安装包需要相应 GitHub 权限。
 
 安装后填写管理员提供的公司服务器地址，再使用公司分配的账号登录。管理后台与业务服务需单独部署；安装包不包含服务器数据库、预设账号或公司密钥。本机开发测试可先按下文启动服务，使用 http://127.0.0.1:4173 作为客户端连接地址。
 
 当前通过 Releases 手动下载新版本安装包升级，客户端自动检查更新与下载尚未实现。仓库右侧的 Packages 用于 npm 等依赖包或容器镜像，本项目的 Windows 和 Mac 安装包统一放在 Releases。
+
+每批更新都发布独立版本：小更新递增补丁位，中更新递增次版本位，大更新递增主版本位。使用 npm run version:bump -- patch|minor|major 同步版本，标签触发 Desktop release，检查和资源核对通过后才公开发布。详见[发版规则](docs/RELEASE-POLICY.md)。
 
 ## 本地运行
 
@@ -51,7 +60,7 @@ npm run test:dsh
 npm run package:win
 ```
 
-Windows 安装包输出到 release；macOS 可在 Mac 上运行 npm run package:mac，或使用 GitHub Actions 的“macOS installers”分别构建 Apple 芯片与 Intel 包。Mac 构建流程包含原生桌面操作和打包程序启动检查，仍需员工物理设备的下载、文件授权、升级与卸载验收。当前安装包供开发测试，未做正式代码签名与 Apple 公证。桌面包独立于服务器依赖，开发测试和第三方分析缓存不打包给员工。
+Windows 安装包输出到 release；macOS 可在 Mac 上运行 npm run package:mac。正式版本使用 GitHub Actions 的“Desktop release”统一构建 Windows、两种 Mac 包和公司服务器更新包。Mac 构建流程包含原生桌面操作和打包程序启动检查，仍需员工物理设备的下载、文件授权、升级与卸载验收。当前安装包供开发测试，未做正式代码签名与 Apple 公证。桌面包独立于服务器依赖，开发测试和第三方分析缓存不打包给员工。
 
 构建后可用 npm start 启动带静态界面的公司业务服务，默认只监听本机 4310 端口。[部署说明](docs/DEPLOYMENT.md)记录公司服务器地址、HTTPS、数据与备份边界。真实接口配置前，开发程序不显示伪造生成结果。
 

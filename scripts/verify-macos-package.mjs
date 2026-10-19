@@ -100,7 +100,7 @@ try {
   await writeFile(`release/macos-first-launch-${arch}.png`, Buffer.from(screenshot.data, 'base64'));
   const desktop = JSON.parse(await readFile('artifacts/desktop-verification.json', 'utf8'));
   const sha256 = createHash('sha256').update(await readFile(dmg)).digest('hex');
-  const report = { version, architecture: arch, platform: process.platform, os: command('sw_vers', ['-productVersion']).trim(), sourceCommit: process.env.GITHUB_SHA || command('git', ['rev-parse', 'HEAD']).trim(), workflowRun: process.env.GITHUB_RUN_ID || null, createdAt: new Date().toISOString(), artifact: basename(dmg), bytes: (await readFile(dmg)).length, sha256, signing: 'ad-hoc', developerIdSigned: false, notarized: false, physicalEmployeeMacTested: false, files, checks, firstLaunch: page, desktopVerification: desktop };
+  const report = { version, architecture: arch, platform: process.platform, os: command('sw_vers', ['-productVersion']).trim(), sourceCommit: command('git', ['rev-parse', 'HEAD']).trim(), workflowRun: process.env.GITHUB_RUN_ID || null, createdAt: new Date().toISOString(), artifact: basename(dmg), bytes: (await readFile(dmg)).length, sha256, signing: 'ad-hoc', developerIdSigned: false, notarized: false, physicalEmployeeMacTested: false, files, checks, firstLaunch: page, desktopVerification: desktop };
   await writeFile(`release/macos-verification-${arch}.json`, JSON.stringify(report, null, 2) + '\n');
   await writeFile(`release/SHA256SUMS-macOS-${arch}.txt`, `${sha256}  ${basename(dmg)}\n`);
   console.log(JSON.stringify({ artifact: basename(dmg), sha256, checks, desktopChecks: desktop.checks.length }, null, 2));

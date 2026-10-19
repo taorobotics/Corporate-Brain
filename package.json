@@ -1,6 +1,6 @@
 {
   "name": "corporate-brain",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "private": true,
   "type": "module",
   "description": "公司大脑：本地记录、部门账号和公司技能平台",
@@ -18,6 +18,8 @@
     "test": "tsx --test server/platform.test.ts",
     "test:desktop": "electron desktop/verify.cjs",
     "test:dsh": "node scripts/verify-dsh.mjs",
+    "version:bump": "node scripts/version.mjs",
+    "version:check": "node scripts/version.mjs check",
     "package:win": "npm run build && node scripts/package-desktop.mjs --win nsis",
     "package:win:dir": "npm run build && node scripts/package-desktop.mjs --win --dir",
     "package:mac": "npm run build && node scripts/package-desktop.mjs --mac dmg"
@@ -53,6 +55,7 @@
     ],
     "win": {
       "target": "nsis",
+      "artifactName": "Corporate-Brain-Setup-${version}-${arch}.${ext}",
       "signAndEditExecutable": false
     },
     "mac": {

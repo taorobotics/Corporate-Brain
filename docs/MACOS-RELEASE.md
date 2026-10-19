@@ -19,7 +19,7 @@ Mac 客户端使用 DMG 分发，安装包和 Windows 版本放在同一个 [Git
 
 ## 构建与检查
 
-工作流为 [.github/workflows/macos-release.yml](../.github/workflows/macos-release.yml)，在 GitHub Actions 的“macOS installers”中手动运行，填写已存在且匹配应用版本的 release_tag，例如 v0.1.0。
+工作流已统一为 [.github/workflows/desktop-release.yml](../.github/workflows/desktop-release.yml)。推送新的 vX.Y.Z 标签会触发“Desktop release”，必要时也可手动填写已存在且匹配版本的 release_tag，例如 v0.1.1。旧的 Mac 专用工作流已替换，后续 Windows、两种 Mac 和服务器更新包共同通过检查后再发布。
 
 流程使用 Apple 芯片和 Intel 的原生 Mac runner 分别构建，先核对版本、标签对应的应用源码和实际架构，然后执行后端测试、前端构建与真实 Electron 桌面操作检查。生成 DMG 后继续检查：
 
@@ -27,7 +27,7 @@ Mac 客户端使用 DMG 分发，安装包和 Windows 版本放在同一个 [Git
 - app.asar 只含允许分发的客户端和字体文件，不携带数据库、开发依赖或分析缓存。
 - 从挂载的 DMG 启动实际打包应用，以临时本地空间检查首次公司连接页、中文字体、preload 隔离和 HTTPS 地址校验。
 
-两种架构均通过后才进入发布步骤，向已存在的 Release 添加 DMG、各自的 SHA256SUMS-macOS-架构.txt 和 macos-verification-架构.json。上传使用不覆盖模式，已有同名资源会阻止重复发布；若修复后需要替换已发布程序，应使用新版本和新标签。
+所有平台和服务器包通过后才进入发布步骤，将 DMG、各自的 SHA256SUMS-macOS-架构.txt 和 macos-verification-架构.json 与其他资源上传到草稿，复核全部校验值后再公开 Release。失败后可以重试尚未公开的草稿；已公开的资源不覆盖，若需修复已发布程序，应使用新版本和新标签。
 
 GitHub Actions 的截图与桌面诊断保留 14 天。随 Release 发布的验证 JSON 记录源码提交、工作流运行编号、运行系统、架构、安装包体积、校验值和检查结果。GitHub Mac runner 验证不能替代员工物理设备上从浏览器下载后的 Gatekeeper、文件授权、升级与卸载验收。
 

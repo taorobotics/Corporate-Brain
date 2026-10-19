@@ -1,0 +1,27 @@
+import assert from 'node:assert/strict';
+import { createHash } from 'node:crypto';
+import { execFileSync } from 'node:child_process';
+import { readFile, writeFile } from 'node:fs/promises';
+import { resolve } from 'node:path';
+import { listPackage, extractFile } from '@electron/asar';
+
+assert.equal(process.platform, 'win32');
+assert.equal(process.arch, 'x64');
+const { version } = JSON.parse(await readFile('desktop/package.json', 'utf8'));
+const artifact = `Corporate-Brain-Setup-${version}-x64.exe`;
+const bytes = await readFile(resolve('release', artifact));
+assert.equal(bytes.subarray(0, 2).toString(), 'MZ', 'Installer must be a Windows executable');
+const asar = resolve('release/win-unpacked/resources/app.asar');
+const entries = listPackage(asar).map(path => path.replaceAll('\\', '/'));
+const files = entries.map(path => path.replace(/^\//, '')).filter(path => !entries.some(other => other.startsWith(`/${path}/`))).sort();
+const allowed = ['fonts.css', 'fonts/NotoSansSC-VF.woff2', 'fonts/OFL.txt', 'fonts/source.json', 'main.cjs', 'package.json', 'preload.cjs', 'server-preload.cjs', 'server-setup.html', 'server-setup.js'].sort();
+assert.deepEqual(files, allowed);
+assert.equal(JSON.parse(extractFile(asar, 'package.json').toString()).version, version);
+for (const file of files) assert.deepEqual(extractFile(asar, file), await readFile(resolve('desktop', file)), `Packaged source differs: ${file}`);
+const desktopVerification = JSON.parse(await readFile('artifacts/desktop-verification.json', 'utf8'));
+assert.equal(desktopVerification.result, 'passed');
+const sha256 = createHash('sha256').update(bytes).digest('hex');
+const report = { version, platform: process.platform, architecture: process.arch, artifact, bytes: bytes.length, sha256, sourceCommit: execFileSync('git', ['rev-parse', 'HEAD'], { encoding: 'utf8' }).trim(), workflowRun: process.env.GITHUB_RUN_ID || null, files, signature: 'NotSigned', independentInstallUpgradeUninstallTested: false, checks: ['Windows executable installer exists', 'Packaged application version matches the release', 'Client file allowlist and all bytes match source; no database or credentials'], desktopVerification };
+await writeFile('release/windows-verification-x64.json', JSON.stringify(report, null, 2) + '\n');
+await writeFile('release/SHA256SUMS-Windows-x64.txt', `${sha256}  ${artifact}\n`);
+console.log(JSON.stringify({ artifact, sha256, desktopChecks: desktopVerification.checks.length }));
