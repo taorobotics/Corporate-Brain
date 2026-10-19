@@ -27,6 +27,7 @@ import type {
 import { roleNames } from "../shared/types";
 import { api, download } from "./api";
 import { Button, Empty, Field, Modal, Search, Busy } from "./components";
+import { SelectField } from "./Dropdown";
 const statusNames = {
   pending: "待审核",
   published: "已发布",
@@ -209,29 +210,38 @@ export default function Admin(props: WorkspaceProps) {
                     onChange={setSearch}
                     placeholder="姓名或登录账号"
                   />
-                  <select
-                    aria-label="筛选部门"
+                  <SelectField
+                    label="筛选部门"
+                    icon={<Buildings size={17} />}
                     value={departmentFilter}
-                    onChange={(e) => setDepartmentFilter(e.target.value)}
-                  >
-                    <option value="">全部获准部门</option>
-                    {departments
-                      .filter((d) => companyAdmin || d.id === user.departmentId)
-                      .map((d) => (
-                        <option key={d.id} value={d.id}>
-                          {d.name}
-                        </option>
-                      ))}
-                  </select>
-                  <select
-                    aria-label="筛选状态"
+                    onValueChange={setDepartmentFilter}
+                    options={[
+                      { value: "", label: "全部获准部门" },
+                      ...departments
+                        .filter(
+                          (d) => companyAdmin || d.id === user.departmentId,
+                        )
+                        .map((d) => ({ value: d.id, label: d.name })),
+                    ]}
+                  />
+                  <SelectField
+                    label="筛选状态"
                     value={statusFilter}
-                    onChange={(e) => setStatusFilter(e.target.value)}
-                  >
-                    <option value="">全部状态</option>
-                    <option value="1">已启用</option>
-                    <option value="0">已停用</option>
-                  </select>
+                    onValueChange={setStatusFilter}
+                    options={[
+                      { value: "", label: "全部状态" },
+                      {
+                        value: "1",
+                        label: "已启用",
+                        icon: <CheckCircle size={17} />,
+                      },
+                      {
+                        value: "0",
+                        label: "已停用",
+                        icon: <XCircle size={17} />,
+                      },
+                    ]}
+                  />
                   <Button onClick={exportUsers}>
                     <DownloadSimple size={17} />
                     导出清单
@@ -513,18 +523,16 @@ export default function Admin(props: WorkspaceProps) {
               onChange={setSearch}
               placeholder="搜索技能或作者"
             />
-            <select
-              aria-label="筛选归属部门"
+            <SelectField
+              label="筛选归属部门"
+              icon={<Buildings size={17} />}
               value={departmentFilter}
-              onChange={(e) => setDepartmentFilter(e.target.value)}
-            >
-              <option value="">全部获准部门</option>
-              {departments.map((d) => (
-                <option key={d.id} value={d.id}>
-                  {d.name}
-                </option>
-              ))}
-            </select>
+              onValueChange={setDepartmentFilter}
+              options={[
+                { value: "", label: "全部获准部门" },
+                ...departments.map((d) => ({ value: d.id, label: d.name })),
+              ]}
+            />
             <Button onClick={() => void load()}>刷新</Button>
           </div>
           {reviews.length ? (
@@ -669,13 +677,19 @@ export default function Admin(props: WorkspaceProps) {
             </Field>
             {targetDepartment && (
               <Field label="状态">
-                <select
+                <SelectField
+                  label="部门状态"
                   name="enabled"
                   defaultValue={String(targetDepartment.enabled)}
-                >
-                  <option value="1">启用</option>
-                  <option value="0">停用</option>
-                </select>
+                  options={[
+                    {
+                      value: "1",
+                      label: "启用",
+                      icon: <CheckCircle size={17} />,
+                    },
+                    { value: "0", label: "停用", icon: <XCircle size={17} /> },
+                  ]}
+                />
               </Field>
             )}
             <p className="muted small">
@@ -741,47 +755,56 @@ export default function Admin(props: WorkspaceProps) {
               </Field>
             )}
             <Field label="所属部门">
-              <select
+              <SelectField
+                label="所属部门"
                 name="departmentId"
                 defaultValue={targetUser?.departmentId ?? user.departmentId}
-              >
-                {departments
+                options={departments
                   .filter(
                     (d) =>
                       d.enabled && (companyAdmin || d.id === user.departmentId),
                   )
-                  .map((d) => (
-                    <option key={d.id} value={d.id}>
-                      {d.name}
-                    </option>
-                  ))}
-              </select>
+                  .map((d) => ({
+                    value: d.id,
+                    label: d.name,
+                    icon: <Buildings size={17} />,
+                  }))}
+              />
             </Field>
             <Field label="角色">
-              <select name="role" defaultValue={targetUser?.role ?? "employee"}>
-                {(Object.entries(roleNames) as [Role, string][])
+              <SelectField
+                label="角色"
+                name="role"
+                defaultValue={targetUser?.role ?? "employee"}
+                options={(Object.entries(roleNames) as [Role, string][])
                   .filter(
                     ([role]) =>
                       companyAdmin ||
                       role === "employee" ||
                       role === targetUser?.role,
                   )
-                  .map(([role, label]) => (
-                    <option key={role} value={role}>
-                      {label}
-                    </option>
-                  ))}
-              </select>
+                  .map(([role, label]) => ({
+                    value: role,
+                    label,
+                    icon: <ShieldCheck size={17} />,
+                  }))}
+              />
             </Field>
             {targetUser && (
               <Field label="状态">
-                <select
+                <SelectField
+                  label="账号状态"
                   name="enabled"
                   defaultValue={String(targetUser.enabled)}
-                >
-                  <option value="1">启用</option>
-                  <option value="0">停用</option>
-                </select>
+                  options={[
+                    {
+                      value: "1",
+                      label: "启用",
+                      icon: <CheckCircle size={17} />,
+                    },
+                    { value: "0", label: "停用", icon: <XCircle size={17} /> },
+                  ]}
+                />
               </Field>
             )}
             <footer>
@@ -801,21 +824,21 @@ export default function Admin(props: WorkspaceProps) {
       {dialog === "batch" && (
         <Modal wide title="按部门批量开通员工账号" close={() => setDialog("")}>
           <Field label="统一所属部门">
-            <select
+            <SelectField
+              label="统一所属部门"
               value={batchDepartment}
-              onChange={(e) => setBatchDepartment(e.target.value)}
-            >
-              {departments
+              onValueChange={setBatchDepartment}
+              options={departments
                 .filter(
                   (d) =>
                     d.enabled && (companyAdmin || d.id === user.departmentId),
                 )
-                .map((d) => (
-                  <option key={d.id} value={d.id}>
-                    {d.name}
-                  </option>
-                ))}
-            </select>
+                .map((d) => ({
+                  value: d.id,
+                  label: d.name,
+                  icon: <Buildings size={17} />,
+                }))}
+            />
           </Field>
           <Field label="每行填写：登录账号,员工姓名">
             <textarea
@@ -1000,10 +1023,23 @@ export default function Admin(props: WorkspaceProps) {
                 <input name="name" required placeholder="例如：公司对话服务" />
               </Field>
               <Field label="服务用途">
-                <select name="kind">
-                  <option value="chat">对话（OpenAI 兼容）</option>
-                  <option value="image">图片（返回 b64_json）</option>
-                </select>
+                <SelectField
+                  label="服务用途"
+                  name="kind"
+                  defaultValue="chat"
+                  options={[
+                    {
+                      value: "chat",
+                      label: "对话",
+                      description: "OpenAI 兼容接口",
+                    },
+                    {
+                      value: "image",
+                      label: "图片",
+                      description: "返回 b64_json 格式图片",
+                    },
+                  ]}
+                />
               </Field>
             </div>
             <Field label="服务地址（包括 API 前缀）">

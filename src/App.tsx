@@ -20,7 +20,15 @@ import {
   Question,
   CheckCircle,
   DownloadSimple,
+  Plug,
+  ArrowUUpLeft,
+  ArrowUUpRight,
+  Scissors,
+  Copy,
+  ClipboardText,
+  SelectionAll,
 } from "@phosphor-icons/react";
+import { ActionMenu } from "./Dropdown";
 import type {
   User,
   LocalState,
@@ -76,8 +84,7 @@ export default function App() {
   const [departments, setDepartments] = useState<Department[]>([]),
     [skills, setSkills] = useState<Skill[]>([]),
     [connections, setConnections] = useState<Connection[]>([]);
-  const accountRef = useRef<HTMLDivElement>(null),
-    importRef = useRef<HTMLInputElement>(null),
+  const importRef = useRef<HTMLInputElement>(null),
     loadedProfile = useRef<string | null>(null);
   const notify = (message: string) => setToast(message);
   const navigate = (value: string) => {
@@ -126,24 +133,6 @@ export default function App() {
     const timer = setTimeout(() => setToast(""), 5500);
     return () => clearTimeout(timer);
   }, [toast]);
-  useEffect(() => {
-    const close = (event: MouseEvent) => {
-      if (!accountRef.current?.contains(event.target as Node))
-        setAccountOpen(false);
-    };
-    const escape = (event: KeyboardEvent) => {
-      if (event.key === "Escape") {
-        setAccountOpen(false);
-        setMenu("");
-      }
-    };
-    document.addEventListener("mousedown", close);
-    document.addEventListener("keydown", escape);
-    return () => {
-      document.removeEventListener("mousedown", close);
-      document.removeEventListener("keydown", escape);
-    };
-  }, []);
   useEffect(() => {
     loadedProfile.current = null;
     setReady(false);
@@ -299,49 +288,67 @@ export default function App() {
           </IconButton>
           {["文件", "编辑", "视图", "帮助"].map((label) => (
             <div key={label} className="menu-anchor">
-              <button
-                className="menu-label"
-                onClick={() => setMenu(menu === label ? "" : label)}
-              >
-                {label}
-              </button>
-              {menu === label && (
-                <div className="dropdown top-menu">
-                  {(label === "文件"
+              <ActionMenu
+                open={menu === label}
+                onOpenChange={(open) =>
+                  setMenu((current) =>
+                    open ? label : current === label ? "" : current,
+                  )
+                }
+                restoreFocusBeforeAction={label === "编辑"}
+                className="top-menu-popup"
+                trigger={<button className="menu-label">{label}</button>}
+                items={(label === "文件"
+                  ? [
+                      ["新建任务", "new"],
+                      ["导出本地记录", "export"],
+                      ["导入本地记录", "import"],
+                      ...(window.brainDesktop
+                        ? [["切换公司服务器", "server"]]
+                        : []),
+                    ]
+                  : label === "视图"
                     ? [
-                        ["新建任务", "new"],
-                        ["导出本地记录", "export"],
-                        ["导入本地记录", "import"],
-                        ...(window.brainDesktop
-                          ? [["切换公司服务器", "server"]]
-                          : []),
+                        ["切换侧栏", "sidebar"],
+                        ["个人设置", "settings"],
                       ]
-                    : label === "视图"
+                    : label === "编辑"
                       ? [
-                          ["切换侧栏", "sidebar"],
-                          ["个人设置", "settings"],
+                          ["撤销", "edit:undo"],
+                          ["重做", "edit:redo"],
+                          ["剪切", "edit:cut"],
+                          ["复制", "edit:copy"],
+                          ["粘贴", "edit:paste"],
+                          ["全选", "edit:selectAll"],
                         ]
-                      : label === "编辑"
-                        ? [
-                            ["撤销", "edit:undo"],
-                            ["重做", "edit:redo"],
-                            ["剪切", "edit:cut"],
-                            ["复制", "edit:copy"],
-                            ["粘贴", "edit:paste"],
-                            ["全选", "edit:selectAll"],
-                          ]
-                        : [["使用帮助", "help"]]
-                  ).map(([text, action]) => (
-                    <button
-                      key={action}
-                      onMouseDown={(e) => e.preventDefault()}
-                      onClick={() => handleMenu(action)}
-                    >
-                      {text}
-                    </button>
-                  ))}
-                </div>
-              )}
+                      : [["使用帮助", "help"]]
+                ).map(([text, action]) => {
+                  const Icon = {
+                    new: NotePencil,
+                    export: DownloadSimple,
+                    import: ArrowRight,
+                    server: Plug,
+                    sidebar: SidebarSimple,
+                    settings: GearSix,
+                    help: Question,
+                    "edit:undo": ArrowUUpLeft,
+                    "edit:redo": ArrowUUpRight,
+                    "edit:cut": Scissors,
+                    "edit:copy": Copy,
+                    "edit:paste": ClipboardText,
+                    "edit:selectAll": SelectionAll,
+                  }[action];
+                  return {
+                    label: text,
+                    onSelect: () => handleMenu(action),
+                    icon: Icon ? <Icon size={17} /> : undefined,
+                    separatorBefore:
+                      action === "server" ||
+                      action === "edit:cut" ||
+                      action === "edit:selectAll",
+                  };
+                })}
+              />
             </div>
           ))}
           <span className="bar-spacer" />
@@ -491,9 +498,13 @@ export default function App() {
                 </div>
               </>
             )}
-            <div className="account-area" ref={accountRef}>
-              {accountOpen && (
-                <div className="dropdown account-menu">
+            <div className="account-area">
+              <ActionMenu
+                open={accountOpen}
+                onOpenChange={setAccountOpen}
+                side="top"
+                className="account-menu-popup"
+                header={
                   <div className="account-summary">
                     <UserCircle size={32} />
                     <div>
@@ -503,65 +514,71 @@ export default function App() {
                       </small>
                     </div>
                   </div>
-                  <button onClick={() => navigate("settings")}>
-                    <UserCircle size={19} />
-                    个人设置
-                  </button>
-                  <button onClick={() => navigate("models")}>
-                    <GearSix size={19} />
-                    模型与服务
-                  </button>
-                  {[
+                }
+                items={[
+                  {
+                    label: "个人设置",
+                    onSelect: () => navigate("settings"),
+                    icon: <UserCircle size={19} />,
+                  },
+                  {
+                    label: "模型与服务",
+                    onSelect: () => navigate("models"),
+                    icon: <GearSix size={19} />,
+                  },
+                  ...([
                     "company_admin",
                     "department_admin",
                     "department_reviewer",
                     "company_reviewer",
-                  ].includes(user.role) && (
-                    <button
-                      onClick={() =>
-                        navigate(
-                          ["department_reviewer", "company_reviewer"].includes(
-                            user.role,
-                          )
-                            ? "admin-skills"
-                            : "admin-users",
-                        )
-                      }
-                    >
-                      <ShieldCheck size={19} />
-                      管理后台
-                    </button>
-                  )}
-                  <button onClick={() => handleMenu("export")}>
-                    <DownloadSimple size={19} />
-                    导出本地记录
+                  ].includes(user.role)
+                    ? [
+                        {
+                          label: "管理后台",
+                          icon: <ShieldCheck size={19} />,
+                          onSelect: () =>
+                            navigate(
+                              [
+                                "department_reviewer",
+                                "company_reviewer",
+                              ].includes(user.role)
+                                ? "admin-skills"
+                                : "admin-users",
+                            ),
+                        },
+                      ]
+                    : []),
+                  {
+                    label: "导出本地记录",
+                    onSelect: () => handleMenu("export"),
+                    icon: <DownloadSimple size={19} />,
+                  },
+                  {
+                    label: "帮助",
+                    onSelect: () => handleMenu("help"),
+                    icon: <Question size={19} />,
+                  },
+                  {
+                    label: "退出登录",
+                    onSelect: () => void logout(),
+                    icon: <SignOut size={19} />,
+                    danger: true,
+                    separatorBefore: true,
+                  },
+                ]}
+                trigger={
+                  <button className="account-trigger" aria-label="打开账号菜单">
+                    <span className="avatar">
+                      <UserCircle size={32} weight="duotone" />
+                    </span>
+                    <span>
+                      <strong>{user.name}</strong>
+                      <small>{user.departmentName}</small>
+                    </span>
+                    <CaretDown size={14} />
                   </button>
-                  <button onClick={() => handleMenu("help")}>
-                    <Question size={19} />
-                    帮助
-                  </button>
-                  <div className="separator" />
-                  <button onClick={() => void logout()}>
-                    <SignOut size={19} />
-                    退出登录
-                  </button>
-                </div>
-              )}
-              <button
-                className="account-trigger"
-                aria-label="打开账号菜单"
-                aria-expanded={accountOpen}
-                onClick={() => setAccountOpen((v) => !v)}
-              >
-                <span className="avatar">
-                  <UserCircle size={32} weight="duotone" />
-                </span>
-                <span>
-                  <strong>{user.name}</strong>
-                  <small>{user.departmentName}</small>
-                </span>
-                <CaretDown size={14} />
-              </button>
+                }
+              />
               <IconButton label="设置" onClick={() => navigate("settings")}>
                 <GearSix size={21} />
               </IconButton>

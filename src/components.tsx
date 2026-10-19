@@ -75,11 +75,17 @@ export function Modal({
     const before = document.activeElement as HTMLElement;
     ref.current?.focus();
     const handle = (event: KeyboardEvent) => {
+      // Portalled dropdowns own Escape and Tab until they close.
+      if (
+        event.defaultPrevented ||
+        document.querySelector("[data-overlay-popup][data-open]")
+      )
+        return;
       if (event.key === "Escape") close();
       if (event.key === "Tab") {
         const nodes = Array.from(
           ref.current?.querySelectorAll<HTMLElement>(
-            "button:not(:disabled),input,textarea,select,a[href]",
+            'button:not(:disabled),input:not([type="hidden"]):not([tabindex="-1"]),textarea,select,a[href]',
           ) ?? [],
         );
         const first = nodes[0],

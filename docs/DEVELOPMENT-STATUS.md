@@ -20,7 +20,8 @@
 | --- | --- |
 | 类型检查与前端生产构建 | npm run build 通过 |
 | 后端 HTTP 与持久化边界 | npm test 通过，9 项测试（1 个整体场景与 8 个独立子检查）；涉及初始密码与过期、部门管理员范围、批量开通、部门发布、跨部门审核、提交包边界、调部门撤权、密钥保护、请求来源和管理者防自锁 |
-| 桌面交互 | [桌面验证报告](../artifacts/desktop-verification.json)：13 项真实 Electron 操作检查通过，渲染控制台无错误，包含普通窗口圆角与最大化、全屏及还原状态 |
+| 桌面交互 | [桌面验证报告](../artifacts/desktop-verification.json)：20 项真实 Windows Electron 操作检查通过，渲染控制台无错误，包含普通窗口圆角、最大化与全屏、统一下拉框的键盘与指针操作、后台筛选与表单取值、模型切换保存和弹窗焦点管理 |
+| 下拉菜单 | 14 处业务选择框与顶部、账号菜单改用 Base UI 1.9.0 的统一浮层；沿用 Marvis 字体和暖色系，包含图标、选中勾选、说明、空状态、暗色和窗口边界调整。模型选择排除停用项；测试模型仅存在于内存验收服务，未调用生成服务。实际截图见根目录 design-qa.md。本次菜单改版在 Windows 验证，未据此宣称 Mac 员工物理设备验收通过 |
 | 预览素材说明 | 预览测试使用已批准效果图作为明确标注的静态测试素材；只验证面板交互，未据此宣称已完成真实图片生成 |
 | DSH | [DSH 验证报告](../artifacts/dsh-verification.json)：官方 dsh 与 SDK 固定 0.2.0-rc.2，sdk-minimal 在单独 home、工作目录和受限传入环境中初始化成功；没有使用真实模型凭据或执行生产工具 |
 | REA | [REA 记录](../artifacts/rea-verification.json)：rea-agents 6.5.0 对本机 Codex 26.1013.3656.0 的 .vite/build/preload.js 做静态分析，读取 6,909 字节，发现 3 个 context bridge API 与 25 项 IPC 操作；这不等于完整恢复应用功能 |

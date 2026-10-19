@@ -24,7 +24,14 @@ import {
   ArrowRight,
   Plug,
   MagnifyingGlass,
+  ChatCircle,
+  VideoCamera,
+  ListChecks,
+  Lightning,
+  Sun,
+  Moon,
 } from "@phosphor-icons/react";
+import { SelectField } from "./Dropdown";
 import type { WorkspaceProps } from "./App";
 import type {
   Draft,
@@ -80,10 +87,11 @@ export default function Workspace(props: WorkspaceProps) {
   const filesRef = useRef<HTMLInputElement>(null),
     messagesRef = useRef<HTMLDivElement>(null);
   const conversation = state.conversations.find((c) => c.id === conversationId);
+  const taskModels = connections.filter(
+    (c) => c.enabled && c.kind === taskKind,
+  );
   const model =
-    connections.find(
-      (c) => c.id === state.settings.model && c.kind === taskKind,
-    ) ?? connections.find((c) => c.kind === taskKind);
+    taskModels.find((c) => c.id === state.settings.model) ?? taskModels[0];
   useEffect(() => {
     setPreview(null);
     setSearch("");
@@ -153,7 +161,7 @@ export default function Workspace(props: WorkspaceProps) {
       id: crypto.randomUUID(),
       role: "user",
       content,
-      attachments: attachments.map(a=>({...a})),
+      attachments: attachments.map((a) => ({ ...a })),
       at: new Date().toISOString(),
     };
     const updated = { ...current, messages: [...current.messages, message] };
@@ -393,7 +401,22 @@ export default function Workspace(props: WorkspaceProps) {
                   </span>
                   <div className="message-body">
                     <div className="message-text">{message.content}</div>
-                    {message.attachments?.some(a=>a.image) && <div className="message-attachments">{message.attachments.filter(a=>a.image).map((a,index)=><button key={index} onClick={()=>setPreview(a.image!)} title={a.name}><img src={a.image} alt={a.name}/><span>{a.name}</span></button>)}</div>}
+                    {message.attachments?.some((a) => a.image) && (
+                      <div className="message-attachments">
+                        {message.attachments
+                          .filter((a) => a.image)
+                          .map((a, index) => (
+                            <button
+                              key={index}
+                              onClick={() => setPreview(a.image!)}
+                              title={a.name}
+                            >
+                              <img src={a.image} alt={a.name} />
+                              <span>{a.name}</span>
+                            </button>
+                          ))}
+                      </div>
+                    )}
                     {message.image && (
                       <>
                         <button
@@ -505,41 +528,88 @@ export default function Workspace(props: WorkspaceProps) {
                     <Sparkle size={19} />
                     技能
                   </button>
-                  <select
-                    aria-label="任务类型"
+                  <SelectField
+                    label="任务类型"
+                    variant="quiet"
+                    side="top"
                     value={taskKind}
-                    onChange={(e) =>
-                      setTaskKind(e.target.value as typeof taskKind)
+                    onValueChange={(value) =>
+                      setTaskKind(value as typeof taskKind)
                     }
-                  >
-                    <option value="chat">对话</option>
-                    <option value="image">图片</option>
-                    <option value="video">视频</option>
-                  </select>
+                    options={[
+                      {
+                        value: "chat",
+                        label: "对话",
+                        description: "讨论想法、撰写内容与日常问答",
+                        icon: <ChatCircle size={18} />,
+                      },
+                      {
+                        value: "image",
+                        label: "图片",
+                        description: "使用已配置的图片服务创作",
+                        icon: <Images size={18} />,
+                      },
+                      {
+                        value: "video",
+                        label: "视频",
+                        description: "视频服务仍在接入，需求可先保存",
+                        icon: <VideoCamera size={18} />,
+                        badge: "接入中",
+                      },
+                    ]}
+                  />
                   <span className="bar-spacer" />
-                  <select
-                    aria-label="选择模型"
-                    value={model?.id ?? ""}
-                    onChange={(e) => patchSettings({ model: e.target.value })}
-                  >
-                    {!model && <option value="">未配置模型</option>}
-                    {connections
-                      .filter((c) => c.kind === taskKind)
-                      .map((c) => (
-                        <option value={c.id} key={c.id}>
-                          {c.name}
-                        </option>
-                      ))}
-                  </select>
-                  <select
-                    aria-label="工作模式"
+                  <SelectField
+                    label="选择模型"
+                    variant="quiet"
+                    side="top"
+                    align="end"
+                    value={model?.id ?? null}
+                    placeholder="未配置模型"
+                    onValueChange={(value) => patchSettings({ model: value })}
+                    options={taskModels.map((c) => ({
+                      value: c.id,
+                      label: c.name,
+                      description: c.model,
+                      icon: <Plug size={18} />,
+                    }))}
+                    emptyText="尚未配置可用模型"
+                    emptyDescription="添加服务连接后，即可在这里切换获准使用的模型。"
+                    action={{
+                      label: "前往模型与服务",
+                      onClick: () => navigate("models"),
+                    }}
+                  />
+                  <SelectField
+                    label="工作模式"
+                    variant="quiet"
+                    side="top"
+                    align="end"
                     value={state.settings.mode}
-                    onChange={(e) => patchSettings({ mode: e.target.value })}
-                  >
-                    <option>问答</option>
-                    <option>规划</option>
-                    <option>执行</option>
-                  </select>
+                    onValueChange={(value) => patchSettings({ mode: value })}
+                    options={[
+                      {
+                        value: "问答",
+                        label: "问答",
+                        description: "围绕问题交流，直接获得回复",
+                        icon: <ChatCircle size={18} />,
+                      },
+                      {
+                        value: "规划",
+                        label: "规划",
+                        description: "规划工具仍在接入，需求可先保存",
+                        icon: <ListChecks size={18} />,
+                        badge: "接入中",
+                      },
+                      {
+                        value: "执行",
+                        label: "执行",
+                        description: "Agent 工具仍在接入，需求可先保存",
+                        icon: <Lightning size={18} />,
+                        badge: "接入中",
+                      },
+                    ]}
+                  />
                   <button
                     className="send"
                     aria-label="发送任务"
@@ -974,14 +1044,25 @@ export default function Workspace(props: WorkspaceProps) {
             <h2>工作偏好</h2>
             <div className="setting-row">
               <span>外观</span>
-              <select
-                aria-label="外观"
+              <SelectField
+                label="外观"
                 value={state.settings.theme}
-                onChange={(e) => patchSettings({ theme: e.target.value })}
-              >
-                <option value="light">浅色</option>
-                <option value="dark">深色</option>
-              </select>
+                onValueChange={(value) => patchSettings({ theme: value })}
+                options={[
+                  {
+                    value: "light",
+                    label: "浅色",
+                    description: "明亮、温和的工作空间",
+                    icon: <Sun size={18} />,
+                  },
+                  {
+                    value: "dark",
+                    label: "深色",
+                    description: "适合低光环境的深色界面",
+                    icon: <Moon size={18} />,
+                  },
+                ]}
+              />
             </div>
             <div className="setting-row">
               <div>

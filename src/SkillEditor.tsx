@@ -10,6 +10,7 @@ import type { WorkspaceProps } from "./App";
 import type { Draft } from "../shared/types";
 import { api } from "./api";
 import { Button, Modal, Field, Busy } from "./components";
+import { SelectField } from "./Dropdown";
 export default function SkillEditor({
   initial,
   close,
@@ -286,16 +287,30 @@ export default function SkillEditor({
                 <input value={user.departmentName} readOnly />
               </Field>
               <Field label="发布范围">
-                <select
+                <SelectField
+                  label="发布范围"
                   value={draft.audience}
-                  onChange={(e) =>
-                    patch({ audience: e.target.value as Draft["audience"] })
+                  onValueChange={(value) =>
+                    patch({ audience: value as Draft["audience"] })
                   }
-                >
-                  <option value="department">本部门</option>
-                  <option value="departments">指定多个部门</option>
-                  <option value="company">全公司</option>
-                </select>
+                  options={[
+                    {
+                      value: "department",
+                      label: "本部门",
+                      description: "仅向本部门同事共享",
+                    },
+                    {
+                      value: "departments",
+                      label: "指定多个部门",
+                      description: "选择允许安装和使用的部门",
+                    },
+                    {
+                      value: "company",
+                      label: "全公司",
+                      description: "由公司审核员审核后共享给所有部门",
+                    },
+                  ]}
+                />
               </Field>
             </div>
             {draft.audience === "departments" && (

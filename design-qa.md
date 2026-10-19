@@ -56,3 +56,18 @@ WOFF2 转换保留原字库的 30,890 个 Unicode 字符与 100–900 可变字�
 新增检查直接调用真实窗口的最大化、还原、进入及退出全屏，等待窗口状态与渲染边界共同变化，13 项桌面检查通过。生产构建通过，900px 窗口无文档横向溢出。
 
 窗口外观参考为 artifacts/screenshots/desktop-rounded-preview.png：在实际 employee-chat.png 界面截图外添加浅灰展示背景和示意阴影，便于查看小圆角；不是操作系统桌面合成器的截图。对应 HTML 保留实际界面尺寸，没有裁掉底部输入区。Windows 11 及 macOS 的最外层原生轮廓由系统控制，旧 Windows 不保证原生外角，Mac 实机仍待验证。
+
+## 统一下拉菜单复核（2026-10-19）
+
+依据 ui-ux-pro-max 的视觉与可访问性规则，以及 pick-ui-library 对无样式交互组件的选型建议，使用 Base UI 1.9.0 统一 14 处业务选择框和顶部、账号菜单。保留 Marvis 字体及暖白、陶土色体系：13px 选项标题、12px 说明、13px 浮层圆角、轻阴影、选中底色与勾选，触发器箭头随展开状态旋转。深色菜单使用主题变量；减少动态效果偏好禁用过渡。
+
+对话底部菜单优先向上展开，普通表单优先向下，窗口空间不足时自动调整位置。浮层使用 Portal，弹窗和滚动容器不会裁切菜单，长列表独立滚动。模型空状态显示原因和真实配置入口；已配置模型按任务类型和启用状态筛选，选择保存到个人本地设置。规划、执行和视频选项明确标注接入中。
+
+真实 Electron 截图：
+
+- [对话输入区局部](artifacts/screenshots/dropdown-composer-detail.png)：直接截取运行中窗口的相关区域，没有合成或生成菜单。
+- [模型未配置](artifacts/screenshots/dropdown-model-empty.png)与[模型选择验收](artifacts/screenshots/dropdown-model-configured.png)：后者使用明确标注的临时测试连接，未请求生成服务。
+- [部门筛选](artifacts/screenshots/dropdown-admin-departments.png)与[角色表单](artifacts/screenshots/dropdown-admin-role.png)。
+- [深色外观选择](artifacts/screenshots/dropdown-theme-dark.png)、[900px 窗口](artifacts/screenshots/dropdown-narrow.png)和[顶部编辑菜单](artifacts/screenshots/dropdown-top-menu.png)。
+
+生产构建、9 项后端检查与 20 项 Windows 桌面交互检查通过，渲染控制台无错误。新增检查覆盖指针和键盘选择、Esc 与触发器焦点恢复、模型选择重开恢复及停用项排除、部门筛选、原生 FormData 取值、下拉层与弹窗的 Esc 层级、账号菜单键盘导航、编辑命令桥接、深色与窄窗口边界。验收使用内存服务与临时桌面本地空间，不修改实际公司账号或模型配置。Mac 的本次菜单改版未在员工物理设备复测，原有 Mac 包构建记录仍对应其原始发布版本。

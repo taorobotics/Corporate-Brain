@@ -23,6 +23,7 @@
     "package:mac": "npm run build && node scripts/package-desktop.mjs --mac dmg"
   },
   "dependencies": {
+    "@base-ui/react": "1.9.0",
     "@deepseek-ai/dsh": "0.2.0-rc.2",
     "@deepseek-ai/dsh-sdk-client": "0.2.0-rc.2",
     "@phosphor-icons/react": "^2.1.10",

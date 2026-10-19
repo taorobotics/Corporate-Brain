@@ -482,34 +482,6 @@ code {
   display: flex;
   align-items: center;
 }
-.dropdown {
-  position: absolute;
-  background: var(--panel);
-  border: 1px solid var(--line);
-  box-shadow: 0 12px 45px #24231f1c;
-  border-radius: 13px;
-  padding: 7px;
-  z-index: 30;
-}
-.dropdown button {
-  width: 100%;
-  display: flex;
-  gap: 10px;
-  align-items: center;
-  text-align: left;
-  padding: 10px 11px;
-  border-radius: 6px;
-  white-space: nowrap;
-  font-size: 14px;
-}
-.dropdown button:hover {
-  background: var(--side);
-}
-.account-menu {
-  bottom: 65px;
-  left: 0;
-  width: 270px;
-}
 .account-summary {
   display: flex;
   gap: 10px;
@@ -525,10 +497,310 @@ code {
 .account-summary small {
   color: var(--muted);
 }
-.top-menu {
-  top: 37px;
-  left: 0;
-  min-width: 190px;
+/* Shared selection and command menus. Tokens follow the existing warm palette. */
+:root {
+  --menu-hover: color-mix(in srgb, var(--ink) 5%, var(--panel));
+  --menu-selected: color-mix(in srgb, var(--accent) 10%, var(--panel));
+  --menu-description: color-mix(in srgb, var(--ink) 70%, var(--panel));
+  --menu-shadow:
+    0 12px 40px color-mix(in srgb, var(--ink) 12%, transparent),
+    0 2px 7px color-mix(in srgb, var(--ink) 5%, transparent);
+}
+.select-trigger {
+  display: inline-flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  min-width: 0;
+  max-width: 100%;
+  min-height: 40px;
+  padding: 9px 12px;
+  border: 1px solid var(--line);
+  border-radius: 9px;
+  background: var(--panel);
+  color: var(--ink);
+  font-size: 13px;
+  text-align: left;
+  transition:
+    background 140ms ease,
+    border-color 140ms ease,
+    box-shadow 140ms ease;
+  -webkit-app-region: no-drag;
+}
+.select-trigger:hover:not(:disabled) {
+  background: var(--menu-hover);
+  border-color: color-mix(in srgb, var(--ink) 20%, var(--line));
+}
+.select-trigger[data-popup-open] {
+  background: var(--menu-selected);
+  border-color: color-mix(in srgb, var(--accent) 45%, var(--line));
+}
+.select-value {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  flex: 1;
+}
+.select-trigger-icon,
+.select-caret,
+.select-option-icon,
+.action-menu-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  color: var(--menu-description);
+}
+.select-caret {
+  margin-left: auto;
+  transition: transform 140ms ease;
+}
+.select-trigger[data-popup-open] .select-caret {
+  transform: rotate(180deg);
+}
+.select-quiet {
+  min-height: 34px;
+  max-width: 200px;
+  gap: 7px;
+  border-color: transparent;
+  background: transparent;
+  padding: 7px 8px;
+  font-size: 12px;
+  border-radius: 8px;
+  flex-shrink: 1;
+}
+.select-quiet[data-empty] .select-value {
+  color: var(--menu-description);
+}
+.dropdown-positioner {
+  z-index: 110;
+  outline: none;
+  max-width: calc(100vw - 24px);
+  -webkit-app-region: no-drag;
+}
+.select-popup,
+.action-menu-popup {
+  background: var(--panel);
+  color: var(--ink);
+  border: 1px solid color-mix(in srgb, var(--ink) 12%, var(--panel));
+  box-shadow: var(--menu-shadow);
+  border-radius: 13px;
+  padding: 6px;
+  outline: none;
+  min-width: max(210px, var(--anchor-width));
+  max-width: min(360px, calc(100vw - 24px));
+  max-height: var(--available-height);
+  transform-origin: var(--transform-origin);
+  transition:
+    opacity 130ms ease,
+    transform 130ms ease;
+}
+.select-popup {
+  display: flex;
+  flex-direction: column;
+}
+.select-popup[data-starting-style],
+.select-popup[data-ending-style],
+.action-menu-popup[data-starting-style],
+.action-menu-popup[data-ending-style] {
+  opacity: 0;
+  transform: translateY(3px) scale(0.98);
+}
+.select-popup[data-side="top"][data-starting-style],
+.select-popup[data-side="top"][data-ending-style],
+.action-menu-popup[data-side="top"][data-starting-style],
+.action-menu-popup[data-side="top"][data-ending-style] {
+  transform: translateY(-3px) scale(0.98);
+}
+.select-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 28px;
+  padding: 7px 9px 10px;
+  color: var(--menu-description);
+  font-size: 12px;
+  font-weight: 500;
+  flex-shrink: 0;
+}
+.select-heading > span {
+  font-weight: 400;
+  font-size: 11px;
+  color: var(--menu-description);
+}
+.select-list {
+  max-height: 320px;
+  min-height: 0;
+  flex: 0 1 auto;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
+  scroll-padding: 5px;
+  outline: none;
+}
+.select-option,
+.action-menu-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 38px;
+  padding: 9px;
+  border-radius: 8px;
+  font-size: 13px;
+  line-height: 1.5;
+  cursor: pointer;
+  outline: none;
+  user-select: none;
+}
+.select-option[data-selected] {
+  background: var(--menu-selected);
+}
+.select-option[data-highlighted],
+.action-menu-item[data-highlighted] {
+  background: var(--menu-hover);
+}
+.select-option[data-selected][data-highlighted] {
+  background: color-mix(in srgb, var(--accent) 15%, var(--panel));
+}
+.select-option[data-disabled] {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+.select-option-icon {
+  width: 26px;
+  height: 28px;
+}
+.select-option[data-selected] .select-option-icon,
+.select-check {
+  color: var(--accent);
+}
+.select-option-copy {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+}
+.select-option-label {
+  font-weight: 500;
+  overflow-wrap: anywhere;
+}
+.select-description {
+  font-size: 12px;
+  color: var(--menu-description);
+  line-height: 1.6;
+  overflow-wrap: anywhere;
+}
+.select-check {
+  width: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  margin-left: auto;
+}
+.select-badge {
+  font-size: 11px;
+  white-space: nowrap;
+  padding: 1px 5px;
+  border: 1px solid var(--line);
+  color: var(--menu-description);
+  border-radius: 4px;
+}
+.select-empty {
+  padding: 16px 16px 20px;
+  text-align: center;
+  width: 280px;
+  max-width: 100%;
+}
+.select-empty-icon {
+  display: inline-flex;
+  padding: 10px;
+  border-radius: 12px;
+  background: var(--menu-hover);
+  color: var(--menu-description);
+  margin-bottom: 12px;
+}
+.select-empty strong {
+  display: block;
+  font-size: 13px;
+  font-weight: 500;
+}
+.select-empty p {
+  margin: 7px 0 0;
+  font-size: 12px;
+  line-height: 1.7;
+  color: var(--menu-description);
+}
+.select-footer {
+  border-top: 1px solid var(--line);
+  margin-top: 5px;
+  padding-top: 5px;
+  flex-shrink: 0;
+}
+.select-footer button {
+  width: 100%;
+  min-height: 37px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  text-align: left;
+  gap: 12px;
+  padding: 8px 10px;
+  font-size: 12px;
+  border-radius: 7px;
+}
+.select-footer button:hover {
+  background: var(--menu-hover);
+}
+.action-menu-popup {
+  min-width: 220px;
+}
+.action-menu-item > span:not(.action-menu-icon) {
+  flex: 1;
+}
+.action-menu-icon {
+  width: 21px;
+}
+.action-menu-item kbd {
+  margin-left: 22px;
+  font: inherit;
+  font-size: 11px;
+  color: var(--menu-description);
+}
+.action-menu-item[data-danger] {
+  color: #ac4c40;
+}
+.action-menu-item[data-danger] .action-menu-icon {
+  color: inherit;
+}
+:root[data-theme="dark"] .action-menu-item[data-danger] {
+  color: #eda497;
+}
+.menu-separator {
+  height: 1px;
+  background: var(--line);
+  margin: 5px 4px;
+}
+.account-menu-popup {
+  width: 285px;
+}
+.account-summary strong,
+.account-summary small {
+  overflow-wrap: anywhere;
+}
+.menu-label[data-popup-open] {
+  background: var(--active);
+  border-radius: 6px;
+}
+@media (prefers-reduced-motion: reduce) {
+  .select-trigger,
+  .select-caret,
+  .select-popup,
+  .action-menu-popup {
+    transition: none;
+  }
 }
 .main-content {
   flex: 1;
@@ -661,9 +933,28 @@ code {
   line-height: 1.9;
   overflow-wrap: anywhere;
 }
-.message-attachments { display:flex; gap:9px; margin-top:12px; flex-wrap:wrap; }
-.message-attachments button { display:flex; gap:9px; align-items:center; padding:7px 9px; background:var(--panel); border:1px solid var(--line); border-radius:8px; font-size:12px; }
-.message-attachments img { width:42px; height:42px; object-fit:cover; border-radius:5px; }
+.message-attachments {
+  display: flex;
+  gap: 9px;
+  margin-top: 12px;
+  flex-wrap: wrap;
+}
+.message-attachments button {
+  display: flex;
+  gap: 9px;
+  align-items: center;
+  padding: 7px 9px;
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  font-size: 12px;
+}
+.message-attachments img {
+  width: 42px;
+  height: 42px;
+  object-fit: cover;
+  border-radius: 5px;
+}
 .generated-image {
   display: block;
   position: relative;
@@ -757,13 +1048,6 @@ code {
 }
 .composer-tools > .text-button {
   font-size: 12px;
-}
-.composer-tools select {
-  padding: 6px 3px;
-  background: transparent;
-  border: 0;
-  font-size: 11px;
-  max-width: 155px;
 }
 .send {
   height: 36px;
@@ -955,7 +1239,7 @@ code {
 .toolbar > .search {
   flex: 1;
 }
-.toolbar > select {
+.toolbar > .select-trigger {
   min-width: 150px;
 }
 .search {
@@ -1264,7 +1548,7 @@ code {
   line-height: 1.5;
   max-width: 420px;
 }
-.setting-row select {
+.setting-row .select-trigger {
   min-width: 120px;
 }
 .connection-list {
@@ -1522,7 +1806,7 @@ tbody > tr:hover {
   font-weight: 500;
 }
 .field input,
-.field select,
+.field .select-trigger,
 .field textarea {
   width: 100%;
 }
@@ -1847,7 +2131,7 @@ tbody > tr:hover {
     font-size: 14px;
   }
   .admin-page .toolbar input,
-  .admin-page .toolbar select {
+  .admin-page .toolbar .select-trigger {
     font-size: 15px;
   }
 }
@@ -1866,7 +2150,7 @@ tbody > tr:hover {
   .toolbar {
     flex-wrap: wrap;
   }
-  .toolbar > select {
+  .toolbar > .select-trigger {
     min-width: 120px;
   }
   .workspace-picker span {
@@ -1958,9 +2242,9 @@ tbody > tr:hover {
   .composer-tools {
     gap: 2px;
   }
-  .composer-tools select {
-    max-width: 100px;
-    font-size: 10px;
+  .composer-tools .select-trigger {
+    max-width: 140px;
+    padding-inline: 6px;
   }
   .composer-tools > .text-button {
     font-size: 0;
@@ -2000,7 +2284,7 @@ tbody > tr:hover {
     grid-template-columns: 1fr;
     gap: 0;
   }
-  .account-menu {
+  .account-menu-popup {
     width: 250px;
   }
   .modal {

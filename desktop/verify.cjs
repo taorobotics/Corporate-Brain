@@ -1,5 +1,5 @@
 // Exercises the real Electron window and preload bridge against a disposable server.
-const { app, BrowserWindow } = require("electron");
+const { app, BrowserWindow, ipcMain } = require("electron");
 const { spawn } = require("node:child_process");
 const fs = require("node:fs/promises");
 const { join, resolve } = require("node:path");
@@ -48,6 +48,12 @@ async function waitFor(test, label, timeout = 12000) {
   const win = BrowserWindow.getAllWindows()[0];
   win.setContentSize(1586, 992);
   const web = win.webContents;
+  // Keep offscreen menu transitions and keyboard focus running as in a foreground window.
+  web.setBackgroundThrottling(false);
+  web.debugger.attach("1.3");
+  await web.debugger.sendCommand("Emulation.setFocusEmulationEnabled", {
+    enabled: true,
+  });
   web.on("console-message", (event) => {
     if (
       event.level === "error" &&
@@ -60,7 +66,7 @@ async function waitFor(test, label, timeout = 12000) {
     js(`document.body.innerText.includes(${JSON.stringify(text)})`);
   const click = (text) =>
     js(
-      `(() => { const item = Array.from(document.querySelectorAll('button')).find(b => b.textContent.trim() === ${JSON.stringify(text)}); if (!item) throw new Error('Button missing: ' + ${JSON.stringify(text)}); item.click(); })()`,
+      `(() => { const item = Array.from(document.querySelectorAll('button,[role="menuitem"]')).find(b => b.textContent.trim() === ${JSON.stringify(text)}); if (!item) throw new Error('Button missing: ' + ${JSON.stringify(text)}); item.click(); })()`,
     );
   const fill = (selector, value) =>
     js(
@@ -79,6 +85,54 @@ async function waitFor(test, label, timeout = 12000) {
     const image = await web.capturePage();
     await fs.writeFile(join(shots, name), image.toPNG());
   }
+  const key = async (keyCode) => {
+    const keys = {
+      Escape: ["Escape", 27],
+      End: ["End", 35],
+      Home: ["Home", 36],
+      Return: ["Enter", 13],
+    };
+    const [key, windowsVirtualKeyCode] = keys[keyCode];
+    if (!web.debugger.isAttached()) web.debugger.attach("1.3");
+    for (const type of ["keyDown", "keyUp"])
+      await web.debugger.sendCommand("Input.dispatchKeyEvent", {
+        type,
+        key,
+        code: key,
+        windowsVirtualKeyCode,
+      });
+    await new Promise((resolve) => setTimeout(resolve, 160));
+  };
+  const openSelect = async (label) => {
+    await waitFor(
+      () =>
+        js(
+          `!document.querySelector('.select-popup[data-open],.select-popup[data-ending-style]')`,
+        ),
+      "previous select finished closing",
+    );
+    await js(
+      `(() => { const trigger = document.querySelector(${JSON.stringify(`.select-trigger[aria-label="${label}"]`)}); trigger.focus(); trigger.click(); })()`,
+    );
+    await waitFor(
+      () => js(`!!document.querySelector('.select-popup[data-open]')`),
+      `open select ${label}`,
+    );
+    await new Promise((resolve) => setTimeout(resolve, 160));
+  };
+  const selectOption = async (label, text) => {
+    await openSelect(label);
+    await js(
+      `(() => { const option = Array.from(document.querySelectorAll('.select-popup[data-open] [role="option"]')).find(el => el.querySelector('.select-option-label')?.textContent === ${JSON.stringify(text)}); if (!option) throw new Error('Missing option: ' + ${JSON.stringify(text)}); option.click(); })()`,
+    );
+    await waitFor(
+      () =>
+        js(
+          `!document.querySelector('.select-popup[data-open],.select-popup[data-ending-style]')`,
+        ),
+      `select ${text}`,
+    );
+  };
   await waitFor(() => has("建立你的公司大脑"), "setup page");
   await fill("input[name=companyName]", "管理部");
   await fill("input[name=name]", "验收管理员");
@@ -91,23 +145,224 @@ async function waitFor(test, label, timeout = 12000) {
   await capture("employee-chat.png");
   if (process.platform === "win32") {
     const cornerRadius = () =>
-      js(`getComputedStyle(document.getElementById('root')).borderTopLeftRadius`);
-    await waitFor(() => cornerRadius().then(value => value === "8px"), "normal window corners");
+      js(
+        `getComputedStyle(document.getElementById('root')).borderTopLeftRadius`,
+      );
+    await waitFor(
+      () => cornerRadius().then((value) => value === "8px"),
+      "normal window corners",
+    );
     win.maximize();
     await waitFor(() => win.isMaximized(), "native maximize");
-    await waitFor(() => cornerRadius().then(value => value === "0px"), "maximized edge treatment");
+    await waitFor(
+      () => cornerRadius().then((value) => value === "0px"),
+      "maximized edge treatment",
+    );
     win.unmaximize();
     await waitFor(() => !win.isMaximized(), "native restore");
-    await waitFor(() => cornerRadius().then(value => value === "8px"), "restored corner treatment");
+    await waitFor(
+      () => cornerRadius().then((value) => value === "8px"),
+      "restored corner treatment",
+    );
     win.setFullScreen(true);
     await waitFor(() => win.isFullScreen(), "native fullscreen");
-    await waitFor(() => cornerRadius().then(value => value === "0px"), "fullscreen edge treatment");
+    await waitFor(
+      () => cornerRadius().then((value) => value === "0px"),
+      "fullscreen edge treatment",
+    );
     win.setFullScreen(false);
     await waitFor(() => !win.isFullScreen(), "leave native fullscreen");
-    await waitFor(() => cornerRadius().then(value => value === "8px"), "restored corners after fullscreen");
+    await waitFor(
+      () => cornerRadius().then((value) => value === "8px"),
+      "restored corners after fullscreen",
+    );
     win.setContentSize(1586, 992);
-    checks.push("Native maximize and fullscreen use straight edges; restored windows recover small corners");
+    checks.push(
+      "Native maximize and fullscreen use straight edges; restored windows recover small corners",
+    );
   }
+  assert.equal(
+    await js(`document.querySelectorAll('.composer-tools select').length`),
+    0,
+  );
+  await openSelect("任务类型");
+  assert.equal(
+    await js(`document.querySelector('.select-popup[data-open]').dataset.side`),
+    "top",
+  );
+  await capture("dropdown-task-type.png");
+  const composerRegion = await js(
+    `(() => { const a = document.querySelector('.composer').getBoundingClientRect(), b = document.querySelector('.select-popup[data-open]').getBoundingClientRect(); const x=Math.max(0,Math.floor(Math.min(a.left,b.left)-20)), y=Math.max(0,Math.floor(Math.min(a.top,b.top)-20)); return {x,y,width:Math.min(innerWidth-x,Math.ceil(Math.max(a.right,b.right)-x+20)),height:Math.min(innerHeight-y,Math.ceil(Math.max(a.bottom,b.bottom)-y+20))}; })()`,
+  );
+  await fs.writeFile(
+    join(shots, "dropdown-composer-detail.png"),
+    (await web.capturePage(composerRegion)).toPNG(),
+  );
+  await key("Escape");
+  await waitFor(
+    () => js(`!document.querySelector('.select-popup[data-open]')`),
+    "escape closes task select",
+  );
+  await waitFor(
+    () =>
+      js(`document.activeElement.getAttribute('aria-label') === '任务类型'`),
+    "Escape restores select trigger focus",
+  );
+  await selectOption("任务类型", "图片");
+  assert.equal(
+    await js(
+      `document.querySelector('[aria-label="任务类型"]').textContent.includes('图片')`,
+    ),
+    true,
+  );
+  await selectOption("任务类型", "对话");
+  await openSelect("工作模式");
+  await key("End");
+  await key("Return");
+  await waitFor(
+    () =>
+      js(
+        `document.querySelector('[aria-label="工作模式"]').textContent.includes('执行')`,
+      ),
+    "keyboard selects last mode",
+  );
+  await selectOption("工作模式", "问答");
+  checks.push(
+    "Custom composer selects open upwards, select by pointer and keyboard, Escape restores focus",
+  );
+  await openSelect("选择模型");
+  assert.equal(await has("尚未配置可用模型"), true);
+  await capture("dropdown-model-empty.png");
+  await click("前往模型与服务");
+  await waitFor(
+    () => has("还没有可用的模型连接"),
+    "empty model configuration action",
+  );
+  await js(`location.hash='chat'`);
+  await waitFor(
+    () => has("今天，一起完成些什么"),
+    "return from model settings",
+  );
+  checks.push(
+    "Empty model picker explains configuration and opens the real model settings",
+  );
+  const modelFixtures = [];
+  for (const [name, kind] of [
+    ["验收模型 A（仅测试选项）", "chat"],
+    ["验收模型 B（仅测试选项）", "chat"],
+    ["验收图片模型（仅测试选项）", "image"],
+  ]) {
+    modelFixtures.push(
+      await request("/connections", {
+        name,
+        kind,
+        model: "qa-selection-only-no-generation",
+        baseUrl: "https://qa.invalid/v1",
+        apiKey: "qa-placeholder-not-a-secret",
+        departments: [],
+      }),
+    );
+  }
+  await js(`location.reload()`);
+  await waitFor(() => has("验收模型 A（仅测试选项）"), "model fixture choices");
+  await selectOption("选择模型", "验收模型 B（仅测试选项）");
+  await openSelect("选择模型");
+  assert.equal(
+    await js(
+      `document.querySelectorAll('.select-popup[data-open] [role="option"]').length`,
+    ),
+    2,
+  );
+  await capture("dropdown-model-configured.png");
+  await key("Escape");
+  await js(`location.reload()`);
+  await waitFor(
+    () =>
+      js(
+        `document.querySelector('[aria-label="选择模型"]')?.textContent.includes('验收模型 B')`,
+      ),
+    "selected model restored after reload",
+  );
+  await selectOption("任务类型", "图片");
+  await openSelect("选择模型");
+  assert.equal(
+    await js(
+      `document.querySelectorAll('.select-popup[data-open] [role="option"]').length`,
+    ),
+    1,
+  );
+  await key("Escape");
+  await selectOption("任务类型", "对话");
+  for (const fixture of modelFixtures)
+    await request(`/connections/${fixture.id}`, {}, "DELETE");
+  await js(`location.reload()`);
+  await waitFor(
+    () => has("未配置模型"),
+    "removed fixtures leave unconfigured state",
+  );
+  checks.push(
+    "Configured model picker filters by task kind and persists selection; QA fixtures never call a model",
+  );
+  await fill('textarea[aria-label="任务输入"]', "菜单编辑选区验收");
+  const editPoint = await js(
+    `(() => { const input = document.querySelector('[aria-label="任务输入"]'); input.focus(); input.setSelectionRange(2, 4); const trigger = Array.from(document.querySelectorAll('.menu-label')).find(el => el.textContent === '编辑'); const r = trigger.getBoundingClientRect(); return {x:Math.round(r.left+r.width/2),y:Math.round(r.top+r.height/2)}; })()`,
+  );
+  if (!web.debugger.isAttached()) web.debugger.attach("1.3");
+  await web.debugger.sendCommand("Input.dispatchMouseEvent", {
+    type: "mousePressed",
+    button: "left",
+    clickCount: 1,
+    ...editPoint,
+  });
+  await web.debugger.sendCommand("Input.dispatchMouseEvent", {
+    type: "mouseReleased",
+    button: "left",
+    clickCount: 1,
+    ...editPoint,
+  });
+  await waitFor(
+    () => js(`!!document.querySelector('.action-menu-popup[data-open]')`),
+    "edit menu open",
+  );
+  await capture("dropdown-top-menu.png");
+  const editActions = [];
+  const trackEdit = (_event, action) => editActions.push(action);
+  ipcMain.on("edit:action", trackEdit);
+  await click("全选");
+  await waitFor(
+    () =>
+      js(
+        `document.activeElement === document.querySelector('[aria-label="任务输入"]')`,
+      ),
+    "edit menu restores original input focus",
+  );
+  assert.ok(
+    editActions.includes("selectAll"),
+    "Edit action reaches the existing native bridge",
+  );
+  ipcMain.off("edit:action", trackEdit);
+  await fill('textarea[aria-label="任务输入"]', "");
+  await js(
+    `document.querySelector('[aria-label="打开账号菜单"]').focus(); document.querySelector('[aria-label="打开账号菜单"]').click()`,
+  );
+  await waitFor(
+    () => js(`!!document.querySelector('.account-menu-popup[data-open]')`),
+    "keyboard account menu",
+  );
+  await key("Home");
+  await key("Return");
+  await waitFor(
+    () => has("本地记录与备份"),
+    "account menu keyboard navigation",
+  );
+  await js(`location.hash='chat'`);
+  await waitFor(
+    () => has("今天，一起完成些什么"),
+    "return from keyboard menu action",
+  );
+  checks.push(
+    "Top edit menu restores the original input target and invokes its native action; account menu supports keyboard navigation",
+  );
   await js(`document.querySelector('[aria-label="打开账号菜单"]').click()`);
   await waitFor(() => has("管理后台"), "account menu");
   await capture("employee-account-menu.png");
@@ -130,6 +385,42 @@ async function waitFor(test, label, timeout = 12000) {
   await js(`location.hash='admin-users';location.reload()`);
   await waitFor(() => has("验收员工"), "department users refresh");
   await capture("admin-users.png");
+  await openSelect("筛选部门");
+  await capture("dropdown-admin-departments.png");
+  await key("Escape");
+  await selectOption("筛选部门", "运营部");
+  await waitFor(
+    () =>
+      js(`!document.querySelector('tbody').textContent.includes('验收员工')`),
+    "department filter applied",
+  );
+  await selectOption("筛选部门", "全部获准部门");
+  await waitFor(() => has("验收员工"), "department filter reset");
+  await click("添加员工");
+  await waitFor(() => js(`!!document.querySelector('.modal')`), "account form");
+  await selectOption("所属部门", "设计部");
+  await selectOption("角色", "部门管理员");
+  const formValues = await js(
+    `Object.fromEntries(new FormData(document.querySelector('.modal form')))`,
+  );
+  assert.equal(formValues.departmentId, design.id);
+  assert.equal(formValues.role, "department_admin");
+  await openSelect("角色");
+  await capture("dropdown-admin-role.png");
+  await key("Escape");
+  assert.equal(
+    await js(`!!document.querySelector('.modal')`),
+    true,
+    "Escape closes only the menu, not the underlying dialog",
+  );
+  await key("Escape");
+  await waitFor(
+    () => js(`!document.querySelector('.modal')`),
+    "second Escape closes dialog",
+  );
+  checks.push(
+    "Admin dropdown filters and form values work; portalled menus preserve dialog Escape handling",
+  );
   await click("部门");
   await waitFor(() => has("设计部"), "department list");
   await capture("admin-departments.png");
@@ -229,9 +520,7 @@ async function waitFor(test, label, timeout = 12000) {
     "集成测试样例，验证提交与审核流程，未调用付费模型。",
   );
   await click("下一步");
-  await js(
-    `(() => {const el=document.querySelector('.modal select'); el.value='company';el.dispatchEvent(new Event('change',{bubbles:true}));})()`,
-  );
+  await selectOption("发布范围", "全公司");
   await click("提交审核");
   await waitFor(() => has("技能包已提交审核"), "skill submitted");
   checks.push(
@@ -259,12 +548,31 @@ async function waitFor(test, label, timeout = 12000) {
   await js(`document.querySelector('[aria-label="设置"]').click()`);
   await waitFor(() => has("本地记录与备份"), "settings");
   await capture("employee-settings.png");
-  web.debugger.attach('1.3');
-  await web.debugger.sendCommand('DOM.enable'); await web.debugger.sendCommand('CSS.enable');
-  const fontDocument = await web.debugger.sendCommand('DOM.getDocument');
-  const fontNode = await web.debugger.sendCommand('DOM.querySelector',{nodeId:fontDocument.root.nodeId,selector:'.settings-content'});
-  const actualFonts = await web.debugger.sendCommand('CSS.getPlatformFontsForNode',{nodeId:fontNode.nodeId});
-  await fs.writeFile(resolve(__dirname,'../artifacts/ui-fonts.json'),JSON.stringify(actualFonts,null,2));
+  await selectOption("外观", "深色");
+  await openSelect("外观");
+  await capture("dropdown-theme-dark.png");
+  assert.equal(await js(`document.documentElement.dataset.theme`), "dark");
+  await key("Escape");
+  await selectOption("外观", "浅色");
+  checks.push(
+    "Theme dropdown updates local preferences and renders readable dark menu states",
+  );
+  if (!web.debugger.isAttached()) web.debugger.attach("1.3");
+  await web.debugger.sendCommand("DOM.enable");
+  await web.debugger.sendCommand("CSS.enable");
+  const fontDocument = await web.debugger.sendCommand("DOM.getDocument");
+  const fontNode = await web.debugger.sendCommand("DOM.querySelector", {
+    nodeId: fontDocument.root.nodeId,
+    selector: ".settings-content",
+  });
+  const actualFonts = await web.debugger.sendCommand(
+    "CSS.getPlatformFontsForNode",
+    { nodeId: fontNode.nodeId },
+  );
+  await fs.writeFile(
+    resolve(__dirname, "../artifacts/ui-fonts.json"),
+    JSON.stringify(actualFonts, null, 2),
+  );
   web.debugger.detach();
   await js(`document.querySelector('[aria-label="打开账号菜单"]').click()`);
   await click("退出登录");
@@ -329,6 +637,22 @@ async function waitFor(test, label, timeout = 12000) {
     false,
   );
   checks.push("900px desktop viewport has no document overflow");
+  await openSelect("工作模式");
+  const bounds = await js(
+    `(() => { const menu = document.querySelector('.select-popup[data-open]'); const r = menu.getBoundingClientRect(); return { left: r.left, top: r.top, right: r.right, bottom: r.bottom, width: innerWidth, height: innerHeight }; })()`,
+  );
+  assert.ok(
+    bounds.left >= 0 &&
+      bounds.top >= 0 &&
+      bounds.right <= bounds.width &&
+      bounds.bottom <= bounds.height,
+    JSON.stringify(bounds),
+  );
+  await capture("dropdown-narrow.png");
+  await key("Escape");
+  checks.push(
+    "Dropdown collision positioning stays inside a 900px desktop viewport",
+  );
   await js("window.brainDesktop.changeServer()");
   await waitFor(
     () => BrowserWindow.getAllWindows().length === 2,
@@ -345,7 +669,7 @@ async function waitFor(test, label, timeout = 12000) {
     "server setup form",
   );
   await setupWindow.webContents.executeJavaScript(
-    'document.fonts.ready.then(() => true)',
+    "document.fonts.ready.then(() => true)",
   );
   await fs.writeFile(
     join(shots, "desktop-server-setup.png"),
@@ -383,6 +707,16 @@ async function waitFor(test, label, timeout = 12000) {
   app.exit(0);
 })().catch(async (error) => {
   console.error(error.stack);
+  const currentWindow = BrowserWindow.getAllWindows()[0];
+  if (currentWindow) {
+    console.error(
+      await currentWindow.webContents
+        .executeJavaScript(
+          `JSON.stringify({ focus: document.activeElement?.outerHTML.slice(0,300), visibility: document.visibilityState, popups: Array.from(document.querySelectorAll('[data-overlay-popup]')).map(el=>({html:el.outerHTML.slice(0,600),opacity:getComputedStyle(el).opacity,animations:el.getAnimations().map(a=>({state:a.playState,time:a.currentTime}))})) })`,
+        )
+        .catch(() => "no diagnostic page"),
+    );
+  }
   if (server) server.kill();
   try {
     await fs.mkdir(resolve(__dirname, "../artifacts"), { recursive: true });
