@@ -42,6 +42,6 @@ npm run desktop 启动桌面开发版。打包版本首次启动显示连接公�
 - npm run test:desktop：隔离的内存服务与临时桌面用户目录，实际 Electron 窗口、渲染与 preload 桥接操作验收；不污染公司业务数据库。
 - npm run test:dsh：在项目 .cache 的隔离目录启动 DSH SDK，验证初始化握手；不调用真实模型，不开放员工执行工具。
 - npm run package:win：Windows 本地测试安装包；npm run package:win:dir：展开运行目录。
-- npm run package:mac：需 Mac 环境；当前没有 Mac 实机、签名、公证或系统权限验证结果。
+- npm run package:mac：需 Mac 环境。已通过 GitHub 原生 Mac runner 构建并发布 arm64 与 x64 DMG，包含原生桌面交互及实际打包程序启动检查；使用 ad-hoc 签名，没有 Apple Developer ID 签名、公证或员工物理 Mac 的系统授权验收。见 [Mac 分发与检查说明](MACOS-RELEASE.md)。
 
 未接通的视频任务、NAS 检索归档、个人模型安全存储、完整 Agent 工具执行、团队项目和自动更新不会因设置表单或按钮存在而标记成功。后续任务清单见 DEVELOPMENT-STATUS.md。

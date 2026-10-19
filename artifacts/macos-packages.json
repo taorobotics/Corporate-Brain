@@ -1,0 +1,64 @@
+{
+  "verifiedAt": "2026-10-19T02:26:32.910Z",
+  "release": "https://github.com/taorobotics/Corporate-Brain/releases/tag/v0.1.0",
+  "workflow": "https://github.com/taorobotics/Corporate-Brain/actions/runs/39189544385",
+  "windowsAssetUnchanged": true,
+  "architectures": [
+    {
+      "architecture": "arm64",
+      "os": "15.7.9",
+      "artifact": "Corporate-Brain-0.1.0-macOS-arm64.dmg",
+      "bytes": 135935465,
+      "sha256": "1841d6efa485909c81745563465f974dda0b1e316facbf5db00eaaebdc62f917",
+      "url": "https://github.com/taorobotics/Corporate-Brain/releases/download/v0.1.0/Corporate-Brain-0.1.0-macOS-arm64.dmg",
+      "sourceCommit": "37760d7f8369c78fccf3c37269b82c45d1a56da7",
+      "workflowRun": "39189544385",
+      "signing": "ad-hoc",
+      "developerIdSigned": false,
+      "notarized": false,
+      "physicalEmployeeMacTested": false,
+      "desktopChecks": 12,
+      "packagedChecks": [
+        "DMG integrity, native architecture, bundle version and ad-hoc code signature",
+        "Client-only ASAR allowlist: no company database, credentials or development dependencies",
+        "Packaged first launch opens server connection UI with isolated preload and Chinese fonts",
+        "Packaged client rejects insecure remote company URLs"
+      ],
+      "firstLaunch": {
+        "title": "连接公司大脑",
+        "heading": "连接公司大脑",
+        "bridge": "function",
+        "node": "undefined",
+        "font": "\"PingFang SC\", \"Noto Sans SC\", \"Microsoft YaHei\", \"Segoe UI\", Arial, sans-serif"
+      }
+    },
+    {
+      "architecture": "x64",
+      "os": "15.7.9",
+      "artifact": "Corporate-Brain-0.1.0-macOS-x64.dmg",
+      "bytes": 141434234,
+      "sha256": "ff1e4d301b1b4c864052ba6b71cd067807c47affa9dd66b5c9a38051c62fa3ae",
+      "url": "https://github.com/taorobotics/Corporate-Brain/releases/download/v0.1.0/Corporate-Brain-0.1.0-macOS-x64.dmg",
+      "sourceCommit": "37760d7f8369c78fccf3c37269b82c45d1a56da7",
+      "workflowRun": "39189544385",
+      "signing": "ad-hoc",
+      "developerIdSigned": false,
+      "notarized": false,
+      "physicalEmployeeMacTested": false,
+      "desktopChecks": 12,
+      "packagedChecks": [
+        "DMG integrity, native architecture, bundle version and ad-hoc code signature",
+        "Client-only ASAR allowlist: no company database, credentials or development dependencies",
+        "Packaged first launch opens server connection UI with isolated preload and Chinese fonts",
+        "Packaged client rejects insecure remote company URLs"
+      ],
+      "firstLaunch": {
+        "title": "连接公司大脑",
+        "heading": "连接公司大脑",
+        "bridge": "function",
+        "node": "undefined",
+        "font": "\"PingFang SC\", \"Noto Sans SC\", \"Microsoft YaHei\", \"Segoe UI\", Arial, sans-serif"
+      }
+    }
+  ]
+}

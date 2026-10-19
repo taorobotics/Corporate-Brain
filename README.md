@@ -2,9 +2,9 @@
 
 面向公司员工的 AI 创作与工作平台，包含 Windows 客户端、macOS 客户端、员工网页端和浏览器管理后台。
 
-当前已有 v0.1 开发版：员工网页端、Windows 桌面外壳和管理后台可运行，部门账号及文本型 Skill 的提交、审核、发布、下载安装流程已接通。真实模型、视频、NAS 和完整 Agent 执行仍按阶段推进，详见[开发状态与验证记录](docs/DEVELOPMENT-STATUS.md)。
+当前已有 v0.1 开发版：员工网页端、Windows/macOS 桌面外壳和管理后台可运行，部门账号及文本型 Skill 的提交、审核、发布、下载安装流程已接通。真实模型、视频、NAS 和完整 Agent 执行仍按阶段推进，详见[开发状态与验证记录](docs/DEVELOPMENT-STATUS.md)。
 
-## 下载 Windows 测试版
+## 下载 Windows / macOS 测试版
 
 在仓库首页右侧点击 **Releases**，进入版本页后在 **Assets** 下载客户端：
 
@@ -12,13 +12,15 @@
 - [全部版本与更新说明](https://github.com/taorobotics/Corporate-Brain/releases)：保留各版本独立的安装包和说明。
 
 - [Windows x64 安装包 v0.1.0](https://github.com/taorobotics/Corporate-Brain/releases/download/v0.1.0/Corporate-Brain-Setup-0.1.0-x64.exe)
-- [安装包 SHA-256 校验文件](https://github.com/taorobotics/Corporate-Brain/releases/download/v0.1.0/SHA256SUMS.txt)
+- [Mac Apple 芯片安装包 v0.1.0](https://github.com/taorobotics/Corporate-Brain/releases/download/v0.1.0/Corporate-Brain-0.1.0-macOS-arm64.dmg)
+- [Mac Intel 安装包 v0.1.0](https://github.com/taorobotics/Corporate-Brain/releases/download/v0.1.0/Corporate-Brain-0.1.0-macOS-x64.dmg)
+- SHA-256 校验文件：[Windows](https://github.com/taorobotics/Corporate-Brain/releases/download/v0.1.0/SHA256SUMS.txt)、[Mac Apple 芯片](https://github.com/taorobotics/Corporate-Brain/releases/download/v0.1.0/SHA256SUMS-macOS-arm64.txt)、[Mac Intel](https://github.com/taorobotics/Corporate-Brain/releases/download/v0.1.0/SHA256SUMS-macOS-x64.txt)。
 
-这是未签名的 Windows 开发测试版，macOS 安装包尚未发布。仓库当前为私有，访问源码和安装包需要相应 GitHub 权限。
+这些是开发测试版。Windows 尚未签名；Mac 使用 ad-hoc 签名，尚无 Apple Developer ID 签名和公证，下载后可能出现系统安全提示。Mac 打开 DMG 后将“公司大脑”拖入 Applications（应用程序），安装和检查范围见 [macOS 分发说明](docs/MACOS-RELEASE.md)。仓库当前为私有，访问源码和安装包需要相应 GitHub 权限。
 
 安装后填写管理员提供的公司服务器地址，再使用公司分配的账号登录。管理后台与业务服务需单独部署；安装包不包含服务器数据库、预设账号或公司密钥。本机开发测试可先按下文启动服务，使用 http://127.0.0.1:4173 作为客户端连接地址。
 
-当前通过 Releases 手动下载新版本安装包升级，客户端自动检查更新与下载尚未实现。仓库右侧的 Packages 用于 npm 等依赖包或容器镜像，本项目的 Windows 安装包统一放在 Releases。
+当前通过 Releases 手动下载新版本安装包升级，客户端自动检查更新与下载尚未实现。仓库右侧的 Packages 用于 npm 等依赖包或容器镜像，本项目的 Windows 和 Mac 安装包统一放在 Releases。
 
 ## 本地运行
 
@@ -49,7 +51,7 @@ npm run test:dsh
 npm run package:win
 ```
 
-Windows 安装包输出到 release；macOS 需在 Mac 上运行 npm run package:mac，并做实机与签名验证。当前 Windows 包供本地测试，未做正式代码签名。桌面包独立于服务器依赖，开发测试和第三方分析缓存不打包给员工。
+Windows 安装包输出到 release；macOS 可在 Mac 上运行 npm run package:mac，或使用 GitHub Actions 的“macOS installers”分别构建 Apple 芯片与 Intel 包。Mac 构建流程包含原生桌面操作和打包程序启动检查，仍需员工物理设备的下载、文件授权、升级与卸载验收。当前安装包供开发测试，未做正式代码签名与 Apple 公证。桌面包独立于服务器依赖，开发测试和第三方分析缓存不打包给员工。
 
 构建后可用 npm start 启动带静态界面的公司业务服务，默认只监听本机 4310 端口。[部署说明](docs/DEPLOYMENT.md)记录公司服务器地址、HTTPS、数据与备份边界。真实接口配置前，开发程序不显示伪造生成结果。
 
