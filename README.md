@@ -6,7 +6,10 @@
 
 ## 下载 Windows 测试版
 
-在 [GitHub Releases](https://github.com/taorobotics/Corporate-Brain/releases) 下载客户端：
+在仓库首页右侧点击 **Releases**，进入版本页后在 **Assets** 下载客户端：
+
+- [最新版下载页](https://github.com/taorobotics/Corporate-Brain/releases/latest)：后续新版本继续使用这个入口。
+- [全部版本与更新说明](https://github.com/taorobotics/Corporate-Brain/releases)：保留各版本独立的安装包和说明。
 
 - [Windows x64 安装包 v0.1.0](https://github.com/taorobotics/Corporate-Brain/releases/download/v0.1.0/Corporate-Brain-Setup-0.1.0-x64.exe)
 - [安装包 SHA-256 校验文件](https://github.com/taorobotics/Corporate-Brain/releases/download/v0.1.0/SHA256SUMS.txt)
@@ -14,6 +17,8 @@
 这是未签名的 Windows 开发测试版，macOS 安装包尚未发布。仓库当前为私有，访问源码和安装包需要相应 GitHub 权限。
 
 安装后填写管理员提供的公司服务器地址，再使用公司分配的账号登录。管理后台与业务服务需单独部署；安装包不包含服务器数据库、预设账号或公司密钥。本机开发测试可先按下文启动服务，使用 http://127.0.0.1:4173 作为客户端连接地址。
+
+当前通过 Releases 手动下载新版本安装包升级，客户端自动检查更新与下载尚未实现。仓库右侧的 Packages 用于 npm 等依赖包或容器镜像，本项目的 Windows 安装包统一放在 Releases。
 
 ## 本地运行
 
