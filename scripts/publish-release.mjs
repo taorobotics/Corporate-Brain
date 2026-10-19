@@ -30,9 +30,14 @@ const notes = `docs/releases/${tag}.md`;
 const findRelease = () => JSON.parse(gh('api', `repos/${repo}/releases?per_page=100`, '--paginate', '--slurp')).flat().find(release => release.tag_name === tag);
 let release = findRelease();
 if (!release) {
-  gh('release', 'create', tag, '--repo', repo, '--draft', '--verify-tag', '--title', `${tag} 公司大脑 · Windows / macOS 测试版`, '--notes-file', notes);
-  release = findRelease();
-  assert.ok(release, 'Created draft must be visible before uploading');
+  // Verify the existing tag, then retain the POST response instead of relying
+  // on the release list being refreshed immediately after draft creation.
+  gh('api', `repos/${repo}/git/ref/tags/${tag}`);
+  release = JSON.parse(execFileSync('gh', ['api', `repos/${repo}/releases`, '--method', 'POST', '--input', '-'], {
+    encoding: 'utf8', stdio: ['pipe', 'pipe', 'pipe'], timeout: 300000,
+    input: JSON.stringify({ tag_name: tag, name: `${tag} 公司大脑 · Windows / macOS 测试版`, body: await readFile(notes, 'utf8'), draft: true, prerelease: false }),
+  }));
+  assert.ok(release.id && release.draft && release.tag_name === tag, 'Created draft must match the verified tag');
 }
 const uploads = [...files, 'SHA256SUMS.txt'];
 if (!release.draft) {
