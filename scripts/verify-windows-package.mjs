@@ -21,7 +21,9 @@ assert.equal(JSON.parse(extractFile(asar, 'package.json').toString()).version, v
 for (const file of files) assert.deepEqual(extractFile(asar, file), await readFile(resolve('desktop', file)), `Packaged source differs: ${file}`);
 const desktopVerification = JSON.parse(await readFile('artifacts/desktop-verification.json', 'utf8'));
 const product = JSON.parse(await readFile('package.json', 'utf8')).build.productName;
-const metadata = JSON.parse(execFileSync('powershell', ['-NoProfile', '-NonInteractive', '-File', resolve('scripts/verify-windows-metadata.ps1'), '-ExecutablePath', resolve('release/win-unpacked', `${product}.exe`)], { encoding: 'utf8' }));
+const metadataEnv = { ...process.env };
+delete metadataEnv.PSModulePath; // Windows PowerShell must not load PowerShell 7 modules inherited through Node.
+const metadata = JSON.parse(execFileSync('powershell', ['-NoProfile', '-NonInteractive', '-File', resolve('scripts/verify-windows-metadata.ps1'), '-ExecutablePath', resolve('release/win-unpacked', `${product}.exe`)], { encoding: 'utf8', env: metadataEnv }));
 assert.equal(metadata.ProductName, product);
 assert.ok([version, `${version}.0`].includes(metadata.ProductVersion));
 for (const file of ['LICENSE.electron.txt', 'LICENSES.chromium.html']) assert.ok((await readFile(resolve('release/win-unpacked', file))).length > 100);

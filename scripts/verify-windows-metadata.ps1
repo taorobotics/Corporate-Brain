@@ -1,5 +1,7 @@
 param([Parameter(Mandatory = $true)][string]$ExecutablePath)
 $ErrorActionPreference = 'Stop'
+[Console]::OutputEncoding = [System.Text.UTF8Encoding]::new($false)
+$OutputEncoding = [Console]::OutputEncoding
 $packageFile = Get-Item -LiteralPath $ExecutablePath
 $signature = Get-AuthenticodeSignature -LiteralPath $packageFile.FullName
 [pscustomobject]@{
