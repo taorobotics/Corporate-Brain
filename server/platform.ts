@@ -13,6 +13,8 @@ import {
   tokenHash,
 } from "./database";
 import type { User, Skill, Connection } from "../shared/types";
+import { mountUpdates } from "./updates";
+import rootPackage from "../package.json";
 
 const id = z.string().uuid();
 const shortText = z.string().trim().min(1).max(100);
@@ -131,6 +133,7 @@ export function createPlatform(
     database?: string;
     origins?: string[];
     secureCookies?: boolean;
+    updates?: import("./updates").UpdateOptions;
   } = {},
 ) {
   const store = createStore(options.database ?? ".data/platform.sqlite");
@@ -189,7 +192,11 @@ export function createPlatform(
   const getActor = (req: Request) => (req as AuthRequest).actor!;
   const loginAttempts = new Map<string, { count: number; resetAt: number }>();
   app.get("/api/health", (_req, res) =>
-    res.json({ status: "ok", version: "0.1.0", chatStorage: "device-only" }),
+    res.json({
+      status: "ok",
+      version: rootPackage.version,
+      chatStorage: "device-only",
+    }),
   );
   app.get("/api/bootstrap", (_req, res) =>
     res.json({ required: !db.prepare("SELECT id FROM users LIMIT 1").get() }),
@@ -307,6 +314,7 @@ export function createPlatform(
     next();
   });
   app.get("/api/auth/me", (req, res) => res.json(getActor(req)));
+  mountUpdates(app, options.updates);
   app.post("/api/auth/logout", (req, res) => {
     db.prepare("DELETE FROM sessions WHERE token_hash=?").run(
       tokenHash(req.cookies.brain_session),
@@ -822,11 +830,9 @@ export function createPlatform(
   app.use(
     (error: unknown, _req: Request, res: Response, _next: NextFunction) => {
       if (error instanceof z.ZodError)
-        return res
-          .status(400)
-          .json({
-            error: error.issues.map((issue) => issue.message).join("；"),
-          });
+        return res.status(400).json({
+          error: error.issues.map((issue) => issue.message).join("；"),
+        });
       if (error instanceof ApiError)
         return res.status(error.status).json({ error: error.message });
       if (error instanceof Error && error.message.includes("UNIQUE constraint"))

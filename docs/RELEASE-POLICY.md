@@ -40,4 +40,6 @@
 
 管理员更新服务器前，先停止服务并一致性备份现有 .data（包括 secrets.key）及部署配置。将服务器包解压到新的应用目录，运行 npm ci --include=dev（当前启动入口需要 tsx），继续指向原有 BRAIN_DATABASE 和相应 secrets.key，不覆盖、不清空原数据，按原 HTTPS、APP_ORIGIN、HOST、PORT 配置启动。服务器包已含 dist，无须重新构建即可 npm start；从 GitHub 源码部署则仍需 npm run build。详细变量和数据边界见 [DEPLOYMENT.md](DEPLOYMENT.md)。
 
-现阶段 Windows 未做可信代码签名，Mac 只有 ad-hoc 签名、没有 Apple 公证；发版不代表这些条件自动完成。客户端自动发现、下载和安装更新仍未实现，当前按 Releases 手动分发。
+从 v0.2.0 起，客户端通过公司服务检查 Releases，并在左侧提示、下载和校验更新，员工主动打开安装程序。私有仓库只在服务器配置 BRAIN_GITHUB_TOKEN，详见 [DEPLOYMENT.md](DEPLOYMENT.md#客户端更新源)。每份新版本说明使用“## 员工端更新”段落列出员工可见变化，客户端弹窗优先展示这部分；部署和检查细节放在后续独立段落。
+
+现阶段 Windows 未做可信代码签名，Mac 只有 ad-hoc 签名、没有 Apple 公证；发版与客户端更新入口不代表这些条件自动完成。首次从 0.1.x 升级到 0.2.0 需要员工手动安装，后续可从客户端进入更新流程。公司服务器仍由管理员备份后单独更新。

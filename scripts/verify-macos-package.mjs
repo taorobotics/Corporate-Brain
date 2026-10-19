@@ -37,7 +37,7 @@ try {
 
   const asar = join(app, 'Contents/Resources/app.asar');
   const files = listPackage(asar).map(path => path.replace(/^\//, '')).filter(path => !listPackage(asar).some(other => other.startsWith(`/${path}/`))).sort();
-  const allowed = ['fonts.css', 'fonts/NotoSansSC-VF.woff2', 'fonts/OFL.txt', 'fonts/source.json', 'main.cjs', 'package.json', 'preload.cjs', 'server-preload.cjs', 'server-setup.html', 'server-setup.js'].sort();
+  const allowed = ['fonts.css', 'fonts/NotoSansSC-VF.woff2', 'fonts/OFL.txt', 'fonts/source.json', 'main.cjs', 'updates.cjs', 'package.json', 'preload.cjs', 'server-preload.cjs', 'server-setup.html', 'server-setup.js'].sort();
   assert.deepEqual(files, allowed);
   assert.equal(JSON.parse(extractFile(asar, 'package.json').toString()).version, version);
   checks.push('Client-only ASAR allowlist: no company database, credentials or development dependencies');

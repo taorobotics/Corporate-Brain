@@ -2,6 +2,7 @@ import type { LocalState } from "../shared/types";
 declare global {
   interface Window {
     brainDesktop?: {
+      updates?: import("../shared/updates").UpdateBridge;
       edit(action: string): void;
       readState(id: string): Promise<LocalState | null>;
       writeState(id: string, data: LocalState): Promise<void>;

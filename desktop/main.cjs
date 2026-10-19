@@ -1,8 +1,18 @@
-const { app, BrowserWindow, ipcMain, dialog, Menu } = require("electron");
+const {
+  app,
+  BrowserWindow,
+  ipcMain,
+  dialog,
+  Menu,
+  shell,
+} = require("electron");
+const { DesktopUpdates } = require("./updates.cjs");
 const { join } = require("node:path");
 const fs = require("node:fs/promises");
 const { createHash } = require("node:crypto");
 let win;
+let updater,
+  installing = false;
 let address = process.env.BRAIN_APP_URL || "";
 if (!address) {
   try {
@@ -44,6 +54,7 @@ function sender(event) {
     !win ||
     event.sender !== win.webContents ||
     !event.senderFrame ||
+    event.senderFrame !== win.webContents.mainFrame ||
     new URL(event.senderFrame.url).origin !== origin
   )
     throw new Error("未授权窗口");
@@ -196,6 +207,67 @@ ipcMain.handle("company:setup", (event) => {
   sender(event);
   openServerSetup();
 });
+for (const [channel, method] of [
+  ["state", "snapshot"],
+  ["check", "check"],
+  ["download", "download"],
+  ["cancel", "cancel"],
+]) {
+  ipcMain.handle(`updates:${channel}`, (event) => {
+    sender(event);
+    if (installing) throw new Error("安装程序正在准备，请稍后");
+    return updater[method]();
+  });
+}
+ipcMain.handle("updates:install", async (event) => {
+  sender(event);
+  if (installing) return false;
+  if (!app.isPackaged)
+    throw new Error("开发预览中不运行安装程序，请使用已打包客户端");
+  if (updater.state.status !== "ready") throw new Error("请先下载并校验更新");
+  installing = true;
+  const owner = win,
+    updates = updater,
+    company = origin;
+  try {
+    const { response } = await dialog.showMessageBox(owner, {
+      type: "question",
+      title: "更新公司大脑",
+      message: `安装 v${updates.state.release.version}？`,
+      detail:
+        process.platform === "darwin"
+          ? "将打开已校验的 DMG。请退出公司大脑后，将新版拖入 Applications 替换。本地对话与个人草稿保留在原设备。"
+          : "本地记录保存完成后将退出客户端并打开安装向导。请按向导完成更新，再重新打开公司大脑。",
+      buttons: [
+        process.platform === "darwin" ? "打开安装包" : "退出并安装",
+        "稍后",
+      ],
+      defaultId: 1,
+      cancelId: 1,
+      noLink: true,
+    });
+    if (response !== 0) return false;
+    if (win !== owner || origin !== company)
+      throw new Error("公司连接已变化，请重新下载更新");
+    const actor = await owner.webContents.session.fetch(
+      `${company}/api/auth/me`,
+      {
+        credentials: "include",
+        redirect: "error",
+        signal: AbortSignal.timeout(10000),
+      },
+    );
+    if (!actor.ok) throw new Error("请重新登录后安装更新");
+    await Promise.all([...writes.values()]);
+    const path = await updates.verify();
+    const error = await shell.openPath(path);
+    if (error) throw new Error("系统未能打开安装包，请稍后重试");
+    if (process.platform === "win32") app.quit();
+    return true;
+  } finally {
+    installing = false;
+  }
+});
 function createMainWindow() {
   win = new BrowserWindow({
     width: 1440,
@@ -215,6 +287,24 @@ function createMainWindow() {
       sandbox: true,
       offscreen: process.env.BRAIN_VERIFY === "1",
       devTools: !app.isPackaged,
+    },
+  });
+  const owner = win,
+    company = origin;
+  updater = new DesktopUpdates({
+    version: require("./package.json").version,
+    platform: process.platform,
+    arch: process.arch,
+    directory: join(app.getPath("userData"), "updates"),
+    request: (path, options) =>
+      owner.webContents.session.fetch(`${company}${path}`, {
+        ...options,
+        credentials: "include",
+        redirect: "error",
+      }),
+    notify: (state) => {
+      if (win === owner && !owner.isDestroyed())
+        owner.webContents.send("updates:state", state);
     },
   });
   const publishWindowAppearance = () => {
@@ -287,6 +377,10 @@ function createMainWindow() {
       label: "帮助",
       submenu: [
         {
+          label: "检查更新…",
+          click: () => win.webContents.send("menu:action", "updates"),
+        },
+        {
           label: "使用帮助",
           click: () => win.webContents.send("menu:action", "help"),
         },
@@ -350,6 +444,8 @@ ipcMain.handle("company:connect", async (event, value) => {
     const health = await response.json();
     if (!response.ok || health.chatStorage !== "device-only")
       throw new Error("地址不是可用的公司大脑服务器");
+    if (installing) throw new Error("安装程序正在准备，请稍后切换公司服务器");
+    await updater?.cancel();
     await fs.mkdir(app.getPath("userData"), { recursive: true });
     await fs.writeFile(
       join(app.getPath("userData"), "company-server.json"),

@@ -143,6 +143,45 @@ async function waitFor(test, label, timeout = 12000) {
   await waitFor(() => has("今天，一起完成些什么"), "initialized workspace");
   checks.push("First administrator setup and login through UI");
   await capture("employee-chat.png");
+  await waitFor(() => has("有可用更新"), "automatic update discovery");
+  await capture("client-update-sidebar.png");
+  await js("document.querySelector('.sidebar-update').click()");
+  await waitFor(() => has("让工作空间保持最新"), "update details dialog");
+  await capture("client-update-dialog.png");
+  assert.ok((await js("window.brainDesktop.updates.state()")).release.version);
+  await js(
+    "Array.from(document.querySelectorAll('.update-dialog button')).find(button => button.textContent.startsWith('下载更新')).click()",
+  );
+  await waitFor(
+    () => has("安装包完整性校验通过"),
+    "native download and hash verification",
+  );
+  const update = await js("window.brainDesktop.updates.state()");
+  assert.equal(update.status, "ready");
+  const updateFiles = await fs.readdir(join(dir, "updates"));
+  assert.equal(updateFiles.length, 1);
+  const updateBytes = await fs.readFile(join(dir, "updates", updateFiles[0]));
+  assert.equal(
+    require("node:crypto")
+      .createHash("sha256")
+      .update(updateBytes)
+      .digest("hex"),
+    update.release.asset.sha256,
+  );
+  await capture("client-update-ready.png");
+  assert.equal(
+    await js("window.brainDesktop.updates.install().then(()=>false,()=>true)"),
+    true,
+    "Development QA never executes the inert installer",
+  );
+  await key("Escape");
+  await waitFor(
+    () => js("!document.querySelector('[role=dialog]')"),
+    "update dialog dismissed",
+  );
+  checks.push(
+    "Client discovers a fixture release, shows sidebar and details, downloads through authenticated server, verifies SHA-256, and blocks installer execution in development QA",
+  );
   if (process.platform === "win32") {
     const cornerRadius = () =>
       js(

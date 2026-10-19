@@ -5,6 +5,7 @@
   "database": "disposable in-memory",
   "checks": [
     "First administrator setup and login through UI",
+    "Client discovers a fixture release, shows sidebar and details, downloads through authenticated server, verifies SHA-256, and blocks installer execution in development QA",
     "Native maximize and fullscreen use straight edges; restored windows recover small corners",
     "Custom composer selects open upwards, select by pointer and keyboard, Escape restores focus",
     "Empty model picker explains configuration and opens the real model settings",

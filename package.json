@@ -1,6 +1,6 @@
 {
   "name": "corporate-brain",
-  "version": "0.1.1",
+  "version": "0.2.0",
   "private": true,
   "type": "module",
   "description": "公司大脑：本地记录、部门账号和公司技能平台",
@@ -15,7 +15,7 @@
     "desktop": "electron .",
     "build": "tsc --noEmit && vite build",
     "start": "tsx server/index.ts",
-    "test": "tsx --test server/platform.test.ts",
+    "test": "tsx --test server/platform.test.ts server/updates.test.ts desktop/updates.test.cjs",
     "test:desktop": "electron desktop/verify.cjs",
     "test:dsh": "node scripts/verify-dsh.mjs",
     "version:bump": "node scripts/version.mjs",
@@ -44,6 +44,7 @@
     },
     "files": [
       "main.cjs",
+      "updates.cjs",
       "preload.cjs",
       "server-preload.cjs",
       "server-setup.html",

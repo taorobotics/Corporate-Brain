@@ -42,6 +42,7 @@ import { Brand, Button, IconButton, Modal, Field } from "./components";
 import Auth from "./Auth";
 import Workspace from "./Workspace";
 import Admin from "./Admin";
+import { useDesktopUpdates, UpdateButton, UpdateDialog } from "./Updates";
 
 const navigation = [
   { id: "chat", label: "新建任务", icon: NotePencil },
@@ -87,6 +88,7 @@ export default function App() {
   const importRef = useRef<HTMLInputElement>(null),
     loadedProfile = useRef<string | null>(null);
   const notify = (message: string) => setToast(message);
+  const updates = useDesktopUpdates(!!user && !user.mustChange);
   const navigate = (value: string) => {
     location.hash = value;
     setPage(value);
@@ -232,12 +234,16 @@ export default function App() {
     } else if (action === "server") {
       void window.brainDesktop?.changeServer();
     } else if (action === "settings") navigate("settings");
+    else if (action === "updates") updates.show();
     else if (action === "help")
       notify(
         "对话保存在本机；技能中心可从对话创建草稿并提交。公司账号请联系管理员。",
       );
   }
-  useEffect(() => window.brainDesktop?.onMenu(handleMenu), [state]);
+  useEffect(
+    () => window.brainDesktop?.onMenu(handleMenu),
+    [state, updates.state],
+  );
   if (loading)
     return (
       <div className="loading-screen">
@@ -321,7 +327,12 @@ export default function App() {
                           ["粘贴", "edit:paste"],
                           ["全选", "edit:selectAll"],
                         ]
-                      : [["使用帮助", "help"]]
+                      : [
+                          ...(window.brainDesktop
+                            ? [["检查更新…", "updates"]]
+                            : []),
+                          ["使用帮助", "help"],
+                        ]
                 ).map(([text, action]) => {
                   const Icon = {
                     new: NotePencil,
@@ -331,6 +342,7 @@ export default function App() {
                     sidebar: SidebarSimple,
                     settings: GearSix,
                     help: Question,
+                    updates: DownloadSimple,
                     "edit:undo": ArrowUUpLeft,
                     "edit:redo": ArrowUUpRight,
                     "edit:cut": Scissors,
@@ -498,90 +510,105 @@ export default function App() {
                 </div>
               </>
             )}
-            <div className="account-area">
-              <ActionMenu
-                open={accountOpen}
-                onOpenChange={setAccountOpen}
-                side="top"
-                className="account-menu-popup"
-                header={
-                  <div className="account-summary">
-                    <UserCircle size={32} />
-                    <div>
-                      <strong>{user.name}</strong>
-                      <small>
-                        {user.departmentName} · {user.username}
-                      </small>
+            <div className="sidebar-footer">
+              <UpdateButton model={updates} />
+              <div className="account-area">
+                <ActionMenu
+                  open={accountOpen}
+                  onOpenChange={setAccountOpen}
+                  side="top"
+                  className="account-menu-popup"
+                  header={
+                    <div className="account-summary">
+                      <UserCircle size={32} />
+                      <div>
+                        <strong>{user.name}</strong>
+                        <small>
+                          {user.departmentName} · {user.username}
+                        </small>
+                      </div>
                     </div>
-                  </div>
-                }
-                items={[
-                  {
-                    label: "个人设置",
-                    onSelect: () => navigate("settings"),
-                    icon: <UserCircle size={19} />,
-                  },
-                  {
-                    label: "模型与服务",
-                    onSelect: () => navigate("models"),
-                    icon: <GearSix size={19} />,
-                  },
-                  ...([
-                    "company_admin",
-                    "department_admin",
-                    "department_reviewer",
-                    "company_reviewer",
-                  ].includes(user.role)
-                    ? [
-                        {
-                          label: "管理后台",
-                          icon: <ShieldCheck size={19} />,
-                          onSelect: () =>
-                            navigate(
-                              [
-                                "department_reviewer",
-                                "company_reviewer",
-                              ].includes(user.role)
-                                ? "admin-skills"
-                                : "admin-users",
-                            ),
-                        },
-                      ]
-                    : []),
-                  {
-                    label: "导出本地记录",
-                    onSelect: () => handleMenu("export"),
-                    icon: <DownloadSimple size={19} />,
-                  },
-                  {
-                    label: "帮助",
-                    onSelect: () => handleMenu("help"),
-                    icon: <Question size={19} />,
-                  },
-                  {
-                    label: "退出登录",
-                    onSelect: () => void logout(),
-                    icon: <SignOut size={19} />,
-                    danger: true,
-                    separatorBefore: true,
-                  },
-                ]}
-                trigger={
-                  <button className="account-trigger" aria-label="打开账号菜单">
-                    <span className="avatar">
-                      <UserCircle size={32} weight="duotone" />
-                    </span>
-                    <span>
-                      <strong>{user.name}</strong>
-                      <small>{user.departmentName}</small>
-                    </span>
-                    <CaretDown size={14} />
-                  </button>
-                }
-              />
-              <IconButton label="设置" onClick={() => navigate("settings")}>
-                <GearSix size={21} />
-              </IconButton>
+                  }
+                  items={[
+                    {
+                      label: "个人设置",
+                      onSelect: () => navigate("settings"),
+                      icon: <UserCircle size={19} />,
+                    },
+                    {
+                      label: "模型与服务",
+                      onSelect: () => navigate("models"),
+                      icon: <GearSix size={19} />,
+                    },
+                    ...([
+                      "company_admin",
+                      "department_admin",
+                      "department_reviewer",
+                      "company_reviewer",
+                    ].includes(user.role)
+                      ? [
+                          {
+                            label: "管理后台",
+                            icon: <ShieldCheck size={19} />,
+                            onSelect: () =>
+                              navigate(
+                                [
+                                  "department_reviewer",
+                                  "company_reviewer",
+                                ].includes(user.role)
+                                  ? "admin-skills"
+                                  : "admin-users",
+                              ),
+                          },
+                        ]
+                      : []),
+                    {
+                      label: "导出本地记录",
+                      onSelect: () => handleMenu("export"),
+                      icon: <DownloadSimple size={19} />,
+                    },
+                    {
+                      label: "帮助",
+                      onSelect: () => handleMenu("help"),
+                      icon: <Question size={19} />,
+                    },
+                    ...(window.brainDesktop
+                      ? [
+                          {
+                            label: "检查更新…",
+                            onSelect: () => updates.show(),
+                            icon: <DownloadSimple size={19} />,
+                          },
+                        ]
+                      : []),
+                    {
+                      label: "退出登录",
+                      onSelect: () => void logout(),
+                      icon: <SignOut size={19} />,
+                      danger: true,
+                      separatorBefore: true,
+                    },
+                  ]}
+                  trigger={
+                    <button
+                      className="account-trigger"
+                      aria-label="打开账号菜单"
+                    >
+                      <span className="avatar">
+                        <UserCircle size={32} weight="duotone" />
+                      </span>
+                      <span>
+                        <strong>{user.name}</strong>
+                        <small>{user.departmentName}</small>
+                      </span>
+                      <CaretDown size={14} />
+                    </button>
+                  }
+                />
+                <IconButton label="设置" onClick={() => navigate("settings")}>
+                  <GearSix size={21} />
+                </IconButton>
+              </div>
             </div>
           </aside>
         )}
@@ -618,6 +645,14 @@ export default function App() {
           </IconButton>
         </div>
       )}
+      <UpdateDialog
+        model={updates}
+        beforeInstall={async () => {
+          if (!ready || loadedProfile.current !== user.id)
+            throw new Error("本地记录尚未就绪，请稍后再安装");
+          await writeLocal(user.id, state);
+        }}
+      />
       {passwordOpen && (
         <Modal
           title={user.mustChange ? "首次登录，请修改初始密码" : "修改密码"}

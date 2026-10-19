@@ -12,7 +12,7 @@ const output = resolve('release', artifact);
 await mkdir('release', { recursive: true });
 try {
   for (const path of ['dist', 'server', 'shared', 'package.json', 'package-lock.json', 'tsconfig.json', 'README.md']) {
-    await cp(path, join(stage, path), { recursive: true, filter: source => !/[/\\](?:qa|platform\.test)\.ts$/.test(source) });
+    await cp(path, join(stage, path), { recursive: true, filter: source => !/[/\\](?:qa|[^/\\]+\.test)\.ts$/.test(source) });
   }
   await mkdir(join(stage, 'docs/releases'), { recursive: true });
   for (const path of ['docs/DEPLOYMENT.md', 'docs/RELEASE-POLICY.md', `docs/releases/v${version}.md`]) await cp(path, join(stage, path));
