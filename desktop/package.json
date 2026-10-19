@@ -1,7 +1,8 @@
 {
   "name": "corporate-brain-desktop",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "private": true,
+  "license": "MIT",
   "main": "main.cjs",
   "description": "公司大脑员工客户端",
   "author": "Corporate Brain",

@@ -443,6 +443,38 @@ code {
   gap: 2px;
   padding-top: 12px;
 }
+.legal-tabs {
+  display: flex;
+  gap: 5px;
+  flex-wrap: wrap;
+  border-bottom: 1px solid var(--line);
+  padding-bottom: 12px;
+}
+.legal-tabs button {
+  border-radius: 7px;
+  padding: 8px 12px;
+  color: var(--muted);
+  font-size: 12px;
+}
+.legal-tabs button[aria-pressed="true"] {
+  color: var(--accent);
+  background: var(--active);
+}
+.legal-document {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  line-height: 1.9;
+  font-size: 12px;
+  max-height: 58dvh;
+  overflow: auto;
+  margin-top: 15px;
+}
+.auth-legal {
+  display: block;
+  margin: 9px auto 0;
+  color: var(--accent);
+  font-size: 12px;
+}
 .sidebar-footer {
   margin-top: auto;
 }

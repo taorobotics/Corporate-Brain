@@ -14,3 +14,5 @@
 - 客户端当前从公司服务器加载界面。界面和业务服务变更必须随服务器包交付，更新说明要写清客户端与服务器各自的更新方式。
 
 详细流程见 [docs/RELEASE-POLICY.md](docs/RELEASE-POLICY.md)。
+
+开源分发：原创代码采用 MIT，保留第三方原有许可；不得提交密钥、真实数据库、内部 Skills、员工记录或专有分析缓存。发布须带许可、隐私及签名状态，公开前检查完整历史与旧 Release。SignPath 尚未获批，不得称已签名；未来正式签名遵守其人工审批要求。见 docs/OPEN-SOURCE-READINESS.md。

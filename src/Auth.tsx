@@ -6,9 +6,11 @@ import type { User } from "../shared/types";
 export default function Auth({
   bootstrap,
   onLogin,
+  onLegal,
 }: {
   bootstrap: boolean;
   onLogin: (user: User) => void;
+  onLegal: () => void;
 }) {
   const [setup, setSetup] = useState(bootstrap),
     [busy, setBusy] = useState(false),
@@ -101,6 +103,9 @@ export default function Auth({
       </div>
       <p className="auth-foot">
         对话与个人草稿保存在这台设备 · 公司技能按部门共享
+        <button className="auth-legal" onClick={onLegal}>
+          隐私与许可
+        </button>
       </p>
     </main>
   );

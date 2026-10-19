@@ -4,6 +4,12 @@
 
 当前已有 v0.2.0 开发测试版：员工网页端、Windows/macOS 桌面外壳和管理后台可运行，部门账号、文本型 Skill 的提交发布安装及客户端更新入口已接通。真实模型、视频、NAS 和完整 Agent 执行仍按阶段推进，详见[开发状态与验证记录](docs/DEVELOPMENT-STATUS.md)。
 
+## 开源与签名状态
+
+原创代码采用 [MIT License](LICENSE)，允许使用、修改与商用并保留声明。第三方组件保留各自许可，见 [THIRD_PARTY_NOTICES.txt](THIRD_PARTY_NOTICES.txt) 和[锁定依赖清单](docs/dependency-licenses.json)。真实账号、密钥、聊天、内部 Skills 和公司资料不属于开源分发内容。package.json 的 private: true 用于防止误发布到 npm，不代表源码许可证禁止公开。
+
+[Code signing policy](docs/CODE_SIGNING_POLICY.md) · [隐私说明](docs/PRIVACY.md) · [安全报告](SECURITY.md) · [开源与签名准备清单](docs/OPEN-SOURCE-READINESS.md) · [申请材料](docs/SIGNPATH-APPLICATION.md)。当前尚未向 SignPath 提交或获批，Windows 仍未取得可信签名，Mac 仍为 ad-hoc 签名。公开和加入免费签名服务分别需要维护者确认与服务方审核。
+
 ## 下载 Windows / macOS 测试版
 
 在仓库首页右侧点击 **Releases**，进入版本页后在 **Assets** 下载客户端：

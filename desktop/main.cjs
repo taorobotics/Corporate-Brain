@@ -47,6 +47,41 @@ function validateAddress(value) {
 }
 let origin = address ? validateAddress(address) : "";
 let setupWindow;
+let legalWindow;
+ipcMain.handle("company:legal", (event) => {
+  const expected = require("node:url").pathToFileURL(
+    join(__dirname, "server-setup.html"),
+  ).href;
+  if (
+    !setupWindow ||
+    event.sender !== setupWindow.webContents ||
+    event.senderFrame !== setupWindow.webContents.mainFrame ||
+    event.senderFrame.url !== expected
+  )
+    throw new Error("未授权窗口");
+  if (legalWindow && !legalWindow.isDestroyed()) {
+    legalWindow.focus();
+    return;
+  }
+  legalWindow = new BrowserWindow({
+    width: 850,
+    height: 700,
+    show: process.env.BRAIN_VERIFY !== "1",
+    autoHideMenuBar: true,
+    title: "隐私与许可",
+    webPreferences: {
+      contextIsolation: true,
+      nodeIntegration: false,
+      sandbox: true,
+      offscreen: process.env.BRAIN_VERIFY === "1",
+    },
+  });
+  legalWindow.webContents.setWindowOpenHandler(() => ({ action: "deny" }));
+  legalWindow.webContents.on("will-navigate", (event) =>
+    event.preventDefault(),
+  );
+  return legalWindow.loadFile(join(__dirname, "legal.html"));
+});
 let lastVerifiedUser = null;
 const writes = new Map();
 function sender(event) {
@@ -383,6 +418,10 @@ function createMainWindow() {
         {
           label: "使用帮助",
           click: () => win.webContents.send("menu:action", "help"),
+        },
+        {
+          label: "隐私与许可",
+          click: () => win.webContents.send("menu:action", "legal"),
         },
       ],
     },

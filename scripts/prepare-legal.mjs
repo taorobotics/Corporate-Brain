@@ -1,0 +1,114 @@
+import assert from "node:assert/strict";
+import { cp, mkdir, readFile, readdir, writeFile } from "node:fs/promises";
+import { join } from "node:path";
+const lock = JSON.parse(await readFile("package-lock.json", "utf8"));
+const packages = lock.packages;
+const inventory = Object.entries(packages)
+  .filter(([path]) => path)
+  .map(([path, value]) => ({
+    name: path.split("node_modules/").at(-1),
+    version: value.version,
+    license: value.license || "UNKNOWN",
+    scope: value.dev ? "development" : "runtime",
+    path,
+  }))
+  .sort((a, b) => a.path.localeCompare(b.path, "en"));
+assert.ok(
+  inventory.every(
+    (item) => item.license !== "UNKNOWN" && !/UNLICENSED/i.test(item.license),
+  ),
+  "Review missing or non-open-source dependency licenses",
+);
+await writeFile(
+  "docs/dependency-licenses.json",
+  JSON.stringify(
+    {
+      source: "package-lock.json",
+      notice:
+        "Declared licenses; each upstream license remains applicable. Optional platform packages may not be installed. Build tools are not bundled into the employee client.",
+      packages: inventory,
+    },
+    null,
+    2,
+  ) + "\n",
+);
+const visited = new Set();
+function locate(from, name) {
+  for (let base = from; ;) {
+    const path = `${base ? `${base}/` : ""}node_modules/${name}`;
+    if (packages[path]) return path;
+    if (!base) return null;
+    const index = base.lastIndexOf("/node_modules/");
+    base = index < 0 ? "" : base.slice(0, index);
+  }
+}
+function visit(path) {
+  assert.ok(path);
+  if (visited.has(path)) return;
+  visited.add(path);
+  const item = packages[path];
+  for (const name of Object.keys({
+    ...item.dependencies,
+    ...item.peerDependencies,
+  })) {
+    const dependency = locate(path, name);
+    if (dependency) visit(dependency);
+  }
+}
+for (const name of [
+  "react",
+  "react-dom",
+  "@base-ui/react",
+  "@phosphor-icons/react",
+])
+  visit(locate("", name));
+let notices =
+  "Corporate Brain third-party notices\n\nThe project MIT license applies to original project material only. The following upstream notices are preserved for web UI dependencies, the Electron wrapper and the bundled font. The Electron runtime also ships its own LICENSE.electron.txt / LICENSE and LICENSES.chromium.html. Server and build dependencies retain their package licenses; the locked inventory is docs/dependency-licenses.json. No company Skills, credentials or proprietary application source is distributed by this notice.\n";
+for (const path of [...visited].sort()) {
+  const item = packages[path],
+    name = path.split("node_modules/").at(-1);
+  const files = (await readdir(path))
+    .filter((file) => /^(?:licen[cs]e|copying|notice)(?:\..*)?$/i.test(file))
+    .sort();
+  assert.ok(files.length, `Missing license text for ${name}`);
+  notices += `\n\n========== ${name}@${item.version} (${item.license}) ==========\n`;
+  for (const file of files)
+    notices += `\n--- ${file} ---\n${await readFile(join(path, file), "utf8")}\n`;
+}
+notices += `\n\n========== Electron ==========\n${await readFile("node_modules/electron/LICENSE", "utf8")}\n`;
+notices += `\n\n========== Noto Sans SC (SIL Open Font License 1.1) ==========\n${await readFile("desktop/fonts/OFL.txt", "utf8")}\n`;
+// Normalize formatting only; retain all upstream copyright and license wording.
+await writeFile("THIRD_PARTY_NOTICES.txt", notices.replace(/[ \t]+$/gm, "").trimEnd() + "\n");
+await mkdir("desktop/legal", { recursive: true });
+for (const [from, to] of [
+  ["LICENSE", "LICENSE"],
+  ["THIRD_PARTY_NOTICES.txt", "THIRD_PARTY_NOTICES.txt"],
+  ["docs/PRIVACY.md", "PRIVACY.md"],
+  ["docs/CODE_SIGNING_POLICY.md", "CODE_SIGNING_POLICY.md"],
+])
+  await cp(from, join("desktop/legal", to));
+const escape = (value) =>
+  value.replace(
+    /[&<>"']/g,
+    (c) =>
+      ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[
+        c
+      ],
+  );
+const sections = [];
+for (const [title, file] of [
+  ["隐私说明", "PRIVACY.md"],
+  ["MIT 开源许可", "LICENSE"],
+  ["签名政策", "CODE_SIGNING_POLICY.md"],
+  ["第三方组件声明", "THIRD_PARTY_NOTICES.txt"],
+])
+  sections.push(
+    `<details ${file === "PRIVACY.md" ? "open" : ""}><summary>${title}</summary><pre>${escape(await readFile(join("desktop/legal", file), "utf8"))}</pre></details>`,
+  );
+await writeFile(
+  "desktop/legal.html",
+  `<!doctype html><html lang="zh-CN"><meta charset="utf-8"><meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'self' 'unsafe-inline'; font-src 'self'; object-src 'none'"><meta name="viewport" content="width=device-width,initial-scale=1"><title>隐私与许可 · 公司大脑</title><link rel="stylesheet" href="fonts.css"><style>body{font:14px/1.8 var(--font-ui);margin:32px;background:#fbfaf8;color:#272925}main{max-width:850px;margin:auto}h1{font-size:24px}details{border:1px solid #e7e5e1;border-radius:10px;margin:16px 0;background:white}summary{cursor:pointer;padding:16px;font-weight:600}pre{font:13px/1.9 var(--font-ui);white-space:pre-wrap;overflow-wrap:anywhere;margin:0;padding:0 20px 20px}</style><main><h1>隐私与许可</h1>${sections.join("")}</main></html>`,
+);
+console.log(
+  `Prepared license, ${visited.size} frontend dependency notices, font notice and ${inventory.length} locked license entries.`,
+);

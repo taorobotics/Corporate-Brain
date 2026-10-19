@@ -24,6 +24,7 @@
     "Non-conversation screens do not open the far-right preview",
     "900px desktop viewport has no document overflow",
     "Dropdown collision positioning stays inside a 900px desktop viewport",
+    "Online pre-login and offline company-connection windows expose original license and privacy policy with isolated local legal viewer",
     "Native company server setup rejects insecure remote HTTP and connects to the verified company API"
   ],
   "consoleErrors": [],

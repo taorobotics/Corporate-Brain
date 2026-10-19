@@ -1,3 +1,6 @@
+document
+  .querySelector("#show-legal")
+  .addEventListener("click", () => window.companyConnection.showLegal());
 document.querySelector("form").addEventListener("submit", async (event) => {
   event.preventDefault();
   const button = document.querySelector("button");

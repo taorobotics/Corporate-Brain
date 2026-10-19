@@ -8,6 +8,7 @@ import { createServer } from 'node:net';
 import { tmpdir } from 'node:os';
 import { basename, join, resolve } from 'node:path';
 import { listPackage, extractFile } from '@electron/asar';
+import { legalFiles } from './legal-files.mjs';
 
 assert.equal(process.platform, 'darwin', 'Run package checks on macOS');
 const arch = process.env.TARGET_ARCH || process.arch;
@@ -37,9 +38,13 @@ try {
 
   const asar = join(app, 'Contents/Resources/app.asar');
   const files = listPackage(asar).map(path => path.replace(/^\//, '')).filter(path => !listPackage(asar).some(other => other.startsWith(`/${path}/`))).sort();
-  const allowed = ['fonts.css', 'fonts/NotoSansSC-VF.woff2', 'fonts/OFL.txt', 'fonts/source.json', 'main.cjs', 'updates.cjs', 'package.json', 'preload.cjs', 'server-preload.cjs', 'server-setup.html', 'server-setup.js'].sort();
+  const allowed = ['fonts.css', 'fonts/NotoSansSC-VF.woff2', 'fonts/OFL.txt', 'fonts/source.json', 'main.cjs', 'updates.cjs', 'package.json', 'preload.cjs', 'server-preload.cjs', 'server-setup.html', 'server-setup.js', ...legalFiles].sort();
   assert.deepEqual(files, allowed);
   assert.equal(JSON.parse(extractFile(asar, 'package.json').toString()).version, version);
+  for (const file of files) assert.deepEqual(extractFile(asar, file), await readFile(resolve('desktop', file)), `Packaged source differs: ${file}`);
+  const chromiumNotices = command('find', [app, '-name', 'LICENSES.chromium.html']).trim().split('\n').filter(Boolean);
+  assert.ok(chromiumNotices.length > 0, 'Electron/Chromium license notice must remain in the Mac runtime');
+  checks.push('Bundled MIT, privacy and dependency notices match source; Electron/Chromium notices retained');
   checks.push('Client-only ASAR allowlist: no company database, credentials or development dependencies');
 
   const portServer = createServer();

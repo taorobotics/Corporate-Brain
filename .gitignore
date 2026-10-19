@@ -9,3 +9,18 @@ release/
 *.log
 artifacts/runtime/
 artifacts/local-test-setup.json
+# Deployment data and internal skills are separate from the open-source engine.
+private-skills/
+company-data/
+profiles/
+secrets/
+*.sqlite
+*.sqlite-wal
+*.sqlite-shm
+*.db
+*.pfx
+*.p12
+*.pem
+*.key
+/desktop/legal/
+/desktop/legal.html

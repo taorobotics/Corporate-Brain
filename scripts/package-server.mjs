@@ -11,11 +11,11 @@ const artifact = `Corporate-Brain-Server-${version}.zip`;
 const output = resolve('release', artifact);
 await mkdir('release', { recursive: true });
 try {
-  for (const path of ['dist', 'server', 'shared', 'package.json', 'package-lock.json', 'tsconfig.json', 'README.md']) {
+  for (const path of ['dist', 'server', 'shared', 'package.json', 'package-lock.json', 'tsconfig.json', 'README.md', 'LICENSE', 'THIRD_PARTY_NOTICES.txt', 'SECURITY.md']) {
     await cp(path, join(stage, path), { recursive: true, filter: source => !/[/\\](?:qa|[^/\\]+\.test)\.ts$/.test(source) });
   }
   await mkdir(join(stage, 'docs/releases'), { recursive: true });
-  for (const path of ['docs/DEPLOYMENT.md', 'docs/RELEASE-POLICY.md', `docs/releases/v${version}.md`]) await cp(path, join(stage, path));
+  for (const path of ['docs/DEPLOYMENT.md', 'docs/RELEASE-POLICY.md', 'docs/PRIVACY.md', 'docs/CODE_SIGNING_POLICY.md', 'docs/dependency-licenses.json', `docs/releases/v${version}.md`]) await cp(path, join(stage, path));
   execFileSync('zip', ['-q', '-r', output, '.'], { cwd: stage });
   execFileSync('unzip', ['-tq', output]);
   const entries = execFileSync('unzip', ['-Z1', output], { encoding: 'utf8' }).trim().split('\n');

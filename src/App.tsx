@@ -42,6 +42,7 @@ import { Brand, Button, IconButton, Modal, Field } from "./components";
 import Auth from "./Auth";
 import Workspace from "./Workspace";
 import Admin from "./Admin";
+import Legal from "./Legal";
 import { useDesktopUpdates, UpdateButton, UpdateDialog } from "./Updates";
 
 const navigation = [
@@ -89,6 +90,7 @@ export default function App() {
     loadedProfile = useRef<string | null>(null);
   const notify = (message: string) => setToast(message);
   const updates = useDesktopUpdates(!!user && !user.mustChange);
+  const [legalOpen, setLegalOpen] = useState(false);
   const navigate = (value: string) => {
     location.hash = value;
     setPage(value);
@@ -235,6 +237,7 @@ export default function App() {
       void window.brainDesktop?.changeServer();
     } else if (action === "settings") navigate("settings");
     else if (action === "updates") updates.show();
+    else if (action === "legal") setLegalOpen(true);
     else if (action === "help")
       notify(
         "对话保存在本机；技能中心可从对话创建草稿并提交。公司账号请联系管理员。",
@@ -260,7 +263,17 @@ export default function App() {
         <Button onClick={() => void initialize()}>重新连接</Button>
       </div>
     );
-  if (!user) return <Auth bootstrap={bootstrap} onLogin={setUser} />;
+  if (!user)
+    return (
+      <>
+        <Auth
+          bootstrap={bootstrap}
+          onLogin={setUser}
+          onLegal={() => setLegalOpen(true)}
+        />
+        {legalOpen && <Legal close={() => setLegalOpen(false)} />}
+      </>
+    );
   const isAdmin = page.startsWith("admin");
   const workspaceProps: WorkspaceProps = {
     user,
@@ -332,6 +345,7 @@ export default function App() {
                             ? [["检查更新…", "updates"]]
                             : []),
                           ["使用帮助", "help"],
+                          ["隐私与许可", "legal"],
                         ]
                 ).map(([text, action]) => {
                   const Icon = {
@@ -342,6 +356,7 @@ export default function App() {
                     sidebar: SidebarSimple,
                     settings: GearSix,
                     help: Question,
+                    legal: ShieldCheck,
                     updates: DownloadSimple,
                     "edit:undo": ArrowUUpLeft,
                     "edit:redo": ArrowUUpRight,
@@ -653,6 +668,7 @@ export default function App() {
           await writeLocal(user.id, state);
         }}
       />
+      {legalOpen && <Legal close={() => setLegalOpen(false)} />}
       {passwordOpen && (
         <Modal
           title={user.mustChange ? "首次登录，请修改初始密码" : "修改密码"}

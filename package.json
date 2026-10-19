@@ -1,7 +1,12 @@
 {
   "name": "corporate-brain",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "private": true,
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/taorobotics/Corporate-Brain.git"
+  },
   "type": "module",
   "description": "公司大脑：本地记录、部门账号和公司技能平台",
   "main": "desktop/main.cjs",
@@ -12,11 +17,12 @@
     "dev": "node scripts/dev.mjs",
     "dev:web": "vite --host 127.0.0.1 --port 4173 --strictPort",
     "dev:server": "tsx watch server/index.ts",
-    "desktop": "electron .",
-    "build": "tsc --noEmit && vite build",
+    "desktop": "node scripts/prepare-legal.mjs && electron .",
+    "build": "node scripts/prepare-legal.mjs && tsc --noEmit && vite build",
+    "legal:prepare": "node scripts/prepare-legal.mjs",
     "start": "tsx server/index.ts",
     "test": "tsx --test server/platform.test.ts server/updates.test.ts desktop/updates.test.cjs",
-    "test:desktop": "electron desktop/verify.cjs",
+    "test:desktop": "node scripts/prepare-legal.mjs && electron desktop/verify.cjs",
     "test:dsh": "node scripts/verify-dsh.mjs",
     "version:bump": "node scripts/version.mjs",
     "version:check": "node scripts/version.mjs check",
@@ -36,6 +42,7 @@
     "zod": "^4.6.7"
   },
   "build": {
+    "afterPack": "scripts/after-pack.cjs",
     "appId": "com.corporatebrain.desktop",
     "productName": "公司大脑",
     "directories": {
@@ -51,13 +58,18 @@
       "server-setup.js",
       "fonts.css",
       "fonts/**/*",
+      "legal.html",
+      "legal/**/*",
       "package.json",
       "!node_modules/**/*"
     ],
     "win": {
       "target": "nsis",
       "artifactName": "Corporate-Brain-Setup-${version}-${arch}.${ext}",
-      "signAndEditExecutable": false
+      "signAndEditExecutable": true
+    },
+    "nsis": {
+      "license": "LICENSE"
     },
     "mac": {
       "target": "dmg",

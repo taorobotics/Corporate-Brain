@@ -24,6 +24,8 @@
 
 ## 每个 Release 的交付内容
 
+从 v0.2.1 起，源码、服务器包与客户端保留项目及第三方许可、隐私和签名政策。构建生成法律文本副本；包检查核对原文。Windows 产品元数据须与项目和版本一致。未获签名服务批准的包仍标记未签名；未来 SignPath 正式签名需维护者人工批准，验签及最终摘要通过后才发布，不能覆盖已公开旧包。详见 CODE_SIGNING_POLICY.md 与 OPEN-SOURCE-READINESS.md。
+
 - Corporate-Brain-Setup-X.Y.Z-x64.exe：Windows 客户端。
 - Corporate-Brain-X.Y.Z-macOS-arm64.dmg：Apple 芯片 Mac 客户端。
 - Corporate-Brain-X.Y.Z-macOS-x64.dmg：Intel Mac 客户端。

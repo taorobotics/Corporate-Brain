@@ -3,7 +3,11 @@ import { Readable } from "node:stream";
 import { pipeline } from "node:stream/promises";
 import type { DesktopRelease, UpdateFeed } from "../shared/updates";
 
-export type UpdateOptions = { token?: string; fetch?: typeof fetch };
+export type UpdateOptions = {
+  token?: string;
+  publicSource?: boolean;
+  fetch?: typeof fetch;
+};
 const repository = "taorobotics/Corporate-Brain";
 const apiRoot = `https://api.github.com/repos/${repository}`;
 const versionPattern = /^(0|[1-9]\d{0,5})\.(0|[1-9]\d{0,5})\.(0|[1-9]\d{0,5})$/;
@@ -18,6 +22,9 @@ export function installerName(version: string, target: string) {
 // never cross this boundary into the employee renderer or desktop package.
 export function mountUpdates(app: Express, options: UpdateOptions = {}) {
   const token = options.token ?? process.env.BRAIN_GITHUB_TOKEN ?? "";
+  const configured =
+    !!token ||
+    (options.publicSource ?? process.env.BRAIN_UPDATE_SOURCE === "public");
   const request = options.fetch ?? fetch;
   type Cached = { release: DesktopRelease; ids: Record<string, number> };
   let cached: Cached | null = null;
@@ -25,13 +32,13 @@ export function mountUpdates(app: Express, options: UpdateOptions = {}) {
     retryAfter = 0;
   let pending: Promise<Cached> | null = null;
   const headers = (binary = false) => ({
-    Authorization: `Bearer ${token}`,
+    ...(token ? { Authorization: `Bearer ${token}` } : {}),
     Accept: binary ? "application/octet-stream" : "application/vnd.github+json",
     "X-GitHub-Api-Version": "2026-03-10",
     "User-Agent": "Corporate-Brain-Updates",
   });
   async function latest() {
-    if (!token) return null;
+    if (!configured) return null;
     if (cached && Date.now() < expires) return cached;
     if (Date.now() < retryAfter)
       throw new Error(
@@ -105,7 +112,7 @@ export function mountUpdates(app: Express, options: UpdateOptions = {}) {
     try {
       const data = await latest();
       res.json({
-        configured: !!token,
+        configured,
         release: data?.release ?? null,
       } satisfies UpdateFeed);
     } catch (error) {

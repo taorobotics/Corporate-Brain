@@ -134,6 +134,12 @@ async function waitFor(test, label, timeout = 12000) {
     );
   };
   await waitFor(() => has("建立你的公司大脑"), "setup page");
+  await click("隐私与许可");
+  await waitFor(() => has("公司大脑隐私说明"), "pre-login privacy policy");
+  await click("开源许可");
+  assert.ok(await has("MIT License"));
+  await capture("client-legal-license.png");
+  await key("Escape");
   await fill("input[name=companyName]", "管理部");
   await fill("input[name=name]", "验收管理员");
   await fill("input[name=username]", "qa-admin");
@@ -718,6 +724,31 @@ async function waitFor(test, label, timeout = 12000) {
     `window.companyConnection.connect('http://untrusted.example.com')`,
   );
   assert.ok(rejected.error);
+  await setupWindow.webContents.executeJavaScript(
+    "window.companyConnection.showLegal()",
+  );
+  const legalWindow = BrowserWindow.getAllWindows().find((window) =>
+    window.webContents.getURL().endsWith("/legal.html"),
+  );
+  assert.ok(legalWindow);
+  await legalWindow.webContents.executeJavaScript("document.fonts.ready.then(() => true)");
+  await legalWindow.webContents.executeJavaScript(
+    "document.querySelectorAll('details')[1].open = true",
+  );
+  assert.equal(
+    await legalWindow.webContents.executeJavaScript(
+      "document.body.innerText.includes('MIT License') && document.body.innerText.includes('公司大脑隐私说明') && typeof window.require === 'undefined'",
+    ),
+    true,
+  );
+  await fs.writeFile(
+    join(shots, "client-offline-legal.png"),
+    (await legalWindow.webContents.capturePage()).toPNG(),
+  );
+  legalWindow.close();
+  checks.push(
+    "Online pre-login and offline company-connection windows expose original license and privacy policy with isolated local legal viewer",
+  );
   const connected = await setupWindow.webContents.executeJavaScript(
     `window.companyConnection.connect(${JSON.stringify(process.env.BRAIN_APP_URL)})`,
   );
