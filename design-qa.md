@@ -2,7 +2,7 @@
 
 final result: passed
 
-## v0.2.1 隐私与许可
+## v0.2.2 隐私与许可
 
 新增登录前与帮助菜单入口，许可弹窗沿用现有暖色、字体和键盘焦点管理；原生公司连接页在未连接时也可打开随包法律文件，内容仅本地读取。截图：artifacts/screenshots/client-legal-license.png、client-offline-legal.png。真实 Windows 桌面检查通过在线 MIT 分类、Escape 关闭、离线隐私与许可证折叠阅读及沙箱边界；渲染控制台无错误。没有以增加文案宣称已取得可信签名。
 
@@ -10,7 +10,7 @@ final result: passed
 
 新增左侧底部、账号区上方的更新行，沿用 Marvis 字体、暖灰侧栏和陶土色提示；无新版时为低强调检查入口，有新版时显示版本和小圆点。点击打开居中的更新弹窗，当前版本、平台、更新内容、下载状态和主操作按顺序排列，未使用默认展开的右侧预览。
 
-真实 Windows Electron 截图为 artifacts/screenshots/client-update-sidebar.png、client-update-dialog.png、client-update-ready.png（1586 × 992）。画面中的 v0.2.1 和小体积安装包是明确标注的隔离验收素材，不是实际 Release 或可执行安装程序。实际验证左侧发现更新、弹窗与 Escape 关闭、通过登录服务下载、SHA-256 校验和状态回显；本机 21 项桌面检查通过，渲染控制台无错误。Mac 原生与打包检查以对应 Release 的报告为准，员工物理设备覆盖安装未据此标记通过。
+真实 Windows Electron 截图为 artifacts/screenshots/client-update-sidebar.png、client-update-dialog.png、client-update-ready.png（1586 × 992）。画面中的 v0.2.2 和小体积安装包是明确标注的隔离验收素材，不是实际 Release 或可执行安装程序。实际验证左侧发现更新、弹窗与 Escape 关闭、通过登录服务下载、SHA-256 校验和状态回显；本机 21 项桌面检查通过，渲染控制台无错误。Mac 原生与打包检查以对应 Release 的报告为准，员工物理设备覆盖安装未据此标记通过。
 
 本结论只覆盖本次工程版已实现页面的共同布局、可读性和关键交互，不是全部效果图的逐像素复制证明，也不是 PRD 全部功能验收。模型个人连接、视频、NAS、完整文件权限和后台运行等未完成模块见 docs/DEVELOPMENT-STATUS.md，不将缺少这些模块解释为已经完成。
 

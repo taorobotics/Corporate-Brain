@@ -24,6 +24,6 @@
 1. 维护者建立 SignPath 账号并开启 MFA，从 https://signpath.org/apply 申请，使用 SIGNPATH-APPLICATION.md 的准备材料。
 2. 服务方审核项目控制权、开源许可、用途、构建及可核实声誉。新项目不保证马上获批，不能靠添加 LICENSE 自动满足声誉要求。
 3. 获批后配置实际 organization/project/artifact/signing-policy 标识、CI 来源验证、受控凭据、测试签名和正式人工审批者；不能使用假标识或绕过审批。
-4. 每次正式签名需维护者明确审批；签后验签并生成新摘要，以新版本发布。v0.2.1 仍是未取得可信签名的准备版。
+4. 每次正式签名需维护者明确审批；签后验签并生成新摘要，以新版本发布。v0.2.2 仍是未取得可信签名的准备版。
 
 官方依据：https://signpath.org/terms ，https://docs.signpath.io/origin-verification/ ，https://opensource.org/license/mit 。Mac Developer ID 与公证是独立申请：https://developer.apple.com/developer-id/ 。

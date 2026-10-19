@@ -15,6 +15,9 @@ module.exports = async (context) => {
   ]) {
     const candidates = [
       join(context.appOutDir, source),
+      join(app, "Contents/Resources", source),
+      join(app, "Contents/Resources", source === "LICENSE" ? "LICENSE.electron.txt" : source),
+      resolve("node_modules/electron/dist", source),
       join(
         app,
         "Contents/Frameworks/Electron Framework.framework/Versions/A/Resources",
