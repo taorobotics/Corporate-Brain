@@ -13,7 +13,8 @@
 !addplugindir /x86-unicode "${BUILD_RESOURCES_DIR}\windows\generated"
 !define MUI_INSTFILESPAGE_COLORS "272925 FBFAF8"
 WindowIcon on
-AutoCloseWindow false
+; Advance the completed InstFiles page to our explicit finish page.
+AutoCloseWindow true
 ShowInstDetails nevershow
 ShowUninstDetails nevershow
 SetFont "Microsoft YaHei UI" 9
