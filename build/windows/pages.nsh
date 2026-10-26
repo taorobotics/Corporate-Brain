@@ -47,6 +47,9 @@
 
 !macro BrainUiFunctions PREFIX UNINSTALL
 Function ${PREFIX}BrainGuiInit
+  ; The uninstaller has its own runtime flag; the compiler's AutoCloseWindow
+  ; setting alone only advanced the installer in our lifecycle test.
+  SetAutoClose true
   StrCpy $BrainDpi 96
   System::Call 'user32::GetDpiForWindow(p $HWNDPARENT)i.r0'
   ${If} $0 > 0
