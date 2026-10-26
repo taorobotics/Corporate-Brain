@@ -104,6 +104,7 @@ jobs:
           path: |
             artifacts/desktop-verification.json
             artifacts/installer-verification.json
+            artifacts/installer-timeout.json
             artifacts/ui-fonts.json
             artifacts/screenshots/
             release/macos-first-launch-*.png

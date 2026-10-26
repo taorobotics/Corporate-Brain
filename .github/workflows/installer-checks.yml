@@ -37,6 +37,7 @@ jobs:
           name: windows-installer-diagnostics
           path: |
             artifacts/installer-verification.json
+            artifacts/installer-timeout.json
             artifacts/screenshots/installer-*.png
             release/windows-verification-x64.json
           retention-days: 14

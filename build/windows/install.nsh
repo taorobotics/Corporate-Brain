@@ -9,6 +9,8 @@ StrCpy $appExe "$INSTDIR\${APP_EXECUTABLE_FILENAME}"
 ; Prepare the complete package BEFORE uninstalling an old version. Cancellation here is safe.
 StrCpy $BrainStage 2
 Call BrainUpdateStage
+; NSIS disables Cancel when the install section starts; staging is safe to cancel.
+EnableWindow $BrainCancel 1
 SetOutPath "$PLUGINSDIR\prepared-app"
 !insertmacro installApplicationFiles
 ${IfNot} ${FileExists} "$PLUGINSDIR\prepared-app\${APP_EXECUTABLE_FILENAME}"

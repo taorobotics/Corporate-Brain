@@ -68,6 +68,8 @@ npm run package:win
 
 Windows 安装包输出到 release；macOS 可在 Mac 上运行 npm run package:mac。正式版本使用 GitHub Actions 的“Desktop release”统一构建 Windows、两种 Mac 包和公司服务器更新包。Mac 构建流程包含原生桌面操作和打包程序启动检查，仍需员工物理设备的下载、文件授权、升级与卸载验收。当前安装包供开发测试，未做正式代码签名与 Apple 公证。桌面包独立于服务器依赖，开发测试和第三方分析缓存不打包给员工。
 
+Windows 安装器采用四步原生向导，新装优先推荐固定、可写的 D 盘，覆盖升级保留原路径；卸载保留本机个人记录。构建该安装器另需 Visual C++ x86 工具和 Windows SDK，员工安装无需这些开发工具。构建方式与隔离环境中的真实安装、升级、卸载检查见 [Windows 安装向导](docs/WINDOWS-INSTALLER.md)。
+
 构建后可用 npm start 启动带静态界面的公司业务服务，默认只监听本机 4310 端口。[部署说明](docs/DEPLOYMENT.md)记录公司服务器地址、HTTPS、数据与备份边界。真实接口配置前，开发程序不显示伪造生成结果。
 
 ## 开发依据

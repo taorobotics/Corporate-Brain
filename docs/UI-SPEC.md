@@ -70,4 +70,6 @@
 
 ## 5 开发版对照记录
 
+Windows 安装器按用户确认的[四步向导图](design/approved/windows-installer-wizard.png)实现，采用原生控件、暖白与陶土色。包含欢迎、安装位置、真实进度与旋转加载项、完成；D 盘优先仅适用于新装，覆盖升级锁定原路径。完成页分别提供立即打开与完成，卸载明确保留个人记录。运行规则与验证范围见 [Windows 安装向导](WINDOWS-INSTALLER.md)。Mac 仍用原拖拽安装界面。
+
 v0.1 的实际窗口截图位于 artifacts/screenshots；已实现页面的视觉核对见 [design-qa.md](../design-qa.md)。部门管理、初始账号分发、本地记录与技能主动提交的交互按第 1 节新增规则实现。未实现的完整模块不因本次视觉核对通过而自动视为已开发。

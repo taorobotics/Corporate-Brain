@@ -90,6 +90,8 @@ try {
     $checks.Add('Installer refuses data-deletion flags before invoking an old uninstaller')
 
     $page = New-InstallFlow -Upgrade
+    $cancelControl = Get-InstallerControls $page.Handle | Where-Object { $_.ClassName -eq 'Button' -and $_.Text -eq '取消' } | Select-Object -First 1
+    if (-not $cancelControl.Enabled) { throw 'Cancellation must be enabled during safe package preparation' }
     Invoke-InstallerButton $page.Handle '取消'
     $confirm = Wait-InstallerText $process.Id '要取消本次安装吗'
     $yes = Get-InstallerControls $confirm.Handle | Where-Object Id -eq 6 | Select-Object -First 1

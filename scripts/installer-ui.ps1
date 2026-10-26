@@ -59,6 +59,11 @@ function Wait-InstallerText([int]$ProcessId, [string]$Text, [int]$TimeoutSeconds
     }
     Start-Sleep -Milliseconds 100
   } while ([DateTime]::UtcNow -lt $until)
+  $visibleState = @([InstallerWindow]::Windows($ProcessId) | Where-Object Visible | ForEach-Object { Get-InstallerControls $_.Handle | Select-Object Text,ClassName,Enabled,Id })
+  $visibleState | ConvertTo-Json -Depth 4 | Set-Content -LiteralPath (Join-Path $PSScriptRoot '../artifacts/installer-timeout.json') -Encoding utf8
+  foreach ($window in [InstallerWindow]::Windows($ProcessId) | Where-Object { $_.Visible -and $_.ClassName -eq '#32770' }) {
+    Save-InstallerWindow $window.Handle (Join-Path $PSScriptRoot '../artifacts/screenshots/installer-timeout.png')
+  }
   throw "Installer UI timed out: $Text"
 }
 function Invoke-InstallerButton([IntPtr]$Window, [string]$Text) {
