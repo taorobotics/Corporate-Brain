@@ -67,7 +67,8 @@ function Invoke-InstallerButton([IntPtr]$Window, [string]$Text) {
   [void][InstallerWindow]::PostMessage($control.Handle, 0xF5, [IntPtr]::Zero, [IntPtr]::Zero)
 }
 function Save-InstallerWindow([IntPtr]$Handle, [string]$Path) {
-  Start-Sleep -Milliseconds 200
+  # Text controls exist before nsDialogs finishes its page transition and first paint.
+  Start-Sleep -Milliseconds 1000
   [void][InstallerWindow]::RedrawWindow($Handle,[IntPtr]::Zero,[IntPtr]::Zero,0x185)
   $rect = [InstallerWindow+Rect]::new()
   if (-not [InstallerWindow]::GetWindowRect($Handle,[ref]$rect)) { throw 'Window bounds unavailable' }

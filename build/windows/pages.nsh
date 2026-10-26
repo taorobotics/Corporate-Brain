@@ -97,9 +97,8 @@ Function ${PREFIX}BrainPage
   ${EndIf}
   !insertmacro BMove $BrainDialog 0 0 904 550
   SetCtlColors $BrainDialog 272925 FBFAF8
-  !insertmacro BLabel 0 0 190 550 "" $0 $BrainFont 52554F F1F0EC
-  ; The broad sidebar surface must sit behind its sibling icons and labels.
-  System::Call 'user32::SetWindowPos(p r0, p 1, i 0, i 0, i 0, i 0, i 19)'
+  ; Paint the sidebar on the page itself, without a broad Static overlapping controls.
+  BrainWizard::Panel /NOUNLOAD $BrainDialog
   ${NSD_CreateIcon} 28 25 64 64 ""
   Pop $BrainLogoControl
   !insertmacro BMove $BrainLogoControl 28 25 64 64
