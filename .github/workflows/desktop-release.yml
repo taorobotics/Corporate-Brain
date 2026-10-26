@@ -67,6 +67,14 @@ jobs:
       - name: Build Windows installer
         if: matrix.platform == 'Windows'
         run: node scripts/package-desktop.mjs --win nsis --x64 --publish never
+      - name: Fetch prior Windows release for real upgrade verification
+        if: matrix.platform == 'Windows'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release download v0.2.2 --repo "$env:GITHUB_REPOSITORY" --pattern Corporate-Brain-Setup-0.2.2-x64.exe --dir "$env:RUNNER_TEMP/brain-previous"
+      - name: Verify native installer lifecycle and preserved local records
+        if: matrix.platform == 'Windows'
+        run: pwsh -NoProfile -File scripts/verify-installer.ps1 -FullLifecycle -PreviousInstaller "$env:RUNNER_TEMP/brain-previous/Corporate-Brain-Setup-0.2.2-x64.exe"
       - name: Verify Windows installer
         if: matrix.platform == 'Windows'
         run: node scripts/verify-windows-package.mjs
@@ -95,6 +103,7 @@ jobs:
           name: diagnostics-${{ matrix.platform }}-${{ matrix.arch }}
           path: |
             artifacts/desktop-verification.json
+            artifacts/installer-verification.json
             artifacts/ui-fonts.json
             artifacts/screenshots/
             release/macos-first-launch-*.png

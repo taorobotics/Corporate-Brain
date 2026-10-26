@@ -1,6 +1,6 @@
 {
   "name": "corporate-brain",
-  "version": "0.2.2",
+  "version": "0.2.3",
   "private": true,
   "license": "MIT",
   "repository": {
@@ -65,11 +65,24 @@
     ],
     "win": {
       "target": "nsis",
+      "icon": "build/windows/generated/company-brain.ico",
       "artifactName": "Corporate-Brain-Setup-${version}-${arch}.${ext}",
       "signAndEditExecutable": true
     },
     "nsis": {
-      "license": "LICENSE"
+      "oneClick": false,
+      "perMachine": false,
+      "allowToChangeInstallationDirectory": true,
+      "runAfterFinish": false,
+      "deleteAppDataOnUninstall": false,
+      "installerLanguages": [
+        "zh_CN"
+      ],
+      "language": "2052",
+      "installerIcon": "build/windows/generated/company-brain.ico",
+      "uninstallerIcon": "build/windows/generated/company-brain.ico",
+      "include": "build/windows/theme.nsh",
+      "script": "build/windows/installer.nsi"
     },
     "mac": {
       "target": "dmg",

@@ -20,6 +20,12 @@ assert.deepEqual(files, allowed);
 assert.equal(JSON.parse(extractFile(asar, 'package.json').toString()).version, version);
 for (const file of files) assert.deepEqual(extractFile(asar, file), await readFile(resolve('desktop', file)), `Packaged source differs: ${file}`);
 const desktopVerification = JSON.parse(await readFile('artifacts/desktop-verification.json', 'utf8'));
+const installerVerification = JSON.parse(await readFile('artifacts/installer-verification.json', 'utf8'));
+assert.equal(installerVerification.result, 'passed');
+assert.equal(installerVerification.realInstallUpgradeUninstall, true, 'A UI-only preview is insufficient for release');
+assert.equal(installerVerification.version, version);
+assert.equal(installerVerification.sha256, createHash('sha256').update(bytes).digest('hex'));
+assert.equal(installerVerification.sourceCommit, execFileSync('git', ['rev-parse', 'HEAD'], {encoding:'utf8'}).trim());
 const product = JSON.parse(await readFile('package.json', 'utf8')).build.productName;
 const metadataEnv = { ...process.env };
 delete metadataEnv.PSModulePath; // Windows PowerShell must not load PowerShell 7 modules inherited through Node.
@@ -30,6 +36,9 @@ for (const file of ['LICENSE.electron.txt', 'LICENSES.chromium.html']) assert.ok
 assert.equal(desktopVerification.result, 'passed');
 const sha256 = createHash('sha256').update(bytes).digest('hex');
 const report = { version, platform: process.platform, architecture: process.arch, artifact, bytes: bytes.length, sha256, sourceCommit: execFileSync('git', ['rev-parse', 'HEAD'], { encoding: 'utf8' }).trim(), workflowRun: process.env.GITHUB_RUN_ID || null, files, executableMetadata: metadata, signature: metadata.SignatureStatus, independentInstallUpgradeUninstallTested: false, checks: ['Windows executable installer exists', 'Packaged application version matches the release', 'Client file allowlist and all bytes match source; no database or credentials', 'Original MIT, privacy policy and third-party notices included; Electron runtime notices preserved', 'Executable product name and product version match the project and release'], desktopVerification };
+report.installerVerification = installerVerification;
+report.disposableWindowsLifecycleTested = true;
+report.checks.push('Real native wizard, staged cancellation, v0.2.2 upgrade, launch and uninstall on a disposable Windows runner');
 await writeFile('release/windows-verification-x64.json', JSON.stringify(report, null, 2) + '\n');
 await writeFile('release/SHA256SUMS-Windows-x64.txt', `${sha256}  ${artifact}\n`);
 console.log(JSON.stringify({ artifact, sha256, desktopChecks: desktopVerification.checks.length }));
