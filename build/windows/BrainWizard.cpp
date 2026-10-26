@@ -92,6 +92,14 @@ extern "C" void __cdecl Panel(HWND,int,wchar_t*,Stack** stack,void*) {
   SetWindowSubclass(panel,panelProc,1,0);
   InvalidateRect(panel,0,TRUE);
 }
+static BOOL CALLBACK hideNativeControl(HWND window,LPARAM parent) {
+  if(GetParent(window)==reinterpret_cast<HWND>(parent))ShowWindow(window,SW_HIDE);
+  return TRUE;
+}
+extern "C" void __cdecl NativePage(HWND,int,wchar_t*,Stack** stack,void*) {
+  HWND page=reinterpret_cast<HWND>(popHandle(stack));
+  EnumChildWindows(page,hideNativeControl,reinterpret_cast<LPARAM>(page));
+}
 extern "C" void __cdecl Progress(HWND parent,int,wchar_t*,Stack** stack,void*) {
   stopProgress();host=parent;
   progress=reinterpret_cast<HWND>(popHandle(stack));

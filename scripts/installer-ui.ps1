@@ -51,6 +51,9 @@ function Get-InstallerWindow([int]$ProcessId) {
 function Wait-InstallerText([int]$ProcessId, [string]$Text, [int]$TimeoutSeconds = 20) {
   $until = [DateTime]::UtcNow.AddSeconds($TimeoutSeconds)
   do {
+    if (-not (Get-Process -Id $ProcessId -ErrorAction SilentlyContinue)) {
+      throw "Installer process exited before reaching: $Text"
+    }
     foreach ($window in [InstallerWindow]::Windows($ProcessId)) {
       if (-not $window.Visible -and $window.ClassName -eq '#32770') { [void][InstallerWindow]::ShowWindow($window.Handle,4) }
       if (-not $window.Visible) { continue }

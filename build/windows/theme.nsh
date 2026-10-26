@@ -61,6 +61,7 @@ Var BrainNav3
 Var BrainNav4
 Var BrainPageStep
 Var BrainCreatedLabel
+Var BrainNativeControls
 
 !macro BrainInvalid TEXT
   MessageBox MB_OK|MB_ICONEXCLAMATION "${TEXT}" /SD IDOK

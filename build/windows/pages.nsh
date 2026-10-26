@@ -29,7 +29,11 @@
   System::Call 'kernel32::MulDiv(i ${Y}, i $BrainDpi, i 96)i.r1'
   System::Call 'kernel32::MulDiv(i ${W}, i $BrainDpi, i 96)i.r2'
   System::Call 'kernel32::MulDiv(i ${H}, i $BrainDpi, i 96)i.r3'
-  ${NSD_CreateLabel} $0 $1 $2 $3 "${TEXT}"
+  ${If} $BrainNativeControls == 1
+    System::Call 'user32::CreateWindowExW(i 0, w "STATIC", w "${TEXT}", i 0x50000100, i r0, i r1, i r2, i r3, p $BrainDialog, p 0, p 0, p 0)p.s'
+  ${Else}
+    ${NSD_CreateLabel} $0 $1 $2 $3 "${TEXT}"
+  ${EndIf}
   Pop $BrainCreatedLabel
   Pop $3
   Pop $2
@@ -89,6 +93,7 @@ Function .onGUIEnd
 FunctionEnd
 
 Function ${PREFIX}BrainPage
+  StrCpy $BrainNativeControls 0
   BrainWizard::Style /NOUNLOAD
   nsDialogs::Create 1018
   Pop $BrainDialog
@@ -118,6 +123,18 @@ Function ${PREFIX}BrainPage
   ${If} $BrainPageStep > 3
     SendMessage $BrainNav3 ${WM_SETTEXT} 0 "STR:✓   安装中"
   ${EndIf}
+  !if ${UNINSTALL} == 1
+    SendMessage $BrainNav1 ${WM_SETTEXT} 0 "STR:1   确认卸载"
+    SendMessage $BrainNav2 ${WM_SETTEXT} 0 "STR:2   卸载中"
+    SendMessage $BrainNav3 ${WM_SETTEXT} 0 "STR:3   完成"
+    ShowWindow $BrainNav4 ${SW_HIDE}
+    ${If} $BrainPageStep > 1
+      SendMessage $BrainNav1 ${WM_SETTEXT} 0 "STR:✓   确认卸载"
+    ${EndIf}
+    ${If} $BrainPageStep > 2
+      SendMessage $BrainNav2 ${WM_SETTEXT} 0 "STR:✓   卸载中"
+    ${EndIf}
+  !endif
   !insertmacro BLabel 28 510 160 26 "v${VERSION} · Windows 64 位" $0 $BrainFont 81827C F1F0EC
   !insertmacro BLabel 220 30 650 46 "$BrainTitle" $0 $BrainTitleFont 272925 FBFAF8
   !insertmacro BLabel 222 84 640 40 "$BrainSubTitle" $0 $BrainFont 81827C FBFAF8
@@ -144,6 +161,41 @@ Function ${PREFIX}BrainPrivacy
   ExecShell "open" "$PLUGINSDIR\brain-privacy.txt"
 FunctionEnd
 
+; InstFiles is owned by NSIS. Decorate that page directly, without installing
+; nsDialogs' custom-page navigation procedure over the native lifecycle.
+Function ${PREFIX}BrainProgressPage
+  BrainWizard::Style /NOUNLOAD
+  StrCpy $BrainNativeControls 1
+  StrCpy $BrainDialog $BrainNativePage
+  BrainWizard::NativePage /NOUNLOAD $BrainDialog
+  !insertmacro BMove $BrainDialog 0 0 904 550
+  SetCtlColors $BrainDialog 272925 FBFAF8
+  BrainWizard::Panel /NOUNLOAD $BrainDialog
+  System::Call 'user32::CreateWindowExW(i 0, w "STATIC", w "", i 0x50000003, i 28, i 25, i 32, i 32, p $BrainDialog, p 0, p 0, p 0)p.r0'
+  !insertmacro BMove $0 28 25 32 32
+  System::Call 'kernel32::GetModuleHandleW(p 0)p.r1'
+  System::Call 'user32::LoadImageW(p r1, p 103, i 1, i 32, i 32, i 0x8000)p.r1'
+  SendMessage $0 0x170 $1 0
+  !insertmacro BLabel 30 100 150 36 "公司大脑" $0 $BrainBrandFont 272925 F1F0EC
+  !insertmacro BLabel 32 145 145 60 "让知识和技能$\r$\n成为工作的助力" $0 $BrainFont 81827C F1F0EC
+  !insertmacro BLabel 30 237 155 32 "✓   欢迎使用" $BrainNav1 $BrainFont 81827C F1F0EC
+  !insertmacro BLabel 30 282 155 32 "✓   安装位置" $BrainNav2 $BrainFont 81827C F1F0EC
+  !insertmacro BLabel 30 327 155 32 "3   安装中" $BrainNav3 $BrainFont B76C4E F1F0EC
+  !insertmacro BLabel 30 372 155 32 "4   完成" $BrainNav4 $BrainFont 81827C F1F0EC
+  !if ${UNINSTALL} == 1
+    SendMessage $BrainNav1 ${WM_SETTEXT} 0 "STR:✓   确认卸载"
+    SendMessage $BrainNav2 ${WM_SETTEXT} 0 "STR:2   卸载中"
+    SendMessage $BrainNav3 ${WM_SETTEXT} 0 "STR:3   完成"
+    ShowWindow $BrainNav4 ${SW_HIDE}
+  !endif
+  !insertmacro BLabel 28 510 160 26 "v${VERSION} · Windows 64 位" $0 $BrainFont 81827C F1F0EC
+  !insertmacro BLabel 220 30 650 46 "$BrainTitle" $0 $BrainTitleFont 272925 FBFAF8
+  !insertmacro BLabel 222 84 640 40 "$BrainSubTitle" $0 $BrainFont 81827C FBFAF8
+  System::Call 'user32::CreateWindowExW(i 0, w "STATIC", w "", i 0x50000010, i 0, i 0, i 1, i 1, p $BrainDialog, p 0, p 0, p 0)p.r0'
+  !insertmacro BMove $0 190 124 714 1
+  SendMessage $BrainCancel ${WM_SETTEXT} 0 "STR:取消"
+FunctionEnd
+
 Function ${PREFIX}BrainProgressShow
   FindWindow $BrainNativePage "#32770" "" $HWNDPARENT
   GetDlgItem $BrainBar $BrainNativePage 1004
@@ -153,12 +205,15 @@ Function ${PREFIX}BrainProgressShow
   StrCpy $BrainSubTitle "请稍候，安装程序正在处理以下项目。"
   !if ${UNINSTALL} == 1
     StrCpy $BrainTitle "正在卸载公司大脑"
+    StrCpy $BrainPageStep 2
     StrCpy $BrainSubTitle "正在移除程序与快捷方式，保留本机个人记录。"
   !endif
-  Call ${PREFIX}BrainPage
+  Call ${PREFIX}BrainProgressPage
   SetCtlColors $BrainNav3 B76C4E F1F0EC
-  System::Call 'user32::SetParent(p $BrainBar, p $BrainDialog)p'
-  System::Call 'user32::SetParent(p $BrainFile, p $BrainDialog)p'
+  !if ${UNINSTALL} == 1
+    SetCtlColors $BrainNav3 81827C F1F0EC
+    SetCtlColors $BrainNav2 B76C4E F1F0EC
+  !endif
   !insertmacro BMove $BrainBar 222 151 586 22
   !insertmacro BMove $BrainFile 223 476 642 28
   ShowWindow $BrainBar ${SW_SHOW}
@@ -166,12 +221,11 @@ Function ${PREFIX}BrainProgressShow
   System::Call 'uxtheme::SetWindowTheme(p $BrainBar, w "", w "")'
   SendMessage $BrainBar 0x409 0 0x004E6CB7
   !insertmacro BLabel 826 148 60 28 "0%" $BrainPercent $BrainFont 272925 FBFAF8
-  ${NSD_CreateBitmap} 222 192 28 28 ""
+  System::Call 'user32::CreateWindowExW(i 0, w "STATIC", w "", i 0x5000000E, i 222, i 192, i 28, i 28, p $BrainDialog, p 0, p 0, p 0)p.s'
   Pop $BrainSpinner
   !insertmacro BMove $BrainSpinner 222 192 28 28
   !insertmacro BLabel 262 194 600 32 "正在准备安装…" $BrainStatus $BrainFont 272925 FBFAF8
-  ${NSD_CreateGroupBox} 0 0 1 1 ""
-  Pop $0
+  System::Call 'user32::CreateWindowExW(i 0, w "BUTTON", w "", i 0x50000007, i 0, i 0, i 1, i 1, p $BrainDialog, p 0, p 0, p 0)p.r0'
   !insertmacro BMove $0 222 232 650 225
   SetCtlColors $0 81827C FBFAF8
   !insertmacro BLabel 234 252 630 30 "已完成  检查磁盘空间与写入权限" $BrainRow1 $BrainFont 52554F FBFAF8
@@ -179,7 +233,6 @@ Function ${PREFIX}BrainProgressShow
   !insertmacro BLabel 234 332 630 30 "等待    写入程序与资源" $BrainRow3 $BrainFont 81827C FBFAF8
   !insertmacro BLabel 234 372 630 30 "等待    注册卸载入口与快捷方式" $BrainRow4 $BrainFont 81827C FBFAF8
   !insertmacro BLabel 234 412 630 30 "等待    完成安装检查" $BrainRow5 $BrainFont 81827C FBFAF8
-  ShowWindow $BrainNativePage ${SW_HIDE}
   ShowWindow $BrainDialog ${SW_SHOW}
   BrainWizard::Progress /NOUNLOAD $BrainBar $BrainPercent $BrainSpinner "$PLUGINSDIR"
   !if ${UNINSTALL} == 1
@@ -194,9 +247,6 @@ FunctionEnd
 
 Function ${PREFIX}BrainProgressLeave
   BrainWizard::Stop /NOUNLOAD
-  ${If} $BrainLogoBitmap != 0
-    ${NSD_FreeIcon} $BrainLogoBitmap
-  ${EndIf}
 FunctionEnd
 !macroend
 
@@ -460,17 +510,21 @@ Function BrainUserAbort
 FunctionEnd
 
 Function un.BrainWelcome
+  StrCpy $BrainPageStep 1
   StrCpy $BrainTitle "卸载公司大脑？"
   StrCpy $BrainSubTitle "将移除程序与快捷方式，个人数据单独保留。"
   Call un.BrainPage
+  SetCtlColors $BrainNav1 B76C4E F1F0EC
   !insertmacro BLabel 245 210 610 80 "保留本机对话、个人草稿与设置。$\r$\n重新安装后，可在原设备继续使用已有记录。" $0 $BrainBrandFont 52554F FBFAF8
   SendMessage $BrainNext ${WM_SETTEXT} 0 "STR:卸载应用"
   nsDialogs::Show
 FunctionEnd
 Function un.BrainFinish
+  StrCpy $BrainPageStep 3
   StrCpy $BrainTitle "卸载完成"
   StrCpy $BrainSubTitle "程序与快捷方式已移除，本机个人记录已保留。"
   Call un.BrainPage
+  SetCtlColors $BrainNav3 B76C4E F1F0EC
   !insertmacro BLabel 250 245 600 50 "公司大脑已卸载" $0 $BrainTitleFont 272925 FBFAF8
   SendMessage $BrainNext ${WM_SETTEXT} 0 "STR:关闭"
   ShowWindow $BrainBack ${SW_HIDE}
