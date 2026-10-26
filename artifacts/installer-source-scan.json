@@ -1,0 +1,11 @@
+{
+  "version": "0.2.3",
+  "sourceCommit": "75ea09af82e2ce79e3ec016d179b4d41fa1ee598",
+  "verifiedAt": "2026-10-26T12:43:43.135Z",
+  "scanner": "Gitleaks",
+  "scannerVersion": "8.30.1",
+  "scope": "Git history reachable from all local refs before the release-evidence commit",
+  "commits": 26,
+  "result": "passed",
+  "findings": 0
+}
