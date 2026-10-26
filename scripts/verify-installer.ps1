@@ -129,6 +129,9 @@ try {
     do {
       foreach ($candidate in Get-Process -ErrorAction SilentlyContinue | Where-Object { $_.ProcessName -like '*公司大脑*' -or $_.ProcessName -like '*Au_*' }) {
         foreach ($item in [InstallerWindow]::Windows($candidate.Id)) {
+          if (-not $item.Visible -and $item.ClassName -eq '#32770' -and $item.Text.Contains('公司大脑')) {
+            [void][InstallerWindow]::ShowWindow($item.Handle,4)
+          }
           if (((Get-InstallerControls $item.Handle).Text -join "`n").Contains('将移除程序与快捷方式')) { $uninstallOwner = $candidate; $page = $item; break }
         }
         if ($uninstallOwner) { break }
