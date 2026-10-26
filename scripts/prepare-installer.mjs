@@ -23,7 +23,7 @@ export async function prepareInstaller() {
   const visualStudio = execFileSync(locator, ['-latest','-products','*','-requires','Microsoft.VisualStudio.Component.VC.Tools.x86.x64','-property','installationPath'], {encoding:'utf8',windowsHide:true}).trim();
   assert.ok(visualStudio, 'Windows installer UI requires the Visual C++ x86 build tools');
   const compilerSetup = resolve(visualStudio, 'VC/Auxiliary/Build/vcvars32.bat');
-  const command = `call "${compilerSetup}" >nul && cl.exe /nologo /LD /O2 /W4 /WX /GS- /GR- /EHs-c- /Fo"${resolve(target,'BrainWizard.obj')}" "${resolve('build/windows/BrainWizard.cpp')}" /link /NODEFAULTLIB /ENTRY:DllMain /DEF:"${resolve('build/windows/BrainWizard.def')}" /OUT:"${resolve(target,'BrainWizard.dll')}" /IMPLIB:"${resolve(target,'BrainWizard.lib')}" user32.lib gdi32.lib comctl32.lib kernel32.lib`;
+  const command = `call "${compilerSetup}" >nul && cl.exe /nologo /utf-8 /LD /O2 /W4 /WX /GS- /GR- /EHs-c- /Fo"${resolve(target,'BrainWizard.obj')}" "${resolve('build/windows/BrainWizard.cpp')}" /link /NODEFAULTLIB /ENTRY:DllMain /DEF:"${resolve('build/windows/BrainWizard.def')}" /OUT:"${resolve(target,'BrainWizard.dll')}" /IMPLIB:"${resolve(target,'BrainWizard.lib')}" user32.lib gdi32.lib comctl32.lib kernel32.lib`;
   execFileSync('cmd.exe', ['/d','/s','/c',command], {stdio:'inherit',windowsHide:true,windowsVerbatimArguments:true});
   const plugin = await readFile(resolve(target,'BrainWizard.dll'));
   assert.equal(plugin.readUInt16LE(plugin.readUInt32LE(0x3c)+4), 0x14c, 'NSIS UI plug-in must be x86');

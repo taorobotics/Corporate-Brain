@@ -7,6 +7,8 @@ static HWND host, primary, progress, percent, spinner, panel;
 static HBITMAP frames[16];
 static unsigned frame;
 static const UINT_PTR timerId = 0xCB01;
+static volatile LONG installPhase, cancelDecision;
+static HWND stageText;
 static LRESULT CALLBACK panelProc(HWND window,UINT message,WPARAM w,LPARAM l,UINT_PTR,DWORD_PTR) {
   if(message==WM_ERASEBKGND) {
     RECT r;GetClientRect(window,&r);
@@ -56,6 +58,29 @@ static LRESULT CALLBACK buttonProc(HWND window,UINT message,WPARAM w,LPARAM l,UI
   return DefSubclassProc(window,message,w,l);
 }
 static LRESULT CALLBACK windowProc(HWND window,UINT message,WPARAM w,LPARAM l,UINT_PTR,DWORD_PTR) {
+  if((message==WM_COMMAND && LOWORD(w)==IDCANCEL) || message==WM_CLOSE) {
+    const LONG phase=InterlockedCompareExchange(&installPhase,0,0);
+    if(phase==1) {
+      if(InterlockedCompareExchange(&cancelDecision,0,0)!=0)return TRUE;
+      InterlockedExchange(&cancelDecision,2);
+      if(InterlockedCompareExchange(&installPhase,0,0)!=1) {
+        InterlockedExchange(&cancelDecision,0);
+        MessageBoxW(window,L"程序已进入写入阶段，请等待当前步骤结束。",L"公司大脑",MB_OK|MB_ICONINFORMATION);
+        return TRUE;
+      }
+      const int answer=MessageBoxW(window,L"要取消本次安装吗？\r\n将等待当前安全步骤结束，清理临时文件，并保留已有对话与草稿。",L"公司大脑",MB_YESNO|MB_DEFBUTTON2|MB_ICONQUESTION);
+      InterlockedExchange(&cancelDecision,answer==IDYES?1:0);
+      if(answer==IDYES) {
+        EnableWindow(GetDlgItem(window,IDCANCEL),FALSE);
+        if(IsWindow(stageText))SetWindowTextW(stageText,L"正在等待解压结束，随后安全取消…");
+      }
+      return TRUE;
+    }
+    if(phase==2) {
+      MessageBoxW(window,L"正在完成程序写入，请等待当前步骤结束。个人记录不会被清除。",L"公司大脑",MB_OK|MB_ICONINFORMATION);
+      return TRUE;
+    }
+  }
   if(message==WM_DRAWITEM) {
     DRAWITEMSTRUCT* item=reinterpret_cast<DRAWITEMSTRUCT*>(l);
     if(item && item->hwndItem==primary) {
@@ -99,6 +124,23 @@ static BOOL CALLBACK hideNativeControl(HWND window,LPARAM parent) {
 extern "C" void __cdecl NativePage(HWND,int,wchar_t*,Stack** stack,void*) {
   HWND page=reinterpret_cast<HWND>(popHandle(stack));
   EnumChildWindows(page,hideNativeControl,reinterpret_cast<LPARAM>(page));
+}
+extern "C" void __cdecl Prepare(HWND,int,wchar_t*,Stack** stack,void*) {
+  stageText=reinterpret_cast<HWND>(popHandle(stack));
+  InterlockedExchange(&cancelDecision,0);InterlockedExchange(&installPhase,1);
+}
+extern "C" void __cdecl Commit(HWND,int stringSize,wchar_t*,Stack** stack,void*) {
+  InterlockedExchange(&installPhase,2);
+  if(IsWindow(host))EnableWindow(GetDlgItem(host,IDCANCEL),FALSE);
+  while(InterlockedCompareExchange(&cancelDecision,0,0)==2)Sleep(30);
+  Stack* result=reinterpret_cast<Stack*>(GlobalAlloc(GPTR,sizeof(Stack)+stringSize*sizeof(wchar_t)));
+  if(result) {
+    result->text[0]=InterlockedCompareExchange(&cancelDecision,0,0)==1?L'0':L'1';
+    result->next=*stack;*stack=result;
+  }
+}
+extern "C" void __cdecl Complete(HWND,int,wchar_t*,Stack**,void*) {
+  InterlockedExchange(&installPhase,0);
 }
 extern "C" void __cdecl Progress(HWND parent,int,wchar_t*,Stack** stack,void*) {
   stopProgress();host=parent;

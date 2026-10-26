@@ -2,7 +2,7 @@
 
 面向公司员工的 AI 创作与工作平台，包含 Windows 客户端、macOS 客户端、员工网页端和浏览器管理后台。
 
-当前已有 v0.2.2 开发测试版：员工网页端、Windows/macOS 桌面外壳和管理后台可运行，部门账号、文本型 Skill 的提交发布安装及客户端更新入口已接通。真实模型、视频、NAS 和完整 Agent 执行仍按阶段推进，详见[开发状态与验证记录](docs/DEVELOPMENT-STATUS.md)。
+当前开发测试版本为 v0.2.3：员工网页端、Windows/macOS 桌面外壳和管理后台可运行，部门账号、文本型 Skill 的提交发布安装及客户端更新入口已接通，Windows 增加四步安装向导。真实模型、视频、NAS 和完整 Agent 执行仍按阶段推进，详见[开发状态与验证记录](docs/DEVELOPMENT-STATUS.md)。
 
 ## 开源与签名状态
 

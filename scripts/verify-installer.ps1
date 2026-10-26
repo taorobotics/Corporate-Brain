@@ -70,7 +70,7 @@ try {
   Save-InstallerWindow $confirm.Handle (Join-Path $outputPath 'installer-cancel.png')
   $yes = Get-InstallerControls $confirm.Handle | Where-Object Id -eq 6 | Select-Object -First 1
   if (-not $yes) { throw 'Cancel confirmation affirmative button missing' }
-  [void][InstallerWindow]::PostMessage($yes.Handle,0xF5,[IntPtr]::Zero,[IntPtr]::Zero)
+  [void][InstallerWindow]::PostMessage($confirm.Handle,0x111,[IntPtr]6,$yes.Handle)
   if (-not $process.WaitForExit(10000)) { throw 'Installer did not cancel' }
   $checks.Add('Cancellation requires confirmation and exits before installing')
   if ($FullLifecycle) {
@@ -95,7 +95,7 @@ try {
     Invoke-InstallerButton $page.Handle '取消'
     $confirm = Wait-InstallerText $process.Id '要取消本次安装吗'
     $yes = Get-InstallerControls $confirm.Handle | Where-Object Id -eq 6 | Select-Object -First 1
-    [void][InstallerWindow]::PostMessage($yes.Handle,0xF5,[IntPtr]::Zero,[IntPtr]::Zero)
+    [void][InstallerWindow]::PostMessage($confirm.Handle,0x111,[IntPtr]6,$yes.Handle)
     if (-not $process.WaitForExit(120000)) { throw 'Staged cancellation did not finish' }
     if ((Get-FileHash -LiteralPath (Join-Path $qaTarget '公司大脑.exe') -Algorithm SHA256).Hash -ne $oldHash) { throw 'Cancellation changed the old application' }
     $checks.Add('Cancel during package preparation preserves the prior installed application')
@@ -173,9 +173,19 @@ try {
     ConvertTo-Json -Depth 5 | Set-Content -LiteralPath (Join-Path $workspacePath 'artifacts/installer-verification.json') -Encoding utf8
   Write-Output "Installer UI passed: $($checks.Count) checks"
 } catch {
-  @{version=$version; result='failed'; mode=$(if($FullLifecycle){'Disposable Windows CI lifecycle'}else{'UI-only'}); checks=$checks; error=$_.Exception.Message; realInstallUpgradeUninstall=$false; sourceCommit=(git rev-parse HEAD)} |
+  $installerFailure = $_
+  try {
+    if ($process -and -not $process.HasExited) {
+      @([InstallerWindow]::Windows($process.Id) | Where-Object Visible | ForEach-Object { Get-InstallerControls $_.Handle | Select-Object Text,ClassName,Enabled,Id }) |
+        ConvertTo-Json -Depth 4 | Set-Content -LiteralPath (Join-Path $workspacePath 'artifacts/installer-timeout.json') -Encoding utf8
+      foreach ($failedWindow in [InstallerWindow]::Windows($process.Id) | Where-Object { $_.Visible -and $_.ClassName -eq '#32770' }) {
+        Save-InstallerWindow $failedWindow.Handle (Join-Path $outputPath 'installer-timeout.png')
+      }
+    }
+  } catch { Write-Warning 'Native failure capture was unavailable' }
+  @{version=$version; result='failed'; mode=$(if($FullLifecycle){'Disposable Windows CI lifecycle'}else{'UI-only'}); checks=$checks; error=$installerFailure.Exception.Message; realInstallUpgradeUninstall=$false; sourceCommit=(git rev-parse HEAD)} |
     ConvertTo-Json -Depth 5 | Set-Content -LiteralPath (Join-Path $workspacePath 'artifacts/installer-verification.json') -Encoding utf8
-  throw
+  throw $installerFailure
 } finally {
   if ($process -and -not $process.HasExited) { Stop-Process -Id $process.Id }
 }

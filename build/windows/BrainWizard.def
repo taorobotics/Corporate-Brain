@@ -3,6 +3,9 @@ EXPORTS
   Style
  Panel
  NativePage
+ Prepare
+ Commit
+ Complete
   Progress
   Stop
   Release

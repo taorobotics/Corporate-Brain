@@ -9,6 +9,7 @@ StrCpy $appExe "$INSTDIR\${APP_EXECUTABLE_FILENAME}"
 ; Prepare the complete package BEFORE uninstalling an old version. Cancellation here is safe.
 StrCpy $BrainStage 2
 Call BrainUpdateStage
+BrainWizard::Prepare /NOUNLOAD $BrainStatus
 ; NSIS disables Cancel when the install section starts; staging is safe to cancel.
 EnableWindow $BrainCancel 1
 SetOutPath "$PLUGINSDIR\prepared-app"
@@ -24,12 +25,10 @@ ${EndIf}
 !endif
 ; Keep the brief commit phase non-cancellable. Never strand a half-upgrade on user cancellation.
 StrCpy $BrainCritical 1
-EnableWindow $BrainCancel 0
-; A cancel confirmation may still be open when extraction finishes. Wait for its decision.
-${DoWhile} $BrainCancelPending == 2
-  Sleep 50
-${Loop}
-${If} $BrainCancelPending == 1
+; Native atomics coordinate the UI and worker without concurrent NSIS callbacks.
+BrainWizard::Commit /NOUNLOAD
+Pop $0
+${If} $0 != 1
   SetErrorLevel 1
   Quit
 ${EndIf}
@@ -88,4 +87,5 @@ ${EndIf}
 !endif
 StrCpy $BrainDone 1
 StrCpy $BrainCritical 0
+BrainWizard::Complete /NOUNLOAD
 EnableWindow $BrainCancel 1

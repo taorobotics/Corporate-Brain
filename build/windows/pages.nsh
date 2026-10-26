@@ -256,7 +256,6 @@ FunctionEnd
 Function BrainInit
   !insertmacro BrainRejectDataDeletion
   StrCpy $BrainShortcutValue ${BST_CHECKED}
-  StrCpy $BrainCancelPending 0
   StrCpy $BrainCritical 0
   StrCpy $BrainDone 0
   !ifdef APP_64_UNPACKED_SIZE
@@ -489,23 +488,11 @@ Function BrainUserAbort
     MessageBox MB_OK|MB_ICONINFORMATION "正在完成程序写入，请等待当前步骤结束。个人记录不会被清除。"
     Abort
   ${EndIf}
-  StrCpy $BrainCancelPending 2
-  ${If} $BrainCritical == 1
-    StrCpy $BrainCancelPending 0
-    MessageBox MB_OK|MB_ICONINFORMATION "程序已进入写入阶段，请等待当前步骤结束。"
-    Abort
-  ${EndIf}
   MessageBox MB_YESNO|MB_DEFBUTTON2|MB_ICONQUESTION "要取消本次安装吗？$\r$\n将等待当前安全步骤结束，清理临时文件，并保留已有对话与草稿。" IDYES brain_cancel_yes IDNO brain_continue_install
   brain_cancel_yes:
-  StrCpy $BrainCancelPending 1
-  ${If} $BrainStage == 2
-    SendMessage $BrainStatus ${WM_SETTEXT} 0 "STR:正在等待解压结束，随后安全取消…"
-    Abort
-  ${EndIf}
   SetErrorLevel 1
   Return
   brain_continue_install:
-    StrCpy $BrainCancelPending 0
     Abort
 FunctionEnd
 
