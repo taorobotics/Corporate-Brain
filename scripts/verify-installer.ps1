@@ -102,6 +102,21 @@ try {
 
     $page = New-InstallFlow -Upgrade
     Save-InstallerWindow $page.Handle (Join-Path $outputPath 'installer-progress.png')
+    $stageLabel = Get-InstallerControls $page.Handle | Where-Object { $_.Text.Contains('检查磁盘空间与写入权限') } | Select-Object -First 1
+    if (-not $stageLabel) { throw 'Installation stage list missing' }
+    $bounds = [InstallerWindow+Rect]::new()
+    [void][InstallerWindow]::GetWindowRect($page.Handle,[ref]$bounds)
+    $capture = [Drawing.Bitmap]::new((Join-Path $outputPath 'installer-progress.png'))
+    $ink = 0
+    try {
+      for ($y=2;$y -lt $stageLabel.Height-2;$y+=3) {
+        for ($x=2;$x -lt $stageLabel.Width-2;$x+=3) {
+          $pixel = $capture.GetPixel($stageLabel.Left-$bounds.Left+$x,$stageLabel.Top-$bounds.Top+$y)
+          if ($pixel.R -lt 210 -and $pixel.G -lt 210 -and $pixel.B -lt 210) { $ink++ }
+        }
+      }
+    } finally { $capture.Dispose() }
+    if ($ink -lt 25) { throw 'Installation stage text exists but is covered or not painted' }
     $bar = Get-InstallerControls $page.Handle | Where-Object ClassName -eq 'msctls_progress32' | Select-Object -First 1
     if (-not $bar) { throw 'Native extraction progress control missing' }
     $loading = Get-InstallerControls $page.Handle | Where-Object { $_.Bitmap -and $_.Width -lt 60 } | Select-Object -First 1

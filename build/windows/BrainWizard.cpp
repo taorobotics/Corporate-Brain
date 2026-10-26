@@ -17,9 +17,15 @@ static LRESULT CALLBACK panelProc(HWND window,UINT message,WPARAM w,LPARAM l,UIN
     r.right=MulDiv(190,GetDpiForWindow(window),96);
     HBRUSH sideBrush=CreateSolidBrush(RGB(241,240,236));
     FillRect(reinterpret_cast<HDC>(w),&r,sideBrush);DeleteObject(sideBrush);
+    if(GetPropW(window,L"Brain.ProgressPage")) {
+      const int dpi=GetDpiForWindow(window);
+      RECT card={MulDiv(222,dpi,96),MulDiv(232,dpi,96),MulDiv(872,dpi,96),MulDiv(457,dpi,96)};
+      HBRUSH border=CreateSolidBrush(RGB(223,220,214));
+      FrameRect(reinterpret_cast<HDC>(w),&card,border);DeleteObject(border);
+    }
     return 1;
   }
-  if(message==WM_NCDESTROY)RemoveWindowSubclass(window,panelProc,1);
+  if(message==WM_NCDESTROY) {RemovePropW(window,L"Brain.ProgressPage");RemoveWindowSubclass(window,panelProc,1);}
   return DefSubclassProc(window,message,w,l);
 }
 static BOOL CALLBACK hideDefaultSurface(HWND window,LPARAM) {
@@ -123,6 +129,7 @@ static BOOL CALLBACK hideNativeControl(HWND window,LPARAM parent) {
 }
 extern "C" void __cdecl NativePage(HWND,int,wchar_t*,Stack** stack,void*) {
   HWND page=reinterpret_cast<HWND>(popHandle(stack));
+  SetPropW(page,L"Brain.ProgressPage",reinterpret_cast<HANDLE>(1));
   EnumChildWindows(page,hideNativeControl,reinterpret_cast<LPARAM>(page));
 }
 extern "C" void __cdecl Prepare(HWND,int,wchar_t*,Stack** stack,void*) {

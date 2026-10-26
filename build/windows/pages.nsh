@@ -225,9 +225,6 @@ Function ${PREFIX}BrainProgressShow
   Pop $BrainSpinner
   !insertmacro BMove $BrainSpinner 222 192 28 28
   !insertmacro BLabel 262 194 600 32 "正在准备安装…" $BrainStatus $BrainFont 272925 FBFAF8
-  System::Call 'user32::CreateWindowExW(i 0, w "BUTTON", w "", i 0x50000007, i 0, i 0, i 1, i 1, p $BrainDialog, p 0, p 0, p 0)p.r0'
-  !insertmacro BMove $0 222 232 650 225
-  SetCtlColors $0 81827C FBFAF8
   !insertmacro BLabel 234 252 630 30 "已完成  检查磁盘空间与写入权限" $BrainRow1 $BrainFont 52554F FBFAF8
   !insertmacro BLabel 234 292 630 30 "进行中  解压并准备应用文件" $BrainRow2 $BrainFont B76C4E FBFAF8
   !insertmacro BLabel 234 332 630 30 "等待    写入程序与资源" $BrainRow3 $BrainFont 81827C FBFAF8
