@@ -124,12 +124,16 @@ try {
     $uninstall = Join-Path $qaTarget 'Uninstall 公司大脑.exe'
     $process = Start-Process -FilePath $uninstall -PassThru -WindowStyle Hidden
     # NSIS relocates uninstallers; wait for the process which owns the confirmation UI.
-    $until = [DateTime]::UtcNow.AddSeconds(20)
+    $until = [DateTime]::UtcNow.AddSeconds(40)
     $uninstallOwner = $null
+    $uninstallIds = [Collections.Generic.HashSet[int]]::new()
+    [void]$uninstallIds.Add($process.Id)
     do {
-      foreach ($candidate in Get-Process -ErrorAction SilentlyContinue | Where-Object { $_.ProcessName -like '*公司大脑*' -or $_.ProcessName -like '*Au_*' }) {
+      # Follow NSIS's relocated child by ancestry; its temporary name is not an API.
+      foreach ($child in Get-CimInstance Win32_Process | Where-Object { $uninstallIds.Contains([int]$_.ParentProcessId) }) { [void]$uninstallIds.Add([int]$child.ProcessId) }
+      foreach ($candidate in Get-Process -Id @($uninstallIds) -ErrorAction SilentlyContinue) {
         foreach ($item in [InstallerWindow]::Windows($candidate.Id)) {
-          if (-not $item.Visible -and $item.ClassName -eq '#32770' -and $item.Text.Contains('公司大脑')) {
+          if (-not $item.Visible -and $item.ClassName -eq '#32770') {
             [void][InstallerWindow]::ShowWindow($item.Handle,4)
           }
           if (((Get-InstallerControls $item.Handle).Text -join "`n").Contains('将移除程序与快捷方式')) { $uninstallOwner = $candidate; $page = $item; break }
@@ -138,7 +142,11 @@ try {
       }
       if (-not $uninstallOwner) { Start-Sleep -Milliseconds 100 }
     } while (-not $uninstallOwner -and [DateTime]::UtcNow -lt $until)
-    if (-not $uninstallOwner) { throw 'Native uninstall confirmation missing' }
+    if (-not $uninstallOwner) {
+      @([InstallerWindow]::Windows($process.Id)) | ConvertTo-Json -Depth 4 | Set-Content -LiteralPath (Join-Path $workspacePath 'artifacts/installer-timeout.json') -Encoding utf8
+      $launcherExit = if ($process.HasExited) { $process.ExitCode } else { 'running' }
+      throw "Native uninstall confirmation missing (launcher: $launcherExit; process IDs: $($uninstallIds -join ','))"
+    }
     Save-InstallerWindow $page.Handle (Join-Path $outputPath 'installer-uninstall.png')
     Invoke-InstallerButton $page.Handle '卸载应用'
     $page = Wait-InstallerText $uninstallOwner.Id '程序与快捷方式已移除' 120
