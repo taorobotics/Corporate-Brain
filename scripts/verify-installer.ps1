@@ -53,6 +53,12 @@ $process = $null
 try {
   $process = Start-Process -FilePath $installerPath -PassThru -WindowStyle Hidden
   $window = Wait-InstallerText $process.Id '完整对话与个人草稿保存在你的电脑'
+  $windowRect = [InstallerWindow+Rect]::new()
+  [void][InstallerWindow]::GetWindowRect($window.Handle,[ref]$windowRect)
+  $workArea = [InstallerWindow]::WorkArea($window.Handle)
+  $expectedLeft = $workArea.Left + (($workArea.Right - $workArea.Left) - $windowRect.Right + $windowRect.Left) / 2
+  $expectedTop = $workArea.Top + (($workArea.Bottom - $workArea.Top) - $windowRect.Bottom + $windowRect.Top) / 2
+  if ([Math]::Abs($windowRect.Left - $expectedLeft) -gt 4 -or [Math]::Abs($windowRect.Top - $expectedTop) -gt 4) { throw 'Installer window is not centered in the current monitor work area' }
   $heading = Get-InstallerControls $window.Handle | Where-Object { $_.Text -match '^(欢迎使用公司大脑安装向导|升级公司大脑)$' } | Select-Object -First 1
   if (-not $heading -or $heading.Width -lt 300 -or $heading.Height -lt 25) { throw 'Welcome heading is clipped or missing' }
   Save-InstallerWindow $window.Handle (Join-Path $outputPath 'installer-welcome.png')

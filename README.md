@@ -2,7 +2,21 @@
 
 面向公司员工的 AI 创作与工作平台，包含 Windows 客户端、macOS 客户端、员工网页端和浏览器管理后台。
 
-当前开发测试版本为 v0.2.3：员工网页端、Windows/macOS 桌面外壳和管理后台可运行，部门账号、文本型 Skill 的提交发布安装及客户端更新入口已接通，Windows 增加四步安装向导。真实模型、视频、NAS 和完整 Agent 执行仍按阶段推进，详见[开发状态与验证记录](docs/DEVELOPMENT-STATUS.md)。
+当前开发测试版本为 v0.2.4：员工网页端、Windows/macOS 桌面外壳和管理后台可运行，部门账号、文本型 Skill 的提交发布安装及客户端更新入口已接通，Windows 增加四步安装向导并在启动时居中显示。真实模型、视频、NAS 和完整 Agent 执行仍按阶段推进，详见[开发状态与验证记录](docs/DEVELOPMENT-STATUS.md)。
+
+## 界面预览
+
+以下图片来自实际运行中的员工客户端、管理后台和 Windows 安装器，已去除账号密钥、员工对话和公司资料。安装器截图展示欢迎页与真实安装进度页；正式安装包请从 [Releases](https://github.com/taorobotics/Corporate-Brain/releases/latest) 下载。
+
+<p align="center">
+  <img src="docs/readme/employee-chat.png" alt="公司大脑员工客户端" width="49%" />
+  <img src="docs/readme/admin-users.png" alt="公司大脑管理后台" width="49%" />
+</p>
+
+<p align="center">
+  <img src="docs/readme/windows-installer-welcome.png" alt="Windows 安装器欢迎页" width="49%" />
+  <img src="docs/readme/windows-installer-progress.png" alt="Windows 安装器真实进度页" width="49%" />
+</p>
 
 ## 开源与签名状态
 

@@ -27,6 +27,9 @@ public static class InstallerWindow {
   [DllImport("user32.dll")] public static extern bool PrintWindow(IntPtr h,IntPtr dc,uint flags);
   [DllImport("user32.dll")] public static extern bool RedrawWindow(IntPtr h,IntPtr r,IntPtr region,uint flags);
   [DllImport("user32.dll")] public static extern bool GetWindowRect(IntPtr h,out Rect r);
+  [DllImport("user32.dll")] static extern IntPtr MonitorFromWindow(IntPtr h,uint flags);
+  [StructLayout(LayoutKind.Sequential)] struct MonitorInfo { public int Size; public Rect Monitor; public Rect Work; public uint Flags; }
+  [DllImport("user32.dll",CharSet=CharSet.Unicode)] static extern bool GetMonitorInfo(IntPtr monitor,ref MonitorInfo info);
   [StructLayout(LayoutKind.Sequential)] public struct Rect { public int Left,Top,Right,Bottom; }
   static InstallerControl Read(IntPtr h) {
     var s=new StringBuilder(4096); SendMessage(h,0xD,(IntPtr)s.Capacity,s);
@@ -41,6 +44,10 @@ public static class InstallerWindow {
   }
   public static InstallerControl[] Children(IntPtr root) {
     var list=new List<InstallerControl>();EnumChildWindows(root,(h,p)=>{list.Add(Read(h));return true;},IntPtr.Zero);return list.ToArray();
+  }
+  public static Rect WorkArea(IntPtr window) {
+    var monitor=MonitorFromWindow(window,2);var info=new MonitorInfo {Size=Marshal.SizeOf<MonitorInfo>()};
+    return GetMonitorInfo(monitor,ref info) ? info.Work : new Rect();
   }
 }
 '@

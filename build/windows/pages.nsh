@@ -63,6 +63,7 @@ Function ${PREFIX}BrainGuiInit
   GetDlgItem $BrainCancel $HWNDPARENT 2
   GetDlgItem $BrainBack $HWNDPARENT 3
   !insertmacro BMove $HWNDPARENT 0 0 920 660
+  BrainWizard::Center /NOUNLOAD $HWNDPARENT
   ; Hide the default MUI header/branding; the page owns these surfaces.
   GetDlgItem $0 $HWNDPARENT 1037
   ShowWindow $0 ${SW_HIDE}

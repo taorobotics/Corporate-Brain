@@ -1,6 +1,7 @@
 LIBRARY BrainWizard
 EXPORTS
   Style
+  Center
  Panel
  NativePage
  Prepare

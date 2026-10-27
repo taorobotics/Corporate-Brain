@@ -117,6 +117,21 @@ extern "C" void __cdecl Style(HWND parent,int,wchar_t*,Stack**,void*) {
   SetWindowSubclass(primary,buttonProc,1,0);
   SendMessageW(primary,BM_SETSTYLE,BS_OWNERDRAW,TRUE);
 }
+extern "C" void __cdecl Center(HWND parent,int,wchar_t*,Stack**,void*) {
+  if(!IsWindow(parent)) return;
+  RECT windowRect;
+  if(!GetWindowRect(parent,&windowRect)) return;
+  const int width=windowRect.right-windowRect.left;
+  const int height=windowRect.bottom-windowRect.top;
+  HMONITOR monitor=MonitorFromWindow(parent,MONITOR_DEFAULTTONEAREST);
+  MONITORINFO info;
+  info.cbSize=sizeof(info);
+  if(!GetMonitorInfoW(monitor,&info)) return;
+  const RECT work=info.rcWork;
+  const int x=work.left+((work.right-work.left)-width)/2;
+  const int y=work.top+((work.bottom-work.top)-height)/2;
+  SetWindowPos(parent,0,x,y,0,0,SWP_NOSIZE|SWP_NOZORDER|SWP_NOACTIVATE);
+}
 extern "C" void __cdecl Panel(HWND,int,wchar_t*,Stack** stack,void*) {
   panel=reinterpret_cast<HWND>(popHandle(stack));
   SetWindowLongPtrW(panel,GWL_STYLE,GetWindowLongPtrW(panel,GWL_STYLE)|WS_CLIPCHILDREN);
