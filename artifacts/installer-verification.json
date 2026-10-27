@@ -1,15 +1,15 @@
 {
-  "realInstallUpgradeUninstall": false,
-  "defaultPath": "D:\\Applications\\Corporate Brain",
-  "version": "0.2.4",
-  "sourceCommit": "6601fa047e001aa5fb2c6b618f8a0e87b2e22b61",
-  "mode": "UI-only",
-  "result": "passed",
-  "sha256": "1251b966f7f7b2eb213dd152497cb0c5b40f3c4cd3d9e082923c0308d7299bd0",
   "physicalEmployeeDeviceTested": false,
   "checks": [
     "Native welcome page, privacy and license links are visible",
     "Native path page shows actual space, directory and shortcut selection",
     "Cancellation requires confirmation and exits before installing"
-  ]
+  ],
+  "mode": "UI-only",
+  "defaultPath": "D:\\Applications\\Corporate Brain",
+  "sourceCommit": "65ffe5a8746af76f833d15561803cba5fd1cb7a5",
+  "sha256": "a78c29e18b959642a52b4161a10bf12af6f1d0b704e75c3951788989ec26a883",
+  "realInstallUpgradeUninstall": false,
+  "result": "passed",
+  "version": "0.2.5"
 }
