@@ -55,6 +55,7 @@ try {
   const env = { ...process.env };
   delete env.BRAIN_APP_URL;
   delete env.BRAIN_VERIFY;
+  env.BRAIN_ADMIN_SETUP = '1';
   delete env.ELECTRON_RUN_AS_NODE;
   child = spawn(binary, [`--user-data-dir=${join(scratch, 'profile')}`, `--remote-debugging-port=${port}`], { env, stdio: ['ignore', 'ignore', 'pipe'] });
   let stderr = '';
