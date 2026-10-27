@@ -4,7 +4,7 @@
 
 ## 当前发布
 
-[v0.2.5 Release](https://github.com/taorobotics/Corporate-Brain/releases/tag/v0.2.5) 已发布为 Latest，包含 Windows 四步安装向导、两种 Mac 安装包和服务器更新包，README 已加入员工客户端、管理后台与安装器的实际界面预览。安装器启动后会按当前显示器工作区居中，欢迎页优先使用系统 HarmonyOS Sans SC、无该字体时回退 Microsoft YaHei UI，许可与隐私链接在内容区底部居中。四个包来自同一版本标签，摘要、校验和真实报告已复核，见 [发布清单](../artifacts/releases/v0.2.5.json)。各构建通过 18 项测试和生产构建，Windows 通过 22 项桌面检查，两种 Mac 各通过 21 项及实际 DMG 挂载启动。Windows 另通过 11 项真实安装、准备阶段取消、v0.2.2 覆盖升级、立即打开、界面与静默卸载及合成个人记录保留检查；客户端法律文件、Electron/Chromium 许可与 Windows 产品元数据均通过打包检查，服务器包通过完整性与数据排除检查。
+[v0.2.6 Release](https://github.com/taorobotics/Corporate-Brain/releases/tag/v0.2.6) 已发布为 Latest，包含 Windows 四步安装向导、两种 Mac 安装包和服务器更新包，README 已加入员工客户端、管理后台与安装器的实际界面预览。安装器启动后会按当前显示器工作区居中，欢迎页优先使用系统 HarmonyOS Sans SC、无该字体时回退 Microsoft YaHei UI，许可与隐私链接在内容区底部居中。临时目录空间检查改为约 2 倍程序所需空间，并在不足时显示实际可用与需要的空间。四个包来自同一版本标签，摘要、校验和真实报告已复核，见 [发布清单](../artifacts/releases/v0.2.6.json)。各构建通过 18 项测试和生产构建，Windows 通过 22 项桌面检查，两种 Mac 各通过 21 项及实际 DMG 挂载启动。Windows 另通过 11 项真实安装、准备阶段取消、v0.2.2 覆盖升级、立即打开、界面与静默卸载及合成个人记录保留检查；客户端法律文件、Electron/Chromium 许可与 Windows 产品元数据均通过打包检查，服务器包通过完整性与数据排除检查。
 
 v0.2.2 及更早 Release 和验证清单继续保留。v0.2.1 因 Mac Electron 许可位置检查失败，保留为未发布候选，未移动旧标签或替换旧包。Windows 安装生命周期验证运行于临时 runner；Windows 仍未签名，Mac 为 ad-hoc，员工物理设备与企业安全策略、可信签名仍待验收。
 
