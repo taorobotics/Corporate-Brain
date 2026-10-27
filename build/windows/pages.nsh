@@ -466,19 +466,19 @@ Function BrainValidateTarget
     !insertmacro BrainInvalid "无法使用此安装位置：没有写入权限。请更改位置后重试。"
   ${EndIf}
   Delete "$0"
-  ; Reserve the archive, two staged copies, commit and cache headroom before writing.
+  ; Reserve the compressed archive, one staged copy and working headroom.
   ${GetRoot} "$TEMP" $0
   System::Call 'kernel32::GetDiskFreeSpaceExW(w "$0\", *l.r1, p 0, p 0)i.r2'
   ${If} $2 == 0
-    !insertmacro BrainInvalid "系统临时目录不可用，请检查磁盘后重试。"
+    !insertmacro BrainInvalid "系统临时目录不可用，请检查系统磁盘后重试。"
   ${EndIf}
   System::Int64Op $1 / 1048576
-  Pop $1
-  IntOp $2 $BrainRequiredMB * 4
-  System::Int64Op $1 < $2
+  Pop $BrainTempFreeMB
+  IntOp $BrainTempRequiredMB $BrainRequiredMB * 2
+  System::Int64Op $BrainTempFreeMB < $BrainTempRequiredMB
   Pop $0
   ${If} $0 != 0
-    !insertmacro BrainInvalid "系统临时目录空间不足。请先释放系统磁盘空间，再运行安装。"
+    !insertmacro BrainInvalid "系统临时目录空间不足。当前可用约 $BrainTempFreeMB MB，需要约 $BrainTempRequiredMB MB。请释放系统磁盘空间后再运行安装。"
   ${EndIf}
 FunctionEnd
 

@@ -49,6 +49,8 @@ Var BrainOldPath
 Var BrainOldVersion
 Var BrainRequiredMB
 Var BrainFreeMB
+Var BrainTempRequiredMB
+Var BrainTempFreeMB
 Var BrainCritical
 Var BrainDone
 Var BrainStage
