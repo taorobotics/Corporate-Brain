@@ -4,7 +4,7 @@
 
 ## 当前发布
 
-[v0.2.9 Release](https://github.com/taorobotics/Corporate-Brain/releases/tag/v0.2.9) 将沿用 Windows 四步安装向导、两种 Mac 安装包和服务器更新包，并加入员工端预置公司入口。员工包只读取安装资源中的 URL，账号、密码、密钥不进入安装包；没有设置 `BRAIN_APP_URL` 的测试包显示联系管理员提示。安装器准备、写入、注册和完成检查前会立即刷新进度页，写入阶段文案与实际动作一致。macOS 首次启动验证会在管理员配置环境中检查不安全地址拒绝逻辑。Windows 和 Mac 资源、校验和真实发布报告在 GitHub Actions 完成后补充到发布清单。
+[v0.2.9 Release](https://github.com/taorobotics/Corporate-Brain/releases/tag/v0.2.9) 已发布 Windows x64、macOS arm64/x64 和服务器 ZIP。员工包只读取安装资源中的 URL，账号、密码、密钥不进入安装包；没有设置 `BRAIN_APP_URL` 的测试包显示联系管理员提示。安装器准备、写入、注册和完成检查前会立即刷新进度页，写入阶段文案与实际动作一致。macOS 首次启动验证会在管理员配置环境中检查不安全地址拒绝逻辑。四个发布资产的摘要、验证报告和校验和已复核，见 [v0.2.9 发布清单](../artifacts/releases/v0.2.9.json)。
 
 v0.2.2 及更早 Release 和验证清单继续保留。v0.2.1 因 Mac Electron 许可位置检查失败，保留为未发布候选，未移动旧标签或替换旧包。Windows 安装生命周期验证运行于临时 runner；Windows 仍未签名，Mac 为 ad-hoc，员工物理设备与企业安全策略、可信签名仍待验收。
 
