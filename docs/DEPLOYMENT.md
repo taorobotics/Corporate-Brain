@@ -6,7 +6,7 @@
 
 根目录执行 npm ci、npm run dev，网页地址 http://127.0.0.1:4173，业务服务 http://127.0.0.1:4310。首次访问初始化管理员；用户名使用 2–64 位字母、数字及 . _ @ -，密码至少 12 位。没有内置员工名单、部门名单或默认管理员密码。
 
-npm run desktop 启动桌面开发版。打包版本首次启动显示连接公司服务器，填写公司统一入口。仅允许 HTTPS，localhost 和 127.0.0.1 等本机地址可使用 HTTP。当前只支持根路径部署，不支持将应用放在域名的子路径下。
+npm run desktop 启动桌面开发版。员工分发包在构建时读取 `BRAIN_APP_URL`，将公司统一入口作为不含密钥的配置文件放进应用资源；员工首次打开直接进入账号登录页。没有预设入口的包只显示联系管理员的提示。仅允许 HTTPS，localhost 和 127.0.0.1 等本机地址可使用 HTTP。当前只支持根路径部署，不支持将应用放在域名的子路径下。
 
 ## 公司服务配置
 
@@ -19,7 +19,8 @@ npm run desktop 启动桌面开发版。打包版本首次启动显示连接公�
 | BRAIN_DATABASE | .data/platform.sqlite | 公司业务 SQLite 数据库文件 |
 | APP_ORIGIN | 本机开发入口列表 | 公司实际 HTTPS 根入口，用于写请求来源校验 |
 | NODE_ENV | 未设置 | 生产入口设置 production，启用安全 Cookie；须经 HTTPS 访问 |
-| BRAIN_APP_URL | 开发版默认本机 4173 | 桌面开发或公司预设的服务器地址；打包版本也可在连接页配置 |
+| BRAIN_APP_URL | 开发版默认本机 4173 | 桌面开发或公司预设的服务器地址；打包时只写入 URL，不写入账号、密码或密钥 |
+| BRAIN_ADMIN_SETUP | 未设置 | 仅管理员配置环境开启服务器入口配置页；普通员工包不要设置 |
 | BRAIN_GITHUB_TOKEN | 未配置 | 仅服务器使用，读取私有仓库发布与安装包；建议限定本仓库、Contents: read |
 | BRAIN_UPDATE_SOURCE | private | 仓库公开后设置 public 允许无 token 读取公开 Release；不改变公司登录权限 |
 

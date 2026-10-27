@@ -10,6 +10,7 @@ StrCpy $appExe "$INSTDIR\${APP_EXECUTABLE_FILENAME}"
 StrCpy $BrainStage 2
 Call BrainUpdateStage
 BrainWizard::Prepare /NOUNLOAD $BrainStatus
+BrainWizard::Refresh /NOUNLOAD
 ; NSIS disables Cancel when the install section starts; staging is safe to cancel.
 EnableWindow $BrainCancel 1
 SetOutPath "$PLUGINSDIR\prepared-app"
@@ -34,6 +35,7 @@ ${If} $0 != 1
 ${EndIf}
 StrCpy $BrainStage 3
 Call BrainUpdateStage
+BrainWizard::Refresh /NOUNLOAD
 Var /GLOBAL keepShortcuts
 StrCpy $keepShortcuts "false"
 !insertmacro setIsTryToKeepShortcuts
@@ -64,6 +66,7 @@ ${Loop}
 
 StrCpy $BrainStage 4
 Call BrainUpdateStage
+BrainWizard::Refresh /NOUNLOAD
 !insertmacro registryAddInstallInfo
 !insertmacro addStartMenuLink $keepShortcuts
 ${If} $BrainShortcutValue == ${BST_CHECKED}
@@ -76,6 +79,7 @@ ${Else}
 ${EndIf}
 StrCpy $BrainStage 5
 Call BrainUpdateStage
+BrainWizard::Refresh /NOUNLOAD
 ${IfNot} ${FileExists} "$appExe"
 ${OrIfNot} ${FileExists} "$INSTDIR\resources\app.asar"
   MessageBox MB_OK|MB_ICONSTOP "安装检查失败，请重新运行安装程序。个人对话和草稿保留在本机。" /SD IDOK

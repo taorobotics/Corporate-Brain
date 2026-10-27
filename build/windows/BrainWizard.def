@@ -7,6 +7,7 @@ EXPORTS
  Prepare
  Commit
  Complete
+ Refresh
   Progress
   Stop
   Release

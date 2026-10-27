@@ -2220,6 +2220,15 @@ tbody > tr:hover {
   font-size: 12px;
   margin-bottom: 25px;
 }
+.auth-card > .auth-notice {
+  padding: 11px 13px;
+  border: 1px solid #ead8ce;
+  border-radius: 10px;
+  background: #fcf7f3;
+  color: #795e50;
+  line-height: 1.7;
+  margin: -8px 0 18px;
+}
 .auth-card form > .button {
   width: 100%;
   margin-top: 10px;

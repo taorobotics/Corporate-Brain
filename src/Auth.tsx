@@ -12,7 +12,10 @@ export default function Auth({
   onLogin: (user: User) => void;
   onLegal: () => void;
 }) {
-  const [setup, setSetup] = useState(bootstrap),
+  const desktopEmployee =
+      !!window.brainDesktop && window.brainDesktop.allowBootstrap !== true,
+    setupAllowed = bootstrap && !desktopEmployee;
+  const [setup, setSetup] = useState(setupAllowed),
     [busy, setBusy] = useState(false),
     [error, setError] = useState("");
   async function submit(e: FormEvent<HTMLFormElement>) {
@@ -44,12 +47,17 @@ export default function Auth({
         <div className="eyebrow">
           <LockKey size={16} /> 公司工作空间
         </div>
-        <h1>{setup ? "建立你的公司大脑" : "欢迎回来"}</h1>
+        <h1>{setup ? "建立你的公司大脑" : "登录公司账号"}</h1>
         <p>
           {setup
             ? "创建首位管理员，随后按部门开通员工账号。"
-            : "登录公司账号，继续你的工作。"}
+            : "使用管理员分配的账号和密码登录，继续你的工作。"}
         </p>
+        {desktopEmployee && bootstrap && (
+          <p role="status" className="auth-notice">
+            公司服务还没有完成初始化。请联系管理员开通公司账号；此客户端不提供注册入口。
+          </p>
+        )}
         <form onSubmit={submit}>
           {setup && (
             <>

@@ -9,21 +9,23 @@ const {
 const { DesktopUpdates } = require("./updates.cjs");
 const { join } = require("node:path");
 const fs = require("node:fs/promises");
+const fsSync = require("node:fs");
 const { createHash } = require("node:crypto");
 let win;
 let updater,
   installing = false;
-let address = process.env.BRAIN_APP_URL || "";
-if (!address) {
+function readCompanyAddress(file) {
   try {
-    address = JSON.parse(
-      require("node:fs").readFileSync(
-        join(app.getPath("userData"), "company-server.json"),
-        "utf8",
-      ),
-    ).url;
-  } catch {}
+    const value = JSON.parse(fsSync.readFileSync(file, "utf8")).url;
+    return typeof value === "string" ? value.trim() : "";
+  } catch {
+    return "";
+  }
 }
+let address = process.env.BRAIN_APP_URL || "";
+if (!address) address = readCompanyAddress(join(app.getPath("userData"), "company-server.json"));
+if (!address && app.isPackaged)
+  address = readCompanyAddress(join(process.resourcesPath, "company-server.json"));
 if (!address && !app.isPackaged) address = "http://127.0.0.1:4173";
 function validateAddress(value) {
   const url = new URL(value);
@@ -240,6 +242,8 @@ ipcMain.on("edit:action", (event, action) => {
 });
 ipcMain.handle("company:setup", (event) => {
   sender(event);
+  if (process.env.BRAIN_VERIFY !== "1" && process.env.BRAIN_ADMIN_SETUP !== "1")
+    throw new Error("公司服务器由管理员统一配置");
   openServerSetup();
 });
 for (const [channel, method] of [
@@ -464,6 +468,8 @@ function openServerSetup() {
   setupWindow.loadFile(join(__dirname, "server-setup.html"));
 }
 ipcMain.handle("company:connect", async (event, value) => {
+  if (process.env.BRAIN_VERIFY !== "1" && process.env.BRAIN_ADMIN_SETUP !== "1")
+    throw new Error("请使用管理员预配置的安装包");
   if (
     !setupWindow ||
     event.sender !== setupWindow.webContents ||

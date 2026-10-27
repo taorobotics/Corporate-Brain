@@ -322,7 +322,7 @@ export default function App() {
                       ["新建任务", "new"],
                       ["导出本地记录", "export"],
                       ["导入本地记录", "import"],
-                      ...(window.brainDesktop
+                      ...(window.brainDesktop?.canChangeServer
                         ? [["切换公司服务器", "server"]]
                         : []),
                     ]

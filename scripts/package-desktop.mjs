@@ -1,7 +1,10 @@
 import { spawn } from 'node:child_process';
-import { existsSync } from 'node:fs';
+import { existsSync, mkdirSync, writeFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 const args = process.argv.slice(2);
+const generated = resolve('build/generated/company-server.json');
+mkdirSync(resolve('build/generated'), { recursive: true });
+writeFileSync(generated, `${JSON.stringify({ url: process.env.BRAIN_APP_URL || '' }, null, 2)}\n`, 'utf8');
 if (args.includes('--win')) {
   const { prepareInstaller } = await import('./prepare-installer.mjs');
   await prepareInstaller();

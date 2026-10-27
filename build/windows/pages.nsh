@@ -268,7 +268,7 @@ Function ${PREFIX}BrainProgressShow
   !insertmacro BLabel 262 194 600 32 "正在准备安装…" $BrainStatus $BrainFont 272925 FBFAF8
   !insertmacro BLabel 234 252 630 30 "已完成  检查磁盘空间与写入权限" $BrainRow1 $BrainFont 52554F FBFAF8
   !insertmacro BLabel 234 292 630 30 "进行中  解压并准备应用文件" $BrainRow2 $BrainFont B76C4E FBFAF8
-  !insertmacro BLabel 234 332 630 30 "等待    写入程序与资源" $BrainRow3 $BrainFont 81827C FBFAF8
+  !insertmacro BLabel 234 332 630 30 "等待    替换旧版并写入程序" $BrainRow3 $BrainFont 81827C FBFAF8
   !insertmacro BLabel 234 372 630 30 "等待    注册卸载入口与快捷方式" $BrainRow4 $BrainFont 81827C FBFAF8
   !insertmacro BLabel 234 412 630 30 "等待    完成安装检查" $BrainRow5 $BrainFont 81827C FBFAF8
   ShowWindow $BrainDialog ${SW_SHOW}
@@ -490,10 +490,10 @@ Function BrainUpdateStage
     SendMessage $BrainStatus ${WM_SETTEXT} 0 "STR:正在解压并准备应用文件…"
   ${ElseIf} $BrainStage == 3
     SendMessage $BrainRow2 ${WM_SETTEXT} 0 "STR:已完成  解压并准备应用文件"
-    SendMessage $BrainRow3 ${WM_SETTEXT} 0 "STR:进行中  写入程序与资源"
-    SendMessage $BrainStatus ${WM_SETTEXT} 0 "STR:正在写入程序，请等待此步骤完成…"
+    SendMessage $BrainRow3 ${WM_SETTEXT} 0 "STR:进行中  替换旧版并写入程序"
+    SendMessage $BrainStatus ${WM_SETTEXT} 0 "STR:正在替换旧版并写入程序，请等待此步骤完成…"
   ${ElseIf} $BrainStage == 4
-    SendMessage $BrainRow3 ${WM_SETTEXT} 0 "STR:已完成  写入程序与资源"
+    SendMessage $BrainRow3 ${WM_SETTEXT} 0 "STR:已完成  替换旧版并写入程序"
     SendMessage $BrainRow4 ${WM_SETTEXT} 0 "STR:进行中  注册卸载入口与快捷方式"
     SendMessage $BrainStatus ${WM_SETTEXT} 0 "STR:正在注册卸载入口与快捷方式…"
   ${ElseIf} $BrainStage == 5

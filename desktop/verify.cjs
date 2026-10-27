@@ -621,7 +621,7 @@ async function waitFor(test, label, timeout = 12000) {
   web.debugger.detach();
   await js(`document.querySelector('[aria-label="打开账号菜单"]').click()`);
   await click("退出登录");
-  await waitFor(() => has("欢迎回来"), "logout");
+  await waitFor(() => has("登录公司账号"), "logout");
   await fill("input[name=username]", employee.user.username);
   await fill("input[name=password]", employee.initialPassword);
   await click("登录");
@@ -633,7 +633,7 @@ async function waitFor(test, label, timeout = 12000) {
   await fill("input[name=current]", employee.initialPassword);
   await fill("input[name=password]", newPassword);
   await click("保存并重新登录");
-  await waitFor(() => has("欢迎回来"), "relogin after password change");
+  await waitFor(() => has("登录公司账号"), "relogin after password change");
   await fill("input[name=username]", employee.user.username);
   await fill("input[name=password]", newPassword);
   await click("登录");

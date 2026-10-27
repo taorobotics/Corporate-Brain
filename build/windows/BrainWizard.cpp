@@ -164,6 +164,12 @@ extern "C" void __cdecl Commit(HWND,int stringSize,wchar_t*,Stack** stack,void*)
 extern "C" void __cdecl Complete(HWND,int,wchar_t*,Stack**,void*) {
   InterlockedExchange(&installPhase,0);
 }
+extern "C" void __cdecl Refresh(HWND parent,int,wchar_t*,Stack**,void*) {
+  HWND window=IsWindow(parent)?parent:host;
+  if(!IsWindow(window)) return;
+  RedrawWindow(window,nullptr,nullptr,RDW_INVALIDATE|RDW_UPDATENOW|RDW_ALLCHILDREN);
+  UpdateWindow(window);
+}
 extern "C" void __cdecl Progress(HWND parent,int,wchar_t*,Stack** stack,void*) {
   stopProgress();host=parent;
   progress=reinterpret_cast<HWND>(popHandle(stack));
