@@ -1,15 +1,15 @@
 {
-  "physicalEmployeeDeviceTested": false,
+  "version": "0.2.6",
+  "result": "passed",
   "checks": [
     "Native welcome page, privacy and license links are visible",
     "Native path page shows actual space, directory and shortcut selection",
     "Cancellation requires confirmation and exits before installing"
   ],
-  "mode": "UI-only",
+  "sourceCommit": "3690ca2e5b442e268522fa399ff848252547c48e",
   "defaultPath": "D:\\Applications\\Corporate Brain",
-  "sourceCommit": "65ffe5a8746af76f833d15561803cba5fd1cb7a5",
-  "sha256": "a78c29e18b959642a52b4161a10bf12af6f1d0b704e75c3951788989ec26a883",
+  "mode": "UI-only",
   "realInstallUpgradeUninstall": false,
-  "result": "passed",
-  "version": "0.2.5"
+  "sha256": "dfccb2691e02ee972ae5ff775c00da253ebd56e2aaa0efc06aa9d7e050266545",
+  "physicalEmployeeDeviceTested": false
 }
