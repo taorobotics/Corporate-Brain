@@ -94,7 +94,7 @@ try {
     return result.result.value;
   };
   const page = await evaluate(`(async () => { await document.fonts.ready; return { title: document.title, heading: document.querySelector('h1')?.textContent, bridge: typeof window.companyConnection?.connect, node: typeof window.require, font: getComputedStyle(document.body).fontFamily }; })()`);
-  assert.equal(page.heading, '连接公司大脑');
+  assert.equal(page.heading, '公司大脑未配置');
   assert.equal(page.bridge, 'function');
   assert.equal(page.node, 'undefined');
   checks.push('Packaged first launch opens server connection UI with isolated preload and Chinese fonts');
