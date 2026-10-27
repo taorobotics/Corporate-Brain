@@ -21,6 +21,8 @@
 
 统一字体顺序：`PingFang SC, Noto Sans SC, Microsoft YaHei, Segoe UI, Arial, sans-serif`。
 
+Windows 原生安装器不能直接使用网页 WOFF2 字体，因此不把字体安装到系统。安装器启动时优先检测系统已有的 HarmonyOS Sans SC；未检测到时使用 Microsoft YaHei UI，欢迎页、许可链接、路径输入和按钮都使用同一套运行时字体句柄。这样能保持鸿蒙字体的视觉风格，同时保证没有鸿蒙字体的 Windows 电脑仍能正常显示中文。
+
 Mac 可优先使用系统自带苹方；没有苹方的电脑由产品自身提供 Noto Sans SC。只引用本机苹方，不打包或分发苹果字体文件。界面既有字号和布局保留，正文、菜单和标题按已有字重显示；代码区继续使用等宽字体。
 
 网页端、桌面远程工作区和后台使用 `public/fonts.css`，由本公司服务提供字体文件。桌面首次连接页使用 `desktop/fonts.css` 和安装包内的相同字体，因此无须先连接服务器才能显示字体。两份字体及 CSS 保持内容一致。

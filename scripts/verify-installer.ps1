@@ -61,6 +61,11 @@ try {
   if ([Math]::Abs($windowRect.Left - $expectedLeft) -gt 4 -or [Math]::Abs($windowRect.Top - $expectedTop) -gt 4) { throw 'Installer window is not centered in the current monitor work area' }
   $heading = Get-InstallerControls $window.Handle | Where-Object { $_.Text -match '^(欢迎使用公司大脑安装向导|升级公司大脑)$' } | Select-Object -First 1
   if (-not $heading -or $heading.Width -lt 300 -or $heading.Height -lt 25) { throw 'Welcome heading is clipped or missing' }
+  $links = @(Get-InstallerControls $window.Handle | Where-Object { $_.Text -in @('MIT 许可','隐私说明') })
+  if ($links.Count -ne 2) { throw 'License and privacy links are missing' }
+  $linkGroupCenter = (($links | Measure-Object -Property Left -Average).Average + (($links | Measure-Object -Property Width -Average).Average / 2))
+  $expectedContentCenter = $windowRect.Left + (($windowRect.Right - $windowRect.Left) * 0.595)
+  if ([Math]::Abs(($links | Measure-Object -Property Left -Average).Average + (($links | Measure-Object -Property Width -Average).Average / 2) - $expectedContentCenter) -gt 18) { throw 'License and privacy links are not centered in the content area' }
   Save-InstallerWindow $window.Handle (Join-Path $outputPath 'installer-welcome.png')
   $checks.Add('Native welcome page, privacy and license links are visible')
   Invoke-InstallerButton $window.Handle '下一步 >'

@@ -22,6 +22,7 @@ SetFont "Microsoft YaHei UI" 9
 Var BrainDialog
 Var BrainNativePage
 Var BrainFont
+Var BrainFontName
 Var BrainTitleFont
 Var BrainBrandFont
 Var BrainNext

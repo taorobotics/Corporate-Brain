@@ -45,6 +45,32 @@
   SetCtlColors ${VAR} ${COLOR} ${BACK}
 !macroend
 
+!macro BLabelCenter X Y W H TEXT VAR FONT COLOR BACK
+  Push $0
+  Push $1
+  Push $2
+  Push $3
+  System::Call 'kernel32::MulDiv(i ${X}, i $BrainDpi, i 96)i.r0'
+  System::Call 'kernel32::MulDiv(i ${Y}, i $BrainDpi, i 96)i.r1'
+  System::Call 'kernel32::MulDiv(i ${W}, i $BrainDpi, i 96)i.r2'
+  System::Call 'kernel32::MulDiv(i ${H}, i $BrainDpi, i 96)i.r3'
+  ${If} $BrainNativeControls == 1
+    System::Call 'user32::CreateWindowExW(i 0, w "STATIC", w "${TEXT}", i 0x50000001, i r0, i r1, i r2, i r3, p $BrainDialog, p 0, p 0, p 0)p.s'
+  ${Else}
+    ${NSD_CreateLabel} $0 $1 $2 $3 "${TEXT}"
+  ${EndIf}
+  Pop $BrainCreatedLabel
+  Pop $3
+  Pop $2
+  Pop $1
+  Pop $0
+  StrCpy ${VAR} $BrainCreatedLabel
+  ${NSD_AddStyle} $BrainCreatedLabel ${WS_CLIPSIBLINGS}
+  ${NSD_AddStyle} $BrainCreatedLabel 0x00000001
+  SendMessage ${VAR} ${WM_SETFONT} ${FONT} 1
+  SetCtlColors ${VAR} ${COLOR} ${BACK}
+!macroend
+
 !macro BrainUiFunctions PREFIX UNINSTALL
 Function ${PREFIX}BrainGuiInit
   ; The uninstaller has its own runtime flag; the compiler's AutoCloseWindow
@@ -55,9 +81,16 @@ Function ${PREFIX}BrainGuiInit
   ${If} $0 > 0
     StrCpy $BrainDpi $0
   ${EndIf}
-  CreateFont $BrainFont "Microsoft YaHei UI" 10
-  CreateFont $BrainTitleFont "Microsoft YaHei UI" 18 700
-  CreateFont $BrainBrandFont "Microsoft YaHei UI" 15 700
+  ; HarmonyOS Sans SC matches the product's compact Chinese typography.
+  ; Clean Windows machines use Microsoft YaHei UI without changing layout.
+  StrCpy $BrainFontName "Microsoft YaHei UI"
+  ReadRegStr $0 HKLM "SOFTWARE\Microsoft\Windows NT\CurrentVersion\Fonts" "HarmonyOS Sans SC (TrueType)"
+  ${If} $0 != ""
+    StrCpy $BrainFontName "HarmonyOS Sans SC"
+  ${EndIf}
+  CreateFont $BrainFont $BrainFontName 10
+  CreateFont $BrainTitleFont $BrainFontName 18 700
+  CreateFont $BrainBrandFont $BrainFontName 15 700
   SendMessage $HWNDPARENT ${WM_SETFONT} $BrainFont 1
   GetDlgItem $BrainNext $HWNDPARENT 1
   GetDlgItem $BrainCancel $HWNDPARENT 2
@@ -147,11 +180,15 @@ Function ${PREFIX}BrainPage
   !insertmacro BMove $0 190 124 714 1
   ${NSD_CreateLink} 0 0 1 1 "MIT 许可"
   Pop $0
-  !insertmacro BMove $0 220 517 86 25
+  !insertmacro BMove $0 449 517 92 25
+  SendMessage $0 ${WM_SETFONT} $BrainFont 1
+  SetCtlColors $0 B76C4E FBFAF8
   ${NSD_OnClick} $0 ${PREFIX}BrainLicense
   ${NSD_CreateLink} 0 0 1 1 "隐私说明"
   Pop $0
-  !insertmacro BMove $0 315 517 86 25
+  !insertmacro BMove $0 553 517 92 25
+  SendMessage $0 ${WM_SETFONT} $BrainFont 1
+  SetCtlColors $0 B76C4E FBFAF8
   ${NSD_OnClick} $0 ${PREFIX}BrainPrivacy
   SendMessage $BrainCancel ${WM_SETTEXT} 0 "STR:取消"
 FunctionEnd
@@ -297,12 +334,12 @@ Function BrainWelcome
   ${EndIf}
   Call BrainPage
   SetCtlColors $BrainNav1 B76C4E F1F0EC
-  ${NSD_CreateIcon} 270 210 64 64 ""
+  ${NSD_CreateIcon} 515 190 64 64 ""
   Pop $0
-  !insertmacro BMove $0 270 210 64 64
+  !insertmacro BMove $0 515 190 64 64
   ${NSD_SetIconFromInstaller} $0 $BrainWelcomeIcon
-  !insertmacro BLabel 360 220 460 48 "公司大脑" $0 $BrainTitleFont B76C4E FBFAF8
-  !insertmacro BLabel 270 280 560 70 "安装完成后，可连接你的公司工作空间。$\r$\n完整对话与个人草稿保存在你的电脑。" $0 $BrainFont 52554F FBFAF8
+  !insertmacro BLabelCenter 270 280 560 48 "公司大脑" $0 $BrainTitleFont B76C4E FBFAF8
+  !insertmacro BLabelCenter 270 340 560 70 "安装完成后，可连接你的公司工作空间。$\r$\n完整对话与个人草稿保存在你的电脑。" $0 $BrainFont 52554F FBFAF8
   SendMessage $BrainNext ${WM_SETTEXT} 0 "STR:下一步 >"
   nsDialogs::Show
 FunctionEnd
@@ -317,9 +354,11 @@ Function BrainDirectory
   ${NSD_CreateDirRequest} 0 0 1 1 "$INSTDIR"
   Pop $BrainPath
   !insertmacro BMove $BrainPath 222 200 526 36
+  SendMessage $BrainPath ${WM_SETFONT} $BrainFont 1
   ${NSD_CreateBrowseButton} 0 0 1 1 "浏览…"
   Pop $0
   !insertmacro BMove $0 760 200 110 36
+  SendMessage $0 ${WM_SETFONT} $BrainFont 1
   ${NSD_OnClick} $0 BrainBrowse
   ${If} $BrainOldPath != ""
     EnableWindow $BrainPath 0
@@ -331,6 +370,7 @@ Function BrainDirectory
   ${NSD_CreateCheckBox} 0 0 1 1 "创建桌面快捷方式"
   Pop $BrainShortcut
   !insertmacro BMove $BrainShortcut 222 365 630 32
+  SendMessage $BrainShortcut ${WM_SETFONT} $BrainFont 1
   SetCtlColors $BrainShortcut 272925 FBFAF8
   ${NSD_SetState} $BrainShortcut $BrainShortcutValue
   !insertmacro BLabel 222 425 650 48 "安装前将检查目录权限、目标磁盘与临时目录空间。$\r$\n程序与个人记录分开保存。" $0 $BrainFont 81827C FBFAF8
@@ -469,8 +509,8 @@ Function BrainFinish
   Call BrainPage
   StrCpy $BrainDone 1
   SetCtlColors $BrainNav4 B76C4E F1F0EC
-  !insertmacro BLabel 270 235 570 50 "安装完成" $0 $BrainTitleFont B76C4E FBFAF8
-  !insertmacro BLabel 270 312 570 70 "打开后，连接你的公司工作空间。$\r$\n对话、个人草稿与连接设置保留在本机。" $0 $BrainFont 52554F FBFAF8
+  !insertmacro BLabelCenter 270 235 570 50 "安装完成" $0 $BrainTitleFont B76C4E FBFAF8
+  !insertmacro BLabelCenter 270 312 570 70 "打开后，连接你的公司工作空间。$\r$\n对话、个人草稿与连接设置保留在本机。" $0 $BrainFont 52554F FBFAF8
   SendMessage $BrainNext ${WM_SETTEXT} 0 "STR:立即打开"
   SendMessage $BrainCancel ${WM_SETTEXT} 0 "STR:完成"
   EnableWindow $BrainCancel 1
@@ -503,7 +543,7 @@ Function un.BrainWelcome
   StrCpy $BrainSubTitle "将移除程序与快捷方式，个人数据单独保留。"
   Call un.BrainPage
   SetCtlColors $BrainNav1 B76C4E F1F0EC
-  !insertmacro BLabel 245 210 610 80 "保留本机对话、个人草稿与设置。$\r$\n重新安装后，可在原设备继续使用已有记录。" $0 $BrainBrandFont 52554F FBFAF8
+  !insertmacro BLabelCenter 245 210 610 80 "保留本机对话、个人草稿与设置。$\r$\n重新安装后，可在原设备继续使用已有记录。" $0 $BrainBrandFont 52554F FBFAF8
   SendMessage $BrainNext ${WM_SETTEXT} 0 "STR:卸载应用"
   nsDialogs::Show
 FunctionEnd
@@ -513,7 +553,7 @@ Function un.BrainFinish
   StrCpy $BrainSubTitle "程序与快捷方式已移除，本机个人记录已保留。"
   Call un.BrainPage
   SetCtlColors $BrainNav3 B76C4E F1F0EC
-  !insertmacro BLabel 250 245 600 50 "公司大脑已卸载" $0 $BrainTitleFont 272925 FBFAF8
+  !insertmacro BLabelCenter 250 245 600 50 "公司大脑已卸载" $0 $BrainTitleFont 272925 FBFAF8
   SendMessage $BrainNext ${WM_SETTEXT} 0 "STR:关闭"
   ShowWindow $BrainBack ${SW_HIDE}
   ShowWindow $BrainCancel ${SW_HIDE}
