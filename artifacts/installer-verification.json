@@ -1,23 +1,15 @@
 {
-  "mode": "Disposable Windows CI lifecycle",
-  "version": "0.2.3",
+  "realInstallUpgradeUninstall": false,
+  "defaultPath": "D:\\Applications\\Corporate Brain",
+  "version": "0.2.4",
+  "sourceCommit": "6601fa047e001aa5fb2c6b618f8a0e87b2e22b61",
+  "mode": "UI-only",
+  "result": "passed",
+  "sha256": "1251b966f7f7b2eb213dd152497cb0c5b40f3c4cd3d9e082923c0308d7299bd0",
   "physicalEmployeeDeviceTested": false,
-  "sha256": "0ff47a22ce87798d698cf53d155e45d2dc227bed6ec45eb8cebd6fdb0d0e68cd",
   "checks": [
     "Native welcome page, privacy and license links are visible",
     "Native path page shows actual space, directory and shortcut selection",
-    "Cancellation requires confirmation and exits before installing",
-    "Installer refuses data-deletion flags before invoking an old uninstaller",
-    "Cancel during package preparation preserves the prior installed application",
-    "Real NSIS extraction progress, rotating activity bitmap and stage list are present",
-    "v0.2.2 upgrade keeps original path, updates real executable and preserves personal records",
-    "Finish closes without launching the application",
-    "Native uninstall confirmation removes application and registration, preserving personal records",
-    "Fresh installation and Open-now launch the real packaged application",
-    "Silent uninstallation also preserves synthetic personal records"
-  ],
-  "defaultPath": "D:\\Applications\\Corporate Brain",
-  "result": "passed",
-  "realInstallUpgradeUninstall": true,
-  "sourceCommit": "75ea09af82e2ce79e3ec016d179b4d41fa1ee598"
+    "Cancellation requires confirmation and exits before installing"
+  ]
 }
