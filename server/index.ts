@@ -1,6 +1,8 @@
 import { resolve } from "node:path";
 import express from "express";
 import { createPlatform } from "./platform";
+import { loadServerEnv } from "./env";
+loadServerEnv();
 const port = Number(process.env.PORT ?? 4310);
 const { app } = createPlatform({
   database: process.env.BRAIN_DATABASE ?? ".data/platform.sqlite",

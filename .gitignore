@@ -6,6 +6,7 @@ release/
 .env
 .env.*
 !.env.example
+/config/deepseek.env
 *.log
 artifacts/runtime/
 artifacts/local-test-setup.json

@@ -1,10 +1,10 @@
 # 开发状态与验证记录
 
-版本：v0.3.0 测试版。更新日期：2026-10-29。完整需求以 PRD v0.3 为准，未宣布 26 项首版验收全部通过。
+版本：v0.3.1 测试版。更新日期：2026-10-29。完整需求以 PRD v0.3 为准，未宣布 26 项首版验收全部通过。
 
 ## 当前发布
 
-[v0.3.0 Release](https://github.com/taorobotics/Corporate-Brain/releases/tag/v0.3.0) 将发布 Windows x64、macOS arm64/x64 和服务器 ZIP。员工包只读取安装资源中的 URL，账号、密码、密钥不进入安装包；没有设置 `BRAIN_APP_URL` 的测试包显示联系管理员提示。DSH 临时目录与公司数据库分开保存，发布包不包含运行时缓存。
+[v0.3.1 Release](https://github.com/taorobotics/Corporate-Brain/releases/tag/v0.3.1) 将发布 Windows x64、macOS arm64/x64 和服务器 ZIP。员工包只读取安装资源中的 URL，账号、密码、密钥不进入安装包；没有设置 `BRAIN_APP_URL` 的测试包显示联系管理员提示。DSH 临时目录与公司数据库分开保存，发布包不包含运行时缓存。
 
 v0.2.2 及更早 Release 和验证清单继续保留。v0.2.1 因 Mac Electron 许可位置检查失败，保留为未发布候选，未移动旧标签或替换旧包。Windows 安装生命周期验证运行于临时 runner；Windows 仍未签名，Mac 为 ad-hoc，员工物理设备与企业安全策略、可信签名仍待验收。
 

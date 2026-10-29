@@ -1,6 +1,6 @@
 {
   "name": "corporate-brain",
-  "version": "0.3.0",
+  "version": "0.3.1",
   "private": true,
   "license": "MIT",
   "repository": {
@@ -21,9 +21,10 @@
     "build": "node scripts/prepare-legal.mjs && tsc --noEmit && vite build",
     "legal:prepare": "node scripts/prepare-legal.mjs",
     "start": "tsx server/index.ts",
-    "test": "tsx --test server/platform.test.ts server/updates.test.ts server/dsh.test.ts desktop/updates.test.cjs",
+    "test": "tsx --test server/platform.test.ts server/updates.test.ts server/dsh.test.ts server/env.test.ts desktop/updates.test.cjs",
     "test:desktop": "node scripts/prepare-legal.mjs && electron desktop/verify.cjs",
     "test:dsh": "node scripts/verify-dsh.mjs",
+    "deepseek:check": "node scripts/check-deepseek-config.mjs",
     "version:bump": "node scripts/version.mjs",
     "version:check": "node scripts/version.mjs check",
     "package:win": "npm run build && node scripts/package-desktop.mjs --win nsis",
