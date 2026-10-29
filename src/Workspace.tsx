@@ -162,19 +162,20 @@ export default function Workspace(props: WorkspaceProps) {
       };
       setConversationId(current.id);
     }
+    const sentAttachments = attachments.map((attachment) => ({ ...attachment }));
     const content =
       text.trim() +
-      attachments
+      sentAttachments
         .map(
           (a) =>
-            `\n\n附件：${a.name}${a.content ? `\n${a.content}` : "（图片未发送；当前文本适配器不支持视觉输入）"}`,
+            `\n\n附件：${a.name}${a.content ? `\n${a.content}` : ""}`,
         )
         .join("");
     const message: Message = {
       id: crypto.randomUUID(),
       role: "user",
       content,
-      attachments: attachments.map((a) => ({ ...a })),
+      attachments: sentAttachments,
       at: new Date().toISOString(),
     };
     const updated = { ...current, messages: [...current.messages, message] };
@@ -227,12 +228,14 @@ export default function Workspace(props: WorkspaceProps) {
             })
           : await api("/generate/chat", {
               connectionId: model.id,
+              sessionId: updated.id,
               messages: [
                 ...system,
                 ...updated.messages
                   .slice(-40)
                   .map((m) => ({ role: m.role, content: m.content })),
               ],
+              attachments: sentAttachments,
             });
       const result: Message = {
         id: crypto.randomUUID(),

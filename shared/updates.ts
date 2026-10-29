@@ -12,6 +12,8 @@ export type DesktopRelease = {
 export type UpdateFeed = {
   configured: boolean;
   release: DesktopRelease | null;
+  reason?: "not-configured" | "provider-unavailable";
+  error?: string;
 };
 export type UpdateState = {
   status:

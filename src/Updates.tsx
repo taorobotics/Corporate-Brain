@@ -47,7 +47,7 @@ export function useDesktopUpdates(enabled: boolean) {
           status: feed.configured ? "available" : "unavailable",
           error: feed.configured
             ? ""
-            : "公司尚未启用客户端更新，请联系管理员配置更新源",
+            : "公司服务器尚未启用客户端更新。私有仓库请配置 BRAIN_GITHUB_TOKEN；公开仓库请配置 BRAIN_UPDATE_SOURCE=public，保存后重启服务器。",
         });
       }
     } catch {

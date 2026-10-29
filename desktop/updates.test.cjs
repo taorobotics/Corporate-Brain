@@ -13,6 +13,7 @@ const { createHash } = require("node:crypto");
 const { DesktopUpdates, newer } = require("./updates.cjs");
 
 test("update versions compare numerically and never offer a downgrade", () => {
+  assert.equal(newer("0.2.10", "0.2.9"), true);
   assert.equal(newer("0.10.0", "0.9.9"), true);
   assert.equal(newer("1.0.0", "0.99.99"), true);
   for (const value of [

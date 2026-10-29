@@ -130,6 +130,7 @@ test("unconfigured server reports the actual state without contacting GitHub", a
   assert.deepEqual(await (await p.get("/latest")).json(), {
     configured: false,
     release: null,
+    reason: "not-configured",
   });
 });
 test("unpublished, preview or incomplete releases are not distributed and failures redact provider errors", async (t) => {

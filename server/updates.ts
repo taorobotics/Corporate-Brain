@@ -114,9 +114,15 @@ export function mountUpdates(app: Express, options: UpdateOptions = {}) {
       res.json({
         configured,
         release: data?.release ?? null,
+        ...(configured ? {} : { reason: "not-configured" as const }),
       } satisfies UpdateFeed);
     } catch (error) {
-      res.status(503).json({ error: (error as Error).message });
+      res.status(503).json({
+        configured,
+        release: null,
+        reason: "provider-unavailable" as const,
+        error: (error as Error).message,
+      } satisfies UpdateFeed & { error: string });
     }
   });
   app.get("/api/desktop-updates/:version/:target", async (req, res) => {

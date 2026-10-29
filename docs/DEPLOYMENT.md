@@ -1,6 +1,6 @@
 # 运行与部署说明
 
-当前版本为 v0.2.2 测试版，部署结构为统一公司服务加员工客户端。员工端与管理后台来自同一服务，按登录账号在后端授权。员工聊天和个人草稿不进入该服务数据库。
+当前版本为 v0.3.0 测试版，部署结构为统一公司服务加员工客户端。员工端与管理后台来自同一服务，按登录账号在后端授权。员工聊天和个人草稿不进入该服务数据库；DSH 运行时只使用按员工和会话隔离的临时工作区。
 
 ## 本机开发与预览
 
@@ -23,10 +23,14 @@ npm run desktop 启动桌面开发版。员工分发包在构建时读取 `BRAIN
 | BRAIN_ADMIN_SETUP | 未设置 | 仅管理员配置环境开启服务器入口配置页；普通员工包不要设置 |
 | BRAIN_GITHUB_TOKEN | 未配置 | 仅服务器使用，读取私有仓库发布与安装包；建议限定本仓库、Contents: read |
 | BRAIN_UPDATE_SOURCE | private | 仓库公开后设置 public 允许无 token 读取公开 Release；不改变公司登录权限 |
+| BRAIN_DSH_ENABLED | 1 | 启用完整 DSH Agent 路由；设为 0 时回退到原 OpenAI 兼容聊天适配器 |
+| BRAIN_DSH_HOME | .cache/dsh-runtime | DSH 会话、附件和临时工作区根目录；应放在服务器私有、可清理的位置，不纳入发布包 |
+| DEEPSEEK_API_KEY | 未配置 | DSH 的 `web_search` 需要的 DeepSeek 搜索凭据；不配置时联网工具会据实返回不可用 |
+| DEEPSEEK_SEARCH_BASE_URL | DeepSeek 默认搜索地址 | 可选的 DeepSeek Messages 兼容搜索网关；与公司对话模型地址分开配置 |
 
 生产环境应由受控 HTTPS 入口反向代理到该服务。首次管理员初始化须由部署人员在受控入口完成，然后再向员工开放。为服务配置固定工作目录、专用运行账号与重启策略。当前没有经过生产并发压测、高可用或全面安全审计，不将本机运行检查当作可直接全员投产的证明。
 
-公司提供的模型在后台添加服务名称、完整 API 前缀地址、实际模型标识、API 密钥、用途与获准部门。当前仅编码 OpenAI 兼容的 chat/completions 与 images/generations 基础适配，图片服务须返回 b64_json。测试对话连接会发起一次真实调用，可能计费；保存配置本身不证明接口可用。
+公司提供的模型在后台添加服务名称、完整 API 前缀地址、实际模型标识、API 密钥、用途与获准部门。对话连接现在经 DSH `sdk` profile 路由，使用 OpenAI 兼容模型适配器，并提供 `web_search`、`web_fetch`、`read`、`read_image` 等工具；图片会作为原生视觉输入发送，文本文件会放入当前受限工作区供 DSH 文件工具读取。DSH 启动失败时才回退到原 OpenAI 兼容 chat/completions 请求。图片生成仍使用 images/generations，且图片服务须返回 b64_json。测试对话连接会发起一次真实调用，可能计费；保存配置本身不证明接口可用。
 
 ## 客户端更新源
 
@@ -34,7 +38,7 @@ v0.2.2 起增加公开源模式。维护者完成仓库公开后，服务器可�
 
 从 v0.2.0 起，公司服务通过 GitHub API 读取 taorobotics/Corporate-Brain 的最新已公开 Release。管理员在服务启动环境或部署平台密钥中设置 BRAIN_GITHUB_TOKEN，重启公司服务即可启用。建议使用仅选中此仓库、Contents: read 的 fine-grained token，按部署平台的密钥轮换机制维护；不要写进 package.json、桌面环境、源码、聊天或公开日志。员工只用原公司账号登录，不需要 GitHub 账号或令牌。未配置时返回真实的未启用状态。
 
-客户端登录后检查一次，运行中每 30 分钟检查；在线或窗口激活时在 5 分钟节流范围外复查，可从左侧、帮助菜单或账号菜单手动检查。服务器缓存版本元数据 5 分钟，合并并发查询，失败后退避 30 秒；只有完整、非草稿、非预发布、三种架构均有已上传包与 SHA-256 摘要的最新版本可供下载。发布完成后提示通常在下次检查出现，手动检查仍可能受服务器 5 分钟缓存影响。
+客户端登录后检查一次，运行中每 30 分钟检查；在线或窗口激活时在 5 分钟节流范围外复查，可从左侧、帮助菜单或账号菜单手动检查。服务器缓存版本元数据 5 分钟，合并并发查询，失败后退避 30 秒；只有完整、非草稿、非预发布、三种架构均有已上传包与 SHA-256 摘要的最新版本可供下载。发布完成后提示通常在下次检查出现，手动检查仍可能受服务器 5 分钟缓存影响。客户端按数字比较三段版本号，`0.2.10` 会正确识别为高于 `0.2.9`。
 
 检查与下载接口均要求有效公司登录，下载只代理已核对的版本及平台资源，GitHub token 和短期资源地址不返回员工端。服务器须能经 HTTPS 访问 api.github.com、release-assets.githubusercontent.com 和 objects.githubusercontent.com。反向代理允许大约 150 MB 安装包流式传输，下载超时至少 15 分钟；不要把凭据加入 URL。多员工同时下载会占公司服务器出口带宽，当前没有 CDN 或断点续传。中断可重试，部分文件会清理；本机更新目录仅保留当前成功下载的安装包，不触碰 profiles。
 
@@ -57,7 +61,7 @@ v0.2.2 起增加公开源模式。维护者完成仓库公开后，服务器可�
 
 - npm test：真实 HTTP 接口、数据库、部门授权、账号凭据与技能发布规则测试。
 - npm run test:desktop：隔离的内存服务与临时桌面用户目录，实际 Electron 窗口、渲染与 preload 桥接操作验收；不污染公司业务数据库。
-- npm run test:dsh：在项目 .cache 的隔离目录启动 DSH SDK，验证初始化握手；不调用真实模型，不开放员工执行工具。
+- npm run test:dsh：在项目 .cache 的隔离目录启动 DSH SDK，验证初始化握手；生产聊天的 DSH 路由另由 `server/dsh.test.ts` 使用本机流式 OpenAI 兼容假服务验证，不调用真实模型。
 - npm run package:win：Windows 本地测试安装包；npm run package:win:dir：展开运行目录。
 - npm run package:mac：需 Mac 环境。已通过 GitHub 原生 Mac runner 构建并发布 arm64 与 x64 DMG，包含原生桌面交互及实际打包程序启动检查；使用 ad-hoc 签名，没有 Apple Developer ID 签名、公证或员工物理 Mac 的系统授权验收。见 [Mac 分发与检查说明](MACOS-RELEASE.md)。
 

@@ -56,7 +56,8 @@ class DesktopUpdates {
           this.set({
             status: "unavailable",
             release: null,
-            error: "公司尚未启用客户端更新，请联系管理员配置更新源",
+            error:
+              "公司服务器尚未启用客户端更新。私有仓库请配置 BRAIN_GITHUB_TOKEN；公开仓库请配置 BRAIN_UPDATE_SOURCE=public，保存后重启服务器。",
           });
           return;
         }

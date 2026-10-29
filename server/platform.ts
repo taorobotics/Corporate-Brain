@@ -14,10 +14,18 @@ import {
 } from "./database";
 import type { User, Skill, Connection } from "../shared/types";
 import { mountUpdates } from "./updates";
+import { DshManager, DshUnavailableError } from "./dsh";
 import rootPackage from "../package.json";
 
 const id = z.string().uuid();
 const shortText = z.string().trim().min(1).max(100);
+const attachment = z
+  .object({
+    name: z.string().trim().min(1).max(200),
+    content: z.string().max(2_000_000).default(""),
+    image: z.string().max(12_000_000).optional(),
+  })
+  .strict();
 const password = z.string().min(12, "密码至少 12 位").max(128);
 const roles = z.enum([
   "company_admin",
@@ -137,6 +145,7 @@ export function createPlatform(
   } = {},
 ) {
   const store = createStore(options.database ?? ".data/platform.sqlite");
+  const dsh = process.env.BRAIN_DSH_ENABLED === "0" ? null : new DshManager();
   const { db } = store;
   const app = express();
   app.disable("x-powered-by");
@@ -772,6 +781,7 @@ export function createPlatform(
     const data = z
       .object({
         connectionId: id,
+        sessionId: id.optional(),
         messages: z
           .array(
             z
@@ -783,18 +793,55 @@ export function createPlatform(
           )
           .min(1)
           .max(60),
+        attachments: z.array(attachment).max(8).default([]),
       })
       .strict()
       .parse(req.body);
     const row = getConnection(data.connectionId, actor, "chat");
-    const result = await invoke(row, "/chat/completions", {
-      model: row.model,
-      messages: data.messages,
-      stream: false,
-    });
-    const content = result.choices?.[0]?.message?.content;
-    if (typeof content !== "string" || !content.trim())
-      fail(502, "模型未返回可显示的文本");
+    let content: string;
+    try {
+      if (!dsh) throw new DshUnavailableError("DSH 已由管理员停用");
+      content = await dsh.run({
+        connectionId: row.id,
+        baseUrl: row.base_url,
+        model: row.model,
+        apiKey: store.decrypt(row.secret),
+        userId: actor.id,
+        sessionId: data.sessionId ?? randomUUID(),
+        messages: data.messages,
+        attachments: data.attachments,
+      });
+    } catch (error) {
+      if (!(error instanceof DshUnavailableError))
+        fail(502, (error as Error).message.slice(0, 500));
+      const lastUserIndex = data.messages.findLastIndex(
+        (message) => message.role === "user",
+      );
+      const directMessages = data.messages.map((message, index) => {
+        if (index !== lastUserIndex || !data.attachments.length)
+          return message;
+        return {
+          ...message,
+          content: [
+            { type: "text", text: message.content },
+            ...data.attachments
+              .filter((item) => item.image)
+              .map((item) => ({
+                type: "image_url",
+                image_url: { url: item.image },
+              })),
+          ],
+        };
+      });
+      const result = await invoke(row, "/chat/completions", {
+        model: row.model,
+        messages: directMessages,
+        stream: false,
+      });
+      content = result.choices?.[0]?.message?.content;
+      if (typeof content !== "string" || !content.trim())
+        fail(502, "模型未返回可显示的文本");
+    }
     store.audit(actor.id, "model.chat_completed", row.id);
     res.json({ content });
   });
