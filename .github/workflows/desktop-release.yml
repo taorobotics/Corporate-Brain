@@ -27,7 +27,7 @@ env:
 jobs:
   prepare:
     name: Prepare draft release
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 5
     steps:
       - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
@@ -128,7 +128,7 @@ jobs:
     needs: prepare
     if: ${{ !inputs.reuse_run_id }}
     name: Company server update
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 15
     steps:
       - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
@@ -160,7 +160,7 @@ jobs:
     name: Publish complete version to Releases
     needs: [prepare, desktop, server]
     if: ${{ always() && !cancelled() && (inputs.reuse_run_id != '' || (needs.desktop.result == 'success' && needs.server.result == 'success')) }}
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 10
     permissions:
       contents: write
