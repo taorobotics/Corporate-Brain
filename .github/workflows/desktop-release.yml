@@ -15,7 +15,7 @@ on:
         type: string
 
 permissions:
-  contents: read
+  contents: write
 
 concurrency:
   group: desktop-release-${{ inputs.release_tag || github.ref_name }}
@@ -25,7 +25,28 @@ env:
   RELEASE_TAG: ${{ inputs.release_tag || github.ref_name }}
 
 jobs:
+  prepare:
+    name: Prepare draft release
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
+        with:
+          ref: ${{ env.RELEASE_TAG }}
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Create or reuse draft release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        shell: bash
+        run: |
+          if ! gh release view "$RELEASE_TAG" --repo "$GH_REPO" >/dev/null 2>&1; then
+            gh release create "$RELEASE_TAG" --repo "$GH_REPO" --draft --title "$RELEASE_TAG 公司大脑 · Windows / macOS 测试版" --notes-file "docs/releases/${RELEASE_TAG}.md"
+          fi
+
   desktop:
+    needs: prepare
     if: ${{ !inputs.reuse_run_id }}
     name: ${{ matrix.platform }} ${{ matrix.arch }}
     strategy:
@@ -85,32 +106,16 @@ jobs:
         if: matrix.platform == 'macOS'
         run: node scripts/verify-macos-package.mjs
       - name: Save verified release assets
-        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
-        with:
-          name: release-${{ matrix.platform }}-${{ matrix.arch }}
-          path: |
-            release/*.exe
-            release/*.dmg
-            release/SHA256SUMS-*.txt
-            release/*-verification*.json
-          if-no-files-found: error
-          retention-days: 14
-          compression-level: 0
-      - name: Save desktop diagnostics
-        if: always()
-        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
-        with:
-          name: diagnostics-${{ matrix.platform }}-${{ matrix.arch }}
-          path: |
-            artifacts/desktop-verification.json
-            artifacts/installer-verification.json
-            artifacts/installer-timeout.json
-            artifacts/ui-fonts.json
-            artifacts/screenshots/
-            release/macos-first-launch-*.png
-          retention-days: 14
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        shell: bash
+        run: |
+          gh release upload "$RELEASE_TAG" --repo "$GH_REPO" --clobber \
+            release/*.exe release/*.dmg release/SHA256SUMS-*.txt release/*-verification*.json
 
   server:
+    needs: prepare
     if: ${{ !inputs.reuse_run_id }}
     name: Company server update
     runs-on: ubuntu-latest
@@ -133,20 +138,17 @@ jobs:
       - run: npm run build
       - name: Package prebuilt server UI and runtime source
         run: node scripts/package-server.mjs
-      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
-        with:
-          name: release-server
-          path: |
-            release/Corporate-Brain-Server-*.zip
-            release/SHA256SUMS-Server.txt
-            release/server-verification.json
-          if-no-files-found: error
-          retention-days: 14
-          compression-level: 0
+      - name: Upload verified server assets directly to draft release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          gh release upload "$RELEASE_TAG" --repo "$GH_REPO" --clobber \
+            release/Corporate-Brain-Server-*.zip release/SHA256SUMS-Server.txt release/server-verification.json
 
   publish:
     name: Publish complete version to Releases
-    needs: [desktop, server]
+    needs: [prepare, desktop, server]
     if: ${{ always() && !cancelled() && (inputs.reuse_run_id != '' || (needs.desktop.result == 'success' && needs.server.result == 'success')) }}
     runs-on: ubuntu-latest
     timeout-minutes: 10
@@ -168,12 +170,7 @@ jobs:
           node-version: '24'
       - name: Validate original builds when recovering an upload
         run: node scripts/validate-release-build.mjs
-      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
-        with:
-          pattern: release-*
-          merge-multiple: true
-          path: release-assets
-          run-id: ${{ inputs.reuse_run_id || github.run_id }}
-          github-token: ${{ github.token }}
+      - name: Download verified assets from draft release
+        run: gh release download "$RELEASE_TAG" --dir release-assets --repo "$GH_REPO"
       - name: Check all hashes, upload to draft, verify uploads and publish
         run: node scripts/publish-release.mjs
