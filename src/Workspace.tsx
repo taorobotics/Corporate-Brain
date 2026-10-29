@@ -64,6 +64,7 @@ export default function Workspace(props: WorkspaceProps) {
     setConversationId,
     skills,
     connections,
+    refresh,
     notify,
   } = props;
   const [text, setText] = useState(""),
@@ -96,6 +97,18 @@ export default function Workspace(props: WorkspaceProps) {
     setPreview(null);
     setSearch("");
   }, [page, conversationId]);
+  useEffect(() => {
+    if (page !== "models") return;
+    // Connections can be added while an employee keeps the client open.
+    // Refresh on entry and when the window regains focus so the model list
+    // reflects the current server-side department authorization.
+    const reload = () => {
+      void refresh().catch((error) => notify((error as Error).message));
+    };
+    reload();
+    window.addEventListener("focus", reload);
+    return () => window.removeEventListener("focus", reload);
+  }, [page]);
   useEffect(() => {
     messagesRef.current?.scrollTo({
       top: messagesRef.current.scrollHeight,

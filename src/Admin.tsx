@@ -73,6 +73,12 @@ export default function Admin(props: WorkspaceProps) {
     setStatusFilter("");
     void load();
   }, [page]);
+  useEffect(() => {
+    if (dialog !== "connection") return;
+    // The dialog may be opened after another administrator changed the
+    // department list. Pull the latest authorization choices before render.
+    void refresh().catch((e) => setError((e as Error).message));
+  }, [dialog]);
   const filteredUsers = users.filter(
     (u) =>
       `${u.name} ${u.username}`.toLowerCase().includes(search.toLowerCase()) &&
@@ -1067,14 +1073,24 @@ export default function Admin(props: WorkspaceProps) {
             </Field>
             <Field label="允许使用的部门（不选表示全公司）">
               <div className="source-list">
-                {departments
-                  .filter((d) => d.enabled)
-                  .map((d) => (
-                    <label className="checkbox-row" key={d.id}>
-                      <input type="checkbox" name="departments" value={d.id} />
-                      {d.name}
-                    </label>
-                  ))}
+                {departments.filter((d) => d.enabled).length ? (
+                  departments
+                    .filter((d) => d.enabled)
+                    .map((d) => (
+                      <label className="checkbox-row" key={d.id}>
+                        <input
+                          type="checkbox"
+                          name="departments"
+                          value={d.id}
+                        />
+                        <span>{d.name}</span>
+                      </label>
+                    ))
+                ) : (
+                  <p className="muted">
+                    暂无可选部门；保存后将按全公司范围开放。
+                  </p>
+                )}
               </div>
             </Field>
             <footer>

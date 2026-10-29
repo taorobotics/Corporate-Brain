@@ -2055,7 +2055,8 @@ tbody > tr:hover {
   border: 1px solid var(--line);
   border-radius: 8px;
   max-height: 185px;
-  overflow: auto;
+  overflow-y: auto;
+  overflow-x: hidden;
   padding: 10px 13px;
   background: var(--bg);
 }
@@ -2067,12 +2068,18 @@ tbody > tr:hover {
   display: flex;
   align-items: center;
   gap: 9px;
+  width: 100%;
+  min-width: 0;
   font-size: 12px;
   padding: 7px 0;
   line-height: 1.5;
 }
 .checkbox-row input {
   flex-shrink: 0;
+}
+.checkbox-row > span {
+  min-width: 0;
+  overflow-wrap: anywhere;
 }
 .checkbox-row small {
   margin-left: auto;
