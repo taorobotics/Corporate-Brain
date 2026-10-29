@@ -15,6 +15,7 @@ import {
 import type { User, Skill, Connection } from "../shared/types";
 import { mountUpdates } from "./updates";
 import { DshManager, DshUnavailableError } from "./dsh";
+import { syncDeepSeekConnections } from "./deepseek-sync";
 import rootPackage from "../package.json";
 
 const id = z.string().uuid();
@@ -145,6 +146,7 @@ export function createPlatform(
   } = {},
 ) {
   const store = createStore(options.database ?? ".data/platform.sqlite");
+  syncDeepSeekConnections(store);
   const dsh = process.env.BRAIN_DSH_ENABLED === "0" ? null : new DshManager();
   const { db } = store;
   const app = express();

@@ -12,12 +12,18 @@
 
 ## 公司模型连接
 
-在管理后台新增一个“对话”连接：
+启用 `DEEPSEEK_SYNC_MODELS=1` 后，服务器启动会自动把两个公司模型同步到管理后台：
 
-- 服务地址：`https://api.deepseek.com/v1`
-- 模型标识：`deepseek-flash`
-- API 密钥：填写同一个 DeepSeek API Key
-- 部门范围：按公司策略选择
+- `DeepSeek Flash` → `deepseek-flash`（支持文本和图片）
+- `DeepSeek Pro` → `deepseek-v4-pro`（文本和推理）
+
+它们使用同一个 `DEEPSEEK_API_KEY`，密钥保存在服务器数据库的加密字段中。需要手动控制连接时，将 `DEEPSEEK_SYNC_MODELS=0`，再在管理后台新增连接。
+
+自动同步使用：
+
+- 服务地址：`DEEPSEEK_CHAT_BASE_URL`，默认 `https://api.deepseek.com/v1`
+- API 密钥：来自 `DEEPSEEK_API_KEY`
+- 部门范围：自动同步为全公司；需要限制范围时关闭自动同步后手动配置
 
 保存后，员工聊天会通过 DSH 路由调用该连接。带图片的消息会作为视觉输入发送；需要实时信息时，DSH 会调用联网工具。当前 DSH 依赖版本使用 Anthropic 兼容搜索入口，因此 `DEEPSEEK_SEARCH_BASE_URL` 默认填写 `https://api.deepseek.com/anthropic/v1`，不要改成 OpenAI `/v1` 聊天地址。
 

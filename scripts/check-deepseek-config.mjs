@@ -22,6 +22,9 @@ console.log(
   JSON.stringify({
     file,
     dshEnabled: process.env.BRAIN_DSH_ENABLED !== "0",
+    syncModels: process.env.DEEPSEEK_SYNC_MODELS === "1",
+    chatBaseUrl:
+      process.env.DEEPSEEK_CHAT_BASE_URL ?? "https://api.deepseek.com/v1",
     searchBaseUrl:
       process.env.DEEPSEEK_SEARCH_BASE_URL ??
       "https://api.deepseek.com/anthropic/v1",
