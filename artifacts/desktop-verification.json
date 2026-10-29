@@ -12,6 +12,7 @@
     "Configured model picker filters by task kind and persists selection; QA fixtures never call a model",
     "Top edit menu restores the original input target and invokes its native action; account menu supports keyboard navigation",
     "Admin dropdown filters and form values work; portalled menus preserve dialog Escape handling",
+    "Company model authorization shows department names and keeps checkboxes at their intended size",
     "Unconfigured generation is explicit; message persisted on the local disk",
     "Local history restored after reloading",
     "Conversation preview defaults closed, opens from an image, resizes with keyboard and closes",

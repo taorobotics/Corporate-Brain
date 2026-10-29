@@ -469,6 +469,33 @@ async function waitFor(test, label, timeout = 12000) {
   await click("部门");
   await waitFor(() => has("设计部"), "department list");
   await capture("admin-departments.png");
+  await js(`location.hash='admin-models';location.reload()`);
+  await waitFor(() => has("添加模型连接"), "admin model connections");
+  await click("添加模型连接");
+  await waitFor(
+    () =>
+      js(
+        `!!document.querySelector('.modal .checkbox-row input[name="departments"]')`,
+      ),
+    "model authorization form",
+  );
+  const modelDepartmentRows = await js(
+    `Array.from(document.querySelectorAll('.modal .checkbox-row')).map(row => row.textContent.trim())`,
+  );
+  assert.deepEqual(modelDepartmentRows, ["管理部", "设计部", "运营部"]);
+  const modelDepartmentWidths = await js(
+    `Array.from(document.querySelectorAll('.modal .checkbox-row input[name="departments"]')).map(input => Math.round(input.getBoundingClientRect().width))`,
+  );
+  assert.deepEqual(modelDepartmentWidths, [16, 16, 16]);
+  await capture("admin-model-connection.png");
+  await key("Escape");
+  await waitFor(
+    () => js(`!document.querySelector('.modal')`),
+    "model connection dialog close",
+  );
+  checks.push(
+    "Company model authorization shows department names and keeps checkboxes at their intended size",
+  );
   await click("查看员工端");
   await waitFor(() => has("今天，一起完成些什么"), "employee workbench");
   await fill('textarea[aria-label="任务输入"]', "只在本机保存的集成验收记录");

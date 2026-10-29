@@ -2075,7 +2075,10 @@ tbody > tr:hover {
   line-height: 1.5;
 }
 .checkbox-row input {
-  flex-shrink: 0;
+  flex: 0 0 16px;
+  width: 16px;
+  height: 16px;
+  padding: 0;
 }
 .checkbox-row > span {
   min-width: 0;
