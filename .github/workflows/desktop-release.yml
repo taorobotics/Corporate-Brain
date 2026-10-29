@@ -105,14 +105,24 @@ jobs:
       - name: Verify mounted macOS package and first launch
         if: matrix.platform == 'macOS'
         run: node scripts/verify-macos-package.mjs
-      - name: Save verified release assets
+      - name: Save verified Windows release assets
+        if: matrix.platform == 'Windows'
         env:
           GH_TOKEN: ${{ github.token }}
           GH_REPO: ${{ github.repository }}
         shell: bash
         run: |
           gh release upload "$RELEASE_TAG" --repo "$GH_REPO" --clobber \
-            release/*.exe release/*.dmg release/SHA256SUMS-*.txt release/*-verification*.json
+            release/*.exe release/SHA256SUMS-Windows-x64.txt release/windows-verification-x64.json
+      - name: Save verified macOS release assets
+        if: matrix.platform == 'macOS'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        shell: bash
+        run: |
+          gh release upload "$RELEASE_TAG" --repo "$GH_REPO" --clobber \
+            release/*.dmg "release/SHA256SUMS-macOS-${{ matrix.arch }}.txt" "release/macos-verification-${{ matrix.arch }}.json"
 
   server:
     needs: prepare
