@@ -22,7 +22,7 @@ npm run desktop 启动桌面开发版。员工分发包在构建时读取 `BRAIN
 | BRAIN_APP_URL | 开发版默认本机 4173 | 桌面开发或公司预设的服务器地址；打包时只写入 URL，不写入账号、密码或密钥 |
 | BRAIN_ADMIN_SETUP | 未设置 | 仅管理员配置环境开启服务器入口配置页；普通员工包不要设置 |
 | BRAIN_GITHUB_TOKEN | 未配置 | 仅服务器使用，读取私有仓库发布与安装包；建议限定本仓库、Contents: read |
-| BRAIN_UPDATE_SOURCE | private | 仓库公开后设置 public 允许无 token 读取公开 Release；不改变公司登录权限 |
+| BRAIN_UPDATE_SOURCE | public | 公开仓库默认读取 GitHub Release；可设置 private/disabled 关闭公开源，私有模式仍需 BRAIN_GITHUB_TOKEN |
 | BRAIN_DSH_ENABLED | 1 | 启用完整 DSH Agent 路由；设为 0 时回退到原 OpenAI 兼容聊天适配器 |
 | BRAIN_DSH_HOME | .cache/dsh-runtime | DSH 会话、附件和临时工作区根目录；应放在服务器私有、可清理的位置，不纳入发布包 |
 | DEEPSEEK_API_KEY | 未配置 | DSH 的 `web_search` 需要的 DeepSeek 搜索凭据；不配置时联网工具会据实返回不可用 |
@@ -36,9 +36,9 @@ npm run desktop 启动桌面开发版。员工分发包在构建时读取 `BRAIN
 
 ## 客户端更新源
 
-v0.2.2 起增加公开源模式。维护者完成仓库公开后，服务器可设置 BRAIN_UPDATE_SOURCE=public 并重启，无须填写 GitHub token。若仓库仍为私有，无 token 的 public 模式会据实报错，不会泄露私有内容或绕过公司登录。默认 private 模式保持原行为；即使使用公开源，也可保留服务器端 token 提升 GitHub API 限额。服务器之外不要分发凭据。
+客户端更新默认从公开的 GitHub Release 自动读取，不需要在服务器上填写 GitHub token；服务器仍可设置 BRAIN_UPDATE_SOURCE=private/disabled 关闭公开源，或设置 BRAIN_GITHUB_TOKEN 使用私有仓库与更高的 API 限额。公司登录与部门授权始终由公司服务器控制，服务器之外不要分发凭据。
 
-从 v0.2.0 起，公司服务通过 GitHub API 读取 taorobotics/Corporate-Brain 的最新已公开 Release。管理员在服务启动环境或部署平台密钥中设置 BRAIN_GITHUB_TOKEN，重启公司服务即可启用。建议使用仅选中此仓库、Contents: read 的 fine-grained token，按部署平台的密钥轮换机制维护；不要写进 package.json、桌面环境、源码、聊天或公开日志。员工只用原公司账号登录，不需要 GitHub 账号或令牌。未配置时返回真实的未启用状态。
+从 v0.2.0 起，公司服务通过 GitHub API 读取 taorobotics/Corporate-Brain 的最新已公开 Release。公开仓库模式默认启用，服务器重启后客户端会自动检查并在左下角显示新版本；若服务器仍返回“更新服务尚未启用”，请先部署包含本功能的服务器包。私有仓库或需要更高 GitHub API 限额时，在服务启动环境或部署平台密钥中设置 BRAIN_GITHUB_TOKEN。令牌建议仅授予此仓库的 Contents: read 权限，按部署平台的密钥轮换机制维护；不要写进 package.json、桌面环境、源码、聊天或公开日志。员工只用原公司账号登录，不需要 GitHub 账号或令牌。
 
 客户端登录后检查一次，运行中每 30 分钟检查；在线或窗口激活时在 5 分钟节流范围外复查，可从左侧、帮助菜单或账号菜单手动检查。服务器缓存版本元数据 5 分钟，合并并发查询，失败后退避 30 秒；只有完整、非草稿、非预发布、三种架构均有已上传包与 SHA-256 摘要的最新版本可供下载。发布完成后提示通常在下次检查出现，手动检查仍可能受服务器 5 分钟缓存影响。客户端按数字比较三段版本号，`0.2.10` 会正确识别为高于 `0.2.9`。
 

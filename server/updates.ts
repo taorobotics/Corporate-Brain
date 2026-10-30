@@ -22,9 +22,21 @@ export function installerName(version: string, target: string) {
 // never cross this boundary into the employee renderer or desktop package.
 export function mountUpdates(app: Express, options: UpdateOptions = {}) {
   const token = options.token ?? process.env.BRAIN_GITHUB_TOKEN ?? "";
+  // The repository is public, so a fresh server can discover Releases without
+  // an administrator having to copy a GitHub token first. An explicit option
+  // or BRAIN_UPDATE_SOURCE=private/disabled still turns the public source off.
   const configured =
     !!token ||
-    (options.publicSource ?? process.env.BRAIN_UPDATE_SOURCE === "public");
+    (options.publicSource ??
+      (() => {
+        const source = process.env.BRAIN_UPDATE_SOURCE?.trim().toLowerCase();
+        return (
+          source !== "private" &&
+          source !== "disabled" &&
+          source !== "off" &&
+          source !== "false"
+        );
+      })());
   const request = options.fetch ?? fetch;
   type Cached = { release: DesktopRelease; ids: Record<string, number> };
   let cached: Cached | null = null;

@@ -9,7 +9,7 @@ import { installerName } from "./updates";
 async function start(t: any, updates: any) {
   const platform = createPlatform({
     database: ":memory:",
-    updates: { publicSource: false, ...updates },
+    updates,
   });
   const server = createServer(platform.app).listen(0, "127.0.0.1");
   await once(server, "listening");
@@ -123,6 +123,7 @@ test("private update source requires company login and never returns credentials
 test("unconfigured server reports the actual state without contacting GitHub", async (t) => {
   const p = await start(t, {
     token: "",
+    publicSource: false,
     fetch: () => {
       throw new Error("Unexpected network");
     },
@@ -193,4 +194,23 @@ test("explicit public update channel checks and downloads without a GitHub token
   const download = await p.get("/0.2.0/win32-x64");
   assert.equal(download.status, 200);
   assert.deepEqual(Buffer.from(await download.arrayBuffer()), fixture.bytes);
+});
+
+test("a fresh server uses the public Releases source by default", async (t) => {
+  const fixture = published();
+  const p = await start(t, {
+    token: "",
+    fetch: async (url: string, init: RequestInit) => {
+      assert.equal(
+        (init.headers as Record<string, string>)?.Authorization,
+        undefined,
+      );
+      return String(url).endsWith("latest")
+        ? Response.json(fixture.data)
+        : new Response(fixture.bytes);
+    },
+  });
+  const latest = await (await p.get("/latest")).json();
+  assert.equal(latest.configured, true);
+  assert.equal(latest.release.version, "0.2.0");
 });

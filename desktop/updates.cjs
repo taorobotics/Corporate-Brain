@@ -57,7 +57,7 @@ class DesktopUpdates {
             status: "unavailable",
             release: null,
             error:
-              "公司服务器尚未启用客户端更新。私有仓库请配置 BRAIN_GITHUB_TOKEN；公开仓库请配置 BRAIN_UPDATE_SOURCE=public，保存后重启服务器。",
+              "公司服务器的更新服务尚未启用，请先更新服务器包。公开仓库无需 GitHub Token；私有仓库才需要配置 BRAIN_GITHUB_TOKEN。",
           });
           return;
         }
