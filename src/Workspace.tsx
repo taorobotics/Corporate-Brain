@@ -237,6 +237,51 @@ export default function Workspace(props: WorkspaceProps) {
     const selected = await window.brainDesktop.selectDirectory();
     if (selected) patchWorkspace({ folder: selected });
   }
+  function localFolderMention(value: string) {
+    const match = value.match(
+      /(?:[A-Za-z]:\\|\\\\)[^<>:"/|?*\r\n，。！？,!?]+/,
+    );
+    return match?.[0].replace(/[\s，。,.!?！？]+$/g, "").trim() || null;
+  }
+  async function readWorkspaceContext(requestText: string) {
+    if (!window.brainDesktop) return [];
+    const folder = localFolderMention(requestText) ?? workspace?.folder;
+    if (!folder) return [];
+    const snapshot = await window.brainDesktop.inspectWorkspace(folder);
+    const textFiles = snapshot.files.filter((file) => !file.image);
+    const imageFiles = snapshot.files.filter((file) => file.image).slice(0, 2);
+    const manifest = [
+      `# 本地工作区读取摘要`,
+      `工作区：${snapshot.root}`,
+      `这是桌面客户端只读扫描后附加的内容，模型不能直接访问员工电脑路径。`,
+      snapshot.truncated
+        ? `本次只读取前 ${snapshot.files.length} 个可识别文件，更多内容请缩小目录范围或分批提问。`
+        : `本次读取 ${snapshot.files.length} 个可识别文件。`,
+      snapshot.skipped ? `已跳过 ${snapshot.skipped} 个不支持或受保护的文件/目录。` : "",
+      "",
+      "## 文件清单",
+      ...snapshot.files.map((file) => `- ${file.name}（${file.size} bytes）`),
+      "",
+      "## 文件内容",
+      ...textFiles.flatMap((file) => [
+        `### ${file.name}`,
+        "```text",
+        file.content,
+        "```",
+        "",
+      ]),
+    ]
+      .filter(Boolean)
+      .join("\n");
+    return [
+      { name: `workspace-${snapshot.root}.md`, content: manifest },
+      ...imageFiles.map((file) => ({
+        name: `workspace/${file.name}`,
+        content: "",
+        image: file.image,
+      })),
+    ];
+  }
   async function chooseFiles(files?: FileList | null) {
     try {
       let selected: typeof attachments;
@@ -321,6 +366,12 @@ export default function Workspace(props: WorkspaceProps) {
     setBusy(true);
     startThinking();
     try {
+      const workspaceAttachments =
+        taskKind === "chat" ? await readWorkspaceContext(text) : [];
+      const modelAttachments = [
+        ...sentAttachments.slice(0, Math.max(0, 8 - workspaceAttachments.length)),
+        ...workspaceAttachments,
+      ].slice(0, 8);
       if (activeSkill) {
         await api(`/skills/${activeSkill.id}/download`);
         if (activeSkill.requiredTools.length)
@@ -349,7 +400,7 @@ export default function Workspace(props: WorkspaceProps) {
                   .slice(-40)
                   .map((m) => ({ role: m.role, content: m.content })),
               ],
-              attachments: sentAttachments,
+              attachments: modelAttachments,
               mode: state.settings.mode,
               workspaceAccess: workspace?.access ?? "edit",
             });
@@ -1290,7 +1341,7 @@ export default function Workspace(props: WorkspaceProps) {
                 <span>本地文件</span>
                 <small>
                   {window.brainDesktop
-                    ? "已接通系统文件选择与目录选择；Agent 文件工具仍在接入"
+                    ? "已接通系统文件选择与工作区目录只读扫描"
                     : "可上传选定文件，本地目录助手尚未接通"}
                 </small>
               </div>

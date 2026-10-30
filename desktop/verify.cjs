@@ -148,6 +148,20 @@ async function waitFor(test, label, timeout = 12000) {
   await click("创建并进入");
   await waitFor(() => has("今天，一起完成些什么"), "initialized workspace");
   checks.push("First administrator setup and login through UI");
+  const workspaceFixture = join(dir, "workspace-fixture");
+  await fs.mkdir(join(workspaceFixture, "node_modules"), { recursive: true });
+  await fs.writeFile(
+    join(workspaceFixture, "README.md"),
+    "# Local workspace\nThis file is visible to the read-only workspace scanner.\n",
+  );
+  await fs.writeFile(join(workspaceFixture, "node_modules", "ignored.txt"), "ignore");
+  const workspaceSnapshot = await js(
+    `window.brainDesktop.inspectWorkspace(${JSON.stringify(workspaceFixture)})`,
+  );
+  assert.equal(workspaceSnapshot.root, "workspace-fixture");
+  assert.ok(workspaceSnapshot.files.some((file) => file.name === "README.md"));
+  assert.ok(!workspaceSnapshot.files.some((file) => file.name.includes("node_modules")));
+  checks.push("Desktop workspace scanner reads text files and excludes dependency directories");
   await capture("employee-chat.png");
   await waitFor(() => has("有可用更新"), "automatic update discovery");
   await capture("client-update-sidebar.png");

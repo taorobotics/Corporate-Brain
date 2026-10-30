@@ -3,14 +3,26 @@ export async function api<T = any>(
   body?: unknown,
   method?: string,
 ): Promise<T> {
-  const response = await fetch(`/api${path}`, {
-    method: method ?? (body === undefined ? "GET" : "POST"),
-    credentials: "include",
-    headers:
-      body === undefined ? undefined : { "Content-Type": "application/json" },
-    body: body === undefined ? undefined : JSON.stringify(body),
-  });
-  const result = await response.json();
+  let response: Response;
+  try {
+    response = await fetch(`/api${path}`, {
+      method: method ?? (body === undefined ? "GET" : "POST"),
+      credentials: "include",
+      headers:
+        body === undefined ? undefined : { "Content-Type": "application/json" },
+      body: body === undefined ? undefined : JSON.stringify(body),
+    });
+  } catch (error) {
+    throw new Error(
+      `公司服务连接失败：${(error as Error).message || "请检查网络和服务状态"}`,
+    );
+  }
+  let result: any;
+  try {
+    result = await response.json();
+  } catch {
+    throw new Error(`公司服务返回了无法读取的响应（HTTP ${response.status}）`);
+  }
   if (!response.ok)
     throw new Error(result.error ?? `请求失败 ${response.status}`);
   return result;

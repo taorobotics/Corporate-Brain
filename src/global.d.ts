@@ -12,6 +12,12 @@ declare global {
         { name: string; content: string; image?: string }[]
       >;
       selectDirectory(): Promise<string | null>;
+      inspectWorkspace(folder: string): Promise<{
+        root: string;
+        files: { name: string; size: number; content: string; image?: string }[];
+        skipped: number;
+        truncated: boolean;
+      }>;
       changeServer(): Promise<void>;
       saveFile(
         name: string,

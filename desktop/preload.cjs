@@ -33,6 +33,7 @@ contextBridge.exposeInMainWorld("brainDesktop", {
   writeState: (id, data) => ipcRenderer.invoke("local:write", id, data),
   selectFiles: () => ipcRenderer.invoke("files:select"),
   selectDirectory: () => ipcRenderer.invoke("directory:select"),
+  inspectWorkspace: (folder) => ipcRenderer.invoke("workspace:inspect", folder),
   changeServer: () => ipcRenderer.invoke("company:setup"),
   saveFile: (name, content, base64) =>
     ipcRenderer.invoke("file:save", name, content, base64),

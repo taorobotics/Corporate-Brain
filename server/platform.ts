@@ -151,7 +151,7 @@ export function createPlatform(
   const { db } = store;
   const app = express();
   app.disable("x-powered-by");
-  app.use(express.json({ limit: "8mb" }));
+  app.use(express.json({ limit: "16mb" }));
   app.use(cookieParser());
   app.use((req, res, next) => {
     res.setHeader("Cache-Control", "no-store");
@@ -802,8 +802,9 @@ export function createPlatform(
       .strict()
       .parse(req.body);
     const row = getConnection(data.connectionId, actor, "chat");
-    let content: string;
+    let content: string | undefined;
     let usage: { inputTokens?: number; outputTokens?: number; totalTokens?: number } | undefined;
+    const hasImageAttachment = data.attachments.some((item) => item.image);
     try {
       if (!dsh) throw new DshUnavailableError("DSH 已由管理员停用");
       const result = await dsh.runDetailed({
@@ -821,18 +822,30 @@ export function createPlatform(
       content = result.content;
       usage = result.usage;
     } catch (error) {
-      if (!(error instanceof DshUnavailableError))
+      // Visual requests can be accepted by the OpenAI-compatible provider even
+      // when a DSH preset rejects the image block. Retry those requests through
+      // the direct chat endpoint so an uploaded image is still sent to the model.
+      if (!(error instanceof DshUnavailableError) && !hasImageAttachment)
         fail(502, (error as Error).message.slice(0, 500));
+    }
+    if (typeof content !== "string") {
       const lastUserIndex = data.messages.findLastIndex(
         (message) => message.role === "user",
       );
+      const textAttachments = data.attachments
+        .filter((item) => item.content)
+        .map((item) => `\n\n文件附件：${item.name}\n${item.content}`)
+        .join("");
       const directMessages = data.messages.map((message, index) => {
-        if (index !== lastUserIndex || !data.attachments.length)
+        if (
+          index !== lastUserIndex ||
+          (!data.attachments.length && !textAttachments)
+        )
           return message;
         return {
           ...message,
           content: [
-            { type: "text", text: message.content },
+            { type: "text", text: `${message.content}${textAttachments}` },
             ...data.attachments
               .filter((item) => item.image)
               .map((item) => ({
