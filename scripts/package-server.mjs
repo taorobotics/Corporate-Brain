@@ -16,9 +16,28 @@ try {
   }
   await mkdir(join(stage, 'docs/releases'), { recursive: true });
   for (const path of ['docs/DEPLOYMENT.md', 'docs/RELEASE-POLICY.md', 'docs/PRIVACY.md', 'docs/CODE_SIGNING_POLICY.md', 'docs/dependency-licenses.json', `docs/releases/v${version}.md`]) await cp(path, join(stage, path));
-  execFileSync('zip', ['-q', '-r', output, '.'], { cwd: stage });
-  execFileSync('unzip', ['-tq', output]);
-  const entries = execFileSync('unzip', ['-Z1', output], { encoding: 'utf8' }).trim().split('\n');
+  if (process.platform === 'win32') {
+    execFileSync(
+      'powershell.exe',
+      [
+        '-NoProfile',
+        '-NonInteractive',
+        '-Command',
+        '$ErrorActionPreference = "Stop"; Compress-Archive -Path (Join-Path $env:CB_STAGE "*") -DestinationPath $env:CB_OUTPUT -Force',
+      ],
+      { stdio: 'inherit', env: { ...process.env, CB_STAGE: stage, CB_OUTPUT: output } },
+    );
+  } else {
+    execFileSync('zip', ['-q', '-r', output, '.'], { cwd: stage });
+  }
+  const entries = execFileSync(
+    process.platform === 'win32' ? 'tar' : 'unzip',
+    process.platform === 'win32' ? ['-tf', output] : ['-Z1', output],
+    { encoding: 'utf8' },
+  )
+    .trim()
+    .split(/\r?\n/)
+    .map((entry) => entry.replace(/^\.\//, ''));
   assert.ok(entries.includes('dist/index.html') && entries.includes('server/index.ts') && entries.includes('package-lock.json'));
   assert.ok(!entries.some(path => /(^|\/)(?:\.data|\.env|node_modules|\.cache|profiles)(\/|$)/.test(path)));
   const bytes = await readFile(output);
