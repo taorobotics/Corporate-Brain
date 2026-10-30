@@ -81,6 +81,8 @@ export default function App() {
     [menu, setMenu] = useState("");
   const [state, setState] = useState<LocalState>(emptyState),
     [ready, setReady] = useState(false),
+    [localError, setLocalError] = useState(""),
+    [localLoadVersion, setLocalLoadVersion] = useState(0),
     [toast, setToast] = useState(""),
     [passwordOpen, setPasswordOpen] = useState(false);
   const [departments, setDepartments] = useState<Department[]>([]),
@@ -140,6 +142,7 @@ export default function App() {
   useEffect(() => {
     loadedProfile.current = null;
     setReady(false);
+    setLocalError("");
     setConversationId(null);
     setState(emptyState());
     setDepartments([]);
@@ -155,7 +158,12 @@ export default function App() {
           setReady(true);
         }
       })
-      .catch(() => notify("本地记录读取失败，请检查设备存储。"));
+      .catch((error) => {
+        if (!active) return;
+        const message = (error as Error).message || "本机记录读取失败";
+        setLocalError(message);
+        notify(`${message} 可以点击“重新读取”。`);
+      });
     if (user.mustChange) {
       setPasswordOpen(true);
     } else void refresh().catch((e) => notify(e.message));
@@ -163,7 +171,7 @@ export default function App() {
       active = false;
       loadedProfile.current = null;
     };
-  }, [user?.id, user?.mustChange]);
+  }, [user?.id, user?.mustChange, localLoadVersion]);
   useEffect(() => {
     if (ready && user && loadedProfile.current === user.id)
       void writeLocal(user.id, state).catch(() =>
@@ -637,7 +645,22 @@ export default function App() {
             )
           ) : (
             <div className="empty">
-              <p>正在读取本机记录…</p>
+              {localError ? (
+                <>
+                  <p>本机记录暂时无法读取</p>
+                  <p className="muted">{localError}</p>
+                  <Button
+                    onClick={() => {
+                      setLocalError("");
+                      setLocalLoadVersion((value) => value + 1);
+                    }}
+                  >
+                    重新读取
+                  </Button>
+                </>
+              ) : (
+                <p>正在读取本机记录…</p>
+              )}
             </div>
           )}
         </main>

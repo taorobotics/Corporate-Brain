@@ -11,6 +11,18 @@ export const emptyState = (): LocalState => ({
 });
 export const localKey = (userId: string) => `${location.origin}:${userId}`;
 let database: Promise<IDBDatabase> | undefined;
+const LOCAL_READ_TIMEOUT_MS = 10_000;
+
+function withTimeout<T>(promise: Promise<T>, message: string) {
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  const timeout = new Promise<never>((_, reject) => {
+    timer = setTimeout(() => reject(new Error(message)), LOCAL_READ_TIMEOUT_MS);
+  });
+  return Promise.race([promise, timeout]).finally(() => {
+    if (timer) clearTimeout(timer);
+  });
+}
+
 function open() {
   return (database ??= new Promise((resolve, reject) => {
     const request = indexedDB.open("corporate-brain-device", 1);
@@ -22,16 +34,27 @@ function open() {
 }
 export async function readLocal(userId: string): Promise<LocalState> {
   if (window.brainDesktop)
-    return normalizeLocalState(await window.brainDesktop.readState(userId));
-  const db = await open();
-  return new Promise((resolve, reject) => {
-    const request = db
-      .transaction("profiles")
-      .objectStore("profiles")
-      .get(localKey(userId));
+    return normalizeLocalState(
+      await withTimeout(
+        window.brainDesktop.readState(userId),
+        "本机记录读取超时，请检查网络后重试。",
+      ),
+    );
+  const db = await withTimeout(
+    open(),
+    "本机存储打开超时，请刷新页面后重试。",
+  );
+  return withTimeout(
+    new Promise((resolve, reject) => {
+      const request = db
+        .transaction("profiles")
+        .objectStore("profiles")
+        .get(localKey(userId));
       request.onsuccess = () => resolve(normalizeLocalState(request.result));
-    request.onerror = () => reject(request.error);
-  });
+      request.onerror = () => reject(request.error);
+    }),
+    "本机记录读取超时，请刷新页面后重试。",
+  );
 }
 export async function writeLocal(userId: string, state: LocalState) {
   if (window.brainDesktop) return window.brainDesktop.writeState(userId, state);

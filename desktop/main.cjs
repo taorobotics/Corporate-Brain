@@ -86,6 +86,23 @@ ipcMain.handle("company:legal", (event) => {
 });
 let lastVerifiedUser = null;
 const writes = new Map();
+const LOCAL_PROFILE_TIMEOUT_MS = 10_000;
+
+function timeoutError(message) {
+  return new Error(message);
+}
+
+function waitWithTimeout(promise, message) {
+  let timer;
+  const timeout = new Promise((_, reject) => {
+    timer = setTimeout(
+      () => reject(timeoutError(message)),
+      LOCAL_PROFILE_TIMEOUT_MS,
+    );
+  });
+  return Promise.race([promise, timeout]).finally(() => clearTimeout(timer));
+}
+
 function sender(event) {
   if (
     !win ||
@@ -103,9 +120,13 @@ async function profile(event, userId) {
   try {
     response = await win.webContents.session.fetch(`${origin}/api/auth/me`, {
       credentials: "include",
+      signal: AbortSignal.timeout(LOCAL_PROFILE_TIMEOUT_MS),
     });
   } catch (error) {
-    if (lastVerifiedUser !== userId) throw error;
+    if (lastVerifiedUser !== userId)
+      throw new Error("公司服务器验证超时，本机记录未读取，请检查网络后重试。", {
+        cause: error,
+      });
   }
   if (response) {
     if (!response.ok) {
@@ -128,7 +149,10 @@ async function profile(event, userId) {
 }
 ipcMain.handle("local:read", async (event, userId) => {
   const file = await profile(event, userId);
-  await writes.get(file);
+  await waitWithTimeout(
+    writes.get(file) || Promise.resolve(),
+    "本机记录仍在保存，请稍后重试。",
+  );
   try {
     return JSON.parse(await fs.readFile(file, "utf8"));
   } catch (error) {
