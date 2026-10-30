@@ -1,0 +1,54 @@
+import assert from "node:assert/strict";
+import { test } from "node:test";
+import {
+  DSH_MODE_OPTIONS,
+  WORKSPACE_ACCESS_OPTIONS,
+  defaultWorkspace,
+  estimateTokens,
+  normalizeLocalState,
+} from "./workspaces";
+
+test("workspace normalization creates a default workspace and migrates legacy modes", () => {
+  const state = normalizeLocalState({
+    settings: { theme: "light", model: "", mode: "问答" as any },
+  });
+  assert.equal(state.workspaces.length, 1);
+  assert.equal(state.workspaces[0].id, defaultWorkspace().id);
+  assert.equal(state.activeWorkspaceId, state.workspaces[0].id);
+  assert.equal(state.settings.mode, "standard");
+});
+
+test("workspace normalization keeps named workspaces and falls back from unknown active ids", () => {
+  const state = normalizeLocalState({
+    workspaces: [
+      {
+        id: "safe",
+        name: "safeChat",
+        description: "safe files",
+        folder: "C:/safe",
+        access: "view",
+      },
+    ],
+    activeWorkspaceId: "missing",
+  });
+  assert.equal(state.activeWorkspaceId, "safe");
+  assert.equal(state.workspaces[0].access, "view");
+  assert.equal(state.workspaces[0].folder, "C:/safe");
+});
+
+test("mode and permission catalogs expose the four DSH modes and three access levels", () => {
+  assert.deepEqual(
+    DSH_MODE_OPTIONS.map((option) => option.value),
+    ["standard", "ptc", "minimal", "creative"],
+  );
+  assert.deepEqual(
+    WORKSPACE_ACCESS_OPTIONS.map((option) => option.value),
+    ["view", "edit", "full"],
+  );
+});
+
+test("token estimate is stable for empty and short text", () => {
+  assert.equal(estimateTokens(""), 0);
+  assert.equal(estimateTokens("1234"), 1);
+  assert.equal(estimateTokens("12345"), 2);
+});

@@ -202,6 +202,7 @@ export default function App() {
           conversations: merge(current.conversations, imported.conversations),
           drafts: merge(current.drafts, imported.drafts),
           projects: merge(current.projects, imported.projects),
+          workspaces: merge(current.workspaces, imported.workspaces),
         };
       });
       notify("已导入当前账号的本地空间，重复记录已跳过。");

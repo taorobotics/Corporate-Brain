@@ -1076,6 +1076,34 @@ code {
   color: #84867f;
   font-size: 12px;
 }
+.workspace-controls {
+  display: inline-flex;
+  align-items: center;
+  gap: 1px;
+  min-width: 0;
+}
+.workspace-controls .select-trigger {
+  max-width: 190px;
+}
+.workspace-controls .icon-button {
+  width: 28px;
+  height: 28px;
+  color: var(--muted);
+}
+.usage-indicator {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  color: var(--muted);
+  font-size: 11px;
+  white-space: nowrap;
+}
+.usage-indicator span {
+  border-radius: 999px;
+  background: var(--side);
+  padding: 2px 5px;
+  font-size: 10px;
+}
 .chat-header .button {
   font-size: 12px;
   padding: 8px 11px;
@@ -1278,6 +1306,7 @@ code {
   display: flex;
   gap: 8px;
   align-items: center;
+  flex-wrap: wrap;
 }
 .composer-tools > .text-button {
   font-size: 12px;
@@ -2405,8 +2434,10 @@ tbody > tr:hover {
   .toolbar > .select-trigger {
     min-width: 120px;
   }
-  .workspace-picker span {
-    display: none;
+  .workspace-controls .select-value {
+    max-width: 90px;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
   .settings-layout {
     grid-template-columns: 145px minmax(0, 1fr);
@@ -2477,6 +2508,10 @@ tbody > tr:hover {
   }
   .workspace-picker,
   .header-divider {
+    display: none;
+  }
+  .workspace-controls,
+  .usage-indicator {
     display: none;
   }
   .chat-header .button {

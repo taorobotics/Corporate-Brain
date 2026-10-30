@@ -1,10 +1,13 @@
 import type { LocalState } from "../shared/types";
+import { defaultWorkspace, normalizeLocalState } from "../shared/workspaces";
 export const emptyState = (): LocalState => ({
   conversations: [],
   drafts: [],
   installed: [],
   projects: [],
-  settings: { theme: "light", model: "", mode: "问答" },
+  workspaces: [defaultWorkspace()],
+  activeWorkspaceId: defaultWorkspace().id,
+  settings: { theme: "light", model: "", mode: "standard" },
 });
 export const localKey = (userId: string) => `${location.origin}:${userId}`;
 let database: Promise<IDBDatabase> | undefined;
@@ -19,14 +22,14 @@ function open() {
 }
 export async function readLocal(userId: string): Promise<LocalState> {
   if (window.brainDesktop)
-    return (await window.brainDesktop.readState(userId)) ?? emptyState();
+    return normalizeLocalState(await window.brainDesktop.readState(userId));
   const db = await open();
   return new Promise((resolve, reject) => {
     const request = db
       .transaction("profiles")
       .objectStore("profiles")
       .get(localKey(userId));
-    request.onsuccess = () => resolve(request.result ?? emptyState());
+      request.onsuccess = () => resolve(normalizeLocalState(request.result));
     request.onerror = () => reject(request.error);
   });
 }
@@ -74,15 +77,14 @@ export function validateImport(value: unknown): LocalState {
     )
       throw new Error("备份中的技能草稿格式有误");
   // Installed packages are re-authorized by downloading from the platform; never trust imports as grants.
-  return {
+  return normalizeLocalState({
     ...emptyState(),
     conversations: data.state.conversations,
     drafts: data.state.drafts,
     projects: data.state.projects,
+    workspaces: data.state.workspaces,
+    activeWorkspaceId: data.state.activeWorkspaceId,
     installed: [],
-    settings: {
-      ...emptyState().settings,
-      theme: data.state.settings?.theme === "dark" ? "dark" : "light",
-    },
-  };
+    settings: data.state.settings,
+  });
 }

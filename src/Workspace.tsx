@@ -7,7 +7,6 @@ import {
   BookOpen,
   Images,
   SlidersHorizontal,
-  CaretDown,
   Paperclip,
   X,
   ArrowsOutSimple,
@@ -26,8 +25,8 @@ import {
   MagnifyingGlass,
   ChatCircle,
   VideoCamera,
-  ListChecks,
   Lightning,
+  ShieldCheck,
   Sun,
   Moon,
 } from "@phosphor-icons/react";
@@ -39,7 +38,14 @@ import type {
   Conversation,
   Message,
   Connection,
+  DshMode,
+  WorkspaceAccess,
 } from "../shared/types";
+import {
+  DSH_MODE_OPTIONS,
+  WORKSPACE_ACCESS_OPTIONS,
+  estimateTokens,
+} from "../shared/workspaces";
 import { roleNames } from "../shared/types";
 import { api, download } from "./api";
 import {
@@ -80,9 +86,12 @@ export default function Workspace(props: WorkspaceProps) {
     [attachments, setAttachments] = useState<
       { name: string; content: string; image?: string }[]
     >([]),
-    [folder, setFolder] = useState<string | null>(null),
     [projectDialog, setProjectDialog] = useState(false),
-    [selectedProject, setSelectedProject] = useState<string | null>(null);
+    [selectedProject, setSelectedProject] = useState<string | null>(null),
+    [workspaceDialog, setWorkspaceDialog] = useState(false),
+    [lastUsage, setLastUsage] = useState<
+      { inputTokens?: number; outputTokens?: number; totalTokens?: number } | null
+    >(null);
   const [taskKind, setTaskKind] = useState<"chat" | "image" | "video">("chat"),
     [taskError, setTaskError] = useState("");
   const filesRef = useRef<HTMLInputElement>(null),
@@ -93,6 +102,12 @@ export default function Workspace(props: WorkspaceProps) {
   );
   const model =
     taskModels.find((c) => c.id === state.settings.model) ?? taskModels[0];
+  const workspace =
+    state.workspaces.find((item) => item.id === state.activeWorkspaceId) ??
+    state.workspaces[0];
+  const draftTokenEstimate = estimateTokens(
+    `${text}\n${attachments.map((attachment) => attachment.content).join("\n")}`,
+  );
   useEffect(() => {
     setPreview(null);
     setSearch("");
@@ -117,6 +132,23 @@ export default function Workspace(props: WorkspaceProps) {
   }, [conversation?.messages.length, busy]);
   function patchSettings(value: Partial<typeof state.settings>) {
     setState((s) => ({ ...s, settings: { ...s.settings, ...value } }));
+  }
+  function patchWorkspace(value: Partial<NonNullable<typeof workspace>>) {
+    if (!workspace) return;
+    setState((s) => ({
+      ...s,
+      workspaces: s.workspaces.map((item) =>
+        item.id === workspace.id ? { ...item, ...value } : item,
+      ),
+    }));
+  }
+  async function chooseWorkspaceFolder() {
+    if (!window.brainDesktop) {
+      notify("网页端无法读取本地目录，请使用桌面客户端选择工作区。");
+      return;
+    }
+    const selected = await window.brainDesktop.selectDirectory();
+    if (selected) patchWorkspace({ folder: selected });
   }
   async function chooseFiles(files?: FileList | null) {
     try {
@@ -199,12 +231,6 @@ export default function Workspace(props: WorkspaceProps) {
       );
       return;
     }
-    if (state.settings.mode !== "问答") {
-      setTaskError(
-        "当前已接通问答与图片生成；规划和执行工具仍在接入，需求已保存在本机。",
-      );
-      return;
-    }
     setBusy(true);
     try {
       if (activeSkill) {
@@ -236,7 +262,10 @@ export default function Workspace(props: WorkspaceProps) {
                   .map((m) => ({ role: m.role, content: m.content })),
               ],
               attachments: sentAttachments,
+              mode: state.settings.mode,
+              workspaceAccess: workspace?.access ?? "edit",
             });
+      setLastUsage(response.usage ?? null);
       const result: Message = {
         id: crypto.randomUUID(),
         role: "assistant",
@@ -290,6 +319,10 @@ export default function Workspace(props: WorkspaceProps) {
   }
   async function saveImage(image: string) {
     try {
+      if (workspace?.access === "view") {
+        notify("当前工作区为仅可查看，先切换到工作区内修改或完全权限。");
+        return;
+      }
       const name = `公司大脑-${Date.now()}.png`;
       if (window.brainDesktop) {
         if (await window.brainDesktop.saveFile(name, image.split(",")[1], true))
@@ -348,22 +381,36 @@ export default function Workspace(props: WorkspaceProps) {
             <header className="chat-header">
               <strong>{conversation?.title ?? "新建任务"}</strong>
               <span className="header-divider" />
-              <button
-                className="text-button workspace-picker"
-                onClick={async () => {
-                  if (!window.brainDesktop) {
-                    notify("网页端可上传选定文件；本地目录助手尚未接通。");
-                    return;
+              <div className="workspace-controls">
+                <SelectField
+                  label="工作区"
+                  variant="quiet"
+                  side="bottom"
+                  value={workspace?.id ?? null}
+                  onValueChange={(value) =>
+                    setState((current) => ({
+                      ...current,
+                      activeWorkspaceId: value,
+                    }))
                   }
-                  setFolder(await window.brainDesktop.selectDirectory());
-                }}
-              >
-                <Folder size={17} />
-                <span>
-                  {folder ? folder.split(/[\\/]/).pop() : "本地工作区"}
-                </span>
-                <CaretDown size={12} />
-              </button>
+                  icon={<Folder size={17} />}
+                  options={state.workspaces.map((item) => ({
+                    value: item.id,
+                    label: item.name,
+                    description: item.description || "个人工作区",
+                  }))}
+                  action={{
+                    label: "添加工作区",
+                    onClick: () => setWorkspaceDialog(true),
+                  }}
+                />
+                <IconButton
+                  label="选择工作区目录"
+                  onClick={() => void chooseWorkspaceFolder()}
+                >
+                  <Folder size={16} />
+                </IconButton>
+              </div>
               <span className="bar-spacer" />
               <Button onClick={() => newDraft()}>
                 <Sparkle size={18} />
@@ -596,35 +643,54 @@ export default function Workspace(props: WorkspaceProps) {
                       onClick: () => navigate("models"),
                     }}
                   />
+                  <span
+                    className="usage-indicator"
+                    title="本轮模型 Token 使用量；额度上限由服务端模型配置提供"
+                  >
+                    {lastUsage?.totalTokens ?? draftTokenEstimate} tokens
+                    <span>{lastUsage ? "本轮" : "估算"}</span>
+                    <span>额度待配置</span>
+                  </span>
                   <SelectField
-                    label="工作模式"
+                    label="DSH 模式"
                     variant="quiet"
                     side="top"
                     align="end"
                     value={state.settings.mode}
-                    onValueChange={(value) => patchSettings({ mode: value })}
-                    options={[
-                      {
-                        value: "问答",
-                        label: "问答",
-                        description: "围绕问题交流，直接获得回复",
-                        icon: <ChatCircle size={18} />,
-                      },
-                      {
-                        value: "规划",
-                        label: "规划",
-                        description: "规划工具仍在接入，需求可先保存",
-                        icon: <ListChecks size={18} />,
-                        badge: "接入中",
-                      },
-                      {
-                        value: "执行",
-                        label: "执行",
-                        description: "Agent 工具仍在接入，需求可先保存",
-                        icon: <Lightning size={18} />,
-                        badge: "接入中",
-                      },
-                    ]}
+                    onValueChange={(value) =>
+                      patchSettings({ mode: value as DshMode })
+                    }
+                    options={DSH_MODE_OPTIONS.map((option) => ({
+                      value: option.value,
+                      label: option.label,
+                      description: option.description,
+                      icon:
+                        option.value === "ptc" ? (
+                          <Lightning size={18} />
+                        ) : option.value === "minimal" ? (
+                          <SlidersHorizontal size={18} />
+                        ) : option.value === "creative" ? (
+                          <Sparkle size={18} />
+                        ) : (
+                          <ChatCircle size={18} />
+                        ),
+                    }))}
+                  />
+                  <SelectField
+                    label="工作区权限"
+                    variant="quiet"
+                    side="top"
+                    align="end"
+                    value={workspace?.access ?? "edit"}
+                    onValueChange={(value) =>
+                      patchWorkspace({ access: value as WorkspaceAccess })
+                    }
+                    options={WORKSPACE_ACCESS_OPTIONS.map((option) => ({
+                      value: option.value,
+                      label: option.label,
+                      description: option.description,
+                      icon: <ShieldCheck size={18} />,
+                    }))}
                   />
                   <button
                     className="send"
@@ -1280,6 +1346,52 @@ export default function Workspace(props: WorkspaceProps) {
             <footer>
               <Button primary type="submit">
                 创建项目
+              </Button>
+            </footer>
+          </form>
+        </Modal>
+      )}
+      {workspaceDialog && (
+        <Modal title="添加工作区" close={() => setWorkspaceDialog(false)}>
+          <form
+            onSubmit={(e) => {
+              e.preventDefault();
+              const data = new FormData(e.currentTarget);
+              const item = {
+                id: crypto.randomUUID(),
+                name: String(data.get("name")).trim(),
+                description: String(data.get("description") ?? "").trim(),
+                folder: null,
+                access: "edit" as const,
+              };
+              setState((current) => ({
+                ...current,
+                workspaces: [item, ...current.workspaces],
+                activeWorkspaceId: item.id,
+              }));
+              setWorkspaceDialog(false);
+              notify("工作区已添加到本机。");
+            }}
+          >
+            <Field label="工作区名称">
+              <input
+                name="name"
+                required
+                maxLength={100}
+                placeholder="例如：safeChat"
+              />
+            </Field>
+            <Field label="说明">
+              <textarea
+                name="description"
+                rows={3}
+                maxLength={500}
+                placeholder="这个工作区用于什么任务？"
+              />
+            </Field>
+            <footer>
+              <Button primary type="submit">
+                添加工作区
               </Button>
             </footer>
           </form>

@@ -796,14 +796,17 @@ export function createPlatform(
           .min(1)
           .max(60),
         attachments: z.array(attachment).max(8).default([]),
+        mode: z.enum(["standard", "ptc", "minimal", "creative"]).default("standard"),
+        workspaceAccess: z.enum(["view", "edit", "full"]).default("edit"),
       })
       .strict()
       .parse(req.body);
     const row = getConnection(data.connectionId, actor, "chat");
     let content: string;
+    let usage: { inputTokens?: number; outputTokens?: number; totalTokens?: number } | undefined;
     try {
       if (!dsh) throw new DshUnavailableError("DSH 已由管理员停用");
-      content = await dsh.run({
+      const result = await dsh.runDetailed({
         connectionId: row.id,
         baseUrl: row.base_url,
         model: row.model,
@@ -812,7 +815,11 @@ export function createPlatform(
         sessionId: data.sessionId ?? randomUUID(),
         messages: data.messages,
         attachments: data.attachments,
+        mode: data.mode,
+        workspaceAccess: data.workspaceAccess,
       });
+      content = result.content;
+      usage = result.usage;
     } catch (error) {
       if (!(error instanceof DshUnavailableError))
         fail(502, (error as Error).message.slice(0, 500));
@@ -841,11 +848,12 @@ export function createPlatform(
         stream: false,
       });
       content = result.choices?.[0]?.message?.content;
+      usage = result.usage;
       if (typeof content !== "string" || !content.trim())
         fail(502, "模型未返回可显示的文本");
     }
     store.audit(actor.id, "model.chat_completed", row.id);
-    res.json({ content });
+    res.json({ content, usage });
   });
   app.post("/api/generate/image", async (req, res) => {
     const actor = getActor(req);

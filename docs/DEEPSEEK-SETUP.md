@@ -27,6 +27,10 @@
 
 保存后，员工聊天会通过 DSH 路由调用该连接。带图片的消息会作为视觉输入发送；需要实时信息时，DSH 会调用联网工具。当前 DSH 依赖版本使用 Anthropic 兼容搜索入口，因此 `DEEPSEEK_SEARCH_BASE_URL` 默认填写 `https://api.deepseek.com/anthropic/v1`，不要改成 OpenAI `/v1` 聊天地址。
 
+员工端的 DSH 模式对应 Harness 的内置 preset：标准模式使用 `standard`，PTC 模式使用 `ptc`，极简模式使用 `minimal`，创造模式使用 `cordis`。工作区权限对应 DSH 的 `read-only`、`workspace-write` 和 `danger-full-access` 沙箱策略；完全权限仍受服务器运行账号和系统权限限制。
+
+客户端会在输入区显示本轮 Token 用量。服务端返回真实用量时显示实际值；模型连接没有配置额度上限时显示“额度待配置”，不会把估算值当作供应商剩余额度。
+
 ## 部署到公司服务器
 
 发布包中的服务器代码和网页来自同一个版本。管理员应：

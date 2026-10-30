@@ -261,19 +261,30 @@ async function waitFor(test, label, timeout = 12000) {
     true,
   );
   await selectOption("任务类型", "对话");
-  await openSelect("工作模式");
+  await openSelect("DSH 模式");
   await key("End");
   await key("Return");
   await waitFor(
     () =>
       js(
-        `document.querySelector('[aria-label="工作模式"]').textContent.includes('执行')`,
+        `document.querySelector('[aria-label="DSH 模式"]').textContent.includes('创造模式')`,
       ),
     "keyboard selects last mode",
   );
-  await selectOption("工作模式", "问答");
+  await selectOption("DSH 模式", "标准模式");
+  await openSelect("工作区");
+  assert.equal(await has("默认工作区"), true);
+  await key("Escape");
+  await selectOption("工作区权限", "仅可查看");
+  assert.equal(
+    await js(
+      `document.querySelector('[aria-label="工作区权限"]').textContent.includes('仅可查看')`,
+    ),
+    true,
+  );
+  await selectOption("工作区权限", "工作区内修改");
   checks.push(
-    "Custom composer selects open upwards, select by pointer and keyboard, Escape restores focus",
+    "Custom composer selects workspaces, DSH modes and permission levels with keyboard and pointer",
   );
   await openSelect("选择模型");
   assert.equal(await has("尚未配置可用模型"), true);
@@ -709,7 +720,7 @@ async function waitFor(test, label, timeout = 12000) {
     false,
   );
   checks.push("900px desktop viewport has no document overflow");
-  await openSelect("工作模式");
+  await openSelect("DSH 模式");
   const bounds = await js(
     `(() => { const menu = document.querySelector('.select-popup[data-open]'); const r = menu.getBoundingClientRect(); return { left: r.left, top: r.top, right: r.right, bottom: r.bottom, width: innerWidth, height: innerHeight }; })()`,
   );

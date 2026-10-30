@@ -5,7 +5,21 @@ import { test } from "node:test";
 import { mkdtemp, rm } from "node:fs/promises";
 import { join } from "node:path";
 import { tmpdir } from "node:os";
-import { DshManager } from "./dsh";
+import {
+  DshManager,
+  dshPermissionMode,
+  dshPresetForMode,
+} from "./dsh";
+
+test("DSH modes map to the shipped presets and workspace permissions map to sandbox modes", () => {
+  assert.equal(dshPresetForMode("standard"), "standard");
+  assert.equal(dshPresetForMode("ptc"), "ptc");
+  assert.equal(dshPresetForMode("minimal"), "minimal");
+  assert.equal(dshPresetForMode("creative"), "cordis");
+  assert.equal(dshPermissionMode("view"), "read-only");
+  assert.equal(dshPermissionMode("edit"), "workspace-write");
+  assert.equal(dshPermissionMode("full"), "danger-full-access");
+});
 
 test("DSH routes an OpenAI-compatible turn and admits an image attachment", async (t) => {
   const requests: string[] = [];

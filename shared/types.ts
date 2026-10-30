@@ -24,6 +24,15 @@ export type User = {
   distributed: number;
 };
 export type Audience = "department" | "departments" | "company";
+export type DshMode = "standard" | "ptc" | "minimal" | "creative";
+export type WorkspaceAccess = "view" | "edit" | "full";
+export type LocalWorkspace = {
+  id: string;
+  name: string;
+  description: string;
+  folder: string | null;
+  access: WorkspaceAccess;
+};
 export type SkillPackage = {
   name: string;
   description: string;
@@ -80,5 +89,7 @@ export type LocalState = {
   drafts: Draft[];
   installed: Skill[];
   projects: { id: string; name: string; description: string }[];
-  settings: { theme: string; model: string; mode: string };
+  workspaces: LocalWorkspace[];
+  activeWorkspaceId: string;
+  settings: { theme: string; model: string; mode: DshMode };
 };

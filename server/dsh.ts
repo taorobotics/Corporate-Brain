@@ -1,8 +1,10 @@
 import { DeepSeekHarness } from "@deepseek-ai/dsh-sdk-client";
 import type { SdkPromptContentBlock } from "@deepseek-ai/dsh-sdk-client";
 import { createHash } from "node:crypto";
-import { mkdir, writeFile } from "node:fs/promises";
+import { createRequire } from "node:module";
+import { mkdir, readFile, writeFile } from "node:fs/promises";
 import { basename, join, resolve } from "node:path";
+import type { DshMode, WorkspaceAccess } from "../shared/types";
 
 export type DshAttachment = {
   name: string;
@@ -24,6 +26,19 @@ export type DshRunOptions = {
   sessionId: string;
   messages: DshMessage[];
   attachments: DshAttachment[];
+  mode?: DshMode;
+  workspaceAccess?: WorkspaceAccess;
+};
+
+export type DshUsage = {
+  inputTokens?: number;
+  outputTokens?: number;
+  totalTokens?: number;
+};
+
+export type DshRunResult = {
+  content: string;
+  usage?: DshUsage;
 };
 
 export class DshUnavailableError extends Error {}
@@ -33,6 +48,37 @@ type Entry = {
   harness: DeepSeekHarness;
   workspace: string;
 };
+
+const require = createRequire(import.meta.url);
+
+export function dshPresetForMode(mode: DshMode = "standard") {
+  return mode === "creative" ? "cordis" : mode;
+}
+
+export function dshPermissionMode(access: WorkspaceAccess = "edit") {
+  return access === "view"
+    ? "read-only"
+    : access === "full"
+      ? "danger-full-access"
+      : "workspace-write";
+}
+
+function extractUsage(events: Array<{ type?: string; data?: any }>): DshUsage | undefined {
+  const event = [...events]
+    .reverse()
+    .find((item) => item.type === "assistant/message" && item.data?.usage);
+  const usage = event?.data?.usage;
+  if (!usage || typeof usage !== "object") return undefined;
+  const inputTokens = Number(usage.inputTokens ?? usage.input_tokens);
+  const outputTokens = Number(usage.outputTokens ?? usage.output_tokens);
+  const totalTokens = Number(usage.totalTokens ?? usage.total_tokens);
+  const result = {
+    ...(Number.isFinite(inputTokens) ? { inputTokens } : {}),
+    ...(Number.isFinite(outputTokens) ? { outputTokens } : {}),
+    ...(Number.isFinite(totalTokens) ? { totalTokens } : {}),
+  };
+  return Object.keys(result).length ? result : undefined;
+}
 
 const IMAGE_DATA =
   /^data:(image\/(?:png|jpeg|webp|gif));base64,([A-Za-z0-9+/=\r\n]+)$/;
@@ -81,19 +127,31 @@ export class DshManager {
       .slice(0, 24);
     const runtimeRoot = join(this.root, hash);
     const patch = join(runtimeRoot, "corporate.patch.yml");
+    const preset = require.resolve(
+      `@deepseek-ai/dsh-web-app/presets/${dshPresetForMode(options.mode)}.patch.yml`,
+    );
     await mkdir(runtimeRoot, { recursive: true });
     await writeFile(
       patch,
       `- id: llm-pi-ai\n  config:\n    providers:\n      corporate:\n        displayName: Company model\n        api: openai-completions\n        baseURL: ${yamlString(options.baseUrl)}\n        apiKeyEnv: CORPORATE_BRAIN_DSH_API_KEY\n        defaultInput: [text, image]\n        models:\n          - id: ${yamlString(options.model)}\n            name: ${yamlString(options.model)}\n            input: [text, image]\n- id: agent-default-model\n  config:\n    provider: corporate\n    model: ${yamlString(options.model)}\n`,
       "utf8",
     );
+    await writeFile(
+      patch,
+      `${await readFile(patch, "utf8")}- insert:\n    - id: agent-preset-registry\n      name: '@deepseek-ai/dsh-agent-preset-registry'\n      config:\n        default: ${yamlString(dshPresetForMode(options.mode))}\n`,
+      "utf8",
+    );
     const harness = new DeepSeekHarness({
       profile: "sdk",
-      patches: [patch],
+      patches: [preset, patch],
       dshHome: join(runtimeRoot, "home"),
       processCwd: workspace,
       cwd: workspace,
-      env: { ...process.env, CORPORATE_BRAIN_DSH_API_KEY: options.apiKey },
+      env: {
+        ...process.env,
+        CORPORATE_BRAIN_DSH_API_KEY: options.apiKey,
+        DSH_PERMISSION_MODE: dshPermissionMode(options.workspaceAccess),
+      },
       provider: "corporate",
       model: options.model,
       initializeTimeoutMs: 20_000,
@@ -111,6 +169,10 @@ export class DshManager {
   }
 
   async run(options: DshRunOptions) {
+    return (await this.runDetailed(options)).content;
+  }
+
+  async runDetailed(options: DshRunOptions): Promise<DshRunResult> {
     const sessionId = options.sessionId || "default";
     const workspace = join(
       this.root,
@@ -120,7 +182,7 @@ export class DshManager {
     );
     await mkdir(workspace, { recursive: true });
     const key = this.key(options);
-    const fingerprint = `${options.baseUrl}\0${options.model}\0${options.apiKey}`;
+    const fingerprint = `${options.baseUrl}\0${options.model}\0${options.apiKey}\0${options.mode ?? "standard"}\0${options.workspaceAccess ?? "edit"}`;
     let entry = this.entries.get(key);
     if (entry && entry.fingerprint !== fingerprint) {
       await entry.harness.close().catch(() => {});
@@ -168,7 +230,10 @@ export class DshManager {
         failed?.data?.reason?.error?.message ?? "DSH 没有返回可显示的文本",
       );
     }
-    return result.finalResponse;
+    return {
+      content: result.finalResponse,
+      usage: extractUsage(result.events as Array<{ type?: string; data?: any }>),
+    };
   }
 
   async close() {

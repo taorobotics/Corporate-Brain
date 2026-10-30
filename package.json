@@ -1,6 +1,6 @@
 {
   "name": "corporate-brain",
-  "version": "0.3.2",
+  "version": "0.4.0",
   "private": true,
   "license": "MIT",
   "repository": {
@@ -21,7 +21,7 @@
     "build": "node scripts/prepare-legal.mjs && tsc --noEmit && vite build",
     "legal:prepare": "node scripts/prepare-legal.mjs",
     "start": "tsx server/index.ts",
-    "test": "tsx --test server/platform.test.ts server/updates.test.ts server/dsh.test.ts server/env.test.ts server/deepseek-sync.test.ts desktop/updates.test.cjs",
+    "test": "tsx --test server/platform.test.ts server/updates.test.ts server/dsh.test.ts server/env.test.ts server/deepseek-sync.test.ts shared/workspaces.test.ts desktop/updates.test.cjs",
     "test:desktop": "node scripts/prepare-legal.mjs && electron desktop/verify.cjs",
     "test:dsh": "node scripts/verify-dsh.mjs",
     "deepseek:check": "node scripts/check-deepseek-config.mjs",
