@@ -59,6 +59,7 @@ import {
 } from "./components";
 import SkillEditor from "./SkillEditor";
 import GrokBall from "./GrokBall";
+import MessageContent from "./MessageContent";
 
 type ThinkingStep = {
   label: string;
@@ -552,7 +553,7 @@ export default function Workspace(props: WorkspaceProps) {
                     )}
                   </span>
                   <div className="message-body">
-                    <div className="message-text">{message.content}</div>
+                    <MessageContent content={message.content} />
                     {message.attachments?.some((a) => a.image) && (
                       <div className="message-attachments">
                         {message.attachments
