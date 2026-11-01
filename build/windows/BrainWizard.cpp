@@ -9,6 +9,7 @@ static unsigned frame;
 static const UINT_PTR timerId = 0xCB01;
 static volatile LONG installPhase, cancelDecision;
 static HWND stageText;
+static HWND launchAction;
 static bool drawButton(DRAWITEMSTRUCT* item) {
   if(!item || !GetPropW(item->hwndItem,L"Brain.Button")) return false;
   const HWND button=item->hwndItem;
@@ -117,6 +118,12 @@ static BOOL CALLBACK styleButton(HWND window,LPARAM) {
   return TRUE;
 }
 static LRESULT CALLBACK windowProc(HWND window,UINT message,WPARAM w,LPARAM l,UINT_PTR,DWORD_PTR) {
+  // Keep launch callbacks inside nsDialogs::Show. A page-leave callback runs
+  // after that message loop returns and cannot own asynchronous polling.
+  if(message==WM_COMMAND && LOWORD(w)==IDOK && IsWindow(launchAction)) {
+    if(IsWindowEnabled(primary)) SendMessageW(launchAction,BM_CLICK,0,0);
+    return TRUE;
+  }
   if((message==WM_COMMAND && LOWORD(w)==IDCANCEL) || message==WM_CLOSE) {
     const LONG phase=InterlockedCompareExchange(&installPhase,0,0);
     if(phase==1) {
@@ -221,6 +228,9 @@ extern "C" void __cdecl Progress(HWND parent,int,wchar_t*,Stack** stack,void*) {
   tick(parent,0,0,0);SetTimer(parent,timerId,100,tick);
 }
 extern "C" void __cdecl Stop(HWND,int,wchar_t*,Stack**,void*) { stopProgress(); }
+extern "C" void __cdecl LaunchAction(HWND,int,wchar_t*,Stack** stack,void*) {
+  launchAction=reinterpret_cast<HWND>(popHandle(stack));
+}
 struct AppWindowSearch { const wchar_t* path; HWND found; };
 static BOOL CALLBACK findAppWindow(HWND window,LPARAM param) {
   if(!IsWindowVisible(window) || GetWindow(window,GW_OWNER)) return TRUE;
@@ -246,6 +256,7 @@ extern "C" void __cdecl AppWindow(HWND,int stringSize,wchar_t*,Stack** stack,voi
   if(result) {result->text[0]=search.found?L'1':L'0';result->next=*stack;*stack=result;}
 }
 extern "C" void __cdecl Release(HWND,int,wchar_t*,Stack**,void*) {
+  launchAction=0;
   stopProgress();
   if(IsWindow(primary))RemoveWindowSubclass(primary,buttonProc,1);
   if(IsWindow(host))RemoveWindowSubclass(host,windowProc,1);

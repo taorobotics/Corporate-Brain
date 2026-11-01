@@ -519,11 +519,17 @@ Function BrainFinish
   EnableWindow $BrainCancel 1
   ShowWindow $BrainBack ${SW_HIDE}
   BrainWizard::Style /NOUNLOAD
+  ${NSD_CreateButton} 0 0 1 1 "启动操作"
+  Pop $0
+  ShowWindow $0 ${SW_HIDE}
+  ${NSD_OnClick} $0 BrainLaunch
+  BrainWizard::LaunchAction /NOUNLOAD $0
   nsDialogs::Show
 FunctionEnd
-Function BrainFinishLeave
+Function BrainLaunch
+  Pop $0
   ${If} $BrainLaunching == 1
-    Abort
+    Return
   ${EndIf}
   StrCpy $BrainLaunching 1
   SendMessage $BrainNext ${WM_SETTEXT} 0 "STR:正在打开…"
@@ -533,7 +539,7 @@ Function BrainFinishLeave
   SetOutPath "$INSTDIR"
   ${IfNot} ${FileExists} "$appExe"
     Call BrainLaunchFailed
-    Abort
+    Return
   ${EndIf}
   ClearErrors
   ; Avoid Explorer/shortcut indirection for normal per-user installs. Preserve
@@ -542,27 +548,31 @@ Function BrainFinishLeave
     ${StdUtils.ExecShellAsUser} $0 "$appExe" "open" ""
     ${If} $0 == "error"
       Call BrainLaunchFailed
-      Abort
+      Return
     ${EndIf}
   ${Else}
     Exec '"$appExe"'
     ${If} ${Errors}
       Call BrainLaunchFailed
-      Abort
+      Return
     ${EndIf}
   ${EndIf}
   System::Call 'kernel32::GetTickCount()i.s'
   Pop $BrainLaunchStarted
   ${NSD_CreateTimer} BrainLaunchPoll 150
-  Abort
 FunctionEnd
 Function BrainLaunchPoll
   BrainWizard::AppWindow /NOUNLOAD "$appExe"
   Pop $0
   ${If} $0 == 1
     ${NSD_KillTimer} BrainLaunchPoll
+    BrainWizard::LaunchAction /NOUNLOAD 0
+    EnableWindow $BrainNext 1
     SetErrorLevel 0
-    Quit
+    ; Leave through the normal wizard navigation after the timer callback
+    ; returns. Quit inside an nsDialogs callback does not end its modal loop.
+    System::Call 'user32::PostMessageW(p $HWNDPARENT, i ${WM_COMMAND}, p 1, p 0)'
+    Return
   ${EndIf}
   System::Call 'kernel32::GetTickCount()i.r0'
   IntOp $0 $0 - $BrainLaunchStarted
@@ -624,7 +634,7 @@ Page custom BrainDirectory BrainDirectoryLeave
 !define MUI_PAGE_CUSTOMFUNCTION_SHOW BrainProgressShow
 !define MUI_PAGE_CUSTOMFUNCTION_LEAVE BrainProgressLeave
 !insertmacro MUI_PAGE_INSTFILES
-Page custom BrainFinish BrainFinishLeave
+Page custom BrainFinish
 UninstPage custom un.BrainWelcome
 !define MUI_PAGE_CUSTOMFUNCTION_SHOW un.BrainProgressShow
 !define MUI_PAGE_CUSTOMFUNCTION_LEAVE un.BrainProgressLeave
