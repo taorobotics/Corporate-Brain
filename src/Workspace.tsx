@@ -60,6 +60,7 @@ import {
 import SkillEditor from "./SkillEditor";
 import GrokBall from "./GrokBall";
 import MessageContent from "./MessageContent";
+import { getSkin } from "../shared/skins";
 
 type ThinkingStep = {
   label: string;
@@ -1291,6 +1292,7 @@ export default function Workspace(props: WorkspaceProps) {
               <GearSix size={18} />
               模型与服务
             </button>
+            <button onClick={() => navigate("skins")}><Images size={18} />皮肤中心</button>
             <button onClick={props.exportRecords}>
               <HardDrives size={18} />
               导出本地记录
@@ -1314,6 +1316,7 @@ export default function Workspace(props: WorkspaceProps) {
               <span>{user.username}</span>
             </div>
             <h2>工作偏好</h2>
+            <div className="setting-row"><div><span>界面皮肤 · {getSkin(state.settings.skin).name}</span><small>62 款可选，默认 Claude，按账号保存在本机</small></div><Button onClick={() => navigate("skins")}>选择皮肤</Button></div>
             <div className="setting-row">
               <span>外观</span>
               <SelectField

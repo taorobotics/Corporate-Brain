@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import {
   ArrowLeft,
   ArrowRight,
@@ -44,6 +44,8 @@ import Workspace from "./Workspace";
 import Admin from "./Admin";
 import Legal from "./Legal";
 import { useDesktopUpdates, UpdateButton, UpdateDialog } from "./Updates";
+import SkinCenter, { type SkinSelection } from "./Skins";
+import { getSkin, skinTokens } from "../shared/skins";
 
 const navigation = [
   { id: "chat", label: "新建任务", icon: NotePencil },
@@ -93,6 +95,15 @@ export default function App() {
   const notify = (message: string) => setToast(message);
   const updates = useDesktopUpdates(!!user && !user.mustChange);
   const [legalOpen, setLegalOpen] = useState(false);
+  const [skinPreview, setSkinPreview] = useState<(SkinSelection & { owner: string }) | null>(null);
+  const activePreview = skinPreview?.owner === user?.id ? skinPreview : null;
+  const savedSkin: SkinSelection = { skin: getSkin(state.settings.skin).id, theme: state.settings.theme === "dark" ? "dark" : "light" };
+  const appearance = activePreview ?? savedSkin;
+  const applySkin = (selection: SkinSelection) => {
+    setState((current) => ({ ...current, settings: { ...current.settings, skin: getSkin(selection.skin).id, theme: selection.theme } }));
+    setSkinPreview(null);
+    notify(`已使用 ${getSkin(selection.skin).name}，偏好将保存在本机。`);
+  };
   const navigate = (value: string) => {
     location.hash = value;
     setPage(value);
@@ -143,6 +154,7 @@ export default function App() {
     loadedProfile.current = null;
     setReady(false);
     setLocalError("");
+    setSkinPreview(null);
     setConversationId(null);
     setState(emptyState());
     setDepartments([]);
@@ -178,9 +190,22 @@ export default function App() {
         notify("记录未能保存，请立即导出备份并检查磁盘或浏览器空间。"),
       );
   }, [state, ready, user?.id]);
+  useLayoutEffect(() => {
+    const root = document.documentElement, skin = getSkin(appearance.skin);
+    root.dataset.theme = appearance.theme;
+    root.dataset.skin = skin.id;
+    root.dataset.skinVariant = skin.variant;
+    root.dataset.skinArtwork = String(!!skin.background);
+    for (const [name, value] of Object.entries(skinTokens(skin, appearance.theme))) root.style.setProperty(name, value);
+  }, [appearance.skin, appearance.theme]);
   useEffect(() => {
-    document.documentElement.dataset.theme = state.settings.theme;
-  }, [state.settings.theme]);
+    if (!activePreview) return;
+    const cancel = (event: KeyboardEvent) => {
+      if (event.key === "Escape" && !document.querySelector('[role="dialog"], [data-overlay-popup][data-open]')) setSkinPreview(null);
+    };
+    document.addEventListener("keydown", cancel);
+    return () => document.removeEventListener("keydown", cancel);
+  }, [!!activePreview]);
   const exportRecords = () =>
     download(
       `公司大脑-本地记录-${new Date().toISOString().slice(0, 10)}.json`,
@@ -638,7 +663,9 @@ export default function App() {
         )}
         <main className="main-content">
           {ready ? (
-            isAdmin ? (
+            page === "skins" ? (
+              <SkinCenter current={savedSkin} onApply={applySkin} onPreview={(value) => setSkinPreview({ ...value, owner: user.id })} back={() => navigate("settings")} />
+            ) : isAdmin ? (
               <Admin {...workspaceProps} />
             ) : (
               <Workspace {...workspaceProps} />
@@ -665,6 +692,7 @@ export default function App() {
           )}
         </main>
       </div>
+      {activePreview && <div className="skin-preview-bar" role="region" aria-label="皮肤试用"><span>正在预览 <strong>{getSkin(activePreview.skin).name}</strong> · 尚未保存</span><Button onClick={() => setSkinPreview({ ...activePreview, theme: activePreview.theme === "dark" ? "light" : "dark" })}>切换明暗</Button><Button onClick={() => setSkinPreview(null)}>取消预览</Button><Button primary onClick={() => applySkin(activePreview)}>保存皮肤</Button></div>}
       <input
         ref={importRef}
         hidden

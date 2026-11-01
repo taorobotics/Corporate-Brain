@@ -654,6 +654,52 @@ async function waitFor(test, label, timeout = 12000) {
   checks.push(
     "Theme dropdown updates local preferences and renders readable dark menu states",
   );
+  assert.equal(await js(`document.documentElement.dataset.skin`), "claude");
+  await click("选择皮肤");
+  await waitFor(() => js(`document.querySelectorAll('.skin-card').length === 62`), "complete skin catalog");
+  await capture("skin-center-claude.png");
+  win.setContentSize(900, 760);
+  await capture("skin-center-narrow.png");
+  assert.equal(await js(`document.documentElement.scrollWidth <= innerWidth && document.querySelector('.skin-center').scrollWidth <= document.querySelector('.skin-center').clientWidth`), true);
+  win.setContentSize(1586, 992);
+  await fill('input[aria-label="搜索皮肤"]', "mint");
+  assert.equal(await js(`document.querySelectorAll('.skin-card').length`), 1);
+  await js(`document.querySelector('[data-skin-id="mint"]').click()`);
+  await waitFor(() => has("全窗预览"), "skin detail");
+  await click("全窗预览");
+  await waitFor(() => js(`document.documentElement.dataset.skin === 'mint'`), "live skin preview");
+  assert.equal((await js(`window.brainDesktop.readState(${JSON.stringify(actor.id)})`)).settings.skin, "claude");
+  await click("取消预览");
+  assert.equal(await js(`document.documentElement.dataset.skin`), "claude");
+  await js(`document.querySelector('[data-skin-id="mint"]').click()`);
+  await click("全窗预览");
+  await key("Escape");
+  await waitFor(() => js(`document.documentElement.dataset.skin === 'claude'`), "Escape cancels preview");
+  await fill('input[aria-label="搜索皮肤"]', "云轨");
+  await js(`document.querySelector('[data-skin-id="future-window"]').click()`);
+  await js(`document.querySelector('[role="dialog"] .skin-mode-switch button:last-child').click()`);
+  await click("全窗预览");
+  await click("新建任务");
+  await waitFor(() => js(`!!document.querySelector('.chat-welcome')`), "preview chat");
+  await capture("skin-future-window-dark.png");
+  assert.equal(await js(`document.documentElement.dataset.theme`), "dark");
+  await click("保存皮肤");
+  await waitFor(async () => (await js(`window.brainDesktop.readState(${JSON.stringify(actor.id)})`)).settings.skin === "future-window", "skin written to native profile");
+  await js("location.reload()");
+  await waitFor(() => js(`document.documentElement.dataset.skin === 'future-window' && document.documentElement.dataset.theme === 'dark'`), "skin survives reload");
+  await js(`location.hash = 'skins'`);
+  await waitFor(() => js(`document.querySelectorAll('.skin-card').length === 62`), "skin catalog after reload");
+  await click("恢复默认 Claude");
+  await waitFor(() => js(`document.documentElement.dataset.skin === 'claude'`), "reset default skin");
+  assert.equal(await js(`document.documentElement.dataset.theme`), "dark");
+  // Leave a distinct saved preference to verify the next employee gets their own default.
+  await fill('input[aria-label="搜索皮肤"]', "mint");
+  await js(`document.querySelector('[data-skin-id="mint"]').click()`);
+  await click("使用这款");
+  await click("返回设置");
+  await waitFor(() => has("本地记录与备份"), "return from skin center");
+  await selectOption("外观", "浅色");
+  checks.push("62 skins: search, live preview without persistence, cancel, artwork, dark mode, native save/reload, restore Claude default");
   if (!web.debugger.isAttached()) web.debugger.attach("1.3");
   await web.debugger.sendCommand("DOM.enable");
   await web.debugger.sendCommand("CSS.enable");
@@ -690,6 +736,8 @@ async function waitFor(test, label, timeout = 12000) {
   await fill("input[name=password]", newPassword);
   await click("登录");
   await waitFor(() => has("今天，一起完成些什么"), "second employee");
+  assert.equal(await js(`document.documentElement.dataset.skin`), "claude");
+  checks.push("Skin preferences are isolated per employee; new employee receives Claude default");
   assert.equal(await has("只在本机保存的集成验收记录"), false);
   assert.equal(
     (

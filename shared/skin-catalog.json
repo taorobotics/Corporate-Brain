@@ -1,0 +1,592 @@
+[
+  {
+    "id": "claude",
+    "name": "Claude",
+    "author": "aklnaaw",
+    "accent": "#d97757",
+    "category": "简约",
+    "variant": "serif",
+    "edition": "Claude 适配"
+  },
+  {
+    "id": "frutiger-aero",
+    "name": "冰蓝气泡玻璃",
+    "author": "lohipo",
+    "accent": "#3FB8E8",
+    "category": "玻璃",
+    "variant": "soft",
+    "background": {
+      "light": "/skins/frutiger-aero/assets/aero-sky.webp",
+      "dark": "/skins/frutiger-aero/assets/aero-sky.webp"
+    },
+    "edition": "内置原作背景"
+  },
+  {
+    "id": "porco-rosso",
+    "name": "吉卜力·红猪侠",
+    "author": "binlecode",
+    "accent": "#c32026",
+    "category": "风景与插画",
+    "variant": "soft",
+    "edition": "配色适配"
+  },
+  {
+    "id": "verdandi",
+    "name": "薇儿丹蒂 · 纯白圣誓",
+    "author": "hjbztlbr",
+    "accent": "#8e2438",
+    "category": "风景与插画",
+    "variant": "soft",
+    "edition": "配色适配"
+  },
+  {
+    "id": "whale-song",
+    "name": "鲸吟",
+    "author": "dsh-web",
+    "accent": "#4d8fd4",
+    "category": "风景与插画",
+    "variant": "soft",
+    "edition": "配色适配"
+  },
+  {
+    "id": "blue-fantasy",
+    "name": "蓝色幻想",
+    "author": "powerdog996（DreamSkin 社区）· dsh-web 适配",
+    "accent": "#4a5fa8",
+    "category": "风景与插画",
+    "variant": "soft",
+    "edition": "配色适配"
+  },
+  {
+    "id": "last-exile",
+    "name": "最后流亡·先锋艇",
+    "author": "binlecode",
+    "accent": "#8f6410",
+    "category": "风景与插画",
+    "variant": "soft",
+    "edition": "配色适配"
+  },
+  {
+    "id": "harbor",
+    "name": "夕港",
+    "author": "moeblack",
+    "accent": "#e4937d",
+    "category": "风景与插画",
+    "variant": "soft",
+    "edition": "配色适配"
+  },
+  {
+    "id": "white-snake",
+    "name": "白蛇·缘起浮生",
+    "author": "binlecode",
+    "accent": "#107c65",
+    "category": "风景与插画",
+    "variant": "soft",
+    "edition": "配色适配"
+  },
+  {
+    "id": "blueprint",
+    "name": "工程蓝图",
+    "author": "stushansusu",
+    "accent": "#4fd1ff",
+    "category": "终端",
+    "variant": "technical",
+    "edition": "配色适配"
+  },
+  {
+    "id": "xp",
+    "name": "Windows XP (Luna)",
+    "author": "dsh-web",
+    "accent": "#316ac5",
+    "category": "终端",
+    "variant": "square",
+    "edition": "配色适配"
+  },
+  {
+    "id": "dragon-heir",
+    "name": "龙的传人",
+    "author": "dsh-web",
+    "accent": "#c3272b",
+    "category": "风景与插画",
+    "variant": "soft",
+    "edition": "配色适配"
+  },
+  {
+    "id": "cafe-roastery",
+    "name": "咖啡工坊",
+    "author": "stushansusu",
+    "accent": "#8f4d0b",
+    "category": "简约",
+    "variant": "soft",
+    "edition": "配色适配"
+  },
+  {
+    "id": "minecraft",
+    "name": "Minecraft 方块世界",
+    "author": "dsh-web",
+    "accent": "#7cbd4b",
+    "category": "终端",
+    "variant": "square",
+    "edition": "配色适配"
+  },
+  {
+    "id": "trading",
+    "name": "交易终端",
+    "author": "dsh-web",
+    "accent": "#f23645",
+    "category": "终端",
+    "variant": "technical",
+    "edition": "配色适配"
+  },
+  {
+    "id": "miku",
+    "name": "初音未来 · 电子歌姬",
+    "author": "涂山苏苏",
+    "accent": "#39c5bb",
+    "category": "风景与插画",
+    "variant": "soft",
+    "edition": "配色适配"
+  },
+  {
+    "id": "whale-mom",
+    "name": "鲸鱼妈妈",
+    "author": "dsh-web",
+    "accent": "#d9a53c",
+    "category": "风景与插画",
+    "variant": "soft",
+    "edition": "配色适配"
+  },
+  {
+    "id": "matrix",
+    "name": "Matrix 骇客帝国",
+    "author": "contributed (seanchen)",
+    "accent": "#00e676",
+    "category": "终端",
+    "variant": "technical",
+    "edition": "配色适配"
+  },
+  {
+    "id": "maid-atelier",
+    "name": "深海女仆工坊",
+    "author": "Small-tailqwq",
+    "accent": "#c5a468",
+    "category": "风景与插画",
+    "variant": "soft",
+    "edition": "配色适配"
+  },
+  {
+    "id": "summer-liquid-glass",
+    "name": "夏沫琉璃",
+    "author": "dsh-web",
+    "accent": "#67DCE7",
+    "category": "玻璃",
+    "variant": "soft",
+    "edition": "配色适配"
+  },
+  {
+    "id": "phoebe-atelier",
+    "name": "辉弦圣堂 · 菲比",
+    "author": "Theater-ahyeon",
+    "accent": "#cfa968",
+    "category": "风景与插画",
+    "variant": "soft",
+    "edition": "配色适配"
+  },
+  {
+    "id": "island-life",
+    "name": "无人岛生活",
+    "author": "wertyq111",
+    "accent": "#19c8b9",
+    "category": "风景与插画",
+    "variant": "soft",
+    "edition": "配色适配"
+  },
+  {
+    "id": "ice-princess",
+    "name": "冰晶公主",
+    "author": "stushansusu",
+    "accent": "#3277D8",
+    "category": "风景与插画",
+    "variant": "soft",
+    "edition": "配色适配"
+  },
+  {
+    "id": "observatory",
+    "name": "天文台",
+    "author": "stushansusu",
+    "accent": "#c2a55a",
+    "category": "风景与插画",
+    "variant": "soft",
+    "edition": "配色适配"
+  },
+  {
+    "id": "stellar-diva",
+    "name": "星海歌姬",
+    "author": "theater",
+    "accent": "#3D6FD6",
+    "category": "风景与插画",
+    "variant": "soft",
+    "edition": "配色适配"
+  },
+  {
+    "id": "hive-maw",
+    "name": "虫巢",
+    "author": "lingfeng.zhang",
+    "accent": "#8fe3a6",
+    "category": "风景与插画",
+    "variant": "soft",
+    "background": {
+      "light": "/skins/hive-maw/assets/hive-bg.jpg",
+      "dark": "/skins/hive-maw/assets/hive-bg.jpg"
+    },
+    "edition": "内置原作背景"
+  },
+  {
+    "id": "starry-nocturne",
+    "name": "星夜夜曲",
+    "author": "theater",
+    "accent": "#5B5FC7",
+    "category": "风景与插画",
+    "variant": "soft",
+    "edition": "配色适配"
+  },
+  {
+    "id": "ember-fall",
+    "name": "余烬",
+    "author": "lingfeng.zhang",
+    "accent": "#e8a860",
+    "category": "风景与插画",
+    "variant": "soft",
+    "background": {
+      "light": "/skins/ember-fall/assets/ember-bg.jpg",
+      "dark": "/skins/ember-fall/assets/ember-bg.jpg"
+    },
+    "edition": "内置原作背景"
+  },
+  {
+    "id": "hologram-sanctum",
+    "name": "虚数圣所",
+    "author": "theater",
+    "accent": "#0FA0BE",
+    "category": "玻璃",
+    "variant": "soft",
+    "edition": "配色适配"
+  },
+  {
+    "id": "abyssal-serenade",
+    "name": "深海人鱼谣",
+    "author": "theater",
+    "accent": "#189EB4",
+    "category": "风景与插画",
+    "variant": "soft",
+    "edition": "配色适配"
+  },
+  {
+    "id": "astral-choir",
+    "name": "星辉教团",
+    "author": "lingfeng.zhang",
+    "accent": "#8b78bc",
+    "category": "风景与插画",
+    "variant": "soft",
+    "background": {
+      "light": "/skins/astral-choir/assets/astral-bg.jpg",
+      "dark": "/skins/astral-choir/assets/astral-bg.jpg"
+    },
+    "edition": "内置原作背景"
+  },
+  {
+    "id": "pixel-anime",
+    "name": "二次元像素",
+    "author": "stushansusu",
+    "accent": "#0F7182",
+    "category": "终端",
+    "variant": "square",
+    "edition": "配色适配"
+  },
+  {
+    "id": "black-gold",
+    "name": "暗夜鎏金",
+    "author": "stushansusu",
+    "accent": "#b99349",
+    "category": "简约",
+    "variant": "soft",
+    "edition": "配色适配"
+  },
+  {
+    "id": "shangmei-jinbi",
+    "name": "金碧重彩",
+    "author": "stushansusu",
+    "accent": "#A8462A",
+    "category": "风景与插画",
+    "variant": "soft",
+    "edition": "配色适配"
+  },
+  {
+    "id": "mid-autumn",
+    "name": "桂影月华",
+    "author": "stushansusu",
+    "accent": "#E7B44E",
+    "category": "风景与插画",
+    "variant": "soft",
+    "edition": "配色适配"
+  },
+  {
+    "id": "national-day",
+    "name": "国庆 · 山河华灯",
+    "author": "stushansusu",
+    "accent": "#BE2A26",
+    "category": "风景与插画",
+    "variant": "soft",
+    "edition": "配色适配"
+  },
+  {
+    "id": "whale-fantasy",
+    "name": "鲸鱼娘 · 未至之境",
+    "author": "stushansusu",
+    "accent": "#3A7BFF",
+    "category": "风景与插画",
+    "variant": "soft",
+    "edition": "配色适配"
+  },
+  {
+    "id": "model-dorm",
+    "name": "居家模型娘",
+    "author": "Daizhdd",
+    "accent": "#9f6778",
+    "category": "风景与插画",
+    "variant": "soft",
+    "background": {
+      "light": "/skins/model-dorm/assets/model-dorm-room-day.webp",
+      "dark": "/skins/model-dorm/assets/model-dorm-room-night.webp"
+    },
+    "edition": "内置原作背景"
+  },
+  {
+    "id": "rainy-night",
+    "name": "鲸鱼娘 · 雨夜",
+    "author": "stushansusu",
+    "accent": "#38B9E8",
+    "category": "风景与插画",
+    "variant": "soft",
+    "edition": "配色适配"
+  },
+  {
+    "id": "xinghai-heart",
+    "name": "星海之心",
+    "author": "stushansusu",
+    "accent": "#4FA6E8",
+    "category": "风景与插画",
+    "variant": "soft",
+    "edition": "配色适配"
+  },
+  {
+    "id": "shuimo-danqing",
+    "name": "鲸鱼娘 · 水墨丹青",
+    "author": "stushansusu",
+    "accent": "#7d9aaa",
+    "category": "简约",
+    "variant": "soft",
+    "edition": "配色适配"
+  },
+  {
+    "id": "lucy-nightsignal",
+    "name": "露西·夜城信号",
+    "author": "lemonhall",
+    "accent": "#22d3ee",
+    "category": "风景与插画",
+    "variant": "soft",
+    "edition": "配色适配"
+  },
+  {
+    "id": "crt-phosphor",
+    "name": "磷光 CRT",
+    "author": "lemonhall",
+    "accent": "#3dff9e",
+    "category": "终端",
+    "variant": "technical",
+    "edition": "配色适配"
+  },
+  {
+    "id": "furina",
+    "name": "芙宁娜",
+    "author": "sclass53",
+    "accent": "#4a5fb5",
+    "category": "风景与插画",
+    "variant": "soft",
+    "edition": "配色适配"
+  },
+  {
+    "id": "diy-journal",
+    "name": "DIY手账本",
+    "author": "Alphazerolan",
+    "accent": "#237fab",
+    "category": "简约",
+    "variant": "square",
+    "edition": "配色适配"
+  },
+  {
+    "id": "mint",
+    "name": "薄荷",
+    "author": "dsh-web",
+    "accent": "#2fbf8f",
+    "category": "简约",
+    "variant": "soft",
+    "edition": "配色适配"
+  },
+  {
+    "id": "remiel-starlit",
+    "name": "蕾米埃尔·星翎",
+    "author": "oh-wang",
+    "accent": "#d75b8d",
+    "category": "风景与插画",
+    "variant": "soft",
+    "edition": "配色适配"
+  },
+  {
+    "id": "cyber-night",
+    "name": "赛博夜城",
+    "author": "logan0116",
+    "accent": "#00e5ff",
+    "category": "风景与插画",
+    "variant": "soft",
+    "background": {
+      "light": "/skins/cyber-night/assets/cyber-night-art.webp",
+      "dark": "/skins/cyber-night/assets/cyber-night-art.webp"
+    },
+    "edition": "内置原作背景"
+  },
+  {
+    "id": "deep-current",
+    "name": "深流",
+    "author": "Twelveeee",
+    "accent": "#2D6CDF",
+    "category": "玻璃",
+    "variant": "soft",
+    "edition": "配色适配"
+  },
+  {
+    "id": "pink-sakura",
+    "name": "粉樱",
+    "author": "guomengjia618-dot",
+    "accent": "#ff7fae",
+    "category": "简约",
+    "variant": "soft",
+    "edition": "配色适配"
+  },
+  {
+    "id": "war-thunder",
+    "name": "战争雷霆 · 钢铁前线",
+    "author": "dsh-web",
+    "accent": "#d9a441",
+    "category": "风景与插画",
+    "variant": "soft",
+    "edition": "配色适配"
+  },
+  {
+    "id": "black-gold-vip",
+    "name": "黑金 VIP",
+    "author": "silicon-sbt",
+    "accent": "#b99349",
+    "category": "简约",
+    "variant": "soft",
+    "edition": "配色适配"
+  },
+  {
+    "id": "wallpaper-exclusive",
+    "name": "壁纸专属",
+    "author": "chemmy-11",
+    "accent": "#0d1627",
+    "category": "玻璃",
+    "variant": "soft",
+    "edition": "配色适配"
+  },
+  {
+    "id": "future-window",
+    "name": "云轨舱窗",
+    "author": "zhuqin",
+    "accent": "#2c86c6",
+    "category": "风景与插画",
+    "variant": "soft",
+    "background": {
+      "light": "/skins/future-window/assets/light.webp",
+      "dark": "/skins/future-window/assets/night.webp"
+    },
+    "edition": "内置原作背景"
+  },
+  {
+    "id": "orca-link",
+    "name": "虎鲸链路",
+    "author": "Small-tailqwq",
+    "accent": "#086cff",
+    "category": "玻璃",
+    "variant": "soft",
+    "edition": "配色适配"
+  },
+  {
+    "id": "catppuccin",
+    "name": "Catppuccin",
+    "author": "Catppuccin 社区配色 · dsh-web 适配",
+    "accent": "#8839ef",
+    "category": "简约",
+    "variant": "soft",
+    "edition": "配色适配"
+  },
+  {
+    "id": "tokyo-night",
+    "name": "东京夜行",
+    "author": "djyx",
+    "accent": "#7aa2f7",
+    "category": "风景与插画",
+    "variant": "soft",
+    "background": {
+      "light": "/skins/tokyo-night/assets/tokyo-night-art.webp",
+      "dark": "/skins/tokyo-night/assets/tokyo-night-art.webp"
+    },
+    "edition": "内置原作背景"
+  },
+  {
+    "id": "blue-throated-bee-eater",
+    "name": "蓝喉蜂虎",
+    "author": "dsh-web",
+    "accent": "#2b87d8",
+    "category": "风景与插画",
+    "variant": "soft",
+    "edition": "配色适配"
+  },
+  {
+    "id": "whalechan-harness",
+    "name": "Whale-chan 鲸鱼娘",
+    "author": "Whale-chan Theme contributors",
+    "accent": "#248bda",
+    "category": "风景与插画",
+    "variant": "soft",
+    "edition": "配色适配"
+  },
+  {
+    "id": "whale-maid",
+    "name": "鲸鱼娘·望海",
+    "author": "stushansusu",
+    "accent": "#2E6FD0",
+    "category": "风景与插画",
+    "variant": "soft",
+    "edition": "配色适配"
+  },
+  {
+    "id": "endfield-baker",
+    "name": "终末地 · BAKER",
+    "author": "Yuji6278（基于 blue-fantasy / powerdog996 DreamSkin 社区作品改作）",
+    "accent": "#17c3e6",
+    "category": "终端",
+    "variant": "technical",
+    "edition": "配色适配"
+  },
+  {
+    "id": "midnight-contract",
+    "name": "零点契约",
+    "author": "Theater-ahyeon",
+    "accent": "#caa775",
+    "category": "风景与插画",
+    "variant": "soft",
+    "edition": "配色适配"
+  }
+]

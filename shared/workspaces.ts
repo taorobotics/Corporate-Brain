@@ -1,4 +1,5 @@
 import type { DshMode, LocalState, LocalWorkspace, WorkspaceAccess } from "./types";
+import { normalizeSkin } from "./skins";
 
 export const DSH_MODE_OPTIONS: ReadonlyArray<{
   value: DshMode;
@@ -104,6 +105,7 @@ export function normalizeLocalState(value: Partial<LocalState> | null | undefine
     activeWorkspaceId,
     settings: {
       theme: settings.theme === "dark" ? "dark" : "light",
+      skin: normalizeSkin(settings.skin),
       model: typeof settings.model === "string" ? settings.model : "",
       mode: normalizeMode(settings.mode),
     },

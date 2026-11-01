@@ -78,6 +78,7 @@ for (const path of [...visited].sort()) {
 notices += `\n\n========== Electron ==========\n${await readFile("node_modules/electron/LICENSE", "utf8")}\n`;
 notices += `\n\n========== Noto Sans SC (SIL Open Font License 1.1) ==========\n${await readFile("desktop/fonts/OFL.txt", "utf8")}\n`;
 notices += `\n\n========== Grok Ball (tycoding/grok-ball, MIT; pinned commit de368ce3acdc5a70e871ee46ebbe8f60b11d3d6a) ==========\n${await readFile("src/vendor/grok-ball.LICENSE", "utf8")}\n`;
+notices += `\n\n========== DSH skin catalog, selected artwork and Claude fonts ==========\n${await readFile("src/vendor/dsh-skins.LICENSE", "utf8")}\n`;
 // Normalize formatting only; retain all upstream copyright and license wording.
 await writeFile("THIRD_PARTY_NOTICES.txt", notices.replace(/[ \t]+$/gm, "").trimEnd() + "\n");
 await mkdir("desktop/legal", { recursive: true });

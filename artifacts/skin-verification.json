@@ -1,0 +1,20 @@
+{
+  "version": "0.8.0",
+  "date": "2026-11-01",
+  "defaultSkin": "claude",
+  "catalogCount": 62,
+  "originalBackgroundSkins": 8,
+  "paletteAdaptations": 53,
+  "unitAndIntegrationTests": { "passed": 30, "failed": 0 },
+  "typescriptAndProductionBuild": "passed",
+  "electron": {
+    "result": "passed",
+    "consoleErrors": [],
+    "checks": ["62 cards", "search", "full-window preview does not persist", "cancel restores saved skin", "Escape cancels preview", "900px gallery without horizontal overflow", "dark original background", "native profile save", "reload restores saved preference", "restore Claude default keeps dark mode", "employee account isolation"]
+  },
+  "paletteValidation": "62 x 2 modes: body and secondary text on background/panel/sidebar and primary button text meet 4.5:1",
+  "assets": "Local same-origin images and fonts; no remote scripts or hooks",
+  "dshNote": "The initial concurrent build/test run hit the existing 20-second DSH startup timeout. An isolated probe and the subsequent full serial suite passed without changing DSH behavior.",
+  "windowsTrustedSignature": false,
+  "crossPlatformRelease": "Requires successful Desktop release jobs; local Electron checks are not macOS package verification."
+}
