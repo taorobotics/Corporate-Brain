@@ -4,6 +4,7 @@
   "productionModelsCalled": false,
   "database": "disposable in-memory",
   "checks": [
+    "Pre-login window controls minimize, maximize, restore and request native close on Windows; macOS keeps native controls",
     "First administrator setup and login through UI",
     "Desktop workspace scanner reads text files and excludes dependency directories",
     "Client discovers a fixture release, shows sidebar and details, downloads through authenticated server, verifies SHA-256, and blocks installer execution in development QA",
@@ -12,6 +13,7 @@
     "Empty model picker explains configuration and opens the real model settings",
     "Configured model picker filters by task kind and persists selection; QA fixtures never call a model",
     "Top edit menu restores the original input target and invokes its native action; account menu supports keyboard navigation",
+    "Admin page retains the shared Windows controls without duplicating native macOS controls",
     "Admin dropdown filters and form values work; portalled menus preserve dialog Escape handling",
     "Company model authorization shows department names and keeps checkboxes at their intended size",
     "Unconfigured generation is explicit; message persisted on the local disk",
@@ -22,6 +24,7 @@
     "Published package downloaded and installed locally",
     "Theme dropdown updates local preferences and renders readable dark menu states",
     "62 skins: search, live preview without persistence, cancel, artwork, dark mode, native save/reload, restore Claude default",
+    "Window controls persist after logout, during connection, after a failed response and after retry",
     "Skin preferences are isolated per employee; new employee receives Claude default",
     "First login change; second employee isolated; IPC rejects another employee profile",
     "Another employee installs the shared Skill without author history",

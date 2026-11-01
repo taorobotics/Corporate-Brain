@@ -3,8 +3,6 @@ import {
   ArrowLeft,
   ArrowRight,
   SidebarSimple,
-  Minus,
-  Square,
   X,
   MagnifyingGlass,
   NotePencil,
@@ -40,6 +38,7 @@ import { api, download } from "./api";
 import { emptyState, readLocal, writeLocal, validateImport } from "./local";
 import { Brand, Button, IconButton, Modal, Field } from "./components";
 import Auth from "./Auth";
+import { WindowControls, WindowTitleBar } from "./WindowControls";
 import Workspace from "./Workspace";
 import Admin from "./Admin";
 import Legal from "./Legal";
@@ -305,30 +304,37 @@ export default function App() {
   );
   if (loading)
     return (
-      <div className="loading-screen">
-        <Brand />
-        <p>正在连接公司工作空间…</p>
+      <div className="session-screen">
+        <WindowTitleBar />
+        <div className="loading-screen">
+          <Brand />
+          <p>正在连接公司工作空间…</p>
+        </div>
       </div>
     );
   if (startupError)
     return (
-      <div className="loading-screen">
-        <Brand />
-        <h2>暂时无法连接公司服务器</h2>
-        <p>{startupError}</p>
-        <Button onClick={() => void initialize()}>重新连接</Button>
+      <div className="session-screen">
+        <WindowTitleBar />
+        <div className="loading-screen">
+          <Brand />
+          <h2>暂时无法连接公司服务器</h2>
+          <p>{startupError}</p>
+          <Button onClick={() => void initialize()}>重新连接</Button>
+        </div>
       </div>
     );
   if (!user)
     return (
-      <>
+      <div className="session-screen">
+        <WindowTitleBar />
         <Auth
           bootstrap={bootstrap}
           onLogin={setUser}
           onLegal={() => setLegalOpen(true)}
         />
         {legalOpen && <Legal close={() => setLegalOpen(false)} />}
-      </>
+      </div>
     );
   const isAdmin = page.startsWith("admin");
   const workspaceProps: WorkspaceProps = {
@@ -438,30 +444,10 @@ export default function App() {
           {!window.brainDesktop && (
             <span className="web-indicator">员工网页端</span>
           )}
-          {window.brainDesktop && (
-            <div className="window-buttons">
-              <IconButton
-                label="最小化"
-                onClick={() => window.brainDesktop!.windowAction("minimize")}
-              >
-                <Minus size={17} />
-              </IconButton>
-              <IconButton
-                label="最大化"
-                onClick={() => window.brainDesktop!.windowAction("maximize")}
-              >
-                <Square size={15} />
-              </IconButton>
-              <IconButton
-                label="关闭窗口"
-                onClick={() => window.brainDesktop!.windowAction("close")}
-              >
-                <X size={18} />
-              </IconButton>
-            </div>
-          )}
+          <WindowControls />
         </div>
       )}
+      {isAdmin && <WindowTitleBar />}
       {isAdmin && (
         <header className="admin-header">
           <Brand />

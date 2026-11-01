@@ -319,10 +319,50 @@ code {
 .window-buttons {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 4px;
+  -webkit-app-region: no-drag;
 }
 .window-buttons .icon-button {
-  width: 34px;
+  width: 42px;
+  border-radius: 5px;
+}
+.window-buttons .icon-button:active {
+  background: color-mix(in srgb, var(--ink) 18%, var(--side));
+}
+.window-buttons .icon-button:active svg {
+  transform: translateY(1px) scale(0.9);
+}
+.window-buttons .icon-button[aria-label="关闭窗口"]:hover {
+  background: #c42b1c;
+  color: #fff;
+}
+.window-buttons .icon-button[aria-label="关闭窗口"]:active {
+  background: #a32116;
+  color: #fff;
+}
+.window-buttons .icon-button:focus-visible {
+  outline-offset: -3px;
+}
+.desktop-bar.standalone-window-bar {
+  height: 41px;
+  min-height: 41px;
+  position: sticky;
+  top: 0;
+  z-index: 110;
+  flex-shrink: 0;
+}
+.window-caption {
+  font-size: 12px;
+  color: var(--muted);
+  user-select: none;
+}
+:root:not([data-desktop="win32"]) .window-buttons,
+:root:not([data-desktop="win32"]) .standalone-window-bar {
+  display: none;
+}
+:root[data-desktop="win32"] .session-screen > .auth,
+:root[data-desktop="win32"] .session-screen > .loading-screen {
+  min-height: calc(100dvh - 41px);
 }
 .app-body {
   display: flex;

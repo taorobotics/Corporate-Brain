@@ -37,9 +37,14 @@ function readCompanyAddress(file) {
   }
 }
 let address = process.env.BRAIN_APP_URL || "";
-if (!address) address = readCompanyAddress(join(app.getPath("userData"), "company-server.json"));
+if (!address)
+  address = readCompanyAddress(
+    join(app.getPath("userData"), "company-server.json"),
+  );
 if (!address && app.isPackaged)
-  address = readCompanyAddress(join(process.resourcesPath, "company-server.json"));
+  address = readCompanyAddress(
+    join(process.resourcesPath, "company-server.json"),
+  );
 if (!address && !app.isPackaged) address = "http://127.0.0.1:4173";
 function validateAddress(value) {
   const url = new URL(value);
@@ -138,9 +143,12 @@ async function profile(event, userId) {
     });
   } catch (error) {
     if (lastVerifiedUser !== userId)
-      throw new Error("公司服务器验证超时，本机记录未读取，请检查网络后重试。", {
-        cause: error,
-      });
+      throw new Error(
+        "公司服务器验证超时，本机记录未读取，请检查网络后重试。",
+        {
+          cause: error,
+        },
+      );
   }
   if (response) {
     if (!response.ok) {
@@ -320,7 +328,11 @@ async function inspectWorkspace(rootPath) {
           image: `data:image/${mime};base64,${bytes.toString("base64")}`,
         });
       } else {
-        files.push({ name, size: bytes.length, content: bytes.toString("utf8") });
+        files.push({
+          name,
+          size: bytes.length,
+          content: bytes.toString("utf8"),
+        });
       }
     }
   }
@@ -352,9 +364,10 @@ ipcMain.handle("file:save", async (event, name, content, base64) => {
 ipcMain.on("window:action", (event, action) => {
   if (!isStartupSender(win, event)) sender(event);
   if (action === "minimize") win.minimize();
-  else if (action === "maximize")
-    win.isMaximized() ? win.unmaximize() : win.maximize();
-  else if (action === "close") win.close();
+  else if (action === "maximize") {
+    if (win.isFullScreen()) win.setFullScreen(false);
+    else win.isMaximized() ? win.unmaximize() : win.maximize();
+  } else if (action === "close") win.close();
 });
 ipcMain.handle("startup:retry", (event) => {
   if (!isStartupSender(win, event)) throw new Error("未授权窗口");

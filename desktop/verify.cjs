@@ -85,6 +85,58 @@ async function waitFor(test, label, timeout = 12000) {
     const image = await web.capturePage();
     await fs.writeFile(join(shots, name), image.toPNG());
   }
+  async function verifyWindowControls(label, exercise = false) {
+    const visible = await js(
+      `Array.from(document.querySelectorAll('.window-buttons button')).filter(button => button.getBoundingClientRect().width > 0).map(button => button.getAttribute('aria-label'))`,
+    );
+    if (process.platform !== "win32") {
+      assert.deepEqual(visible, [], `${label}: use native OS controls`);
+      return;
+    }
+    assert.deepEqual(visible, ["最小化", "最大化", "关闭窗口"], label);
+    const regions = await js(
+      `({bar:getComputedStyle(document.querySelector('.desktop-bar')).webkitAppRegion,button:getComputedStyle(document.querySelector('.window-buttons')).webkitAppRegion})`,
+    );
+    assert.deepEqual(regions, { bar: "drag", button: "no-drag" });
+    if (exercise) {
+      await js(
+        `document.querySelector('.window-buttons [aria-label="最大化"]').click()`,
+      );
+      await waitFor(() => win.isMaximized(), `${label}: maximize button`);
+      await waitFor(
+        () =>
+          js(
+            `!!document.querySelector('.window-buttons [aria-label="还原窗口"]')`,
+          ),
+        `${label}: restore label`,
+      );
+      await js(
+        `document.querySelector('.window-buttons [aria-label="还原窗口"]').click()`,
+      );
+      await waitFor(() => !win.isMaximized(), `${label}: restore button`);
+      await js(
+        `document.querySelector('.window-buttons [aria-label="最小化"]').click()`,
+      );
+      await waitFor(() => win.isMinimized(), `${label}: minimize button`);
+      win.restore();
+      await waitFor(() => !win.isMinimized(), `${label}: return from taskbar`);
+      let closeReceived = false;
+      const preventClose = (event) => {
+        event.preventDefault();
+        closeReceived = true;
+      };
+      win.on("close", preventClose);
+      try {
+        await js(
+          `document.querySelector('.window-buttons [aria-label="关闭窗口"]').click()`,
+        );
+        await waitFor(() => closeReceived, `${label}: native close event`);
+      } finally {
+        win.removeListener("close", preventClose);
+      }
+      win.setContentSize(1586, 992);
+    }
+  }
   const key = async (keyCode) => {
     const keys = {
       Escape: ["Escape", 27],
@@ -134,6 +186,11 @@ async function waitFor(test, label, timeout = 12000) {
     );
   };
   await waitFor(() => has("建立你的公司大脑"), "setup page");
+  await verifyWindowControls("Before login", true);
+  checks.push(
+    "Pre-login window controls minimize, maximize, restore and request native close on Windows; macOS keeps native controls",
+  );
+  await capture("client-login-window-controls.png");
   await click("隐私与许可");
   await waitFor(() => has("公司大脑隐私说明"), "pre-login privacy policy");
   await click("开源许可");
@@ -154,14 +211,21 @@ async function waitFor(test, label, timeout = 12000) {
     join(workspaceFixture, "README.md"),
     "# Local workspace\nThis file is visible to the read-only workspace scanner.\n",
   );
-  await fs.writeFile(join(workspaceFixture, "node_modules", "ignored.txt"), "ignore");
+  await fs.writeFile(
+    join(workspaceFixture, "node_modules", "ignored.txt"),
+    "ignore",
+  );
   const workspaceSnapshot = await js(
     `window.brainDesktop.inspectWorkspace(${JSON.stringify(workspaceFixture)})`,
   );
   assert.equal(workspaceSnapshot.root, "workspace-fixture");
   assert.ok(workspaceSnapshot.files.some((file) => file.name === "README.md"));
-  assert.ok(!workspaceSnapshot.files.some((file) => file.name.includes("node_modules")));
-  checks.push("Desktop workspace scanner reads text files and excludes dependency directories");
+  assert.ok(
+    !workspaceSnapshot.files.some((file) => file.name.includes("node_modules")),
+  );
+  checks.push(
+    "Desktop workspace scanner reads text files and excludes dependency directories",
+  );
   await capture("employee-chat.png");
   await waitFor(() => has("有可用更新"), "automatic update discovery");
   await capture("client-update-sidebar.png");
@@ -454,6 +518,10 @@ async function waitFor(test, label, timeout = 12000) {
   });
   await js(`location.hash='admin-users';location.reload()`);
   await waitFor(() => has("验收员工"), "department users refresh");
+  await verifyWindowControls("Admin page");
+  checks.push(
+    "Admin page retains the shared Windows controls without duplicating native macOS controls",
+  );
   await capture("admin-users.png");
   await openSelect("筛选部门");
   await capture("dropdown-admin-departments.png");
@@ -656,41 +724,81 @@ async function waitFor(test, label, timeout = 12000) {
   );
   assert.equal(await js(`document.documentElement.dataset.skin`), "claude");
   await click("选择皮肤");
-  await waitFor(() => js(`document.querySelectorAll('.skin-card').length === 62`), "complete skin catalog");
+  await waitFor(
+    () => js(`document.querySelectorAll('.skin-card').length === 62`),
+    "complete skin catalog",
+  );
   await capture("skin-center-claude.png");
   win.setContentSize(900, 760);
   await capture("skin-center-narrow.png");
-  assert.equal(await js(`document.documentElement.scrollWidth <= innerWidth && document.querySelector('.skin-center').scrollWidth <= document.querySelector('.skin-center').clientWidth`), true);
+  assert.equal(
+    await js(
+      `document.documentElement.scrollWidth <= innerWidth && document.querySelector('.skin-center').scrollWidth <= document.querySelector('.skin-center').clientWidth`,
+    ),
+    true,
+  );
   win.setContentSize(1586, 992);
   await fill('input[aria-label="搜索皮肤"]', "mint");
   assert.equal(await js(`document.querySelectorAll('.skin-card').length`), 1);
   await js(`document.querySelector('[data-skin-id="mint"]').click()`);
   await waitFor(() => has("全窗预览"), "skin detail");
   await click("全窗预览");
-  await waitFor(() => js(`document.documentElement.dataset.skin === 'mint'`), "live skin preview");
-  assert.equal((await js(`window.brainDesktop.readState(${JSON.stringify(actor.id)})`)).settings.skin, "claude");
+  await waitFor(
+    () => js(`document.documentElement.dataset.skin === 'mint'`),
+    "live skin preview",
+  );
+  assert.equal(
+    (await js(`window.brainDesktop.readState(${JSON.stringify(actor.id)})`))
+      .settings.skin,
+    "claude",
+  );
   await click("取消预览");
   assert.equal(await js(`document.documentElement.dataset.skin`), "claude");
   await js(`document.querySelector('[data-skin-id="mint"]').click()`);
   await click("全窗预览");
   await key("Escape");
-  await waitFor(() => js(`document.documentElement.dataset.skin === 'claude'`), "Escape cancels preview");
+  await waitFor(
+    () => js(`document.documentElement.dataset.skin === 'claude'`),
+    "Escape cancels preview",
+  );
   await fill('input[aria-label="搜索皮肤"]', "云轨");
   await js(`document.querySelector('[data-skin-id="future-window"]').click()`);
-  await js(`document.querySelector('[role="dialog"] .skin-mode-switch button:last-child').click()`);
+  await js(
+    `document.querySelector('[role="dialog"] .skin-mode-switch button:last-child').click()`,
+  );
   await click("全窗预览");
   await click("新建任务");
-  await waitFor(() => js(`!!document.querySelector('.chat-welcome')`), "preview chat");
+  await waitFor(
+    () => js(`!!document.querySelector('.chat-welcome')`),
+    "preview chat",
+  );
   await capture("skin-future-window-dark.png");
   assert.equal(await js(`document.documentElement.dataset.theme`), "dark");
   await click("保存皮肤");
-  await waitFor(async () => (await js(`window.brainDesktop.readState(${JSON.stringify(actor.id)})`)).settings.skin === "future-window", "skin written to native profile");
+  await waitFor(
+    async () =>
+      (await js(`window.brainDesktop.readState(${JSON.stringify(actor.id)})`))
+        .settings.skin === "future-window",
+    "skin written to native profile",
+  );
   await js("location.reload()");
-  await waitFor(() => js(`document.documentElement.dataset.skin === 'future-window' && document.documentElement.dataset.theme === 'dark'`), "skin survives reload");
+  await waitFor(
+    () =>
+      js(
+        `document.documentElement.dataset.skin === 'future-window' && document.documentElement.dataset.theme === 'dark'`,
+      ),
+    "skin survives reload",
+  );
   await js(`location.hash = 'skins'`);
-  await waitFor(() => js(`document.querySelectorAll('.skin-card').length === 62`), "skin catalog after reload");
+  await waitFor(
+    () => js(`document.querySelectorAll('.skin-card').length === 62`),
+    "skin catalog after reload",
+  );
   await click("恢复默认 Claude");
-  await waitFor(() => js(`document.documentElement.dataset.skin === 'claude'`), "reset default skin");
+  await waitFor(
+    () => js(`document.documentElement.dataset.skin === 'claude'`),
+    "reset default skin",
+  );
   assert.equal(await js(`document.documentElement.dataset.theme`), "dark");
   // Leave a distinct saved preference to verify the next employee gets their own default.
   await fill('input[aria-label="搜索皮肤"]', "mint");
@@ -699,7 +807,9 @@ async function waitFor(test, label, timeout = 12000) {
   await click("返回设置");
   await waitFor(() => has("本地记录与备份"), "return from skin center");
   await selectOption("外观", "浅色");
-  checks.push("62 skins: search, live preview without persistence, cancel, artwork, dark mode, native save/reload, restore Claude default");
+  checks.push(
+    "62 skins: search, live preview without persistence, cancel, artwork, dark mode, native save/reload, restore Claude default",
+  );
   if (!web.debugger.isAttached()) web.debugger.attach("1.3");
   await web.debugger.sendCommand("DOM.enable");
   await web.debugger.sendCommand("CSS.enable");
@@ -720,6 +830,43 @@ async function waitFor(test, label, timeout = 12000) {
   await js(`document.querySelector('[aria-label="打开账号菜单"]').click()`);
   await click("退出登录");
   await waitFor(() => has("登录公司账号"), "logout");
+  await verifyWindowControls("Logged-out login page");
+  assert.equal(await js(`document.documentElement.scrollHeight <= innerHeight`), true, "Login title bar must fit without extra document scrolling");
+  await capture("client-login-window-controls.png");
+  // Pause bootstrap so the loading UI can be inspected, then simulate an
+  // unreadable server reply. The controls must survive both early returns.
+  if (!web.debugger.isAttached()) web.debugger.attach("1.3");
+  let pausedRequest;
+  const interceptBootstrap = (_event, method, params) => {
+    if (method === "Fetch.requestPaused") pausedRequest = params.requestId;
+  };
+  web.debugger.on("message", interceptBootstrap);
+  await web.debugger.sendCommand("Fetch.enable", {
+    patterns: [{ urlPattern: "*/api/bootstrap", requestStage: "Request" }],
+  });
+  web.reload();
+  await waitFor(() => !!pausedRequest, "paused bootstrap request");
+  await waitFor(
+    () => has("正在连接公司工作空间"),
+    "loading before authentication",
+  );
+  await verifyWindowControls("Connecting page");
+  await web.debugger.sendCommand("Fetch.fulfillRequest", {
+    requestId: pausedRequest,
+    responseCode: 200,
+    responseHeaders: [{ name: "Content-Type", value: "application/json" }],
+    body: Buffer.from("unreadable QA response").toString("base64"),
+  });
+  await web.debugger.sendCommand("Fetch.disable");
+  web.debugger.removeListener("message", interceptBootstrap);
+  await waitFor(() => has("暂时无法连接公司服务器"), "connection failure page");
+  await verifyWindowControls("Connection failure page");
+  await click("重新连接");
+  await waitFor(() => has("登录公司账号"), "login after retry");
+  await verifyWindowControls("Retried login page");
+  checks.push(
+    "Window controls persist after logout, during connection, after a failed response and after retry",
+  );
   await fill("input[name=username]", employee.user.username);
   await fill("input[name=password]", employee.initialPassword);
   await click("登录");
@@ -737,7 +884,9 @@ async function waitFor(test, label, timeout = 12000) {
   await click("登录");
   await waitFor(() => has("今天，一起完成些什么"), "second employee");
   assert.equal(await js(`document.documentElement.dataset.skin`), "claude");
-  checks.push("Skin preferences are isolated per employee; new employee receives Claude default");
+  checks.push(
+    "Skin preferences are isolated per employee; new employee receives Claude default",
+  );
   assert.equal(await has("只在本机保存的集成验收记录"), false);
   assert.equal(
     (
@@ -831,7 +980,9 @@ async function waitFor(test, label, timeout = 12000) {
     window.webContents.getURL().endsWith("/legal.html"),
   );
   assert.ok(legalWindow);
-  await legalWindow.webContents.executeJavaScript("document.fonts.ready.then(() => true)");
+  await legalWindow.webContents.executeJavaScript(
+    "document.fonts.ready.then(() => true)",
+  );
   await legalWindow.webContents.executeJavaScript(
     "document.querySelectorAll('details')[1].open = true",
   );
