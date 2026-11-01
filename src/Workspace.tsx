@@ -104,9 +104,11 @@ export default function Workspace(props: WorkspaceProps) {
     [selectedProject, setSelectedProject] = useState<string | null>(null),
     [workspaceDialog, setWorkspaceDialog] = useState(false),
     [thinking, setThinking] = useState<ThinkingState | null>(null),
-    [lastUsage, setLastUsage] = useState<
-      { inputTokens?: number; outputTokens?: number; totalTokens?: number } | null
-    >(null);
+    [lastUsage, setLastUsage] = useState<{
+      inputTokens?: number;
+      outputTokens?: number;
+      totalTokens?: number;
+    } | null>(null);
   const [taskKind, setTaskKind] = useState<"chat" | "image" | "video">("chat"),
     [taskError, setTaskError] = useState("");
   const filesRef = useRef<HTMLInputElement>(null),
@@ -147,12 +149,10 @@ export default function Workspace(props: WorkspaceProps) {
       behavior: "smooth",
     });
   }, [conversation?.messages.length, busy]);
-  useEffect(
-    () => () => {
-      if (thinkingTimer.current) clearInterval(thinkingTimer.current);
-      if (thinkingClearTimer.current) clearTimeout(thinkingClearTimer.current);
-    },
-  );
+  useEffect(() => () => {
+    if (thinkingTimer.current) clearInterval(thinkingTimer.current);
+    if (thinkingClearTimer.current) clearTimeout(thinkingClearTimer.current);
+  });
   function patchSettings(value: Partial<typeof state.settings>) {
     setState((s) => ({ ...s, settings: { ...s.settings, ...value } }));
   }
@@ -258,7 +258,9 @@ export default function Workspace(props: WorkspaceProps) {
       snapshot.truncated
         ? `本次只读取前 ${snapshot.files.length} 个可识别文件，更多内容请缩小目录范围或分批提问。`
         : `本次读取 ${snapshot.files.length} 个可识别文件。`,
-      snapshot.skipped ? `已跳过 ${snapshot.skipped} 个不支持或受保护的文件/目录。` : "",
+      snapshot.skipped
+        ? `已跳过 ${snapshot.skipped} 个不支持或受保护的文件/目录。`
+        : "",
       "",
       "## 文件清单",
       ...snapshot.files.map((file) => `- ${file.name}（${file.size} bytes）`),
@@ -327,14 +329,13 @@ export default function Workspace(props: WorkspaceProps) {
       };
       setConversationId(current.id);
     }
-    const sentAttachments = attachments.map((attachment) => ({ ...attachment }));
+    const sentAttachments = attachments.map((attachment) => ({
+      ...attachment,
+    }));
     const content =
       text.trim() +
       sentAttachments
-        .map(
-          (a) =>
-            `\n\n附件：${a.name}${a.content ? `\n${a.content}` : ""}`,
-        )
+        .map((a) => `\n\n附件：${a.name}${a.content ? `\n${a.content}` : ""}`)
         .join("");
     const message: Message = {
       id: crypto.randomUUID(),
@@ -370,7 +371,10 @@ export default function Workspace(props: WorkspaceProps) {
       const workspaceAttachments =
         taskKind === "chat" ? await readWorkspaceContext(text) : [];
       const modelAttachments = [
-        ...sentAttachments.slice(0, Math.max(0, 8 - workspaceAttachments.length)),
+        ...sentAttachments.slice(
+          0,
+          Math.max(0, 8 - workspaceAttachments.length),
+        ),
         ...workspaceAttachments,
       ].slice(0, 8);
       if (activeSkill) {
@@ -688,7 +692,10 @@ export default function Workspace(props: WorkspaceProps) {
                                 ? "active"
                                 : "pending";
                         return (
-                          <div className={`thinking-step ${status}`} key={step.label}>
+                          <div
+                            className={`thinking-step ${status}`}
+                            key={step.label}
+                          >
                             <span className="thinking-step-mark">
                               {status === "done" ? <Check size={12} /> : ""}
                             </span>
@@ -1292,7 +1299,10 @@ export default function Workspace(props: WorkspaceProps) {
               <GearSix size={18} />
               模型与服务
             </button>
-            <button onClick={() => navigate("skins")}><Images size={18} />皮肤中心</button>
+            <button onClick={() => navigate("skins")}>
+              <Images size={18} />
+              皮肤中心
+            </button>
             <button onClick={props.exportRecords}>
               <HardDrives size={18} />
               导出本地记录
@@ -1316,7 +1326,13 @@ export default function Workspace(props: WorkspaceProps) {
               <span>{user.username}</span>
             </div>
             <h2>工作偏好</h2>
-            <div className="setting-row"><div><span>界面皮肤 · {getSkin(state.settings.skin).name}</span><small>62 款可选，默认 Claude，按账号保存在本机</small></div><Button onClick={() => navigate("skins")}>选择皮肤</Button></div>
+            <div className="setting-row">
+              <div>
+                <span>界面皮肤 · {getSkin(state.settings.skin).name}</span>
+                <small>62 款可选，默认 Claude，按账号保存在本机</small>
+              </div>
+              <Button onClick={() => navigate("skins")}>选择皮肤</Button>
+            </div>
             <div className="setting-row">
               <span>外观</span>
               <SelectField
