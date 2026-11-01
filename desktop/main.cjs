@@ -7,11 +7,25 @@ const {
   shell,
 } = require("electron");
 const { DesktopUpdates } = require("./updates.cjs");
+const { loadCompanyWindow, isStartupSender } = require("./startup.cjs");
 const { basename, join, relative } = require("node:path");
 const fs = require("node:fs/promises");
 const fsSync = require("node:fs");
 const { createHash } = require("node:crypto");
 let win;
+// Relaunching a packaged client restores its existing window instead of
+// competing for the same local profile in a second hidden process.
+if (app.isPackaged && !app.requestSingleInstanceLock()) {
+  app.quit();
+  return;
+}
+app.on("second-instance", () => {
+  const existing = win && !win.isDestroyed() ? win : setupWindow;
+  if (!existing || existing.isDestroyed()) return;
+  if (existing.isMinimized()) existing.restore();
+  existing.show();
+  existing.focus();
+});
 let updater,
   installing = false;
 function readCompanyAddress(file) {
@@ -336,11 +350,15 @@ ipcMain.handle("file:save", async (event, name, content, base64) => {
   return true;
 });
 ipcMain.on("window:action", (event, action) => {
-  sender(event);
+  if (!isStartupSender(win, event)) sender(event);
   if (action === "minimize") win.minimize();
   else if (action === "maximize")
     win.isMaximized() ? win.unmaximize() : win.maximize();
   else if (action === "close") win.close();
+});
+ipcMain.handle("startup:retry", (event) => {
+  if (!isStartupSender(win, event)) throw new Error("未授权窗口");
+  return loadCompanyWindow(win, address);
 });
 ipcMain.on("edit:action", (event, action) => {
   sender(event);
@@ -551,7 +569,7 @@ function createMainWindow() {
     });
   Menu.setApplicationMenu(Menu.buildFromTemplate(menu));
   if (process.platform === "win32") win.setMenuBarVisibility(false);
-  win.loadURL(address);
+  void loadCompanyWindow(win, address);
 }
 function openServerSetup() {
   if (setupWindow && !setupWindow.isDestroyed()) {

@@ -1,0 +1,13 @@
+{
+  "version": "0.8.1",
+  "localChecks": {
+    "nativeInstallerUi": "passed: primary/secondary pressed pixels differ and recover; navigation and cancellation work",
+    "startup": "passed: local painting before network navigation; success, timeout recovery, retry and IPC boundary",
+    "existingDesktopInteractions": "26 passed; no renderer console errors",
+    "unitAndIntegrationTests": "30 passed",
+    "productionBuild": "passed"
+  },
+  "fullInstallationLifecycle": "Performed separately on the disposable Windows release runner; final results are in the release verification report.",
+  "physicalEmployeeInstallModified": false,
+  "windowsTrustedSignature": false
+}

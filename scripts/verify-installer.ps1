@@ -22,6 +22,31 @@ function Assert-TestTarget {
   $allowedRoot = [IO.Path]::GetFullPath((Join-Path $workspacePath '.cache/installer-qa')) + [IO.Path]::DirectorySeparatorChar
   if (-not $resolvedTarget.StartsWith($allowedRoot,[StringComparison]::OrdinalIgnoreCase) -or [IO.Path]::GetFileName($resolvedTarget) -ne 'Corporate Brain') { throw 'Unsafe lifecycle target' }
 }
+function Assert-ButtonFeedback([IntPtr]$Window, [string]$Text, [string]$Name) {
+  $button = Get-InstallerControls $Window | Where-Object { $_.ClassName -eq 'Button' -and $_.Text.Replace('&','') -eq $Text } | Select-Object -First 1
+  if (-not $button -or -not $button.Enabled) { throw "Enabled button missing: $Text" }
+  $normal = Join-Path $outputPath "installer-$Name-rest.png"
+  $pressed = Join-Path $outputPath "installer-$Name-pressed.png"
+  Save-InstallerWindow $Window $normal
+  try {
+    [void][InstallerWindow]::SendMessage($button.Handle,0xF3,[IntPtr]1,[IntPtr]::Zero)
+    Save-InstallerWindow $Window $pressed
+  } finally { [void][InstallerWindow]::SendMessage($button.Handle,0xF3,[IntPtr]::Zero,[IntPtr]::Zero) }
+  $bounds = [InstallerWindow+Rect]::new()
+  [void][InstallerWindow]::GetWindowRect($Window,[ref]$bounds)
+  $before = [Drawing.Bitmap]::new($normal)
+  $after = [Drawing.Bitmap]::new($pressed)
+  $changed = 0
+  try {
+    for ($y=3;$y -lt $button.Height-3;$y+=2) {
+      for ($x=3;$x -lt $button.Width-3;$x+=2) {
+        $bx=$button.Left-$bounds.Left+$x; $by=$button.Top-$bounds.Top+$y
+        if ($before.GetPixel($bx,$by).ToArgb() -ne $after.GetPixel($bx,$by).ToArgb()) { $changed++ }
+      }
+    }
+  } finally { $before.Dispose(); $after.Dispose() }
+  if ($changed -lt 150) { throw "Button has no visible pressed feedback: $Text ($changed pixels)" }
+}
 function New-InstallFlow([switch]$Upgrade) {
   $script:process = Start-Process -FilePath $installerPath -PassThru -WindowStyle Hidden
   $page = Wait-InstallerText $script:process.Id '完整对话与个人草稿保存在你的电脑'
@@ -67,6 +92,9 @@ try {
   $expectedContentCenter = $windowRect.Left + (($windowRect.Right - $windowRect.Left) * 0.595)
   if ([Math]::Abs(($links | Measure-Object -Property Left -Average).Average + (($links | Measure-Object -Property Width -Average).Average / 2) - $expectedContentCenter) -gt 18) { throw 'License and privacy links are not centered in the content area' }
   Save-InstallerWindow $window.Handle (Join-Path $outputPath 'installer-welcome.png')
+  Assert-ButtonFeedback $window.Handle '下一步 >' 'primary'
+  Assert-ButtonFeedback $window.Handle '取消' 'secondary'
+  $checks.Add('Primary and secondary buttons visibly depress and recover without activating')
   $checks.Add('Native welcome page, privacy and license links are visible')
   Invoke-InstallerButton $window.Handle '下一步 >'
   $window = Wait-InstallerText $process.Id '选择安装位置'
@@ -183,7 +211,19 @@ try {
     $checks.Add('Native uninstall confirmation removes application and registration, preserving personal records')
 
     $page = New-InstallFlow
-    Complete-Install '立即打开'
+    $page = Wait-InstallerText $process.Id '公司大脑已安装到这台电脑' 120
+    # Force a launch failure without touching the real runtime, then verify retry.
+    $appPath = Join-Path $qaTarget '公司大脑.exe'
+    $heldPath = Join-Path $qaTarget '公司大脑-launch-test.exe'
+    Assert-TestTarget
+    Move-Item -LiteralPath $appPath -Destination $heldPath
+    try {
+      Invoke-InstallerButton $page.Handle '立即打开'
+      $page = Wait-InstallerText $process.Id '重试打开' 30
+    } finally { Move-Item -LiteralPath $heldPath -Destination $appPath }
+    $checks.Add('Open-now failure retains the wizard and provides a working retry')
+    Invoke-InstallerButton $page.Handle '重试打开'
+    if (-not $process.WaitForExit(25000) -or $process.ExitCode -ne 0) { throw 'Retry did not finish after the client window appeared' }
     $until = [DateTime]::UtcNow.AddSeconds(25)
     do {
       $started = Get-Process -Name '公司大脑' -ErrorAction SilentlyContinue | Where-Object { $_.Path -eq (Join-Path $qaTarget '公司大脑.exe') -and $_.MainWindowHandle -ne 0 } | Select-Object -First 1
@@ -191,6 +231,11 @@ try {
     } while (-not $started -and [DateTime]::UtcNow -lt $until)
     if (-not $started) { throw 'Open-now did not launch the packaged app' }
     Save-InstallerWindow $started.MainWindowHandle (Join-Path $outputPath 'installer-first-launch.png')
+    [void][InstallerWindow]::ShowWindow($started.MainWindowHandle,6)
+    $relaunch = Start-Process -FilePath $appPath -PassThru -WindowStyle Hidden
+    if (-not $relaunch.WaitForExit(15000)) { throw 'Second instance did not exit after restoring the original client' }
+    if ([InstallerWindow]::IsIconic($started.MainWindowHandle)) { throw 'Repeated launch did not restore the minimized client window' }
+    $checks.Add('Repeated packaged launch reuses the existing client process')
     [void]$started.CloseMainWindow()
     if (-not $started.WaitForExit(15000)) { Stop-Process -Id $started.Id }
     $checks.Add('Fresh installation and Open-now launch the real packaged application')

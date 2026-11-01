@@ -341,6 +341,7 @@ Function BrainWelcome
   !insertmacro BLabelCenter 270 280 560 48 "公司大脑" $0 $BrainTitleFont B76C4E FBFAF8
   !insertmacro BLabelCenter 270 340 560 70 "安装完成后，可连接你的公司工作空间。$\r$\n完整对话与个人草稿保存在你的电脑。" $0 $BrainFont 52554F FBFAF8
   SendMessage $BrainNext ${WM_SETTEXT} 0 "STR:下一步 >"
+  BrainWizard::Style /NOUNLOAD
   nsDialogs::Show
 FunctionEnd
 
@@ -376,6 +377,7 @@ Function BrainDirectory
   !insertmacro BLabel 222 425 650 48 "安装前将检查目录权限、目标磁盘与临时目录空间。$\r$\n程序与个人记录分开保存。" $0 $BrainFont 81827C FBFAF8
   SendMessage $BrainNext ${WM_SETTEXT} 0 "STR:开始安装"
   Call BrainCapacity
+  BrainWizard::Style /NOUNLOAD
   nsDialogs::Show
 FunctionEnd
 Function BrainBrowse
@@ -503,6 +505,7 @@ Function BrainUpdateStage
 FunctionEnd
 
 Function BrainFinish
+  StrCpy $BrainLaunching 0
   StrCpy $BrainPageStep 4
   StrCpy $BrainTitle "公司大脑安装完成"
   StrCpy $BrainSubTitle "公司大脑已安装到这台电脑。"
@@ -510,18 +513,74 @@ Function BrainFinish
   StrCpy $BrainDone 1
   SetCtlColors $BrainNav4 B76C4E F1F0EC
   !insertmacro BLabelCenter 270 235 570 50 "安装完成" $0 $BrainTitleFont B76C4E FBFAF8
-  !insertmacro BLabelCenter 270 312 570 70 "打开后，连接你的公司工作空间。$\r$\n对话、个人草稿与连接设置保留在本机。" $0 $BrainFont 52554F FBFAF8
+  !insertmacro BLabelCenter 270 312 570 70 "打开后，连接你的公司工作空间。$\r$\n对话、个人草稿与连接设置保留在本机。" $BrainLaunchMessage $BrainFont 52554F FBFAF8
   SendMessage $BrainNext ${WM_SETTEXT} 0 "STR:立即打开"
   SendMessage $BrainCancel ${WM_SETTEXT} 0 "STR:完成"
   EnableWindow $BrainCancel 1
   ShowWindow $BrainBack ${SW_HIDE}
+  BrainWizard::Style /NOUNLOAD
   nsDialogs::Show
 FunctionEnd
 Function BrainFinishLeave
-  !insertmacro StartApp
+  ${If} $BrainLaunching == 1
+    Abort
+  ${EndIf}
+  StrCpy $BrainLaunching 1
+  SendMessage $BrainNext ${WM_SETTEXT} 0 "STR:正在打开…"
+  SendMessage $BrainLaunchMessage ${WM_SETTEXT} 0 "STR:正在打开公司大脑，请稍候…$\r$\n客户端窗口出现后，此向导会自动关闭。"
+  EnableWindow $BrainNext 0
+  BrainWizard::Refresh /NOUNLOAD
+  SetOutPath "$INSTDIR"
+  ${IfNot} ${FileExists} "$appExe"
+    Call BrainLaunchFailed
+    Abort
+  ${EndIf}
+  ClearErrors
+  ; Avoid Explorer/shortcut indirection for normal per-user installs. Preserve
+  ; the unelevated launch path when the installer itself is elevated.
+  ${If} ${UAC_IsAdmin}
+    ${StdUtils.ExecShellAsUser} $0 "$appExe" "open" ""
+    ${If} $0 == "error"
+      Call BrainLaunchFailed
+      Abort
+    ${EndIf}
+  ${Else}
+    Exec '"$appExe"'
+    ${If} ${Errors}
+      Call BrainLaunchFailed
+      Abort
+    ${EndIf}
+  ${EndIf}
+  System::Call 'kernel32::GetTickCount()i.s'
+  Pop $BrainLaunchStarted
+  ${NSD_CreateTimer} BrainLaunchPoll 150
+  Abort
+FunctionEnd
+Function BrainLaunchPoll
+  BrainWizard::AppWindow /NOUNLOAD "$appExe"
+  Pop $0
+  ${If} $0 == 1
+    ${NSD_KillTimer} BrainLaunchPoll
+    SetErrorLevel 0
+    Quit
+  ${EndIf}
+  System::Call 'kernel32::GetTickCount()i.r0'
+  IntOp $0 $0 - $BrainLaunchStarted
+  ${If} $0 > 20000
+    ${NSD_KillTimer} BrainLaunchPoll
+    Call BrainLaunchFailed
+  ${EndIf}
+FunctionEnd
+Function BrainLaunchFailed
+  StrCpy $BrainLaunching 0
+  SendMessage $BrainNext ${WM_SETTEXT} 0 "STR:重试打开"
+  SendMessage $BrainLaunchMessage ${WM_SETTEXT} 0 "STR:暂未检测到客户端窗口。$\r$\n可重试打开，或点“完成”后从桌面快捷方式进入。"
+  EnableWindow $BrainNext 1
+  BrainWizard::Refresh /NOUNLOAD
 FunctionEnd
 Function BrainUserAbort
   ${If} $BrainDone == 1
+    ${NSD_KillTimer} BrainLaunchPoll
     SetErrorLevel 0
     Return
   ${EndIf}

@@ -13,6 +13,7 @@ window.addEventListener("DOMContentLoaded", applyWindowAppearance, {
   once: true,
 });
 contextBridge.exposeInMainWorld("brainDesktop", {
+  retryStartup: () => ipcRenderer.invoke("startup:retry"),
   allowBootstrap: process.env.BRAIN_VERIFY === "1",
   canChangeServer:
     process.env.BRAIN_VERIFY === "1" || process.env.BRAIN_ADMIN_SETUP === "1",

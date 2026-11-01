@@ -38,7 +38,7 @@ try {
 
   const asar = join(app, 'Contents/Resources/app.asar');
   const files = listPackage(asar).map(path => path.replace(/^\//, '')).filter(path => !listPackage(asar).some(other => other.startsWith(`/${path}/`))).sort();
-  const allowed = ['fonts.css', 'fonts/NotoSansSC-VF.woff2', 'fonts/OFL.txt', 'fonts/source.json', 'main.cjs', 'updates.cjs', 'package.json', 'preload.cjs', 'server-preload.cjs', 'server-setup.html', 'server-setup.js', ...legalFiles].sort();
+  const allowed = ['fonts.css', 'fonts/NotoSansSC-VF.woff2', 'fonts/OFL.txt', 'fonts/source.json', 'main.cjs', 'updates.cjs', 'package.json', 'preload.cjs', 'server-preload.cjs', 'server-setup.html', 'server-setup.js', 'startup.cjs', 'startup.html', 'startup.js', ...legalFiles].sort();
   assert.deepEqual(files, allowed);
   assert.equal(JSON.parse(extractFile(asar, 'package.json').toString()).version, version);
   for (const file of files) assert.deepEqual(extractFile(asar, file), await readFile(resolve('desktop', file)), `Packaged source differs: ${file}`);
@@ -106,7 +106,9 @@ try {
   await writeFile(`release/macos-first-launch-${arch}.png`, Buffer.from(screenshot.data, 'base64'));
   const desktop = JSON.parse(await readFile('artifacts/desktop-verification.json', 'utf8'));
   const sha256 = createHash('sha256').update(await readFile(dmg)).digest('hex');
-  const report = { version, architecture: arch, platform: process.platform, os: command('sw_vers', ['-productVersion']).trim(), sourceCommit: command('git', ['rev-parse', 'HEAD']).trim(), workflowRun: process.env.GITHUB_RUN_ID || null, createdAt: new Date().toISOString(), artifact: basename(dmg), bytes: (await readFile(dmg)).length, sha256, signing: 'ad-hoc', developerIdSigned: false, notarized: false, physicalEmployeeMacTested: false, files, checks, firstLaunch: page, desktopVerification: desktop };
+  const startupVerification = JSON.parse(await readFile('artifacts/startup-verification.json', 'utf8'));
+  assert.equal(startupVerification.result, 'passed');
+  const report = { version, architecture: arch, platform: process.platform, os: command('sw_vers', ['-productVersion']).trim(), sourceCommit: command('git', ['rev-parse', 'HEAD']).trim(), workflowRun: process.env.GITHUB_RUN_ID || null, createdAt: new Date().toISOString(), artifact: basename(dmg), bytes: (await readFile(dmg)).length, sha256, signing: 'ad-hoc', developerIdSigned: false, notarized: false, physicalEmployeeMacTested: false, files, checks, firstLaunch: page, desktopVerification: desktop, startupVerification };
   await writeFile(`release/macos-verification-${arch}.json`, JSON.stringify(report, null, 2) + '\n');
   await writeFile(`release/SHA256SUMS-macOS-${arch}.txt`, `${sha256}  ${basename(dmg)}\n`);
   console.log(JSON.stringify({ artifact: basename(dmg), sha256, checks, desktopChecks: desktop.checks.length }, null, 2));

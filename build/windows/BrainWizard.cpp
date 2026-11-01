@@ -9,7 +9,42 @@ static unsigned frame;
 static const UINT_PTR timerId = 0xCB01;
 static volatile LONG installPhase, cancelDecision;
 static HWND stageText;
+static bool drawButton(DRAWITEMSTRUCT* item) {
+  if(!item || !GetPropW(item->hwndItem,L"Brain.Button")) return false;
+  const HWND button=item->hwndItem;
+  const bool main=button==primary, disabled=(item->itemState&ODS_DISABLED)!=0;
+  const bool pressed=!disabled && (item->itemState&ODS_SELECTED)!=0;
+  const bool hover=!disabled && GetPropW(button,L"Brain.Hover");
+  const int dpi=GetDpiForWindow(button), saved=SaveDC(item->hDC);
+  const int depth=MulDiv(2,dpi,96), radius=MulDiv(8,dpi,96);
+  RECT r=item->rcItem;
+  HBRUSH background=CreateSolidBrush(GetParent(button)==host?RGB(241,240,236):RGB(251,250,248));
+  FillRect(item->hDC,&r,background);DeleteObject(background);
+  const COLORREF fill=disabled?RGB(226,224,219):main?(pressed?RGB(146,73,49):hover?RGB(169,92,63):RGB(183,108,78)):(pressed?RGB(219,213,203):hover?RGB(239,234,225):RGB(251,250,248));
+  if(!disabled && !pressed) {
+    RECT shadow=r;shadow.top+=depth;
+    HBRUSH brush=CreateSolidBrush(main?RGB(139,78,55):RGB(207,201,191));
+    HPEN pen=CreatePen(PS_SOLID,1,main?RGB(139,78,55):RGB(207,201,191));
+    HGDIOBJ oldBrush=SelectObject(item->hDC,brush),oldPen=SelectObject(item->hDC,pen);
+    RoundRect(item->hDC,shadow.left,shadow.top,shadow.right,shadow.bottom,radius,radius);
+    SelectObject(item->hDC,oldBrush);SelectObject(item->hDC,oldPen);DeleteObject(brush);DeleteObject(pen);
+  }
+  r.bottom-=depth;
+  if(pressed) {InflateRect(&r,-depth,0);OffsetRect(&r,0,depth);}
+  HBRUSH brush=CreateSolidBrush(fill);HPEN pen=CreatePen(PS_SOLID,1,main?fill:RGB(210,204,195));
+  HGDIOBJ oldBrush=SelectObject(item->hDC,brush),oldPen=SelectObject(item->hDC,pen);
+  RoundRect(item->hDC,r.left,r.top,r.right,r.bottom,radius,radius);
+  SelectObject(item->hDC,oldBrush);SelectObject(item->hDC,oldPen);DeleteObject(brush);DeleteObject(pen);
+  wchar_t text[256];GetWindowTextW(button,text,256);
+  SelectObject(item->hDC,reinterpret_cast<HFONT>(SendMessageW(button,WM_GETFONT,0,0)));
+  SetBkMode(item->hDC,TRANSPARENT);SetTextColor(item->hDC,disabled?RGB(135,135,130):main?RGB(255,255,255):RGB(48,45,40));
+  DrawTextW(item->hDC,text,-1,&r,DT_CENTER|DT_VCENTER|DT_SINGLELINE);
+  if((item->itemState&ODS_FOCUS) && !(item->itemState&ODS_NOFOCUSRECT)) {InflateRect(&r,-4,-4);DrawFocusRect(item->hDC,&r);}
+  RestoreDC(item->hDC,saved);
+  return true;
+}
 static LRESULT CALLBACK panelProc(HWND window,UINT message,WPARAM w,LPARAM l,UINT_PTR,DWORD_PTR) {
+  if(message==WM_DRAWITEM && drawButton(reinterpret_cast<DRAWITEMSTRUCT*>(l))) return TRUE;
   if(message==WM_ERASEBKGND) {
     RECT r;GetClientRect(window,&r);
     HBRUSH mainBrush=CreateSolidBrush(RGB(251,250,248));
@@ -61,7 +96,25 @@ static void CALLBACK tick(HWND,UINT,UINT_PTR,DWORD) {
 }
 static LRESULT CALLBACK buttonProc(HWND window,UINT message,WPARAM w,LPARAM l,UINT_PTR,DWORD_PTR) {
   if(message==BM_SETSTYLE) w=(w & ~static_cast<WPARAM>(BS_TYPEMASK)) | BS_OWNERDRAW;
+  if(message==WM_MOUSEMOVE && !GetPropW(window,L"Brain.Hover")) {
+    SetPropW(window,L"Brain.Hover",reinterpret_cast<HANDLE>(1));
+    TRACKMOUSEEVENT track={sizeof(TRACKMOUSEEVENT),TME_LEAVE,window,0};TrackMouseEvent(&track);
+    InvalidateRect(window,0,FALSE);
+  }
+  if(message==WM_MOUSELEAVE || message==WM_ENABLE) {RemovePropW(window,L"Brain.Hover");InvalidateRect(window,0,FALSE);}
+  if(message==WM_NCDESTROY) {RemovePropW(window,L"Brain.Hover");RemovePropW(window,L"Brain.Button");RemoveWindowSubclass(window,buttonProc,1);}
   return DefSubclassProc(window,message,w,l);
+}
+static BOOL CALLBACK styleButton(HWND window,LPARAM) {
+  wchar_t name[32];GetClassNameW(window,name,32);
+  if(lstrcmpW(name,L"Button")!=0) return TRUE;
+  const LONG_PTR type=GetWindowLongPtrW(window,GWL_STYLE)&BS_TYPEMASK;
+  // Checkboxes, radio buttons and links retain their native semantics.
+  if(type!=BS_PUSHBUTTON && type!=BS_DEFPUSHBUTTON && type!=BS_OWNERDRAW) return TRUE;
+  SetPropW(window,L"Brain.Button",reinterpret_cast<HANDLE>(1));
+  SetWindowSubclass(window,buttonProc,1,0);
+  SendMessageW(window,BM_SETSTYLE,BS_OWNERDRAW,TRUE);
+  return TRUE;
 }
 static LRESULT CALLBACK windowProc(HWND window,UINT message,WPARAM w,LPARAM l,UINT_PTR,DWORD_PTR) {
   if((message==WM_COMMAND && LOWORD(w)==IDCANCEL) || message==WM_CLOSE) {
@@ -87,26 +140,7 @@ static LRESULT CALLBACK windowProc(HWND window,UINT message,WPARAM w,LPARAM l,UI
       return TRUE;
     }
   }
-  if(message==WM_DRAWITEM) {
-    DRAWITEMSTRUCT* item=reinterpret_cast<DRAWITEMSTRUCT*>(l);
-    if(item && item->hwndItem==primary) {
-      const int savedDc=SaveDC(item->hDC);
-      const bool disabled=(item->itemState & ODS_DISABLED)!=0;
-      const COLORREF fill=disabled?RGB(226,224,219):((item->itemState & ODS_SELECTED)?RGB(161,88,61):RGB(183,108,78));
-      HBRUSH brush=CreateSolidBrush(fill); HPEN pen=CreatePen(PS_SOLID,1,fill);
-      HGDIOBJ oldBrush=SelectObject(item->hDC,brush), oldPen=SelectObject(item->hDC,pen);
-      RoundRect(item->hDC,item->rcItem.left,item->rcItem.top,item->rcItem.right,item->rcItem.bottom,8,8);
-      SelectObject(item->hDC,oldBrush); SelectObject(item->hDC,oldPen); DeleteObject(brush);DeleteObject(pen);
-      wchar_t text[256]; GetWindowTextW(primary,text,256);
-      HGDIOBJ oldFont=SelectObject(item->hDC,reinterpret_cast<HFONT>(SendMessageW(primary,WM_GETFONT,0,0)));
-      SetBkMode(item->hDC,TRANSPARENT);SetTextColor(item->hDC,disabled?RGB(135,135,130):RGB(255,255,255));
-      DrawTextW(item->hDC,text,-1,&item->rcItem,DT_CENTER|DT_VCENTER|DT_SINGLELINE);
-      SelectObject(item->hDC,oldFont);
-      if(item->itemState & ODS_FOCUS) { RECT r=item->rcItem;InflateRect(&r,-4,-4);DrawFocusRect(item->hDC,&r); }
-      RestoreDC(item->hDC,savedDc);
-      return TRUE;
-    }
-  }
+  if(message==WM_DRAWITEM && drawButton(reinterpret_cast<DRAWITEMSTRUCT*>(l))) return TRUE;
   if(message==WM_NCDESTROY) { stopProgress();RemoveWindowSubclass(window,windowProc,1); }
   return DefSubclassProc(window,message,w,l);
 }
@@ -114,8 +148,7 @@ extern "C" void __cdecl Style(HWND parent,int,wchar_t*,Stack**,void*) {
   host=parent;primary=GetDlgItem(parent,1);
   EnumChildWindows(parent,hideDefaultSurface,0);
   SetWindowSubclass(parent,windowProc,1,0);
-  SetWindowSubclass(primary,buttonProc,1,0);
-  SendMessageW(primary,BM_SETSTYLE,BS_OWNERDRAW,TRUE);
+  EnumChildWindows(parent,styleButton,0);
 }
 extern "C" void __cdecl Center(HWND parent,int,wchar_t*,Stack**,void*) {
   if(!IsWindow(parent)) return;
@@ -188,6 +221,30 @@ extern "C" void __cdecl Progress(HWND parent,int,wchar_t*,Stack** stack,void*) {
   tick(parent,0,0,0);SetTimer(parent,timerId,100,tick);
 }
 extern "C" void __cdecl Stop(HWND,int,wchar_t*,Stack**,void*) { stopProgress(); }
+struct AppWindowSearch { const wchar_t* path; HWND found; };
+static BOOL CALLBACK findAppWindow(HWND window,LPARAM param) {
+  if(!IsWindowVisible(window) || GetWindow(window,GW_OWNER)) return TRUE;
+  AppWindowSearch* search=reinterpret_cast<AppWindowSearch*>(param);
+  DWORD pid=0;GetWindowThreadProcessId(window,&pid);
+  HANDLE process=OpenProcess(PROCESS_QUERY_LIMITED_INFORMATION,FALSE,pid);
+  if(!process) return TRUE;
+  wchar_t path[1024];DWORD size=1024;
+  const bool match=QueryFullProcessImageNameW(process,0,path,&size) && lstrcmpiW(path,search->path)==0;
+  CloseHandle(process);
+  if(!match) return TRUE;
+  search->found=window;
+  if(IsIconic(window)) ShowWindow(window,SW_RESTORE);
+  SetForegroundWindow(window);
+  return FALSE;
+}
+extern "C" void __cdecl AppWindow(HWND,int stringSize,wchar_t*,Stack** stack,void*) {
+  if(!*stack) return;
+  Stack* input=*stack;AppWindowSearch search={input->text,0};
+  EnumWindows(findAppWindow,reinterpret_cast<LPARAM>(&search));
+  *stack=input->next;GlobalFree(input);
+  Stack* result=reinterpret_cast<Stack*>(GlobalAlloc(GPTR,sizeof(Stack)+stringSize*sizeof(wchar_t)));
+  if(result) {result->text[0]=search.found?L'1':L'0';result->next=*stack;*stack=result;}
+}
 extern "C" void __cdecl Release(HWND,int,wchar_t*,Stack**,void*) {
   stopProgress();
   if(IsWindow(primary))RemoveWindowSubclass(primary,buttonProc,1);

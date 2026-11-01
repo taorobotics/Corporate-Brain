@@ -1,0 +1,11 @@
+{
+  "result": "passed",
+  "checks": [
+    "Local startup page is visible while network response is pending",
+    "Successful navigation replaces startup without a fixed delay",
+    "Remote renderer cannot invoke startup-only IPC",
+    "Timed-out navigation restores local recovery screen",
+    "Recovery button reconnects through real preload IPC"
+  ],
+  "productionModelsCalled": false
+}
