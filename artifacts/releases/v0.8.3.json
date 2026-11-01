@@ -1,0 +1,120 @@
+{
+  "version": "0.8.3",
+  "tag": "v0.8.3",
+  "sourceCommit": "99ac2709d30f08914681307bdaa3b089f761f494",
+  "verifiedAt": "2026-11-01T06:37:27.266Z",
+  "release": "https://github.com/taorobotics/Corporate-Brain/releases/tag/v0.8.3",
+  "workflow": "https://github.com/taorobotics/Corporate-Brain/actions/runs/41280703761",
+  "buildWorkflow": "https://github.com/taorobotics/Corporate-Brain/actions/runs/41280703761",
+  "buildReuseReason": null,
+  "assets": [
+    {
+      "name": "Corporate-Brain-Setup-0.8.3-x64.exe",
+      "bytes": 118397162,
+      "sha256": "92c9907d3b243846255d124ded6878a459914f3178e099aa30872d411fd11d9b",
+      "url": "https://github.com/taorobotics/Corporate-Brain/releases/download/v0.8.3/Corporate-Brain-Setup-0.8.3-x64.exe"
+    },
+    {
+      "name": "Corporate-Brain-0.8.3-macOS-arm64.dmg",
+      "bytes": 138084659,
+      "sha256": "760fe849b7577d4b08b9830e978c35664428d43693e8ffa0f1e1a6e05dc1b036",
+      "url": "https://github.com/taorobotics/Corporate-Brain/releases/download/v0.8.3/Corporate-Brain-0.8.3-macOS-arm64.dmg"
+    },
+    {
+      "name": "Corporate-Brain-0.8.3-macOS-x64.dmg",
+      "bytes": 143636888,
+      "sha256": "53b22206efcf19ca144892e624ebfadfef48ca7bd187802bc6bcaa6acdf08bb6",
+      "url": "https://github.com/taorobotics/Corporate-Brain/releases/download/v0.8.3/Corporate-Brain-0.8.3-macOS-x64.dmg"
+    },
+    {
+      "name": "Corporate-Brain-Server-0.8.3.zip",
+      "bytes": 19261515,
+      "sha256": "977989be4f224ed6bc921fc9f7584e2d682931bb35eeb409413abf34f6305f15",
+      "url": "https://github.com/taorobotics/Corporate-Brain/releases/download/v0.8.3/Corporate-Brain-Server-0.8.3.zip"
+    }
+  ],
+  "verification": {
+    "windows-verification-x64.json": {
+      "platform": "win32",
+      "architecture": "x64",
+      "desktopChecks": 29,
+      "installerLifecycleChecks": 14,
+      "signing": "NotSigned",
+      "notarized": false,
+      "archiveIntegrity": null
+    },
+    "macos-verification-arm64.json": {
+      "platform": "darwin",
+      "architecture": "arm64",
+      "desktopChecks": 28,
+      "installerLifecycleChecks": 0,
+      "signing": "ad-hoc",
+      "notarized": false,
+      "archiveIntegrity": null
+    },
+    "macos-verification-x64.json": {
+      "platform": "darwin",
+      "architecture": "x64",
+      "desktopChecks": 28,
+      "installerLifecycleChecks": 0,
+      "signing": "ad-hoc",
+      "notarized": false,
+      "archiveIntegrity": null
+    },
+    "server-verification.json": {
+      "platform": "server",
+      "architecture": null,
+      "desktopChecks": 0,
+      "installerLifecycleChecks": 0,
+      "signing": null,
+      "notarized": false,
+      "archiveIntegrity": "passed"
+    }
+  },
+  "checksumsVerified": true,
+  "latestReleaseVerified": true,
+  "disposableWindowsLifecycleTested": true,
+  "physicalEmployeeInstallUpgradeUninstallTested": false,
+  "serverDeployment": {
+    "version": "0.8.3",
+    "verifiedAt": "2026-11-01T06:29:58.464Z",
+    "backupCreated": true,
+    "health": "ok",
+    "frontendMatchesLocalBuild": true,
+    "usersPreserved": 3,
+    "departmentsPreserved": 2,
+    "encryptionKeyPreserved": true,
+    "testAccountPreserved": true,
+    "assetChecks": [
+      {
+        "path": "/assets/index-EdwmUFZt.js",
+        "sha256": "4dd1a281341c71133863ec67ccc619ee769a635a5aef27f406a14049533c91a8"
+      },
+      {
+        "path": "/assets/index-CLbwjVSz.css",
+        "sha256": "56971015f1eae1e3f5dee112e52f6cec5caa962a84723d1744644f90ef3266e8"
+      }
+    ]
+  },
+  "liveWindowVerification": {
+    "verifiedAt": "2026-11-01T06:28:32.826Z",
+    "result": "passed",
+    "checks": [
+      "Actual cloud login UI has three window controls",
+      "Real native maximize and restore with correct label",
+      "Real native minimize and taskbar restoration",
+      "Close button reaches native close event"
+    ],
+    "usedCompanyAccount": false
+  },
+  "localCompanyInstaller": {
+    "artifact": "Corporate-Brain-Setup-0.8.3-x64.exe",
+    "sha256": "b2d33e0e428d3a5e555897d8e9074771164d1e1a758b2c9da97d9d46f2ebcdd3",
+    "sourceCommit": "99ac2709d30f08914681307bdaa3b089f761f494",
+    "signature": "NotSigned",
+    "installerUiChecks": 4,
+    "companyServerPreconfigured": true
+  },
+  "releaseRunAttempt": 2,
+  "initialAttemptFailure": "Existing startup-navigation verification timed out in the Windows runner; the unchanged tagged source passed all checks on rerun."
+}
