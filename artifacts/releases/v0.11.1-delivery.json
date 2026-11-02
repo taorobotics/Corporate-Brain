@@ -1,0 +1,136 @@
+{
+  "version": "0.11.1",
+  "verifiedAt": "2026-11-02T07:47:23.164Z",
+  "sourceCommit": "cf9ddbedf5f86c65d4de7aa8141c3314fe2edd43",
+  "release": "https://github.com/taorobotics/Corporate-Brain/releases/tag/v0.11.1",
+  "workflow": "https://github.com/taorobotics/Corporate-Brain/actions/runs/41403670322",
+  "workflowConclusion": "success",
+  "completeReleaseVerified": true,
+  "baseline": {
+    "verifiedAt": "2026-11-02T07:05:29.766Z",
+    "status": 200,
+    "configured": false,
+    "reason": "not-configured",
+    "version": null
+  },
+  "liveFeed": {
+    "verifiedAt": "2026-11-02T07:25:36.946Z",
+    "status": 200,
+    "configured": true,
+    "reason": null,
+    "version": "0.11.1"
+  },
+  "mirror": {
+    "version": "0.11.1",
+    "assets": {
+      "win32-x64": {
+        "name": "Corporate-Brain-Setup-0.11.1-x64.exe",
+        "bytes": 118406604,
+        "sha256": "a4b6b725d1d4afef18045ed28393f021802b22c4bfbaf7bf846b9869540bde54"
+      },
+      "darwin-arm64": {
+        "name": "Corporate-Brain-0.11.1-macOS-arm64.dmg",
+        "bytes": 138116137,
+        "sha256": "025e81e5415b584cddf12b7728aca7107f622bc54aa694b8043c4c3fea2eaf32"
+      },
+      "darwin-x64": {
+        "name": "Corporate-Brain-0.11.1-macOS-x64.dmg",
+        "bytes": 143647840,
+        "sha256": "140a60939d74d327ac8e45a14f4a9aee652382315160066377f242de990a62f5"
+      }
+    },
+    "activatedAt": "2026-11-02T07:23:07.460Z",
+    "source": "company-local-mirror"
+  },
+  "legacySource": {
+    "tag": "v0.9.0",
+    "unmodifiedLegacySource": true,
+    "files": {
+      "main.cjs": "95dee64c32afc2997a1e494dbbc82a8d3a94630418b916f9119f8233215565aa",
+      "preload.cjs": "785b70e533ecefe24708b2e7817194eda574bda679cc8daea2d2b57469ff0a5b",
+      "updates.cjs": "629e47ab5d1668472751aa0fcee7a2b4259f367f6137de3de334194c57cb247c",
+      "startup.cjs": "f2bf3be082702b9a8d34089f6796532316b5ad57ccfb28dc6bf000e26620589b"
+    },
+    "electronVersion": "44.8.0",
+    "legacyRuntimeVersionMatches": true,
+    "packagedInstallerTest": "Separate real v0.9.0 installation and upgrade runs in disposable Windows CI"
+  },
+  "productionOldClient": {
+    "version": "0.11.1",
+    "sourceClient": "0.9.0",
+    "clientSource": {
+      "tag": "v0.9.0",
+      "commit": "8fbb7c88352922f2484581322a8d557d62669fc5"
+    },
+    "verifiedAt": "2026-11-02T07:46:31.215Z",
+    "origin": "https://191-223-41-179.nip.io",
+    "result": "passed",
+    "realProductionFeed": true,
+    "realProductionDownload": true,
+    "realLegacyMainAndPreload": true,
+    "networkMode": "Direct connection in isolated QA process only; system proxy unchanged",
+    "productionRange": {
+      "status": 206,
+      "bytes": 1024,
+      "range": "bytes 0-1023/118406604",
+      "etag": "\"a4b6b725d1d4afef18045ed28393f021802b22c4bfbaf7bf846b9869540bde54\""
+    },
+    "isolatedProfile": true,
+    "package": {
+      "name": "Corporate-Brain-Setup-0.11.1-x64.exe",
+      "bytes": 118406604,
+      "sha256": "a4b6b725d1d4afef18045ed28393f021802b22c4bfbaf7bf846b9869540bde54"
+    },
+    "installerExecuted": false,
+    "employeeRecordsTouched": false
+  },
+  "cloud": {
+    "version": "0.11.1",
+    "verifiedAt": "2026-11-02T07:25:07.589Z",
+    "health": {
+      "status": "ok",
+      "version": "0.11.1",
+      "chatStorage": "device-only"
+    },
+    "frontendMatchesLocalBuild": true,
+    "checks": [
+      {
+        "path": "/assets/index-B-Wri-fH.js",
+        "sha256": "61db91a812171f5ccae1e5304607e4bad00c68d69dc3ec38708ceb3d59f50f58"
+      },
+      {
+        "path": "/assets/index-B4NWIAxt.css",
+        "sha256": "c593ba5e777ebd3979937c0fe17868780e70e18e2c1f18f0f0ba691cae285e61"
+      }
+    ]
+  },
+  "preservation": {
+    "version": "0.11.1",
+    "dataPreserved": true,
+    "rowCounts": {
+      "users": 3,
+      "departments": 2
+    },
+    "encryptionKeyPreserved": true,
+    "backup": "/opt/corporate-brain/backups/before-v0.11.1-20261102T070834Z"
+  },
+  "staticAssetCompression": {
+    "verifiedAt": "2026-11-02T07:27:08.673Z",
+    "gzipVerified": true,
+    "originalBytes": 825061,
+    "wireBytes": 247658,
+    "contentUnchanged": true
+  },
+  "windowsUpgradeChecks": 14,
+  "privacy": {
+    "employeeRecordsTouched": false,
+    "productionModelsCalled": false,
+    "githubTokenInstalledOnServer": false
+  },
+  "limits": [
+    "Offline clients discover the update after reconnecting and logging in.",
+    "Installation requires employee confirmation; Mac requires replacing the app from DMG.",
+    "Windows is not trusted-signed; Mac is ad-hoc signed, not notarized."
+  ],
+  "qaNetworkNote": "Existing local proxy caused a slow full-download QA attempt. Final end-to-end run used a direct connection only in a disposable QA process; system proxy unchanged."
+}
