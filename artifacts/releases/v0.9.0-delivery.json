@@ -1,0 +1,103 @@
+{
+  "version": "0.9.0",
+  "sourceCommit": "8fbb7c88352922f2484581322a8d557d62669fc5",
+  "verifiedAt": "2026-11-02T04:15:18.332Z",
+  "localWindows": {
+    "artifact": "Corporate-Brain-Setup-0.9.0-x64.exe",
+    "sha256": "bfa302658b9e5c7e892372cbc140da216f3caf53a607b368590b50b61faa8da9",
+    "bytes": 119366614,
+    "companyPreconfigured": true,
+    "signature": "NotSigned",
+    "checks": "Exact packaged source bytes, allowlist, company URL, product metadata and installer UI verified; full installation lifecycle tested separately on disposable GitHub runner"
+  },
+  "cloud": {
+    "version": "0.9.0",
+    "verifiedAt": "2026-11-02T04:05:41.641Z",
+    "health": {
+      "status": "ok",
+      "version": "0.9.0",
+      "chatStorage": "device-only"
+    },
+    "frontendMatchesLocalBuild": true,
+    "checks": [
+      {
+        "path": "/assets/index-BlhH3m1T.js",
+        "sha256": "c732f3b2d6c8d01b055c32f305ab6eff0d3ef87c2ef5c9ba613a95e3ef36cc09"
+      },
+      {
+        "path": "/assets/index-CLbwjVSz.css",
+        "sha256": "56971015f1eae1e3f5dee112e52f6cec5caa962a84723d1744644f90ef3266e8"
+      }
+    ],
+    "backup": "/opt/corporate-brain/backups/before-v0.9.0-20261102T040432Z",
+    "dataPreserved": true,
+    "usersPreserved": 3,
+    "departmentsPreserved": 2,
+    "encryptionKeyPreserved": true,
+    "packageSha256": "086124d3aae3882a18f69f924d1e215be007b8a8297bb1629d323d46cff6df38"
+  },
+  "liveLogin": {
+    "version": "0.9.0",
+    "verifiedAt": "2026-11-02T04:14:26.430Z",
+    "origin": "https://191-223-41-179.nip.io",
+    "result": "passed",
+    "scope": "Login and appearance settings; update source availability is reported separately",
+    "testAccountLoginPassed": true,
+    "appearanceSettingsVisible": true,
+    "profileRetries": 0,
+    "updates": {
+      "status": "unavailable",
+      "error": "公司服务器的更新服务尚未启用，请先更新服务器包。公开仓库无需 GitHub Token；私有仓库才需要配置 BRAIN_GITHUB_TOKEN。"
+    },
+    "productionModelsCalled": false,
+    "profile": "disposable isolated device profile"
+  },
+  "liveWindowControls": {
+    "version": "0.9.0",
+    "verifiedAt": "2026-11-02T04:05:56.637Z",
+    "origin": "https://191-223-41-179.nip.io",
+    "result": "passed",
+    "checks": [
+      "Actual cloud login UI has three window controls",
+      "Real native maximize and restore with correct label",
+      "Real native minimize and taskbar restoration",
+      "Close button reaches native close event"
+    ],
+    "usedCompanyAccount": false
+  },
+  "startup": {
+    "result": "passed",
+    "checks": [
+      "Warm startup remains responsive offline; default ignores dark OS; minimal isolated preload",
+      "Painted app reveals while a subresource is still pending; skip never exposes a blank navigation",
+      "Remote renderer is rejected by startup-only retry IPC",
+      "Timeout leaves actionable local screen and real retry button reconnects",
+      "Transient HTTP 503 automatically retries and recovers",
+      "Explicit dark persists per company; invalid preferences rejected; preview closes without navigation",
+      "Default restores warm appearance; reduced-motion disables rotation",
+      "Superseded attempts cannot replace a successful newer navigation",
+      "Certificate failures never bypass TLS; closing cancels attempts and destroys overlay"
+    ],
+    "productionModelsCalled": false
+  },
+  "security": {
+    "repositoryVisibility": "private",
+    "historyScan": {
+      "tool": "Gitleaks 8.30.1",
+      "commitsScanned": 63,
+      "throughCommit": "8fbb7c88352922f2484581322a8d557d62669fc5",
+      "findings": 0,
+      "redacted": true
+    },
+    "historicalReleaseAudit": {
+      "scope": "Published verification reports, installer digest correspondence and file manifests. Historical binaries were not re-extracted during this review.",
+      "reportsReviewed": 58
+    }
+  },
+  "limits": [
+    "No production model inference was invoked",
+    "Local installer UI verification did not replace or uninstall the employee installation",
+    "Windows unsigned; macOS ad-hoc signed and not notarized",
+    "A real cloud profile-read request timed out on the first smoke attempt; network recovery was retried, without clearing employee data"
+  ]
+}

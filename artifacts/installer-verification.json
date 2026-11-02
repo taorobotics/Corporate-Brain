@@ -1,15 +1,16 @@
 {
-  "version": "0.2.6",
-  "result": "passed",
+  "sourceCommit": "8fbb7c88352922f2484581322a8d557d62669fc5",
+  "sha256": "bfa302658b9e5c7e892372cbc140da216f3caf53a607b368590b50b61faa8da9",
+  "physicalEmployeeDeviceTested": false,
+  "mode": "UI-only",
   "checks": [
+    "Primary and secondary buttons visibly depress and recover without activating",
     "Native welcome page, privacy and license links are visible",
     "Native path page shows actual space, directory and shortcut selection",
     "Cancellation requires confirmation and exits before installing"
   ],
-  "sourceCommit": "3690ca2e5b442e268522fa399ff848252547c48e",
-  "defaultPath": "D:\\Applications\\Corporate Brain",
-  "mode": "UI-only",
   "realInstallUpgradeUninstall": false,
-  "sha256": "dfccb2691e02ee972ae5ff775c00da253ebd56e2aaa0efc06aa9d7e050266545",
-  "physicalEmployeeDeviceTested": false
+  "result": "passed",
+  "version": "0.9.0",
+  "defaultPath": "D:\\software\\Corporate Brain"
 }
