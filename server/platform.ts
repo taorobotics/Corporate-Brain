@@ -16,6 +16,8 @@ import type { User, Skill, Connection } from "../shared/types";
 import { mountUpdates } from "./updates";
 import { DshManager, DshUnavailableError } from "./dsh";
 import { syncDeepSeekConnections } from "./deepseek-sync";
+import type { ChatProgress } from "../shared/chat-progress";
+import { readChatResponse } from "./chat-stream";
 import rootPackage from "../package.json";
 
 const id = z.string().uuid();
@@ -796,77 +798,164 @@ export function createPlatform(
           .min(1)
           .max(60),
         attachments: z.array(attachment).max(8).default([]),
-        mode: z.enum(["standard", "ptc", "minimal", "creative"]).default("standard"),
+        mode: z
+          .enum(["standard", "ptc", "minimal", "creative"])
+          .default("standard"),
         workspaceAccess: z.enum(["view", "edit", "full"]).default("edit"),
       })
       .strict()
       .parse(req.body);
     const row = getConnection(data.connectionId, actor, "chat");
-    let content: string | undefined;
-    let usage: { inputTokens?: number; outputTokens?: number; totalTokens?: number } | undefined;
-    const hasImageAttachment = data.attachments.some((item) => item.image);
+    const streaming = req.get("accept")?.includes("application/x-ndjson");
+    const controller = new AbortController();
+    const signal = AbortSignal.any([
+      controller.signal,
+      AbortSignal.timeout(180_000),
+    ]);
+    const disconnected = () => {
+      if (!res.writableEnded) controller.abort();
+    };
+    res.on("close", disconnected);
+    let hasProgress = false;
+    const emit = (event: ChatProgress) => {
+      if (
+        (event.type === "text" && event.text) ||
+        event.type === "reasoning" ||
+        event.type === "tool"
+      )
+        hasProgress = true;
+      if (streaming && !res.destroyed && !res.writableEnded) {
+        if (res.writableLength > 2_000_000) {
+          controller.abort();
+          res.destroy();
+          return;
+        }
+        res.write(JSON.stringify(event) + "\n");
+      }
+    };
+    if (streaming) {
+      res.set({
+        "Content-Type": "application/x-ndjson; charset=utf-8",
+        "Cache-Control": "no-cache, no-transform",
+        "X-Accel-Buffering": "no",
+      });
+      res.flushHeaders();
+    }
+    const heartbeat = streaming
+      ? setInterval(() => {
+          if (!res.destroyed) res.write("\n");
+        }, 15_000)
+      : undefined;
     try {
-      if (!dsh) throw new DshUnavailableError("DSH 已由管理员停用");
-      const result = await dsh.runDetailed({
-        connectionId: row.id,
-        baseUrl: row.base_url,
-        model: row.model,
-        apiKey: store.decrypt(row.secret),
-        userId: actor.id,
-        sessionId: data.sessionId ?? randomUUID(),
-        messages: data.messages,
-        attachments: data.attachments,
-        mode: data.mode,
-        workspaceAccess: data.workspaceAccess,
-      });
-      content = result.content;
-      usage = result.usage;
-    } catch (error) {
-      // Visual requests can be accepted by the OpenAI-compatible provider even
-      // when a DSH preset rejects the image block. Retry those requests through
-      // the direct chat endpoint so an uploaded image is still sent to the model.
-      if (!(error instanceof DshUnavailableError) && !hasImageAttachment)
-        fail(502, (error as Error).message.slice(0, 500));
-    }
-    if (typeof content !== "string") {
-      const lastUserIndex = data.messages.findLastIndex(
-        (message) => message.role === "user",
-      );
-      const textAttachments = data.attachments
-        .filter((item) => item.content)
-        .map((item) => `\n\n文件附件：${item.name}\n${item.content}`)
-        .join("");
-      const directMessages = data.messages.map((message, index) => {
+      let content: string | undefined;
+      let usage:
+        | { inputTokens?: number; outputTokens?: number; totalTokens?: number }
+        | undefined;
+      const hasImageAttachment = data.attachments.some((item) => item.image);
+      try {
+        if (!dsh) throw new DshUnavailableError("DSH 已由管理员停用");
+        const result = await dsh.runDetailed({
+          connectionId: row.id,
+          baseUrl: row.base_url,
+          model: row.model,
+          apiKey: store.decrypt(row.secret),
+          userId: actor.id,
+          sessionId: data.sessionId ?? randomUUID(),
+          messages: data.messages,
+          attachments: data.attachments,
+          mode: data.mode,
+          workspaceAccess: data.workspaceAccess,
+          signal,
+          onProgress: emit,
+        });
+        content = result.content;
+        usage = result.usage;
+      } catch (error) {
+        signal.throwIfAborted();
+        // Visual requests can be accepted by the OpenAI-compatible provider even
+        // when a DSH preset rejects the image block. Retry those requests through
+        // the direct chat endpoint so an uploaded image is still sent to the model.
         if (
-          index !== lastUserIndex ||
-          (!data.attachments.length && !textAttachments)
+          hasProgress ||
+          (!(error instanceof DshUnavailableError) && !hasImageAttachment)
         )
-          return message;
-        return {
-          ...message,
-          content: [
-            { type: "text", text: `${message.content}${textAttachments}` },
-            ...data.attachments
-              .filter((item) => item.image)
-              .map((item) => ({
-                type: "image_url",
-                image_url: { url: item.image },
-              })),
-          ],
-        };
+          fail(502, "模型处理未完成，已保留收到的内容，请稍后重试");
+      }
+      if (typeof content !== "string") {
+        const lastUserIndex = data.messages.findLastIndex(
+          (message) => message.role === "user",
+        );
+        const textAttachments = data.attachments
+          .filter((item) => item.content)
+          .map((item) => `\n\n文件附件：${item.name}\n${item.content}`)
+          .join("");
+        const directMessages = data.messages.map((message, index) => {
+          if (
+            index !== lastUserIndex ||
+            (!data.attachments.length && !textAttachments)
+          )
+            return message;
+          return {
+            ...message,
+            content: [
+              { type: "text", text: `${message.content}${textAttachments}` },
+              ...data.attachments
+                .filter((item) => item.image)
+                .map((item) => ({
+                  type: "image_url",
+                  image_url: { url: item.image },
+                })),
+            ],
+          };
+        });
+        const providerResponse = await fetch(
+          `${row.base_url}/chat/completions`,
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${store.decrypt(row.secret)}`,
+            },
+            body: JSON.stringify({
+              model: row.model,
+              messages: directMessages,
+              stream: Boolean(streaming),
+            }),
+            signal,
+            redirect: "error",
+          },
+        );
+        if (!providerResponse.ok)
+          fail(
+            502,
+            `模型服务返回 ${providerResponse.status}，请检查模型标识、余额和权限`,
+          );
+        const result = await readChatResponse(providerResponse, emit);
+        content = result.content;
+        usage = result.usage;
+        if (typeof content !== "string" || !content.trim())
+          fail(502, "模型未返回可显示的文本");
+      }
+      store.audit(actor.id, "model.chat_completed", row.id);
+      if (streaming) {
+        emit({ type: "done", content, usage });
+        res.end();
+      } else res.json({ content, usage });
+    } catch (error) {
+      if (!streaming) throw error;
+      emit({
+        type: "error",
+        message: signal.aborted
+          ? "请求已停止或超时，已保留收到的内容"
+          : error instanceof ApiError
+            ? error.message
+            : "模型响应中断，已保留收到的内容，请稍后重试",
       });
-      const result = await invoke(row, "/chat/completions", {
-        model: row.model,
-        messages: directMessages,
-        stream: false,
-      });
-      content = result.choices?.[0]?.message?.content;
-      usage = result.usage;
-      if (typeof content !== "string" || !content.trim())
-        fail(502, "模型未返回可显示的文本");
+      res.end();
+    } finally {
+      if (heartbeat) clearInterval(heartbeat);
+      res.off("close", disconnected);
     }
-    store.audit(actor.id, "model.chat_completed", row.id);
-    res.json({ content, usage });
   });
   app.post("/api/generate/image", async (req, res) => {
     const actor = getActor(req);

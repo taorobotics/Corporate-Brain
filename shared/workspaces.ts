@@ -5,6 +5,7 @@ import type {
   WorkspaceAccess,
 } from "./types";
 import { normalizeSkin } from "./skins";
+import { normalizeTrace } from "./chat-progress";
 
 export const DSH_MODE_OPTIONS: ReadonlyArray<{
   value: DshMode;
@@ -107,7 +108,13 @@ export function normalizeLocalState(
   const settings = (value?.settings ?? {}) as Partial<LocalState["settings"]>;
   return {
     conversations: Array.isArray(value?.conversations)
-      ? value.conversations
+      ? value.conversations.map((conversation) => ({
+          ...conversation,
+          messages: conversation.messages.map((message) => ({
+            ...message,
+            trace: normalizeTrace(message.trace),
+          })),
+        }))
       : [],
     drafts: Array.isArray(value?.drafts) ? value.drafts : [],
     installed: Array.isArray(value?.installed) ? value.installed : [],

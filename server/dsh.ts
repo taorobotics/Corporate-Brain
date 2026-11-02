@@ -1,9 +1,11 @@
 import { DeepSeekHarness } from "@deepseek-ai/dsh-sdk-client";
 import type { SdkPromptContentBlock } from "@deepseek-ai/dsh-sdk-client";
-import { createHash } from "node:crypto";
+import { createHash, randomUUID } from "node:crypto";
 import { createRequire } from "node:module";
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import { basename, join, resolve } from "node:path";
+import type { ChatProgress } from "../shared/chat-progress";
+import { dshProgress } from "./dsh-progress";
 import type { DshMode, WorkspaceAccess } from "../shared/types";
 
 export type DshAttachment = {
@@ -28,6 +30,8 @@ export type DshRunOptions = {
   attachments: DshAttachment[];
   mode?: DshMode;
   workspaceAccess?: WorkspaceAccess;
+  signal?: AbortSignal;
+  onProgress?: (event: ChatProgress) => void;
 };
 
 export type DshUsage = {
@@ -47,6 +51,7 @@ type Entry = {
   fingerprint: string;
   harness: DeepSeekHarness;
   workspace: string;
+  fresh: boolean;
 };
 
 const require = createRequire(import.meta.url);
@@ -63,7 +68,9 @@ export function dshPermissionMode(access: WorkspaceAccess = "edit") {
       : "workspace-write";
 }
 
-function extractUsage(events: Array<{ type?: string; data?: any }>): DshUsage | undefined {
+function extractUsage(
+  events: Array<{ type?: string; data?: any }>,
+): DshUsage | undefined {
   const event = [...events]
     .reverse()
     .find((item) => item.type === "assistant/message" && item.data?.usage);
@@ -104,15 +111,19 @@ function imageBlock(value: string): SdkPromptContentBlock {
   return {
     type: "image",
     data: data.toString("base64"),
-    mimeType: match[1] as "image/png" | "image/jpeg" | "image/webp" | "image/gif",
+    mimeType: match[1] as
+      "image/png" | "image/jpeg" | "image/webp" | "image/gif",
   };
 }
 
 export class DshManager {
   private readonly root: string;
   private readonly entries = new Map<string, Entry>();
+  private readonly running = new Set<string>();
 
-  constructor(root = process.env.BRAIN_DSH_HOME ?? resolve(".cache/dsh-runtime")) {
+  constructor(
+    root = process.env.BRAIN_DSH_HOME ?? resolve(".cache/dsh-runtime"),
+  ) {
     this.root = resolve(root);
   }
 
@@ -122,7 +133,7 @@ export class DshManager {
 
   private async create(options: DshRunOptions, workspace: string) {
     const hash = createHash("sha256")
-      .update(`${options.connectionId}\0${options.baseUrl}\0${options.model}`)
+      .update(`${this.key(options)}\0${randomUUID()}`)
       .digest("hex")
       .slice(0, 24);
     const runtimeRoot = join(this.root, hash);
@@ -138,7 +149,7 @@ export class DshManager {
     );
     await writeFile(
       patch,
-      `${await readFile(patch, "utf8")}- insert:\n    - id: agent-preset-registry\n      name: '@deepseek-ai/dsh-agent-preset-registry'\n      config:\n        default: ${yamlString(dshPresetForMode(options.mode))}\n`,
+      `${await readFile(patch, "utf8")}- insert:\n    - id: corporate-progress\n      name: ${yamlString(new URL("./dsh-progress-plugin.mjs", import.meta.url).href)}\n    - id: agent-preset-registry\n      name: '@deepseek-ai/dsh-agent-preset-registry'\n      config:\n        default: ${yamlString(dshPresetForMode(options.mode))}\n`,
       "utf8",
     );
     const harness = new DeepSeekHarness({
@@ -173,6 +184,23 @@ export class DshManager {
   }
 
   async runDetailed(options: DshRunOptions): Promise<DshRunResult> {
+    const key = this.key(options);
+    if (this.running.has(key))
+      throw new Error("当前对话仍有请求正在运行，请稍后重试");
+    this.running.add(key);
+    const signal = AbortSignal.any([
+      options.signal ?? new AbortController().signal,
+      AbortSignal.timeout(180_000),
+    ]);
+    try {
+      signal.throwIfAborted();
+      return await this.runTurn({ ...options, signal });
+    } finally {
+      this.running.delete(key);
+    }
+  }
+
+  private async runTurn(options: DshRunOptions): Promise<DshRunResult> {
     const sessionId = options.sessionId || "default";
     const workspace = join(
       this.root,
@@ -191,18 +219,34 @@ export class DshManager {
     }
     if (!entry) {
       const created = await this.create(options, workspace);
-      entry = { ...created, fingerprint };
+      entry = { ...created, fingerprint, fresh: true };
       this.entries.set(key, entry);
     }
 
-    const latest = [...options.messages].reverse().find((message) => message.role === "user");
+    const latest = [...options.messages]
+      .reverse()
+      .find((message) => message.role === "user");
     if (!latest) throw new Error("缺少用户消息");
     const system = options.messages
       .filter((message) => message.role === "system")
       .map((message) => message.content.trim())
       .filter(Boolean)
       .join("\n\n");
-    const textParts = [system, latest.content.trim()].filter(Boolean);
+    const history = entry.fresh
+      ? options.messages
+          .slice(0, options.messages.lastIndexOf(latest))
+          .filter((message) => message.role !== "system")
+          .map(
+            (message) =>
+              `${message.role === "user" ? "用户" : "助手"}：${message.content}`,
+          )
+          .join("\n\n")
+      : "";
+    const textParts = [
+      system,
+      history ? `此前对话记录：\n${history}` : "",
+      latest.content.trim(),
+    ].filter(Boolean);
     const blocks: SdkPromptContentBlock[] = [
       { type: "text", text: textParts.join("\n\n") },
     ];
@@ -213,7 +257,10 @@ export class DshManager {
         blocks.push({ type: "text", text: `图片附件：${attachment.name}` });
         continue;
       }
-      const fileName = safeName(attachment.name, `attachment-${fileIndex++}.txt`);
+      const fileName = safeName(
+        attachment.name,
+        `attachment-${fileIndex++}.txt`,
+      );
       const path = join(workspace, fileName);
       await writeFile(path, attachment.content ?? "", "utf8");
       blocks.push({
@@ -221,7 +268,32 @@ export class DshManager {
         text: `文件附件已放入当前工作区：${path}\n请使用文件工具读取它，再回答用户的问题。`,
       });
     }
-    const result = await entry.harness.run(blocks, { sessionId });
+    const currentEntry = entry;
+    const abort = () => {
+      if (this.entries.get(key) === currentEntry) this.entries.delete(key);
+      void currentEntry.harness.close().catch(() => {});
+    };
+    if (options.signal?.aborted) {
+      abort();
+      options.signal.throwIfAborted();
+    }
+    options.signal?.addEventListener("abort", abort, { once: true });
+    let result;
+    try {
+      result = await entry.harness.run(blocks, {
+        sessionId,
+        onNotification: dshProgress(
+          sessionId,
+          options.onProgress ?? (() => {}),
+        ),
+      });
+      options.signal?.throwIfAborted();
+      entry.fresh = false;
+    } finally {
+      options.signal?.removeEventListener("abort", abort);
+      if (options.signal?.aborted)
+        await currentEntry.harness.close().catch(() => {});
+    }
     if (!result.finalResponse.trim()) {
       const failed = result.events.findLast(
         (event: any) => event.type === "turn/end" && event.data?.reason?.error,
@@ -232,13 +304,17 @@ export class DshManager {
     }
     return {
       content: result.finalResponse,
-      usage: extractUsage(result.events as Array<{ type?: string; data?: any }>),
+      usage: extractUsage(
+        result.events as Array<{ type?: string; data?: any }>,
+      ),
     };
   }
 
   async close() {
     await Promise.all(
-      [...this.entries.values()].map((entry) => entry.harness.close().catch(() => {})),
+      [...this.entries.values()].map((entry) =>
+        entry.harness.close().catch(() => {}),
+      ),
     );
     this.entries.clear();
   }

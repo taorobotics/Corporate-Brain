@@ -57,7 +57,14 @@ import {
   Field,
 } from "./components";
 import SkillEditor from "./SkillEditor";
-import ChatLoading, { type PendingReply } from "./ChatLoading";
+import ChatLoading, { ThinkingProcess, type PendingReply } from "./ChatLoading";
+import GrokBall from "./GrokBall";
+import { streamChat } from "./chat-stream";
+import {
+  updateTrace,
+  type ChatTrace,
+  type TraceItem,
+} from "../shared/chat-progress";
 import MessageContent from "./MessageContent";
 import { getSkin } from "../shared/skins";
 
@@ -102,6 +109,15 @@ export default function Workspace(props: WorkspaceProps) {
     [taskError, setTaskError] = useState("");
   const filesRef = useRef<HTMLInputElement>(null),
     messagesRef = useRef<HTMLDivElement>(null);
+  const activeRequest = useRef<AbortController | null>(null);
+  const mounted = useRef(true);
+  useEffect(() => {
+    mounted.current = true;
+    return () => {
+      mounted.current = false;
+      activeRequest.current?.abort();
+    };
+  }, []);
   const conversation = state.conversations.find((c) => c.id === conversationId);
   const taskModels = connections.filter(
     (c) => c.enabled && c.kind === taskKind,
@@ -235,7 +251,7 @@ export default function Workspace(props: WorkspaceProps) {
     }
   }
   async function send() {
-    if (!text.trim() || busy) return;
+    if (!text.trim() || busy || activeRequest.current) return;
     setTaskError("");
     let current = conversation;
     if (!current) {
@@ -285,12 +301,56 @@ export default function Workspace(props: WorkspaceProps) {
       return;
     }
     setBusy(true);
+    const controller = new AbortController();
+    activeRequest.current = controller;
+    const startedAt = Date.now();
+    let items: TraceItem[] = [],
+      partial = "";
+    let progressTimer: ReturnType<typeof setTimeout> | undefined;
+    const saveReply = (
+      content: string,
+      status: ChatTrace["status"],
+      image?: string,
+    ) => {
+      if (!mounted.current) return;
+      const result: Message = {
+        id: crypto.randomUUID(),
+        role: "assistant",
+        content,
+        image,
+        at: new Date().toISOString(),
+        ...(taskKind === "chat"
+          ? {
+              trace: {
+                items: items.map((item) =>
+                  item.type === "tool" && item.status === "running"
+                    ? { ...item, status: "stopped" as const }
+                    : item,
+                ),
+                status,
+                elapsed: Math.max(
+                  0,
+                  Math.floor((Date.now() - startedAt) / 1000),
+                ),
+              },
+            }
+          : {}),
+      };
+      setState((s) => ({
+        ...s,
+        conversations: s.conversations.map((c) =>
+          c.id === updated.id ? { ...c, messages: [...c.messages, result] } : c,
+        ),
+      }));
+    };
     setPendingReply({
       conversationId: updated.id,
       phase: "preparing",
       kind: taskKind,
       modelName: model.name,
-      startedAt: Date.now(),
+      startedAt,
+      items: [],
+      content: "",
     });
     try {
       const workspaceAttachments =
@@ -318,42 +378,58 @@ export default function Workspace(props: WorkspaceProps) {
       setPendingReply((current) =>
         current ? { ...current, phase: "waiting" } : null,
       );
+      controller.signal.throwIfAborted();
       const response =
         taskKind === "image"
           ? await api("/generate/image", {
               connectionId: model.id,
               prompt: content,
             })
-          : await api("/generate/chat", {
-              connectionId: model.id,
-              sessionId: updated.id,
-              messages: [
-                ...system,
-                ...updated.messages
-                  .slice(-40)
-                  .map((m) => ({ role: m.role, content: m.content })),
-              ],
-              attachments: modelAttachments,
-              mode: state.settings.mode,
-              workspaceAccess: workspace?.access ?? "edit",
-            });
+          : await streamChat(
+              {
+                connectionId: model.id,
+                sessionId: updated.id,
+                messages: [
+                  ...system,
+                  ...updated.messages
+                    .slice(-40)
+                  .filter((m) => m.content.trim())
+                    .map((m) => ({ role: m.role, content: m.content })),
+                ],
+                attachments: modelAttachments,
+                mode: state.settings.mode,
+                workspaceAccess: workspace?.access ?? "edit",
+              },
+              controller.signal,
+              (event) => {
+                items = updateTrace(items, event);
+                if (event.type === "text") partial = event.text;
+                if (!progressTimer)
+                  progressTimer = setTimeout(() => {
+                    progressTimer = undefined;
+                    if (mounted.current)
+                      setPendingReply((current) =>
+                        current?.conversationId === updated.id
+                          ? { ...current, items, content: partial }
+                          : current,
+                      );
+                  }, 50);
+              },
+            );
       setLastUsage(response.usage ?? null);
-      const result: Message = {
-        id: crypto.randomUUID(),
-        role: "assistant",
-        content: response.content ?? "图片已生成，可以继续保存。",
-        image: response.image,
-        at: new Date().toISOString(),
-      };
-      setState((s) => ({
-        ...s,
-        conversations: s.conversations.map((c) =>
-          c.id === updated.id ? { ...c, messages: [...c.messages, result] } : c,
-        ),
-      }));
+      saveReply(
+        response.content ?? "图片已生成，可以继续保存。",
+        "done",
+        response.image,
+      );
     } catch (e) {
-      setTaskError((e as Error).message);
+      if (taskKind === "chat")
+        saveReply(partial, controller.signal.aborted ? "stopped" : "error");
+      if (!controller.signal.aborted && mounted.current)
+        setTaskError((e as Error).message);
     } finally {
+      if (progressTimer) clearTimeout(progressTimer);
+      activeRequest.current = null;
       setPendingReply(null);
       setBusy(false);
     }
@@ -531,11 +607,20 @@ export default function Workspace(props: WorkspaceProps) {
                   <span className="message-avatar">
                     {message.role === "user" ? (
                       <UserCircle size={26} />
+                    ) : message.trace ? (
+                      <GrokBall emotion="19" size={36} active={false} />
                     ) : (
                       <Sparkle size={25} weight="fill" />
                     )}
                   </span>
                   <div className="message-body">
+                    {message.trace && (
+                      <ThinkingProcess
+                        items={message.trace.items}
+                        status={message.trace.status}
+                        elapsed={message.trace.elapsed}
+                      />
+                    )}
                     <MessageContent content={message.content} />
                     {message.attachments?.some((a) => a.image) && (
                       <div className="message-attachments">
@@ -584,7 +669,10 @@ export default function Workspace(props: WorkspaceProps) {
               ))}
               {pendingReply &&
                 pendingReply.conversationId === conversation?.id && (
-                  <ChatLoading request={pendingReply} />
+                  <ChatLoading
+                    request={pendingReply}
+                    stop={() => activeRequest.current?.abort()}
+                  />
                 )}
               {taskError && taskConversationId === conversation?.id && (
                 <div className="task-error" role="alert">

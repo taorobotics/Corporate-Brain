@@ -70,6 +70,7 @@ export type Message = {
   content: string;
   image?: string;
   attachments?: { name: string; content: string; image?: string }[];
+  trace?: import("./chat-progress").ChatTrace;
   at: string;
 };
 export type Conversation = {

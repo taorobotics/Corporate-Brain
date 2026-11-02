@@ -1,151 +1,174 @@
-/* Fish mark, StateDot and TextShimmer adapted from DeepSeek Harness 0.2.0-rc.2.
-   MIT © 2026 DeepSeek. See vendor/dsh-chat.LICENSE and THIRD_PARTY_NOTICES.txt. */
-.chat-loading {
-  padding-block: 8px 16px;
+.grok-ball-host {
+  display: grid;
+  place-items: center;
+  flex: 0 0 auto;
 }
-.chat-loading .chat-loading-avatar {
-  color: #4d6bfe;
-  padding-top: 2px;
-}
-.chat-loading-body {
-  display: flex;
-  flex-direction: column;
-  gap: 9px;
-  min-width: 0;
-}
-.chat-loading-model {
-  font-size: 13px;
-  font-weight: 600;
-  color: var(--ink);
-  overflow-wrap: anywhere;
-}
-.chat-loading-status {
-  display: flex;
-  align-items: center;
-  gap: 7px;
-  color: var(--muted);
-  font-size: 14px;
-  line-height: 24px;
-}
-.chat-loading-elapsed {
-  margin-left: 5px;
-  font-size: 12px;
-  font-variant-numeric: tabular-nums;
-  white-space: nowrap;
-}
-.dsh-loading-spinner {
-  flex: none;
-}
-.dsh-loading-spinner-motion {
-  transform-origin: center;
-  animation: dsh-loading-spin 1.5s linear infinite;
-}
-.dsh-loading-spinner-track,
-.dsh-loading-spinner-arc {
-  fill: none;
-  stroke: currentColor;
-  stroke-width: 2;
-  stroke-linecap: round;
-}
-.dsh-loading-spinner-track {
-  opacity: 0.25;
-}
-.dsh-loading-spinner-arc {
-  stroke-dasharray: 12 150;
-  animation: dsh-loading-dash 1.5s ease-in-out infinite;
-}
-.dsh-loading-text {
-  position: relative;
-  display: inline-grid;
-  width: max-content;
-  max-width: 100%;
-  min-width: 0;
-}
-.dsh-loading-decoration {
-  position: absolute;
-  inset: 0;
-  overflow: clip;
-  pointer-events: none;
-  user-select: none;
-}
-.dsh-loading-sweep {
-  position: absolute;
-  inset: 0;
-  overflow: hidden;
-  color: var(--ink);
-  mask-image: linear-gradient(
-    105deg,
-    transparent 0%,
-    black 40% 60%,
-    transparent 100%
-  );
-  transform: translateX(-100%);
-  animation-name: dsh-loading-sweep;
-}
-.dsh-loading-highlight {
-  display: block;
+.grok-ball-host svg {
   width: 100%;
   height: 100%;
-  transform: translateX(100%);
-  animation-name: dsh-loading-highlight;
+  overflow: visible;
+}
+.chat-loading-avatar {
+  background: transparent !important;
+  overflow: visible;
+}
+.chat-loading-body {
+  min-width: 0;
+  width: 100%;
+}
+.chat-loading-model {
+  font-size: 12px;
+  color: var(--muted);
+  display: block;
+  margin-bottom: 6px;
+}
+.thinking-process {
+  margin: 0 0 16px;
+  color: var(--muted);
+}
+.thinking-toggle {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 2px 0 10px;
+  border: 0;
+  background: none;
+  color: inherit;
+  cursor: pointer;
+  font: inherit;
+  font-size: 14px;
+}
+.thinking-toggle:focus-visible,
+.thinking-stop:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 4px;
+  border-radius: 4px;
+}
+.thinking-toggle > svg {
+  transform: rotate(-90deg);
+  transition: transform 160ms ease;
+}
+.thinking-toggle > svg.is-open {
+  transform: rotate(0);
+}
+.thinking-elapsed {
+  font-size: 11px;
+  opacity: 0.65;
+  margin-left: 5px;
+  font-variant-numeric: tabular-nums;
+}
+.thinking-details {
+  padding-top: 3px;
+}
+.thinking-details[hidden] {
+  display: none;
+}
+.thinking-entry {
+  position: relative;
+  display: grid;
+  grid-template-columns: 20px minmax(0, 1fr);
+  gap: 10px;
+  padding: 0 0 17px;
+  font-size: 14px;
+  line-height: 1.8;
+}
+.thinking-entry::before {
+  content: "";
+  position: absolute;
+  left: 8px;
+  top: 24px;
+  bottom: 5px;
+  width: 1px;
+  background: color-mix(in srgb, currentColor 20%, transparent);
+}
+.thinking-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: currentColor;
+  margin: 10px 0 0 6px;
+  opacity: 0.65;
+}
+.reasoning-text {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  max-height: 340px;
+  overflow: auto;
+  scrollbar-width: thin;
+  padding-right: 8px;
+}
+.thinking-tool-icon {
+  padding-top: 4px;
+}
+.thinking-tool-title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.thinking-tool-state {
+  font-size: 11px;
+  display: inline-flex;
+  align-items: center;
+  opacity: 0.8;
+}
+.thinking-sources {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 8px;
+}
+.thinking-sources a {
+  max-width: 240px;
   white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  color: inherit;
+  text-decoration: none;
+  font-size: 12px;
+  line-height: 1.5;
+  border: 1px solid color-mix(in srgb, currentColor 20%, transparent);
+  border-radius: 6px;
+  padding: 5px 9px;
 }
-.dsh-loading-sweep,
-.dsh-loading-highlight {
-  animation-duration: 1.5s;
-  animation-delay: 0.3s;
-  animation-timing-function: steps(48, end);
-  animation-iteration-count: infinite;
+.thinking-sources a:hover {
+  color: var(--accent);
+  border-color: currentColor;
 }
-@keyframes dsh-loading-spin {
-  to {
-    transform: rotate(360deg);
-  }
+.thinking-note {
+  font-size: 12px;
+  opacity: 0.8;
+  margin: 0 0 8px;
 }
-@keyframes dsh-loading-dash {
+.thinking-stop {
+  border: 1px solid var(--border);
+  background: transparent;
+  color: var(--muted);
+  border-radius: 6px;
+  padding: 5px 10px;
+  font-size: 12px;
+  cursor: pointer;
+  margin-top: 8px;
+}
+.thinking-stop:hover {
+  color: var(--text);
+}
+.thinking-title.is-active {
+  animation: thinking-breathe 1.8s ease-in-out infinite;
+}
+@keyframes thinking-breathe {
   0%,
   100% {
-    stroke-dasharray: 12 150;
-    stroke-dashoffset: 0;
+    opacity: 0.55;
   }
   50% {
-    stroke-dasharray: 24 150;
-    stroke-dashoffset: -6;
+    opacity: 1;
   }
-}
-@keyframes dsh-loading-sweep {
-  0% {
-    transform: translateX(-100%);
-  }
-  66.6667%,
-  100% {
-    transform: translateX(100%);
-  }
-}
-@keyframes dsh-loading-highlight {
-  0% {
-    transform: translateX(100%);
-  }
-  66.6667%,
-  100% {
-    transform: translateX(-100%);
-  }
-}
-:root[data-theme="dark"] .chat-loading .chat-loading-avatar {
-  color: #8096ff;
 }
 @media (prefers-reduced-motion: reduce) {
-  .dsh-loading-decoration {
-    display: none;
-  }
-  .dsh-loading-spinner-motion,
-  .dsh-loading-spinner-arc,
-  .dsh-loading-sweep,
-  .dsh-loading-highlight {
+  .thinking-title.is-active {
     animation: none;
   }
-  .dsh-loading-spinner-arc {
-    stroke-dasharray: 18 150;
-    stroke-dashoffset: -3;
+  .thinking-toggle > svg {
+    transition: none;
   }
 }

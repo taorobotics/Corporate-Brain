@@ -454,35 +454,49 @@ async function waitFor(test, label, timeout = 12000) {
   );
   await key("Escape");
   await selectOption("任务类型", "对话");
-  // Control only the generation response in this disposable window. Never call a provider.
+  // This disposable client receives explicit fixtures, never invented production activity.
   await js(`(() => {
     window.__loadingOriginalFetch = window.fetch;
-    window.fetch = (input, options) => String(input) === '/api/generate/chat'
-      ? new Promise(resolve => { window.__finishLoadingFixture = (failed = false) => resolve(new Response(JSON.stringify(failed ? {error:'隔离验收：模拟请求失败'} : {content:'这是隔离验收回复，未调用真实模型。'}), {status:failed ? 503 : 200,headers:{'Content-Type':'application/json'}})); })
-      : window.__loadingOriginalFetch(input, options);
+    window.fetch = (input, options) => {
+      if (String(input) !== '/api/generate/chat') return window.__loadingOriginalFetch(input, options);
+      return Promise.resolve(new Response(new ReadableStream({ start(controller) {
+        window.__emitProgress = event => controller.enqueue(new TextEncoder().encode(JSON.stringify(event)+'\\n'));
+        window.__finishLoadingFixture = (failed = false) => { window.__emitProgress(failed ? {type:'error',message:'隔离验收：模拟请求失败'} : {type:'done',content:'这是隔离验收回复，未调用真实模型。'}); controller.close(); };
+        options.signal.addEventListener('abort', () => controller.error(new DOMException('Aborted','AbortError')), {once:true});
+      }}), {headers:{'Content-Type':'application/x-ndjson'}}));
+    };
   })()`);
   await fill('textarea[aria-label="任务输入"]', "加载项验收：等待完成后再回复");
   await js(`document.querySelector('[aria-label="发送任务"]').click()`);
   await waitFor(
     () =>
       js(
-        `document.querySelector('.chat-loading')?.dataset.phase === 'waiting'`,
+        `document.querySelector('.chat-loading')?.dataset.phase === 'waiting' && !!window.__emitProgress`,
       ),
-    "DSH inline loader waits for response",
+    "stream starts",
   );
   assert.equal(
-    await js(
-      `!!document.querySelector('.working-thoughts,.thinking-steps,.grok-ball-host')`,
-    ),
-    false,
+    await js(`!!document.querySelector('.chat-loading .grok-ball-host svg')`),
+    true,
+  );
+  assert.equal(
+    await js(`document.querySelectorAll('.reasoning-entry').length`),
+    0,
+  );
+  await js(
+    `window.__emitProgress({type:'reasoning',id:'r1',text:'【隔离测试内容】先比较平台功能、更新记录与使用成本，再核对公开来源。'}); window.__emitProgress({type:'tool',id:'s1',name:'web_search',status:'done',sources:[{url:'https://example.com/platform',title:'平台功能说明（演示来源）'},{url:'https://example.org/releases',title:'更新记录（演示来源）'}]}); window.__emitProgress({type:'reasoning',id:'r2',text:'【隔离测试内容】已收到两个来源。接下来结合适用场景整理建议，最终回答会显示在过程区下方。'});`,
+  );
+  await waitFor(
+    () => has("找到 2 个来源"),
+    "live reasoning and real event fixture sources",
   );
   await fill('textarea[aria-label="任务输入"]', "输入草稿触发重绘");
   await waitFor(
     () =>
       js(
-        `parseInt(document.querySelector('.chat-loading-elapsed')?.textContent) >= 2`,
+        `parseInt(document.querySelector('.chat-loading .thinking-elapsed')?.textContent) >= 2`,
       ),
-    "loading survives normal rerenders",
+    "stream survives rerender",
   );
   await capture("client-chat-loading-light.png");
   await js(`document.documentElement.dataset.theme='dark'`);
@@ -494,20 +508,33 @@ async function waitFor(test, label, timeout = 12000) {
     await js(`document.documentElement.scrollWidth <= innerWidth + 1`),
     true,
   );
+  await js(`document.querySelector('.chat-loading .thinking-toggle').click()`);
+  assert.equal(
+    await js(
+      `document.querySelector('.chat-loading .thinking-details').hidden`,
+    ),
+    true,
+  );
+  await js(`document.querySelector('.chat-loading .thinking-toggle').click()`);
   await web.debugger.sendCommand("Emulation.setEmulatedMedia", {
     features: [{ name: "prefers-reduced-motion", value: "reduce" }],
   });
   assert.equal(
     await js(
-      `getComputedStyle(document.querySelector('.dsh-loading-spinner-motion')).animationName`,
+      `getComputedStyle(document.querySelector('.thinking-title.is-active')).animationName`,
     ),
     "none",
   );
+  await new Promise((resolve) => setTimeout(resolve, 100));
+  const staticBall = await js(
+    `document.querySelector('.chat-loading .grok-ball-host').innerHTML`,
+  );
+  await new Promise((resolve) => setTimeout(resolve, 120));
   assert.equal(
     await js(
-      `getComputedStyle(document.querySelector('.dsh-loading-decoration')).display`,
+      `document.querySelector('.chat-loading .grok-ball-host').innerHTML`,
     ),
-    "none",
+    staticBall,
   );
   await web.debugger.sendCommand("Emulation.setEmulatedMedia", {
     features: [],
@@ -519,21 +546,25 @@ async function waitFor(test, label, timeout = 12000) {
       js(
         `!!document.querySelector('.chat-welcome') && !document.querySelector('.chat-loading')`,
       ),
-    "new conversation has no foreign request indicator",
+    "no cross-conversation stream",
   );
   await click("加载项验收：等待完成后再回复");
   await waitFor(
     () => js(`!!document.querySelector('.chat-loading')`),
-    "return to pending conversation",
+    "return to live stream",
   );
+  await js(`window.__emitProgress({type:'text',text:'这是逐段到达的回答。'})`);
+  await waitFor(() => has("这是逐段到达的回答。"), "answer streams separately");
   await js(`window.__finishLoadingFixture()`);
   await waitFor(
     () =>
       js(
         `!document.querySelector('.chat-loading') && document.body.innerText.includes('这是隔离验收回复')`,
       ),
-    "answer replaces loader without stale completion card",
+    "settled response",
   );
+  await js(`document.querySelector('.thinking-toggle').click()`);
+  assert.equal(await has("找到 2 个来源"), true);
   await fill('textarea[aria-label="任务输入"]', "加载项验收：失败清理");
   await js(`document.querySelector('[aria-label="发送任务"]').click()`);
   await waitFor(
@@ -541,29 +572,87 @@ async function waitFor(test, label, timeout = 12000) {
       js(
         `document.querySelector('.chat-loading')?.dataset.phase === 'waiting'`,
       ),
-    "second request loader",
+    "second request",
   );
-  await js(`window.__finishLoadingFixture(true)`);
+  await js(
+    `window.__emitProgress({type:'reasoning',id:'error-r',text:'错误前收到的思考。'});window.__emitProgress({type:'text',text:'错误前收到的部分回答。'});window.__finishLoadingFixture(true)`,
+  );
   await waitFor(
     () =>
       js(
         `!document.querySelector('.chat-loading') && !!document.querySelector('.task-error')`,
       ),
-    "failed request removes loader",
+    "partial failure",
   );
+  assert.equal(await has("错误前收到的部分回答。"), true);
+  await fill('textarea[aria-label="任务输入"]', "加载项验收：主动停止");
+  await js(`document.querySelector('[aria-label="发送任务"]').click()`);
+  await waitFor(
+    () =>
+      js(
+        `document.querySelector('.chat-loading')?.dataset.phase === 'waiting'`,
+      ),
+    "third request",
+  );
+  await js(`window.__emitProgress({type:'text',text:'停止前收到的内容。'})`);
+  await waitFor(() => has("停止前收到的内容。"), "partial before stop");
+  await click("停止生成");
+  await waitFor(
+    () =>
+      js(
+        `!document.querySelector('.chat-loading') && !!document.querySelector('[data-status="stopped"]')`,
+      ),
+    "cancel stops and persists partial",
+  );
+  await fill('textarea[aria-label="任务输入"]', "加载项验收：无思考模型");
+  await js(`document.querySelector('[aria-label="发送任务"]').click()`);
+  await waitFor(
+    () =>
+      js(
+        `document.querySelector('.chat-loading')?.dataset.phase === 'waiting'`,
+      ),
+    "no reasoning turn",
+  );
+  await js(`window.__finishLoadingFixture()`);
+  await waitFor(
+    () => js(`!document.querySelector('.chat-loading')`),
+    "no reasoning complete",
+  );
+  await js(
+    `Array.from(document.querySelectorAll('.thinking-toggle')).at(-1).click()`,
+  );
+  assert.equal(await has("此轮模型未提供可显示的思考内容。"), true);
+  const traceActor = await request("/auth/me");
+  await waitFor(async () => {
+    const data = await js(
+      `window.brainDesktop.readState(${JSON.stringify(traceActor.id)})`,
+    );
+    return data.conversations.some((c) =>
+      c.messages.some((m) => m.trace?.items.some((i) => i.id === "r1")),
+    );
+  }, "trace persisted locally");
+  await js(
+    `window.fetch=window.__loadingOriginalFetch; delete window.__loadingOriginalFetch; delete window.__finishLoadingFixture; delete window.__emitProgress;`,
+  );
+  await js("location.reload()");
+  await waitFor(() => has("加载项验收：等待完成后再回复"), "history reload");
+  await click("加载项验收：等待完成后再回复");
+  await waitFor(
+    () => js(`!!document.querySelector('.thinking-toggle')`),
+    "trace restored",
+  );
+  await js(`document.querySelector('.thinking-toggle').click()`);
+  assert.equal(await has("找到 2 个来源"), true);
   await click("新建任务");
   await waitFor(
     () =>
       js(
         `!!document.querySelector('.chat-welcome') && !document.querySelector('.task-error,.chat-loading')`,
       ),
-    "new conversation has no stale error or completion",
-  );
-  await js(
-    `window.fetch=window.__loadingOriginalFetch; delete window.__loadingOriginalFetch; delete window.__finishLoadingFixture;`,
+    "fresh task clear",
   );
   checks.push(
-    "DSH inline whale, state ring and text shimmer follow the real pending request; survive rerenders, respect reduced motion, stay scoped to the conversation and disappear on success/failure",
+    "Real streamed reasoning/tool event fixtures, source links, expandable disclosure, separate answer, static reduced-motion Grok-ball, local trace reload, partial error/cancel, no-reasoning fallback and conversation isolation",
   );
   for (const fixture of modelFixtures)
     await request(`/connections/${fixture.id}`, {}, "DELETE");
