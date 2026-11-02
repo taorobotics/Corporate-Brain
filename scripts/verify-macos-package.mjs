@@ -5,6 +5,7 @@ import { execFileSync, spawn } from 'node:child_process';
 import { once } from 'node:events';
 import { mkdtemp, readFile, readdir, rm, writeFile } from 'node:fs/promises';
 import { createServer } from 'node:net';
+import { createServer as createHttpServer } from 'node:http';
 import { tmpdir } from 'node:os';
 import { basename, join, resolve } from 'node:path';
 import { listPackage, extractFile } from '@electron/asar';
@@ -18,7 +19,7 @@ const dmg = resolve(`release/Corporate-Brain-${version}-macOS-${arch}.dmg`);
 const scratch = await mkdtemp(join(tmpdir(), 'corporate-brain-dmg-'));
 const mount = join(scratch, 'volume');
 const checks = [];
-let mounted = false, child, socket;
+let mounted = false, child, socket, fixture;
 const command = (file, args) => execFileSync(file, args, { encoding: 'utf8', timeout: 60000 });
 try {
   command('hdiutil', ['verify', dmg]);
@@ -54,7 +55,14 @@ try {
   const port = portServer.address().port;
   await new Promise(resolve => portServer.close(resolve));
   const env = { ...process.env };
-  delete env.BRAIN_APP_URL;
+  // Inspect bundled company configuration above. Native interaction is tested
+  // against a disposable company page, without depending on production uptime.
+  fixture = createHttpServer((_req, res) => {
+    res.setHeader('Content-Type', 'text/html; charset=utf-8');
+    res.end('<!doctype html><html><head><title>Package verification</title></head><body>Disposable company page</body></html>');
+  }).listen(0, '127.0.0.1');
+  await once(fixture, 'listening');
+  env.BRAIN_APP_URL = `http://127.0.0.1:${fixture.address().port}`;
   delete env.BRAIN_VERIFY;
   env.BRAIN_ADMIN_SETUP = '1';
   delete env.ELECTRON_RUN_AS_NODE;
@@ -67,8 +75,23 @@ try {
     if (child.exitCode !== null) throw new Error(`Packaged app exited ${child.exitCode}: ${stderr}`);
     try {
       const response = await fetch(`http://127.0.0.1:${port}/json/list`, { signal: AbortSignal.timeout(1000) });
-      target = (await response.json()).find(page => page.type === 'page' && page.url.includes('server-setup.html'));
+      const pages = await response.json();
+      target = pages.find(page => page.type === 'page' && page.url.includes('server-setup.html'));
       if (target) break;
+      const companyPage = pages.find(page => page.type === 'page' && page.url.startsWith(env.BRAIN_APP_URL + '/'));
+      if (companyPage) {
+        const setupSocket = new WebSocket(companyPage.webSocketDebuggerUrl);
+        await once(setupSocket, 'open');
+        try {
+          const reply = new Promise((accept, reject) => {
+            const timer = setTimeout(() => reject(new Error('Packaged administrator bridge timed out')), 5000);
+            setupSocket.addEventListener('message', event => { const value = JSON.parse(event.data); if (value.id === 1) { clearTimeout(timer); accept(value); } });
+          });
+          setupSocket.send(JSON.stringify({ id: 1, method: 'Runtime.evaluate', params: { expression: 'window.brainDesktop.changeServer()', awaitPromise: true, returnByValue: true } }));
+          const result = await reply;
+          assert.ok(!result.error && !result.result?.exceptionDetails, 'Native administrator setup bridge must work');
+        } finally { setupSocket.close(); }
+      }
     } catch {}
     await new Promise(resolve => setTimeout(resolve, 200));
   }
@@ -99,7 +122,7 @@ try {
   assert.equal(page.heading, '公司大脑未配置');
   assert.equal(page.bridge, 'function');
   assert.equal(page.node, 'undefined');
-  checks.push('Packaged first launch opens server connection UI with isolated preload and Chinese fonts');
+  checks.push('Packaged company URL matches release configuration; first launch loads an isolated company fixture and opens administrator connection UI with isolated preload and Chinese fonts');
   await evaluate(`(async () => { document.querySelector('input').value = 'http://insecure.example.com'; document.querySelector('form').requestSubmit(); for (let i = 0; i < 50 && !document.querySelector('.error').textContent; i++) await new Promise(r => setTimeout(r, 100)); return true; })()`);
   assert.match(await evaluate("document.querySelector('.error').textContent"), /HTTPS/);
   checks.push('Packaged client rejects insecure remote company URLs');
@@ -121,5 +144,6 @@ try {
     if (child.exitCode === null) child.kill('SIGKILL');
   }
   if (mounted) command('hdiutil', ['detach', mount, '-force']);
+  fixture?.close();
   await rm(scratch, { recursive: true, force: true });
 }
