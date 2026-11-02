@@ -1,0 +1,189 @@
+{
+  "version": "0.11.3",
+  "verifiedAt": "2026-11-02T09:17:38.305Z",
+  "sourceCommit": "ca13f585c4e34431a50f0e26e0392d36aae23a09",
+  "release": "https://github.com/taorobotics/Corporate-Brain/releases/tag/v0.11.3",
+  "workflow": "https://github.com/taorobotics/Corporate-Brain/actions/runs/41416218025",
+  "workflowConclusion": "success",
+  "completeReleaseVerified": true,
+  "cloud": {
+    "version": "0.11.3",
+    "verifiedAt": "2026-11-02T08:57:35.381Z",
+    "health": {
+      "status": "ok",
+      "version": "0.11.3",
+      "chatStorage": "device-only"
+    },
+    "frontendMatchesLocalBuild": true,
+    "checks": [
+      {
+        "path": "/assets/index-DsbuFmZ_.js",
+        "sha256": "c85d4593b71559f4ed60626b7b7317e008488d727aa18c826da671698e6ddd42"
+      },
+      {
+        "path": "/assets/index-BQfDA6Dr.css",
+        "sha256": "158b15e6abc9392d26aa4fb97b8ef00162ac3007afcd8f6d60bff67eb34566cd"
+      }
+    ],
+    "systemFontPriorityMatchesBuild": true,
+    "networkMode": "Physical interface and actual company IP; original HTTPS certificate verified; system proxy unchanged"
+  },
+  "preservation": {
+    "version": "0.11.3",
+    "dataPreserved": true,
+    "rowCounts": {
+      "users": 3,
+      "departments": 2
+    },
+    "encryptionKeyPreserved": true,
+    "backup": "/opt/corporate-brain/backups/before-v0.11.3-20261102T085709Z"
+  },
+  "mirror": {
+    "version": "0.11.3",
+    "assets": {
+      "win32-x64": {
+        "name": "Corporate-Brain-Setup-0.11.3-x64.exe",
+        "bytes": 118406643,
+        "sha256": "4e4679559aa134037a97fa2f8a1c8a8fe130c6ff0d352bca8ef470f726b2ae4c"
+      },
+      "darwin-arm64": {
+        "name": "Corporate-Brain-0.11.3-macOS-arm64.dmg",
+        "bytes": 138116186,
+        "sha256": "fc3d979140fedbe920692744538132e7a4b04d2d9aa306256b5226a24412e1c3"
+      },
+      "darwin-x64": {
+        "name": "Corporate-Brain-0.11.3-macOS-x64.dmg",
+        "bytes": 143647857,
+        "sha256": "7a133494ee65805179dc373ec8d25d4c92a035e9e9299945a90eb28e652a47af"
+      }
+    },
+    "activatedAt": "2026-11-02T09:13:06.388Z",
+    "source": "company-local-mirror"
+  },
+  "productionStartup": {
+    "scope": "Real Electron main window, native overlay and preload; fresh disposable profile; unmodified production web UI and unauthenticated APIs; existing system proxy and VPN kept enabled",
+    "result": "login-ready",
+    "totalMs": 4514,
+    "bootstrapMs": 478,
+    "authCheckMs": 442,
+    "remoteNotoRequested": false,
+    "requests": [
+      {
+        "path": "/",
+        "startMs": 377,
+        "status": 200,
+        "error": "net::OK",
+        "durationMs": 1837
+      },
+      {
+        "path": "/assets/index-BQfDA6Dr.css",
+        "startMs": 2216,
+        "status": 200,
+        "error": "net::OK",
+        "durationMs": 590
+      },
+      {
+        "path": "/assets/index-DsbuFmZ_.js",
+        "startMs": 2216,
+        "status": 200,
+        "error": "net::OK",
+        "durationMs": 1208
+      },
+      {
+        "path": "/skins/claude/assets/fonts/inter-normal.woff2",
+        "startMs": 3452,
+        "error": "net::ERR_CACHE_MISS",
+        "durationMs": 1
+      },
+      {
+        "path": "/api/bootstrap",
+        "startMs": 3518,
+        "status": 200,
+        "error": "net::OK",
+        "durationMs": 478
+      },
+      {
+        "path": "/skins/claude/assets/fonts/inter-normal.woff2",
+        "startMs": 3514,
+        "status": 200,
+        "error": "net::OK",
+        "durationMs": 519
+      },
+      {
+        "path": "/api/auth/me",
+        "startMs": 3996,
+        "status": 401,
+        "error": "net::OK",
+        "durationMs": 442
+      }
+    ],
+    "phases": [
+      {
+        "ms": 3530,
+        "nativePhase": "web",
+        "phase": "connecting",
+        "introDone": "false",
+        "headline": "正在连接公司工作空间",
+        "loginVisible": false
+      },
+      {
+        "ms": 3644,
+        "nativePhase": "ready",
+        "phase": "connecting",
+        "introDone": "false",
+        "headline": "正在连接公司工作空间",
+        "loginVisible": false
+      },
+      {
+        "ms": 3862,
+        "nativePhase": "web",
+        "phase": "connecting",
+        "introDone": "true",
+        "headline": "正在连接公司工作空间",
+        "loginVisible": false
+      },
+      {
+        "ms": 4514,
+        "nativePhase": "web",
+        "phase": "auth",
+        "introDone": "true",
+        "headline": "登录公司账号",
+        "loginVisible": true
+      }
+    ]
+  },
+  "productionOldUpdateModule": {
+    "version": "0.11.3",
+    "sourceClient": "0.9.0",
+    "result": "passed",
+    "verifiedAt": "2026-11-02T09:16:19.363Z",
+    "scope": "Unmodified v0.9.0 native update module running in Electron against production HTTPS; visual checks recorded separately",
+    "realProductionFeed": true,
+    "realProductionDownload": true,
+    "legacyModuleOnly": true,
+    "networkMode": "Temporary SSH tunnel to production nginx; original HTTPS origin and certificate verification preserved",
+    "package": {
+      "name": "Corporate-Brain-Setup-0.11.3-x64.exe",
+      "bytes": 118406643,
+      "sha256": "4e4679559aa134037a97fa2f8a1c8a8fe130c6ff0d352bca8ef470f726b2ae4c"
+    },
+    "downloadSeconds": 194.191,
+    "installerExecuted": false,
+    "employeeRecordsTouched": false
+  },
+  "windowsUpgradeChecks": 14,
+  "privacy": {
+    "employeeRecordsTouched": false,
+    "productionModelsCalled": false,
+    "systemNetworkSettingsChanged": false
+  },
+  "signing": {
+    "windows": "NotSigned",
+    "mac": "ad-hoc; not notarized"
+  },
+  "limits": [
+    "Startup timings are observations on this device and network, not guaranteed timings for all employees.",
+    "This production UI check stops at the login form; it does not test a signed-in employee workspace.",
+    "Devices without a suitable installed Chinese font retain the self-hosted fallback."
+  ]
+}
