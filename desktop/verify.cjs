@@ -254,12 +254,25 @@ async function waitFor(test, label, timeout = 12000) {
     "Desktop workspace scanner reads text files and excludes dependency directories",
   );
   await capture("employee-chat.png");
-  await waitFor(() => has("有可用更新"), "automatic update discovery");
+  await waitFor(
+    () =>
+      js(
+        "!!document.querySelector('.account-area .sidebar-update.has-update[aria-label^=\"有可用更新\"]')",
+      ),
+    "automatic update discovery in account footer",
+  );
   await capture("client-update-sidebar.png");
   await js("document.querySelector('.sidebar-update').click()");
   await waitFor(() => has("让工作空间保持最新"), "update details dialog");
   await capture("client-update-dialog.png");
   assert.ok((await js("window.brainDesktop.updates.state()")).release.version);
+  await waitFor(
+    () =>
+      js(
+        "Array.from(document.querySelectorAll('.update-dialog button')).some(button => button.textContent.startsWith('下载更新') && !button.disabled)",
+      ),
+    "download button enabled after manual refresh",
+  );
   await js(
     "Array.from(document.querySelectorAll('.update-dialog button')).find(button => button.textContent.startsWith('下载更新')).click()",
   );

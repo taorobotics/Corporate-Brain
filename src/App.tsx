@@ -630,7 +630,6 @@ export default function App() {
                 </>
               )}
               <div className="sidebar-footer">
-                <UpdateButton model={updates} />
                 <div className="account-area">
                   <ActionMenu
                     open={accountOpen}
@@ -727,6 +726,7 @@ export default function App() {
                   <IconButton label="设置" onClick={() => navigate("settings")}>
                     <GearSix size={21} />
                   </IconButton>
+                  <UpdateButton model={updates} />
                 </div>
               </div>
             </aside>

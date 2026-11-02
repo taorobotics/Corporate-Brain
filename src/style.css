@@ -519,68 +519,66 @@ code {
   margin-top: auto;
 }
 .sidebar-update {
-  width: 100%;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 9px 11px;
-  border: 1px solid transparent;
-  border-radius: 10px;
-  text-align: left;
+  position: relative;
+  width: 38px;
+  height: 38px;
+  flex: 0 0 38px;
+  display: grid;
+  place-items: center;
+  padding: 0;
+  margin-left: 5px;
+  border: 0;
+  border-radius: 50%;
   color: var(--muted);
-  margin-top: 8px;
+  background: transparent;
   transition:
     background-color 150ms ease,
-    border-color 150ms ease;
+    color 150ms ease,
+    transform 150ms ease,
+    box-shadow 150ms ease;
 }
 .sidebar-update:hover {
   background: var(--active);
   color: var(--ink);
 }
 .sidebar-update.has-update {
-  color: var(--accent);
-  border-color: color-mix(in srgb, var(--accent) 20%, transparent);
-  background: color-mix(in srgb, var(--accent) 7%, var(--side));
+  color: #fff;
+  background: #086bff;
+  box-shadow: 0 2px 6px rgb(8 107 255 / 16%);
 }
 .sidebar-update.has-update:hover {
-  background: color-mix(in srgb, var(--accent) 12%, var(--side));
+  background: #005ce6;
+  box-shadow: 0 3px 9px rgb(8 107 255 / 25%);
 }
-.update-icon {
-  width: 28px;
-  height: 28px;
-  display: grid;
-  place-items: center;
-  flex-shrink: 0;
+.sidebar-update:active {
+  transform: scale(0.93);
 }
-.has-update .update-icon {
-  border-radius: 50%;
-  background: color-mix(in srgb, var(--accent) 12%, transparent);
+.sidebar-update:focus-visible {
+  outline: 2px solid #086bff;
+  outline-offset: 3px;
 }
-.update-button-copy {
-  display: flex;
-  flex-direction: column;
-  gap: 3px;
-  flex: 1;
-  min-width: 0;
+.update-progress-ring {
+  position: absolute;
+  inset: -3px;
+  width: 44px;
+  height: 44px;
+  fill: none;
+  stroke: #086bff;
+  stroke-width: 2;
+  stroke-linecap: round;
+  transform: rotate(-90deg);
+  pointer-events: none;
 }
-.update-button-copy strong {
-  font-size: 12px;
-  font-weight: 500;
+.update-progress-track {
+  stroke: color-mix(in srgb, #086bff 18%, var(--side));
 }
-.update-button-copy small {
-  font-size: 10px;
-  opacity: 0.8;
-}
-.update-shortcut {
-  font-size: 15px;
-  opacity: 0.55;
-}
-.update-dot {
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  background: var(--accent);
-  margin-right: 3px;
+@media (prefers-reduced-motion: reduce) {
+  .sidebar-update {
+    transition: none;
+  }
+  .sidebar-update:active {
+    transform: none;
+  }
 }
 .update-dialog {
   color: var(--ink);
@@ -740,10 +738,14 @@ code {
   font-size: 14px;
   overflow: hidden;
   text-overflow: ellipsis;
+  white-space: nowrap;
 }
 .account-trigger small {
   font-size: 11px;
   color: var(--muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 .account-trigger > svg {
   color: var(--muted);

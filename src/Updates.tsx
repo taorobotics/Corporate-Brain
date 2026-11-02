@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import {
   ArrowClockwise,
-  ArrowDown,
+  ArrowCircleUp,
   ArrowUpRight,
   CheckCircle,
   CircleNotch,
@@ -147,13 +147,7 @@ export function UpdateButton({ model }: { model: Controller }) {
   const available = !!state.release || (!bridge && !!legacy?.release);
   const downloading = state.status === "downloading";
   const ready = state.status === "ready";
-  const title = downloading
-    ? "正在下载更新"
-    : ready
-      ? "更新已准备好"
-      : available
-        ? "有可用更新"
-        : "检查更新";
+  const checking = state.status === "checking";
   const version = state.release?.version ?? legacy?.release?.version;
   const percent = state.release
     ? Math.min(
@@ -161,33 +155,52 @@ export function UpdateButton({ model }: { model: Controller }) {
         Math.floor((state.received / state.release.asset.bytes) * 100),
       )
     : 0;
+  const title = downloading
+    ? `正在下载更新 · ${percent}%`
+    : checking
+      ? "正在检查更新"
+      : ready
+        ? `更新已准备好 · v${version}`
+        : available
+          ? `有可用更新 · v${version}`
+          : state.status === "error" || state.status === "unavailable"
+            ? "暂时无法检查更新，点击重试"
+            : "检查更新";
   return (
     <button
       className={`sidebar-update ${available ? "has-update" : ""}`}
       onClick={model.show}
       aria-label={title}
+      aria-haspopup="dialog"
+      aria-expanded={model.open}
+      title={title}
+      data-state={state.status}
     >
-      <span className="update-icon">
-        {downloading ? (
-          <CircleNotch size={18} className="spin" />
-        ) : ready ? (
-          <CheckCircle size={18} />
-        ) : (
-          <ArrowDown size={18} />
-        )}
-      </span>
-      <span className="update-button-copy">
-        <strong>{title}</strong>
-        {available && (
-          <small>
-            {downloading ? `${percent}% · 可继续工作` : `v${version}`}
-          </small>
-        )}
-      </span>
-      {available ? (
-        <span className="update-dot" />
+      {checking ? (
+        <CircleNotch
+          size={23}
+          weight="bold"
+          className="spin"
+          aria-hidden="true"
+        />
       ) : (
-        <span className="update-shortcut">↗</span>
+        <ArrowCircleUp size={25} weight="bold" aria-hidden="true" />
+      )}
+      {downloading && (
+        <svg
+          className="update-progress-ring"
+          viewBox="0 0 44 44"
+          aria-hidden="true"
+        >
+          <circle className="update-progress-track" cx="22" cy="22" r="20" />
+          <circle
+            cx="22"
+            cy="22"
+            r="20"
+            pathLength="100"
+            strokeDasharray={`${percent} 100`}
+          />
+        </svg>
       )}
     </button>
   );
