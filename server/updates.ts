@@ -2,8 +2,10 @@ import type { Express } from "express";
 import { Readable } from "node:stream";
 import { pipeline } from "node:stream/promises";
 import type { DesktopRelease, UpdateFeed } from "../shared/updates";
+import { mountUpdateMirror } from "./update-mirror";
 
 export type UpdateOptions = {
+  directory?: string;
   token?: string;
   publicSource?: boolean;
   fetch?: typeof fetch;
@@ -21,10 +23,14 @@ export function installerName(version: string, target: string) {
 // Mounted after company authentication. GitHub credentials and signed CDN URLs
 // never cross this boundary into the employee renderer or desktop package.
 export function mountUpdates(app: Express, options: UpdateOptions = {}) {
+  const directory = options.directory ?? process.env.BRAIN_UPDATE_DIRECTORY;
+  if (directory) {
+    mountUpdateMirror(app, directory);
+    return;
+  }
   const token = options.token ?? process.env.BRAIN_GITHUB_TOKEN ?? "";
-  // The repository is public, so a fresh server can discover Releases without
-  // an administrator having to copy a GitHub token first. An explicit option
-  // or BRAIN_UPDATE_SOURCE=private/disabled still turns the public source off.
+  // Optional GitHub proxy for other deployments. Private repositories require
+  // a server-only credential; company deployments prefer the local mirror.
   const configured =
     !!token ||
     (options.publicSource ??
@@ -121,6 +127,7 @@ export function mountUpdates(app: Express, options: UpdateOptions = {}) {
     return pending;
   }
   app.get("/api/desktop-updates/latest", async (_req, res) => {
+    res.setHeader("Cache-Control", "no-store");
     try {
       const data = await latest();
       res.json({

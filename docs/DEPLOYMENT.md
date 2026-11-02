@@ -36,6 +36,8 @@ npm run desktop 启动桌面开发版。员工分发包在构建时读取 `BRAIN
 
 ## 客户端更新源
 
+公司部署推荐从 0.11.0 起使用本地安装包镜像：设置 `BRAIN_UPDATE_DIRECTORY=/var/lib/corporate-brain-updates`，按 [UPDATE-DISTRIBUTION.md](UPDATE-DISTRIBUTION.md) 配置专用发布账号及 GitHub Actions 自动分发。镜像优先于下述 GitHub 代理配置；私有仓库无需向业务服务器或员工客户端复制 GitHub token。发布必须核对最后的公司分发任务和真实生产下载，不能仅以 Release 公开为完成依据。
+
 客户端更新默认从公开的 GitHub Release 自动读取，不需要在服务器上填写 GitHub token；服务器仍可设置 BRAIN_UPDATE_SOURCE=private/disabled 关闭公开源，或设置 BRAIN_GITHUB_TOKEN 使用私有仓库与更高的 API 限额。公司登录与部门授权始终由公司服务器控制，服务器之外不要分发凭据。
 
 从 v0.2.0 起，公司服务通过 GitHub API 读取 taorobotics/Corporate-Brain 的最新已公开 Release。公开仓库模式默认启用，服务器重启后客户端会自动检查并在左下角显示新版本；若服务器仍返回“更新服务尚未启用”，请先部署包含本功能的服务器包。私有仓库或需要更高 GitHub API 限额时，在服务启动环境或部署平台密钥中设置 BRAIN_GITHUB_TOKEN。令牌建议仅授予此仓库的 Contents: read 权限，按部署平台的密钥轮换机制维护；不要写进 package.json、桌面环境、源码、聊天或公开日志。员工只用原公司账号登录，不需要 GitHub 账号或令牌。

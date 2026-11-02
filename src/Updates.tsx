@@ -47,7 +47,7 @@ export function useDesktopUpdates(enabled: boolean) {
           status: feed.configured ? "available" : "unavailable",
           error: feed.configured
             ? ""
-            : "公司服务器的更新服务尚未启用，请先更新服务器包。公开仓库无需 GitHub Token；私有仓库才需要配置 BRAIN_GITHUB_TOKEN。",
+            : "公司更新服务尚未就绪，请稍后重试；持续失败请联系管理员。",
         });
       }
     } catch {
@@ -64,14 +64,27 @@ export function useDesktopUpdates(enabled: boolean) {
       return;
     }
     let active = true,
-      last = 0;
+      last = 0,
+      failed = false,
+      checking = false;
     const unsubscribe = bridge?.onState((value) => {
-      if (active) setState(value);
+      if (active) {
+        setState(value);
+        failed = ["error", "unavailable"].includes(value.status);
+      }
     });
-    const poll = () => {
-      if (!active || Date.now() - last < 5 * 60_000) return;
+    const poll = (force = false) => {
+      if (
+        !active ||
+        checking ||
+        (!force && Date.now() - last < (failed ? 60_000 : 5 * 60_000))
+      )
+        return;
       last = Date.now();
-      void check();
+      checking = true;
+      void check().finally(() => {
+        checking = false;
+      });
     };
     if (bridge)
       void bridge.state().then((value) => {
@@ -81,15 +94,17 @@ export function useDesktopUpdates(enabled: boolean) {
         }
       });
     else poll();
-    const interval = setInterval(poll, 30 * 60_000);
-    window.addEventListener("online", poll);
-    window.addEventListener("focus", poll);
+    const interval = setInterval(() => poll(), 60_000);
+    const online = () => poll(true);
+    const focus = () => poll();
+    window.addEventListener("online", online);
+    window.addEventListener("focus", focus);
     return () => {
       active = false;
       clearInterval(interval);
       unsubscribe?.();
-      window.removeEventListener("online", poll);
-      window.removeEventListener("focus", poll);
+      window.removeEventListener("online", online);
+      window.removeEventListener("focus", focus);
     };
   }, [enabled, desktop]);
   return {
@@ -102,7 +117,8 @@ export function useDesktopUpdates(enabled: boolean) {
     check,
     show: () => {
       setOpen(true);
-      if (["idle", "error", "unavailable"].includes(state.status)) void check();
+      if (!["checking", "downloading", "ready"].includes(state.status))
+        void check();
     },
     close: () => setOpen(false),
     act: async (

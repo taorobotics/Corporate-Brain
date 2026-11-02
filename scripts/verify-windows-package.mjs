@@ -18,6 +18,7 @@ const files = entries.map(path => path.replace(/^\//, '')).filter(path => !entri
 const allowed = ['fonts.css', 'fonts/NotoSansSC-VF.woff2', 'fonts/OFL.txt', 'fonts/source.json', 'main.cjs', 'updates.cjs', 'package.json', 'preload.cjs', 'server-preload.cjs', 'server-setup.html', 'server-setup.js', 'startup.cjs', 'startup.html', 'startup.js', 'appearance.cjs', 'startup-preload.cjs', 'startup.css', 'entry-scene.js', 'entry-scene.css', ...legalFiles].sort();
 assert.deepEqual(files, allowed);
 assert.equal(JSON.parse(extractFile(asar, 'package.json').toString()).version, version);
+assert.equal(JSON.parse(await readFile(resolve('release/win-unpacked/resources/company-server.json'), 'utf8')).url, process.env.BRAIN_APP_URL || '', 'Packaged company connection must match the configured release destination');
 for (const file of files) assert.deepEqual(extractFile(asar, file), await readFile(resolve('desktop', file)), `Packaged source differs: ${file}`);
 const desktopVerification = JSON.parse(await readFile('artifacts/desktop-verification.json', 'utf8'));
 const startupVerification = JSON.parse(await readFile('artifacts/startup-verification.json', 'utf8'));
@@ -41,7 +42,7 @@ const report = { version, platform: process.platform, architecture: process.arch
 report.installerVerification = installerVerification;
 report.startupVerification = startupVerification;
 report.disposableWindowsLifecycleTested = true;
-report.checks.push('Real native wizard, staged cancellation, v0.2.2 upgrade, launch and uninstall on a disposable Windows runner');
+report.checks.push('Real native wizard, staged cancellation, v0.9.0 upgrade, launch and uninstall on a disposable Windows runner');
 await writeFile('release/windows-verification-x64.json', JSON.stringify(report, null, 2) + '\n');
 await writeFile('release/SHA256SUMS-Windows-x64.txt', `${sha256}  ${artifact}\n`);
 console.log(JSON.stringify({ artifact, sha256, desktopChecks: desktopVerification.checks.length }));

@@ -5,6 +5,11 @@ import { createServer } from "node:http";
 import { createHash } from "node:crypto";
 import { createPlatform } from "./platform";
 import { installerName } from "./updates";
+import { mkdtemp, readFile, writeFile, rm, readdir } from "node:fs/promises";
+import { join } from "node:path";
+import { tmpdir } from "node:os";
+import { Readable } from "node:stream";
+import mirror from "../shared/update-mirror.cjs";
 
 async function start(t: any, updates: any) {
   const platform = createPlatform({
@@ -40,9 +45,9 @@ async function start(t: any, updates: any) {
   const cookie = login.headers.get("set-cookie")!.split(";")[0];
   return {
     base,
-    get: (path: string) =>
+    get: (path: string, headers: Record<string, string> = {}) =>
       fetch(`${base}/api/desktop-updates${path}`, {
-        headers: { Cookie: cookie },
+        headers: { Cookie: cookie, ...headers },
       }),
   };
 }
@@ -119,6 +124,127 @@ test("private update source requires company login and never returns credentials
   assert.equal((await p.get("/0.1.0/win32-x64")).status, 409);
   assert.equal((await p.get("/0.2.0/linux-x64")).status, 400);
   assert.equal(calls.length, before);
+});
+
+async function mirrorFixture(t: any) {
+  const directory = await mkdtemp(join(tmpdir(), "brain-mirror-test-"));
+  t.after(() => rm(directory, { recursive: true, force: true }));
+  const bytes = Buffer.from("An inert installer fixture. Never execute.");
+  const manifest = (version = "0.11.0") => ({
+    version,
+    notes: "更新",
+    publishedAt: "2026-11-02T00:00:00Z",
+    assets: Object.fromEntries(
+      mirror.targets.map((target) => [
+        target,
+        {
+          name: installerName(version, target),
+          bytes: bytes.length,
+          sha256: createHash("sha256").update(bytes).digest("hex"),
+        },
+      ]),
+    ),
+  });
+  const bundle = (release: any, payload = bytes) =>
+    Buffer.concat([
+      Buffer.from(JSON.stringify(release) + "\n"),
+      ...mirror.targets.map(() => payload),
+    ]);
+  const publish = (release: any) =>
+    mirror.importBundle(Readable.from([bundle(release)]), directory);
+  return { directory, bytes, manifest, bundle, publish };
+}
+test("company mirror serves authenticated old-client feed, full downloads and verified byte ranges without GitHub", async (t) => {
+  const f = await mirrorFixture(t),
+    release = f.manifest();
+  await f.publish(release);
+  const p = await start(t, {
+    directory: f.directory,
+    fetch: () => {
+      throw new Error("No GitHub access allowed");
+    },
+  });
+  assert.equal(
+    (await fetch(`${p.base}/api/desktop-updates/latest`)).status,
+    401,
+  );
+  assert.deepEqual(await (await p.get("/latest")).json(), {
+    configured: true,
+    release,
+  });
+  for (const target of mirror.targets) {
+    const full = await p.get(`/0.11.0/${target}`);
+    assert.equal(full.status, 200);
+    assert.deepEqual(Buffer.from(await full.arrayBuffer()), f.bytes);
+    const hash = release.assets[target].sha256;
+    const range = await p.get(`/0.11.0/${target}`, {
+      Range: "bytes=7-",
+      "If-Range": `"${hash}"`,
+    });
+    assert.equal(range.status, 206);
+    assert.equal(range.headers.get("etag"), `"${hash}"`);
+    assert.deepEqual(
+      Buffer.from(await range.arrayBuffer()),
+      f.bytes.subarray(7),
+    );
+  }
+  await f.publish(f.manifest("0.12.0"));
+  assert.equal(
+    (await (await p.get("/latest")).json()).release.version,
+    "0.12.0",
+  );
+  assert.equal(
+    (await p.get("/0.11.0/win32-x64")).status,
+    200,
+    "old version remains downloadable after promotion",
+  );
+  const asset = f.manifest("0.12.0").assets["win32-x64"];
+  await writeFile(
+    join(f.directory, "0.12.0", asset.name),
+    Buffer.alloc(asset.bytes, 1),
+  );
+  assert.equal(
+    (await p.get("/latest")).status,
+    503,
+    "corrupt mirror never reports current/available",
+  );
+  assert.equal((await p.get("/0.12.0/win32-x64")).status, 409);
+});
+test("mirror publishing is atomic, immutable, bounded, idempotent and rejects downgrades and incomplete/tampered bundles", async (t) => {
+  const f = await mirrorFixture(t),
+    first = f.manifest();
+  await f.publish(first);
+  await f.publish(first);
+  const before = await readFile(join(f.directory, "latest.json"));
+  const next = f.manifest("0.12.0");
+  for (const invalid of [
+    f.bundle(next).subarray(0, -1),
+    f.bundle(next, Buffer.alloc(f.bytes.length)),
+    Buffer.concat([f.bundle(next), Buffer.from("extra")]),
+    Buffer.alloc(65537, 97),
+  ]) {
+    await assert.rejects(
+      mirror.importBundle(Readable.from([invalid]), f.directory),
+    );
+    assert.deepEqual(await readFile(join(f.directory, "latest.json")), before);
+  }
+  await assert.rejects(f.publish(f.manifest("0.9.0")), /downgrade/);
+  await assert.rejects(f.publish({ ...first, notes: "replaced" }), /immutable/);
+  const traversal = f.manifest("0.12.0");
+  traversal.assets["win32-x64"].name = "../evil.exe";
+  await assert.rejects(f.publish(traversal), /manifest/);
+  assert.equal(
+    (await readdir(f.directory)).some((name) => name.startsWith(".incoming")),
+    false,
+  );
+  // Exercise network chunk boundaries and version retention.
+  await mirror.importBundle(
+    Readable.from([...f.bundle(next)].map((byte) => Buffer.from([byte]))),
+    f.directory,
+  );
+  await f.publish(f.manifest("0.13.0"));
+  await f.publish(f.manifest("0.14.0"));
+  assert.ok(!(await readdir(f.directory)).includes("0.11.0"));
 });
 test("unconfigured server reports the actual state without contacting GitHub", async (t) => {
   const p = await start(t, {

@@ -41,6 +41,7 @@ try {
   const allowed = ['fonts.css', 'fonts/NotoSansSC-VF.woff2', 'fonts/OFL.txt', 'fonts/source.json', 'main.cjs', 'updates.cjs', 'package.json', 'preload.cjs', 'server-preload.cjs', 'server-setup.html', 'server-setup.js', 'startup.cjs', 'startup.html', 'startup.js', 'appearance.cjs', 'startup-preload.cjs', 'startup.css', 'entry-scene.js', 'entry-scene.css', ...legalFiles].sort();
   assert.deepEqual(files, allowed);
   assert.equal(JSON.parse(extractFile(asar, 'package.json').toString()).version, version);
+  assert.equal(JSON.parse(await readFile(join(app, 'Contents/Resources/company-server.json'), 'utf8')).url, process.env.BRAIN_APP_URL || '', 'Packaged company connection must match the configured release destination');
   for (const file of files) assert.deepEqual(extractFile(asar, file), await readFile(resolve('desktop', file)), `Packaged source differs: ${file}`);
   const chromiumNotices = command('find', [app, '-name', 'LICENSES.chromium.html']).trim().split('\n').filter(Boolean);
   assert.ok(chromiumNotices.length > 0, 'Electron/Chromium license notice must remain in the Mac runtime');

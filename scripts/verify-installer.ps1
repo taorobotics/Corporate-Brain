@@ -15,7 +15,7 @@ $dataPath = Join-Path $env:APPDATA 'corporate-brain-desktop'
 if ($FullLifecycle) {
   if ($env:GITHUB_ACTIONS -ne 'true') { throw 'Full installation tests run only on a disposable GitHub Windows runner; local mode only inspects UI.' }
   if ((Test-Path -LiteralPath $registryPath) -or (Test-Path -LiteralPath $dataPath) -or (Test-Path -LiteralPath (Join-Path $env:APPDATA '公司大脑'))) { throw 'An existing installation/profile was found; refusing lifecycle tests.' }
-  if (-not $PreviousInstaller -or (Get-FileHash -LiteralPath $PreviousInstaller -Algorithm SHA256).Hash -ne 'c7c9c99e928962e99d8fb8f1675fa488962b6d829f826bdd7c6d685377fc905d') { throw 'The pinned v0.2.2 upgrade fixture is missing or differs from its published hash.' }
+  if (-not $PreviousInstaller -or (Get-FileHash -LiteralPath $PreviousInstaller -Algorithm SHA256).Hash -ne '0a316ba6e947e2422a3aee23deec03fd51a27e5391764e21e4fe0d0b78fbfd46') { throw 'The pinned v0.9.0 upgrade fixture is missing or differs from its published hash.' }
 }
 function Assert-TestTarget {
   $resolvedTarget = [IO.Path]::GetFullPath($qaTarget)
@@ -171,7 +171,7 @@ try {
     Complete-Install '完成'
     if (Get-CimInstance Win32_Process | Where-Object ExecutablePath -eq (Join-Path $qaTarget '公司大脑.exe')) { throw 'Finish-only action unexpectedly launched the application' }
     if ((Get-FileHash -LiteralPath $sentinel -Algorithm SHA256).Hash -ne $sentinelHash) { throw 'Upgrade changed local personal records' }
-    $checks.Add('v0.2.2 upgrade keeps original path, updates real executable and preserves personal records')
+    $checks.Add('v0.9.0 upgrade keeps original path, updates real executable and preserves personal records')
     $checks.Add('Finish closes without launching the application')
 
     Assert-TestTarget

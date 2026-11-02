@@ -158,3 +158,40 @@ test("cancelled downloads remove partial files and allow retry without duplicate
   assert.equal(f.updater.state.status, "ready");
   assert.equal(f.requests.filter((path) => !path.endsWith("latest")).length, 2);
 });
+
+test("interrupted transfers resume exact bytes, verify final hash, and reject incorrect range metadata", async (t) => {
+  for (const mode of ["range", "ignore-range", "bad-range"]) {
+    const f = await fixture(t);
+    await f.updater.check();
+    let attempt = 0;
+    f.setBinary(({ headers }) => {
+      if (attempt++ === 0)
+        return new Response(
+          new ReadableStream({
+            start(controller) {
+              controller.enqueue(f.payload.subarray(0, 7));
+              setTimeout(
+                () => controller.error(new Error("network interrupted")),
+                30,
+              );
+            },
+          }),
+        );
+      assert.equal(headers.Range, "bytes=7-");
+      assert.equal(headers["If-Range"], `"${f.asset.sha256}"`);
+      if (mode === "ignore-range") return new Response(f.payload);
+      return new Response(f.payload.subarray(7), {
+        status: 206,
+        headers: {
+          "Content-Range": `bytes ${mode === "bad-range" ? 8 : 7}-${f.payload.length - 1}/${f.payload.length}`,
+          ETag: `"${f.asset.sha256}"`,
+        },
+      });
+    });
+    const state = await f.updater.download();
+    assert.equal(state.status, mode === "bad-range" ? "error" : "ready");
+    if (mode !== "bad-range")
+      assert.deepEqual(await readFile(await f.updater.verify()), f.payload);
+    else await assert.rejects(f.updater.verify());
+  }
+});

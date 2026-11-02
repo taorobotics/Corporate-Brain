@@ -486,6 +486,13 @@ ipcMain.handle("updates:install", async (event) => {
       },
     );
     if (!actor.ok) throw new Error("请重新登录后安装更新");
+    // Persist the active origin before replacing bundled company configuration.
+    // This also keeps a company-specific install connected after a generic update.
+    await fs.writeFile(
+      join(app.getPath("userData"), "company-server.json"),
+      JSON.stringify({ url: company }),
+      { mode: 0o600 },
+    );
     await Promise.all([...writes.values()]);
     const path = await updates.verify();
     const error = await shell.openPath(path);

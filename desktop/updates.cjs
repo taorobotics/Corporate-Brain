@@ -56,8 +56,7 @@ class DesktopUpdates {
           this.set({
             status: "unavailable",
             release: null,
-            error:
-              "公司服务器的更新服务尚未启用，请先更新服务器包。公开仓库无需 GitHub Token；私有仓库才需要配置 BRAIN_GITHUB_TOKEN。",
+            error: "公司更新服务尚未就绪，请稍后重试；持续失败请联系管理员。",
           });
           return;
         }
@@ -156,31 +155,104 @@ class DesktopUpdates {
       try {
         await fs.mkdir(this.directory, { recursive: true, mode: 0o700 });
         await fs.rm(partial, { force: true });
-        const response = await this.request(
-          `/api/desktop-updates/${version}/${this.state.target}`,
-          { signal: controller.signal },
-        );
-        if (!response.ok || !response.body)
-          throw new Error("下载失败，请重新登录或检查网络后重试");
         handle = await fs.open(partial, "wx", 0o600);
-        const hash = createHash("sha256");
         let received = 0,
           lastNotified = 0;
-        for await (const chunk of response.body) {
+        for (let attempt = 0; attempt < 3; attempt++) {
+          if (attempt)
+            await new Promise((resolve) => setTimeout(resolve, 500 * attempt));
           if (controller.signal.aborted) throw new Error("下载已取消");
-          received += chunk.length;
-          if (received > asset.bytes)
-            throw new Error("安装包大小不符，请重新检查更新");
-          hash.update(chunk);
-          await handle.writeFile(chunk);
-          if (Date.now() - lastNotified > 150) {
-            this.set({ received });
-            lastNotified = Date.now();
+          const offset = received;
+          let response;
+          try {
+            response = await this.request(
+              `/api/desktop-updates/${version}/${this.state.target}`,
+              {
+                signal: controller.signal,
+                headers: offset
+                  ? {
+                      Range: `bytes=${offset}-`,
+                      "If-Range": `"${asset.sha256}"`,
+                    }
+                  : {},
+              },
+            );
+          } catch {
+            if (attempt < 2 && !controller.signal.aborted) continue;
+            throw new Error("网络连接中断，请稍后重试下载");
+          }
+          if (!response.ok || !response.body) {
+            await response.body?.cancel();
+            if (response.status >= 500 && attempt < 2) continue;
+            throw new Error("下载失败，请重新登录或检查网络后重试");
+          }
+          if (offset && response.status === 200) {
+            // Older servers may ignore Range: safely restart the same file.
+            await handle.truncate(0);
+            received = 0;
+          } else if (response.status === 206) {
+            if (
+              response.headers.get("content-range") !==
+                `bytes ${offset}-${asset.bytes - 1}/${asset.bytes}` ||
+              response.headers.get("etag") !== `"${asset.sha256}"`
+            ) {
+              await response.body.cancel();
+              throw new Error("续传信息不匹配，请重新检查更新");
+            }
+          } else if (response.status !== 200) {
+            await response.body.cancel();
+            throw new Error("安装包响应无效，请重试");
+          }
+          const reader = response.body.getReader();
+          let interrupted = false;
+          try {
+            while (true) {
+              let part;
+              try {
+                part = await reader.read();
+              } catch {
+                interrupted = true;
+                break;
+              }
+              if (part.done) break;
+              if (controller.signal.aborted) throw new Error("下载已取消");
+              if (received + part.value.length > asset.bytes)
+                throw new Error("安装包大小不符，请重新检查更新");
+              // Explicit offsets remain correct after a server ignores Range.
+              let written = 0;
+              while (written < part.value.length) {
+                const result = await handle.write(
+                  part.value,
+                  written,
+                  part.value.length - written,
+                  received + written,
+                );
+                if (!result.bytesWritten) throw new Error("无法保存安装包");
+                written += result.bytesWritten;
+              }
+              received += written;
+              if (Date.now() - lastNotified > 150) {
+                this.set({ received });
+                lastNotified = Date.now();
+              }
+            }
+          } finally {
+            await reader.cancel().catch(() => {});
+            reader.releaseLock();
+          }
+          if (received === asset.bytes && !interrupted) break;
+          if (attempt === 2) throw new Error("下载中断或安装包不完整，请重试");
+          if (received === asset.bytes) {
+            // A transport error after the final byte must be verified afresh.
+            await handle.truncate(0);
+            received = 0;
           }
         }
         await handle.close();
         handle = null;
         if (controller.signal.aborted) throw new Error("下载已取消");
+        const hash = createHash("sha256");
+        for await (const chunk of createReadStream(partial)) hash.update(chunk);
         if (received !== asset.bytes || hash.digest("hex") !== asset.sha256)
           throw new Error("安装包校验失败，请重新下载");
         await fs.rm(file, { force: true });

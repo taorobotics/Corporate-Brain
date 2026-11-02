@@ -66,6 +66,7 @@ jobs:
     timeout-minutes: 25
     env:
       TARGET_ARCH: ${{ matrix.arch }}
+      BRAIN_APP_URL: ${{ vars.BRAIN_APP_URL }}
     steps:
       - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
         with:
@@ -92,10 +93,10 @@ jobs:
         if: matrix.platform == 'Windows'
         env:
           GH_TOKEN: ${{ github.token }}
-        run: gh release download v0.2.2 --repo "$env:GITHUB_REPOSITORY" --pattern Corporate-Brain-Setup-0.2.2-x64.exe --dir "$env:RUNNER_TEMP/brain-previous"
+        run: gh release download v0.9.0 --repo "$env:GITHUB_REPOSITORY" --pattern Corporate-Brain-Setup-0.9.0-x64.exe --dir "$env:RUNNER_TEMP/brain-previous"
       - name: Verify native installer lifecycle and preserved local records
         if: matrix.platform == 'Windows'
-        run: pwsh -NoProfile -File scripts/verify-installer.ps1 -FullLifecycle -PreviousInstaller "$env:RUNNER_TEMP/brain-previous/Corporate-Brain-Setup-0.2.2-x64.exe"
+        run: pwsh -NoProfile -File scripts/verify-installer.ps1 -FullLifecycle -PreviousInstaller "$env:RUNNER_TEMP/brain-previous/Corporate-Brain-Setup-0.9.0-x64.exe"
       - name: Verify Windows installer
         if: matrix.platform == 'Windows'
         run: node scripts/verify-windows-package.mjs
@@ -184,3 +185,32 @@ jobs:
         run: gh release download "$RELEASE_TAG" --dir release-assets --repo "$GH_REPO"
       - name: Check all hashes, upload to draft, verify uploads and publish
         run: node scripts/publish-release.mjs
+
+  distribute:
+    name: Verify company update distribution
+    needs: publish
+    if: ${{ vars.BRAIN_UPDATE_MIRROR == 'true' }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    permissions:
+      contents: read
+    concurrency:
+      group: company-update-mirror
+      cancel-in-progress: false
+    steps:
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
+        with:
+          ref: ${{ github.sha }}
+          persist-credentials: false
+      - uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v5
+        with:
+          node-version: '24'
+      - name: Copy published installers, verify hashes and atomically activate mirror
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          BRAIN_UPDATE_HOST: ${{ vars.BRAIN_UPDATE_HOST }}
+          BRAIN_UPDATE_USER: ${{ vars.BRAIN_UPDATE_USER }}
+          BRAIN_UPDATE_SSH_KEY: ${{ secrets.BRAIN_UPDATE_SSH_KEY }}
+          BRAIN_UPDATE_KNOWN_HOSTS: ${{ secrets.BRAIN_UPDATE_KNOWN_HOSTS }}
+        run: node scripts/sync-update-mirror.mjs

@@ -18,7 +18,7 @@
 4. 标签推送触发 [.github/workflows/desktop-release.yml](../.github/workflows/desktop-release.yml) 的 Desktop release。必要时可手动运行同一个工作流，明确填写已存在的标签；手动运行仍只构建该标签对应的源码。
 5. 工作流分别在原生 Windows x64、Mac arm64、Mac x64 环境执行后端、构建和桌面交互检查，然后生成与检查安装包；Linux 环境另行生成包含已构建网页的公司服务器更新包。
 6. 只有所有检查都通过，发布任务才会创建草稿、上传完整资源、逐一复核 GitHub 返回的 SHA-256，然后将草稿发布为最新 Release。失败时修复实际问题后重试，不能伪造通过或跳过必要检查。
-7. 最后核对 Releases/latest 指向本次版本、下载资源完整、校验值正确，向用户提供该版本页面链接。
+7. 公司镜像已启用时，等待 Verify company update distribution 任务成功，核对生产更新接口和真实旧客户端完整下载；只有 GitHub 已公开但公司分发失败不能视为完整交付。机制与失败重试见 [UPDATE-DISTRIBUTION.md](UPDATE-DISTRIBUTION.md)。最后核对 Releases/latest 指向本次版本、下载资源完整、校验值正确，向用户提供该版本页面链接。
 
 如果只有发布工具或上传失败，可以在 main 修正发布工具，再手动运行工作流，填写同一 release_tag 及原构建的 reuse_run_id。恢复任务必须验证原运行来自同一仓库、同一版本标签提交，且 Windows、两种 Mac 和服务器的构建检查均成功，才允许复用原始资源。应用包仍来自版本标签；发布工具使用触发该工作流的受控提交，不重写标签或更换已检查的产品源码。草稿按 Release ID 管理，完整上传和复核之前不公开。
 
