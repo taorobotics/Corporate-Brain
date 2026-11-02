@@ -1,0 +1,55 @@
+{
+  "version": "0.11.3",
+  "diagnosedAt": "2026-11-02",
+  "platform": "win32",
+  "scope": "Isolated Electron profiles; production unauthenticated endpoints; no employee records read or modified",
+  "network": {
+    "systemProxyEnabled": true,
+    "vpnVirtualAdapterPresent": true,
+    "dnsReturnedVpnSyntheticAddress": true,
+    "serverLocalHttpsSeconds": [0.047791, 0.049572, 0.053661],
+    "physicalInterfaceWithRealServerAddressSeconds": [0.068786, 0.05553, 0.05436],
+    "configuredProxySeconds": [1.680202, 2.450664, 1.731048],
+    "systemSettingsChanged": false,
+    "tlsVerificationPreserved": true
+  },
+  "before": {
+    "productionVersion": "0.11.2",
+    "fontBytes": 7782216,
+    "nativeStartupFontRequestedMs": 5044,
+    "bootstrapRequestedMs": 5121,
+    "bootstrapAbortedMs": 25129,
+    "result": "connection-error"
+  },
+  "fontIsolationControl": {
+    "onlyNotoFontBlockedInDisposableSession": true,
+    "vpnStillEnabled": true,
+    "bootstrapRequestMs": 8358,
+    "bootstrapResponseMs": 8844,
+    "authResponseMs": 10100,
+    "loginObservedMs": 10211,
+    "skinFontLoaded": true,
+    "result": "login-ready"
+  },
+  "preDeploymentPatchedCssCheck": {
+    "scope": "Local built CSS substituted in a disposable Electron session; other resources and unauthenticated APIs fetched from production via the existing proxy",
+    "bootstrapResponseMs": 4339,
+    "authResponseMs": 4765,
+    "loginObservedMs": 5216,
+    "notoFontRequested": false,
+    "result": "login-ready"
+  },
+  "localChecks": {
+    "build": "passed",
+    "tests": 38,
+    "startupChecks": 9,
+    "desktopChecks": 33,
+    "renderedChineseFont": "Microsoft YaHei",
+    "renderedChineseFontIsRemote": false
+  },
+  "limitations": [
+    "Timings are samples from one network and are not a startup time guarantee.",
+    "The pre-deployment CSS substitution is not claimed as a production deployment check.",
+    "Systems without an installed CJK font still use the bundled open font fallback."
+  ]
+}

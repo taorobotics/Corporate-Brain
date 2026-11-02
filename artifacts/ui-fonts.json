@@ -1,16 +1,16 @@
 {
   "fonts": [
     {
-      "familyName": "Noto Sans SC Thin",
-      "glyphCount": 15,
-      "isCustomFont": true,
-      "postScriptName": "NotoSansSC-SemiBold"
+      "familyName": "Microsoft YaHei",
+      "glyphCount": 103,
+      "isCustomFont": false,
+      "postScriptName": "MicrosoftYaHei"
     },
     {
-      "familyName": "Noto Sans SC Thin",
-      "glyphCount": 103,
-      "isCustomFont": true,
-      "postScriptName": "NotoSansSC"
+      "familyName": "Microsoft YaHei",
+      "glyphCount": 15,
+      "isCustomFont": false,
+      "postScriptName": "MicrosoftYaHei-Bold"
     }
   ]
 }
