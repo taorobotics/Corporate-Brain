@@ -1,0 +1,64 @@
+{
+  "version": "0.11.6",
+  "verifiedAt": "2026-11-02T11:51:25.713Z",
+  "scope": "Real original image, configured DeepSeek Flash provider, standard mode, isolated DshManager workspaces; not the production HTTP endpoint",
+  "originalFailure": {
+    "elapsedMs": 179692,
+    "reason": "aborted/disposed while image processing was still progressing"
+  },
+  "timeoutOnly": {
+    "result": "passed",
+    "model": "deepseek-flash",
+    "originalImageBytes": 144088,
+    "reasoningEvents": 18140,
+    "textEvents": 1755,
+    "toolCalls": 35,
+    "lastProgressMs": 367454,
+    "answerCharacters": 2725,
+    "biologyTermsPresent": true,
+    "usage": {
+      "inputTokens": 4236,
+      "outputTokens": 4776,
+      "totalTokens": 55604
+    },
+    "elapsedMs": 367657
+  },
+  "finalGuidance": {
+    "result": "passed",
+    "model": "deepseek-flash",
+    "originalImageBytes": 144088,
+    "reasoningEvents": 14736,
+    "textEvents": 710,
+    "toolCalls": 16,
+    "lastProgressMs": 164912,
+    "answerCharacters": 1108,
+    "biologyTermsPresent": true,
+    "usage": {
+      "inputTokens": 1084,
+      "outputTokens": 2391,
+      "totalTokens": 30867
+    },
+    "elapsedMs": 165154
+  },
+  "answerReview": {
+    "concreteImageAnalysis": true,
+    "completeQuestionAnswered": true,
+    "incompleteQuestionIdentified": true,
+    "missingInformationNotInvented": true
+  },
+  "sourceSha256": {
+    "server/dsh.ts": "b90f7ef80ec2119f27b7c525875df0f2182f2bec01f3a43036fdd61e52361dcb",
+    "server/chat-deadline.ts": "c51cb4a53e60b6d661058e75603ee3415d82bb9d5d50b12e181406e30ce86661",
+    "server/platform.ts": "ffbfd5fdd4b3bf6428e83ce16f1fcc57e86629ddee8d8ca4f141c172a80edfa5"
+  },
+  "privacy": {
+    "originalImageIncluded": false,
+    "answerIncluded": false,
+    "reasoningIncluded": false,
+    "credentialsIncluded": false
+  },
+  "limits": [
+    "Model timing and answer quality vary between requests.",
+    "Production HTTP verification is recorded separately after deployment."
+  ]
+}

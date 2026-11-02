@@ -7,6 +7,7 @@ import { basename, join, resolve } from "node:path";
 import type { ChatProgress } from "../shared/chat-progress";
 import { dshProgress } from "./dsh-progress";
 import type { DshMode, WorkspaceAccess } from "../shared/types";
+import { createChatDeadline } from "./chat-deadline";
 
 export type DshAttachment = {
   name: string;
@@ -168,13 +169,22 @@ export class DshManager {
       initializeTimeoutMs: 20_000,
       requestTimeoutMs: 120_000,
     });
+    const abortStartup = () => {
+      void harness.close().catch(() => {});
+    };
+    options.signal?.addEventListener("abort", abortStartup, { once: true });
     try {
+      options.signal?.throwIfAborted();
       await harness.start();
+      options.signal?.throwIfAborted();
     } catch (error) {
       await harness.close().catch(() => {});
+      options.signal?.throwIfAborted();
       throw new DshUnavailableError(
         `DSH 运行时未能启动：${(error as Error).message}`,
       );
+    } finally {
+      options.signal?.removeEventListener("abort", abortStartup);
     }
     return { harness, workspace };
   }
@@ -188,14 +198,22 @@ export class DshManager {
     if (this.running.has(key))
       throw new Error("当前对话仍有请求正在运行，请稍后重试");
     this.running.add(key);
-    const signal = AbortSignal.any([
-      options.signal ?? new AbortController().signal,
-      AbortSignal.timeout(180_000),
-    ]);
+    // The HTTP request owns its deadline. Standalone SDK callers get the same
+    // progress-aware policy, without a second hidden three-minute turn limit.
+    const deadline = options.signal ? undefined : createChatDeadline();
+    const signal = options.signal ?? deadline!.signal;
     try {
       signal.throwIfAborted();
-      return await this.runTurn({ ...options, signal });
+      return await this.runTurn({
+        ...options,
+        signal,
+        onProgress: (event) => {
+          deadline?.observe(event);
+          options.onProgress?.(event);
+        },
+      });
     } finally {
+      deadline?.dispose();
       this.running.delete(key);
     }
   }
@@ -244,6 +262,9 @@ export class DshManager {
       : "";
     const textParts = [
       system,
+      options.attachments.some((attachment) => attachment.image)
+        ? "图片处理提示：原图已作为图像输入提供。请先直接分析能看清的内容，普通识图或题目讲解不要默认变成编程任务。仅在必要时使用工具旋转、裁剪；不要反复放大同一区域或猜测模糊、截断的文字。无法确定的部分请明确说明，并请用户补充清晰完整的图片。若用户明确要求编程、文件操作或联网，仍按其要求使用所需工具。"
+        : "",
       history ? `此前对话记录：\n${history}` : "",
       latest.content.trim(),
     ].filter(Boolean);

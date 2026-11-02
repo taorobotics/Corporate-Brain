@@ -627,7 +627,32 @@ async function waitFor(test, label, timeout = 12000) {
   await js(`document.querySelector('.thinking-toggle').click()`);
   assert.equal(await has("找到 2 个来源"), true);
   await fill('textarea[aria-label="任务输入"]', "加载项验收：失败清理");
-  await js(`document.querySelector('.messages').scrollTop=0`);
+  await waitFor(
+    () =>
+      js(
+        `(() => {const el=document.querySelector('.messages');return el.scrollHeight-el.clientHeight > 150;})()`,
+      ),
+    "expanded history is scrollable",
+  );
+  await js(
+    `document.querySelector('.messages').scrollTop=document.querySelector('.messages').scrollHeight`,
+  );
+  await waitFor(
+    () =>
+      js(
+        `(() => {const el=document.querySelector('.messages');return el.scrollHeight-el.clientHeight-el.scrollTop <= 2;})()`,
+      ),
+    "expanded history has settled before user navigation",
+  );
+  const historyPoint = await js(
+    `(() => {const r=document.querySelector('.messages').getBoundingClientRect();return {x:Math.round(r.left+r.width/2),y:Math.round(r.top+r.height/2)};})()`,
+  );
+  await web.debugger.sendCommand("Input.dispatchMouseEvent", {
+    type: "mouseWheel",
+    ...historyPoint,
+    deltaX: 0,
+    deltaY: -350,
+  });
   await waitFor(
     () => js(`!!document.querySelector('.chat-jump-latest')`),
     "reading history before sending again",

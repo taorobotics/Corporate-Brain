@@ -12,6 +12,114 @@ import { createServer } from "node:http";
 import { once } from "node:events";
 import { createPlatform } from "./platform";
 
+test("chat HTTP deadlines follow real progress, preserve partial output on stalls and return explicit JSON timeouts", async (t) => {
+  const provider = createServer(async (req, res) => {
+    let raw = "";
+    for await (const chunk of req) raw += chunk;
+    const payload = JSON.parse(raw);
+    res.writeHead(200, {
+      "Content-Type": payload.stream ? "text/event-stream" : "application/json",
+    });
+    res.flushHeaders();
+    if (!payload.stream) return;
+    const send = (delta: unknown) =>
+      res.write(`data: ${JSON.stringify({ choices: [{ delta }] })}\n\n`);
+    send({ reasoning_content: "已读取图片，正在处理细节。" });
+    if (payload.messages[0].content === "stall") return;
+    let count = 0;
+    const timer = setInterval(() => {
+      if (++count < 6) send({ reasoning_content: "下一部分。" });
+      else {
+        clearInterval(timer);
+        send({ content: "image-complete" });
+        res.end("data: [DONE]\n\n");
+      }
+    }, 80);
+    res.on("close", () => clearInterval(timer));
+  });
+  provider.listen(0, "127.0.0.1");
+  await once(provider, "listening");
+  const previous = process.env.BRAIN_DSH_ENABLED;
+  process.env.BRAIN_DSH_ENABLED = "0";
+  const platform = createPlatform({
+    database: ":memory:",
+    chatTimeouts: { idleMs: 250, maxMs: 2000 },
+  });
+  if (previous === undefined) delete process.env.BRAIN_DSH_ENABLED;
+  else process.env.BRAIN_DSH_ENABLED = previous;
+  const server = createServer(platform.app);
+  server.listen(0, "127.0.0.1");
+  await once(server, "listening");
+  t.after(() => {
+    server.closeAllConnections();
+    server.close();
+    provider.closeAllConnections();
+    provider.close();
+    platform.store.close();
+  });
+  const base = `http://127.0.0.1:${(server.address() as any).port}`;
+  let cookie = "";
+  const post = (route: string, body: unknown, stream = false) =>
+    fetch(base + "/api" + route, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Cookie: cookie,
+        Accept: stream ? "application/x-ndjson" : "application/json",
+      },
+      body: JSON.stringify(body),
+      signal: AbortSignal.timeout(8000),
+    });
+  const account = {
+    username: "deadline-test",
+    password: "Disposable-Deadline-2026",
+  };
+  await post("/bootstrap", {
+    companyName: "超时验收",
+    name: "测试",
+    ...account,
+  });
+  const login = await post("/auth/login", account);
+  cookie = login.headers.get("set-cookie")!.split(";")[0];
+  const model = await (
+    await post("/connections", {
+      name: "deadline",
+      model: "test",
+      kind: "chat",
+      baseUrl: `http://127.0.0.1:${(provider.address() as any).port}/v1`,
+      apiKey: "qa-placeholder",
+      departments: [],
+    })
+  ).json();
+  const request = (content: string, stream: boolean) =>
+    post(
+      "/generate/chat",
+      { connectionId: model.id, messages: [{ role: "user", content }] },
+      stream,
+    );
+  const active = await request("continue", true);
+  const events = (await active.text())
+    .trim()
+    .split("\n")
+    .filter(Boolean)
+    .map((line) => JSON.parse(line));
+  assert.equal(events.at(-1).type, "done");
+  assert.equal(events.at(-1).content, "image-complete");
+  assert.ok(events.filter((event) => event.type === "reasoning").length >= 5);
+  const stalled = await request("stall", true);
+  const partial = (await stalled.text())
+    .trim()
+    .split("\n")
+    .filter(Boolean)
+    .map((line) => JSON.parse(line));
+  assert.equal(partial[0].type, "reasoning");
+  assert.equal(partial.at(-1).type, "error");
+  assert.match(partial.at(-1).message, /长时间未返回新内容/);
+  const json = await request("stall", false);
+  assert.equal(json.status, 504);
+  assert.match((await json.json()).error, /长时间未返回新内容/);
+});
+
 test("authenticated chat endpoint streams reasoning before completion and keeps JSON compatibility", async (t) => {
   let release!: () => void;
   let providerCalls = 0;

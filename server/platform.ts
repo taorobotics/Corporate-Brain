@@ -18,6 +18,7 @@ import { DshManager, DshUnavailableError } from "./dsh";
 import { syncDeepSeekConnections } from "./deepseek-sync";
 import type { ChatProgress } from "../shared/chat-progress";
 import { readChatResponse } from "./chat-stream";
+import { createChatDeadline, ChatTimeoutError } from "./chat-deadline";
 import rootPackage from "../package.json";
 
 const id = z.string().uuid();
@@ -145,6 +146,7 @@ export function createPlatform(
     origins?: string[];
     secureCookies?: boolean;
     updates?: import("./updates").UpdateOptions;
+    chatTimeouts?: { idleMs?: number; maxMs?: number };
   } = {},
 ) {
   const store = createStore(options.database ?? ".data/platform.sqlite");
@@ -808,16 +810,18 @@ export function createPlatform(
     const row = getConnection(data.connectionId, actor, "chat");
     const streaming = req.get("accept")?.includes("application/x-ndjson");
     const controller = new AbortController();
-    const signal = AbortSignal.any([
-      controller.signal,
-      AbortSignal.timeout(180_000),
-    ]);
+    const deadline = createChatDeadline({
+      ...options.chatTimeouts,
+      parent: controller.signal,
+    });
+    const { signal } = deadline;
     const disconnected = () => {
       if (!res.writableEnded) controller.abort();
     };
     res.on("close", disconnected);
     let hasProgress = false;
     const emit = (event: ChatProgress) => {
+      deadline.observe(event);
       if (
         (event.type === "text" && event.text) ||
         event.type === "reasoning" ||
@@ -942,17 +946,25 @@ export function createPlatform(
         res.end();
       } else res.json({ content, usage });
     } catch (error) {
+      const timeout =
+        signal.aborted && signal.reason instanceof ChatTimeoutError
+          ? signal.reason
+          : undefined;
+      if (!streaming && timeout) fail(504, timeout.message);
       if (!streaming) throw error;
       emit({
         type: "error",
-        message: signal.aborted
-          ? "请求已停止或超时，已保留收到的内容"
-          : error instanceof ApiError
-            ? error.message
-            : "模型响应中断，已保留收到的内容，请稍后重试",
+        message: timeout
+          ? timeout.message
+          : signal.aborted
+            ? "请求已停止，已保留收到的内容"
+            : error instanceof ApiError
+              ? error.message
+              : "模型响应中断，已保留收到的内容，请稍后重试",
       });
       res.end();
     } finally {
+      deadline.dispose();
       if (heartbeat) clearInterval(heartbeat);
       res.off("close", disconnected);
     }
