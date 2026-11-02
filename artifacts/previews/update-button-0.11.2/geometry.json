@@ -1,0 +1,13 @@
+{
+  "result": "passed",
+  "scope": "Actual Electron UI with disposable preview data and update fixture",
+  "x": 15,
+  "y": 705,
+  "width": 214,
+  "height": 63,
+  "button": {
+    "width": 38,
+    "height": 38,
+    "rightGap": 0
+  }
+}

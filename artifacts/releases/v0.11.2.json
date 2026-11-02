@@ -1,0 +1,78 @@
+{
+  "version": "0.11.2",
+  "tag": "v0.11.2",
+  "sourceCommit": "729e6e0db1c5a1e402c7e6c3a154d4b597f7b097",
+  "verifiedAt": "2026-11-02T08:05:23.575Z",
+  "release": "https://github.com/taorobotics/Corporate-Brain/releases/tag/v0.11.2",
+  "workflow": "https://github.com/taorobotics/Corporate-Brain/actions/runs/41409347190",
+  "buildWorkflow": "https://github.com/taorobotics/Corporate-Brain/actions/runs/41409347190",
+  "buildReuseReason": null,
+  "assets": [
+    {
+      "name": "Corporate-Brain-Setup-0.11.2-x64.exe",
+      "bytes": 118406610,
+      "sha256": "d19439c8e40f0a289904a2b1881f348c45be3b7119c7e1a6efb8a5ca96f30359",
+      "url": "https://github.com/taorobotics/Corporate-Brain/releases/download/v0.11.2/Corporate-Brain-Setup-0.11.2-x64.exe"
+    },
+    {
+      "name": "Corporate-Brain-0.11.2-macOS-arm64.dmg",
+      "bytes": 138116405,
+      "sha256": "8b08f8c89bee6a9b761750a260b52f06ae68233949ce892bf087ea45422f5872",
+      "url": "https://github.com/taorobotics/Corporate-Brain/releases/download/v0.11.2/Corporate-Brain-0.11.2-macOS-arm64.dmg"
+    },
+    {
+      "name": "Corporate-Brain-0.11.2-macOS-x64.dmg",
+      "bytes": 143647773,
+      "sha256": "d7666a905a1cf390bf8419ecae349ee9c3d910648790aac142b689141f67d104",
+      "url": "https://github.com/taorobotics/Corporate-Brain/releases/download/v0.11.2/Corporate-Brain-0.11.2-macOS-x64.dmg"
+    },
+    {
+      "name": "Corporate-Brain-Server-0.11.2.zip",
+      "bytes": 19287268,
+      "sha256": "42bbd4d202d62bdad19982a56d79946aff805f3d092e41a8c3fe7b34a5075edf",
+      "url": "https://github.com/taorobotics/Corporate-Brain/releases/download/v0.11.2/Corporate-Brain-Server-0.11.2.zip"
+    }
+  ],
+  "verification": {
+    "windows-verification-x64.json": {
+      "platform": "win32",
+      "architecture": "x64",
+      "desktopChecks": 33,
+      "installerLifecycleChecks": 14,
+      "signing": "NotSigned",
+      "notarized": false,
+      "archiveIntegrity": null
+    },
+    "macos-verification-arm64.json": {
+      "platform": "darwin",
+      "architecture": "arm64",
+      "desktopChecks": 32,
+      "installerLifecycleChecks": 0,
+      "signing": "ad-hoc",
+      "notarized": false,
+      "archiveIntegrity": null
+    },
+    "macos-verification-x64.json": {
+      "platform": "darwin",
+      "architecture": "x64",
+      "desktopChecks": 32,
+      "installerLifecycleChecks": 0,
+      "signing": "ad-hoc",
+      "notarized": false,
+      "archiveIntegrity": null
+    },
+    "server-verification.json": {
+      "platform": "server",
+      "architecture": null,
+      "desktopChecks": 0,
+      "installerLifecycleChecks": 0,
+      "signing": null,
+      "notarized": false,
+      "archiveIntegrity": "passed"
+    }
+  },
+  "checksumsVerified": true,
+  "latestReleaseVerified": true,
+  "disposableWindowsLifecycleTested": true,
+  "physicalEmployeeInstallUpgradeUninstallTested": false
+}

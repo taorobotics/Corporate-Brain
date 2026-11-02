@@ -1,0 +1,106 @@
+{
+  "version": "0.11.2",
+  "verifiedAt": "2026-11-02T08:21:05.923Z",
+  "sourceCommit": "729e6e0db1c5a1e402c7e6c3a154d4b597f7b097",
+  "release": "https://github.com/taorobotics/Corporate-Brain/releases/tag/v0.11.2",
+  "workflow": "https://github.com/taorobotics/Corporate-Brain/actions/runs/41409347190",
+  "workflowConclusion": "success",
+  "completeReleaseVerified": true,
+  "mirror": {
+    "version": "0.11.2",
+    "assets": {
+      "win32-x64": {
+        "name": "Corporate-Brain-Setup-0.11.2-x64.exe",
+        "bytes": 118406610,
+        "sha256": "d19439c8e40f0a289904a2b1881f348c45be3b7119c7e1a6efb8a5ca96f30359"
+      },
+      "darwin-arm64": {
+        "name": "Corporate-Brain-0.11.2-macOS-arm64.dmg",
+        "bytes": 138116405,
+        "sha256": "8b08f8c89bee6a9b761750a260b52f06ae68233949ce892bf087ea45422f5872"
+      },
+      "darwin-x64": {
+        "name": "Corporate-Brain-0.11.2-macOS-x64.dmg",
+        "bytes": 143647773,
+        "sha256": "d7666a905a1cf390bf8419ecae349ee9c3d910648790aac142b689141f67d104"
+      }
+    },
+    "activatedAt": "2026-11-02T08:16:01.596Z",
+    "source": "company-local-mirror"
+  },
+  "cloud": {
+    "version": "0.11.2",
+    "verifiedAt": "2026-11-02T08:00:15.886Z",
+    "health": {
+      "status": "ok",
+      "version": "0.11.2",
+      "chatStorage": "device-only"
+    },
+    "frontendMatchesLocalBuild": true,
+    "checks": [
+      {
+        "path": "/assets/index-CDHck1yJ.js",
+        "sha256": "c85d4593b71559f4ed60626b7b7317e008488d727aa18c826da671698e6ddd42"
+      },
+      {
+        "path": "/assets/index-CDlibcxZ.css",
+        "sha256": "d56ab317b070eb28fdef5564f79c185a4676d54f2053fca0c35adc6c23a6b72e"
+      }
+    ]
+  },
+  "preservation": {
+    "version": "0.11.2",
+    "dataPreserved": true,
+    "rowCounts": {
+      "users": 3,
+      "departments": 2
+    },
+    "encryptionKeyPreserved": true,
+    "backup": "/opt/corporate-brain/backups/before-v0.11.2-20261102T075930Z"
+  },
+  "productionOldUpdateModule": {
+    "version": "0.11.2",
+    "sourceClient": "0.9.0",
+    "result": "passed",
+    "verifiedAt": "2026-11-02T08:19:41.329Z",
+    "scope": "Unmodified v0.9.0 native update module running in Electron against production HTTPS; visual checks recorded separately",
+    "realProductionFeed": true,
+    "realProductionDownload": true,
+    "legacyModuleOnly": true,
+    "networkMode": "Temporary SSH tunnel to production nginx; original HTTPS origin and certificate verification preserved",
+    "package": {
+      "name": "Corporate-Brain-Setup-0.11.2-x64.exe",
+      "bytes": 118406610,
+      "sha256": "d19439c8e40f0a289904a2b1881f348c45be3b7119c7e1a6efb8a5ca96f30359"
+    },
+    "downloadSeconds": 196.057,
+    "installerExecuted": false,
+    "employeeRecordsTouched": false
+  },
+  "legacyModuleSha256": "629e47ab5d1668472751aa0fcee7a2b4259f367f6137de3de334194c57cb247c",
+  "visualVerification": {
+    "result": "passed",
+    "scope": "Actual Electron UI with disposable preview data and update fixture",
+    "x": 15,
+    "y": 705,
+    "width": 214,
+    "height": 63,
+    "button": {
+      "width": 38,
+      "height": 38,
+      "rightGap": 0
+    }
+  },
+  "desktopUiChecks": 33,
+  "windowsUpgradeChecks": 14,
+  "privacy": {
+    "employeeRecordsTouched": false,
+    "productionModelsCalled": false,
+    "installerExecutedOnEmployeeDevice": false
+  },
+  "qaScope": "UI verified in the real Electron app against a disposable company server, including all theme and narrow-window checks. Production HTML/JS/CSS match the checked build. Production browser screenshot attempts timed out and are not claimed as passed. Unmodified old update module completed a real production HTTPS download via a temporary SSH tunnel with original TLS validation.",
+  "signing": {
+    "windows": "NotSigned",
+    "mac": "ad-hoc; not notarized"
+  }
+}
