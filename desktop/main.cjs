@@ -550,7 +550,20 @@ function createMainWindow() {
   ]) {
     win.on(event, publishWindowAppearance);
   }
-  win.webContents.setWindowOpenHandler(() => ({ action: "deny" }));
+  win.webContents.setWindowOpenHandler(({ url }) => {
+    try {
+      const target = new URL(url);
+      // Sources and answer links open outside the privileged application window.
+      if (
+        ["https:", "http:"].includes(target.protocol) &&
+        !target.username &&
+        !target.password &&
+        target.href.length <= 2048
+      )
+        void shell.openExternal(target.href).catch(() => {});
+    } catch {}
+    return { action: "deny" };
+  });
   win.webContents.on("will-navigate", (event, next) => {
     if (new URL(next).origin !== company) event.preventDefault();
   });

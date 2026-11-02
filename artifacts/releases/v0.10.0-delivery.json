@@ -1,0 +1,136 @@
+{
+  "version": "0.10.0",
+  "sourceCommit": "d0ed78c05b2da0cb99f0adf62dac6f3696035450",
+  "verifiedAt": "2026-11-02T06:14:58.822Z",
+  "cloud": {
+    "version": "0.10.0",
+    "verifiedAt": "2026-11-02T06:08:50.911Z",
+    "health": {
+      "status": "ok",
+      "version": "0.10.0",
+      "chatStorage": "device-only"
+    },
+    "frontendMatchesLocalBuild": true,
+    "checks": [
+      {
+        "path": "/assets/index-DFunZ4Kb.js",
+        "sha256": "44948df9e95848b812c483d1d43f00f4e86c56d6b3993e7fcc6b48b5722c485e"
+      },
+      {
+        "path": "/assets/index-B4NWIAxt.css",
+        "sha256": "c593ba5e777ebd3979937c0fe17868780e70e18e2c1f18f0f0ba691cae285e61"
+      }
+    ]
+  },
+  "preservation": {
+    "version": "0.10.0",
+    "dataPreserved": true,
+    "rowCounts": {
+      "users": 3,
+      "departments": 2
+    },
+    "encryptionKeyPreserved": true,
+    "backup": "/opt/corporate-brain/backups/before-v0.10.0-20261102T060804Z"
+  },
+  "liveModels": {
+    "version": "0.10.0",
+    "verifiedAt": "2026-11-02T06:09:05.255Z",
+    "scope": "Live short arithmetic smoke through authenticated cloud endpoint; stores timing/counts only, no provider credentials or reasoning text",
+    "productionModelsCalled": true,
+    "reports": [
+      {
+        "model": "deepseek-flash",
+        "result": "passed",
+        "firstReasoningMs": 6877,
+        "firstTextMs": 6877,
+        "elapsedMs": 7046,
+        "reasoningEvents": 14,
+        "reasoningCharacters": 105,
+        "toolEvents": 0,
+        "answerCorrect": true,
+        "providerReasoningExposed": true
+      },
+      {
+        "model": "deepseek-v4-pro",
+        "result": "passed",
+        "firstReasoningMs": 5296,
+        "firstTextMs": 6093,
+        "elapsedMs": 6093,
+        "reasoningEvents": 59,
+        "reasoningCharacters": 534,
+        "toolEvents": 0,
+        "answerCorrect": true,
+        "providerReasoningExposed": true
+      }
+    ]
+  },
+  "localWindows": {
+    "version": "0.10.0",
+    "artifact": "Corporate-Brain-Setup-0.10.0-x64.exe",
+    "sha256": "7e74c86ed6bbb52653808fc2a518ffc46da82cb56af3073375f6d152acf1c4e9",
+    "bytes": 119371340,
+    "sourceCommit": "d0ed78c05b2da0cb99f0adf62dac6f3696035450",
+    "companyServer": "https://191-223-41-179.nip.io",
+    "metadata": {
+      "ProductName": "公司大脑",
+      "ProductVersion": "0.10.0.0",
+      "FileDescription": "公司大脑",
+      "SignatureStatus": "NotSigned"
+    },
+    "files": [
+      "appearance.cjs",
+      "entry-scene.css",
+      "entry-scene.js",
+      "fonts.css",
+      "fonts/NotoSansSC-VF.woff2",
+      "fonts/OFL.txt",
+      "fonts/source.json",
+      "legal.html",
+      "legal/CODE_SIGNING_POLICY.md",
+      "legal/LICENSE",
+      "legal/PRIVACY.md",
+      "legal/THIRD_PARTY_NOTICES.txt",
+      "main.cjs",
+      "package.json",
+      "preload.cjs",
+      "server-preload.cjs",
+      "server-setup.html",
+      "server-setup.js",
+      "startup-preload.cjs",
+      "startup.cjs",
+      "startup.css",
+      "startup.html",
+      "startup.js",
+      "updates.cjs"
+    ],
+    "installerUI": {
+      "realInstallUpgradeUninstall": false,
+      "checks": [
+        "Primary and secondary buttons visibly depress and recover without activating",
+        "Native welcome page, privacy and license links are visible",
+        "Native path page shows actual space, directory and shortcut selection",
+        "Cancellation requires confirmation and exits before installing"
+      ],
+      "mode": "UI-only",
+      "sha256": "7e74c86ed6bbb52653808fc2a518ffc46da82cb56af3073375f6d152acf1c4e9",
+      "result": "passed",
+      "sourceCommit": "d0ed78c05b2da0cb99f0adf62dac6f3696035450",
+      "defaultPath": "D:\\software\\Corporate Brain",
+      "version": "0.10.0",
+      "physicalEmployeeDeviceTested": false
+    },
+    "fullInstallUpgradeUninstall": false,
+    "note": "Local company-preconfigured build; native full lifecycle and Mac validation are performed by GitHub Desktop release, not this local report."
+  },
+  "historyScan": {
+    "tool": "Gitleaks 8.30.1",
+    "commitsScanned": 68,
+    "findings": 0
+  },
+  "limits": [
+    "Two additional live Electron login attempts encountered network timeouts; cloud files matched the tested build and authenticated live model streaming succeeded.",
+    "Desktop source-link opening was discovered during final review and is corrected in v0.10.1.",
+    "First local installer UI attempt timed out before the directory page; the bounded retry passed all four checks.",
+    "Windows unsigned; macOS ad-hoc signed and not notarized."
+  ]
+}

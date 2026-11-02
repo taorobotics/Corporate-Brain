@@ -1,5 +1,5 @@
 // Exercises the real Electron window and preload bridge against a disposable server.
-const { app, BrowserWindow, ipcMain } = require("electron");
+const { app, BrowserWindow, ipcMain, shell } = require("electron");
 const { spawn } = require("node:child_process");
 const fs = require("node:fs/promises");
 const { join, resolve } = require("node:path");
@@ -489,6 +489,32 @@ async function waitFor(test, label, timeout = 12000) {
   await waitFor(
     () => has("找到 2 个来源"),
     "live reasoning and real event fixture sources",
+  );
+  const openedSources = [];
+  const originalOpenExternal = shell.openExternal;
+  const previousWindowCount = BrowserWindow.getAllWindows().length;
+  shell.openExternal = async (url) => {
+    openedSources.push(url);
+  };
+  try {
+    await js(`document.querySelector('.thinking-sources a').click()`);
+    await waitFor(
+      () => openedSources.length === 1,
+      "source reaches system browser",
+    );
+    assert.equal(openedSources[0], "https://example.com/platform");
+    await js(
+      `window.open('mailto:fixture@example.com');window.open('https://user:password@example.com/')`,
+    );
+    await new Promise((resolve) => setTimeout(resolve, 150));
+    assert.equal(openedSources.length, 1);
+    assert.equal(BrowserWindow.getAllWindows().length, previousWindowCount);
+    assert.equal(new URL(web.getURL()).origin, process.env.BRAIN_APP_URL);
+  } finally {
+    shell.openExternal = originalOpenExternal;
+  }
+  checks.push(
+    "Source links reach the system browser; credential-bearing URLs and non-web protocols are rejected without opening an application window",
   );
   await fill('textarea[aria-label="任务输入"]', "输入草稿触发重绘");
   await waitFor(
