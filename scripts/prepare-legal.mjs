@@ -79,6 +79,7 @@ notices += `\n\n========== Electron ==========\n${await readFile("node_modules/e
 notices += `\n\n========== Noto Sans SC (SIL Open Font License 1.1) ==========\n${await readFile("desktop/fonts/OFL.txt", "utf8")}\n`;
 notices += `\n\n========== Grok Ball (tycoding/grok-ball, MIT; pinned commit de368ce3acdc5a70e871ee46ebbe8f60b11d3d6a) ==========\n${await readFile("src/vendor/grok-ball.LICENSE", "utf8")}\n`;
 notices += `\n\n========== DSH skin catalog, selected artwork and Claude fonts ==========\n${await readFile("src/vendor/dsh-skins.LICENSE", "utf8")}\n`;
+notices += `\n\n========== DSH startup screen (6shenhonghong9/dsh-startup-screen, MIT; pinned commit 7f3d2837c1aaef8293abc69093b0a35c80d0f0e8; adapted dossier layout and palette, no third-party audio/video) ==========\n${await readFile("src/vendor/dsh-startup.LICENSE", "utf8")}\n`;
 // Normalize formatting only; retain all upstream copyright and license wording.
 await writeFile("THIRD_PARTY_NOTICES.txt", notices.replace(/[ \t]+$/gm, "").trimEnd() + "\n");
 await mkdir("desktop/legal", { recursive: true });

@@ -1334,12 +1334,21 @@ export default function Workspace(props: WorkspaceProps) {
               <Button onClick={() => navigate("skins")}>选择皮肤</Button>
             </div>
             <div className="setting-row">
-              <span>外观</span>
+              <div>
+                <span>外观</span>
+                <small>默认使用暖浅色；深色同时应用于下次启动动画</small>
+              </div>
               <SelectField
                 label="外观"
                 value={state.settings.theme}
                 onValueChange={(value) => patchSettings({ theme: value })}
                 options={[
+                  {
+                    value: "default",
+                    label: "默认（浅色）",
+                    description: "始终使用暖浅色，不跟随系统切换",
+                    icon: <Sun size={18} />,
+                  },
                   {
                     value: "light",
                     label: "浅色",
@@ -1355,6 +1364,24 @@ export default function Workspace(props: WorkspaceProps) {
                 ]}
               />
             </div>
+            {window.brainDesktop?.previewStartup && (
+              <div className="setting-row">
+                <div>
+                  <span>启动动画</span>
+                  <small>DSH 技术档案风格 · 跟随外观设置 · 可随时跳过</small>
+                </div>
+                <Button
+                  onClick={() =>
+                    void window.brainDesktop
+                      ?.writeAppearance?.(state.settings.theme)
+                      .then(() => window.brainDesktop?.previewStartup?.())
+                      .catch(() => notify("启动动画暂时无法预览，请稍后重试。"))
+                  }
+                >
+                  预览启动动画
+                </Button>
+              </div>
+            )}
             <div className="setting-row">
               <div>
                 <span>本地文件</span>

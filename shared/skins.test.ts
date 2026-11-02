@@ -25,6 +25,7 @@ test("legacy, missing and invalid skin preferences migrate to Claude without los
     assert.equal(state.settings.mode, "creative");
   }
   assert.equal(normalizeLocalState(undefined).settings.skin, "claude");
+  assert.equal(normalizeLocalState(undefined).settings.theme, "default");
   assert.equal(
     normalizeLocalState({
       settings: { skin: "mint", theme: "light", model: "", mode: "standard" },

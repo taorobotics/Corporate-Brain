@@ -11,8 +11,11 @@ export async function api<T = any>(
       headers:
         body === undefined ? undefined : { "Content-Type": "application/json" },
       body: body === undefined ? undefined : JSON.stringify(body),
+      signal: body === undefined ? AbortSignal.timeout(20000) : undefined,
     });
   } catch (error) {
+    if ((error as Error).name === "TimeoutError")
+      throw new Error("公司服务响应超时，请检查网络后重新连接。");
     throw new Error(
       `公司服务连接失败：${(error as Error).message || "请检查网络和服务状态"}`,
     );

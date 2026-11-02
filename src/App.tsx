@@ -94,13 +94,30 @@ export default function App() {
   const notify = (message: string) => setToast(message);
   const updates = useDesktopUpdates(!!user && !user.mustChange);
   const [legalOpen, setLegalOpen] = useState(false);
+  const [launchTheme, setLaunchTheme] = useState("default");
+  useEffect(() => {
+    void window.brainDesktop
+      ?.readAppearance?.()
+      .then(setLaunchTheme)
+      .catch(() => {});
+  }, []);
+  useEffect(() => {
+    if (!ready || !user || loadedProfile.current !== user.id) return;
+    setLaunchTheme(state.settings.theme);
+    void window.brainDesktop
+      ?.writeAppearance?.(state.settings.theme)
+      .catch(() => notify("启动外观未能保存，下次启动可能使用浅色。"));
+  }, [ready, user?.id, state.settings.theme]);
   const [skinPreview, setSkinPreview] = useState<
     (SkinSelection & { owner: string }) | null
   >(null);
   const activePreview = skinPreview?.owner === user?.id ? skinPreview : null;
   const savedSkin: SkinSelection = {
     skin: getSkin(state.settings.skin).id,
-    theme: state.settings.theme === "dark" ? "dark" : "light",
+    theme:
+      (ready ? state.settings.theme : launchTheme) === "dark"
+        ? "dark"
+        : "light",
   };
   const appearance = activePreview ?? savedSkin;
   const applySkin = (selection: SkinSelection) => {

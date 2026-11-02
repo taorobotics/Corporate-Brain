@@ -4,164 +4,49 @@
     <meta charset="utf-8" />
     <meta
       http-equiv="Content-Security-Policy"
-      content="default-src 'none'; script-src 'self'; style-src 'self' 'unsafe-inline'; font-src 'self'; object-src 'none'"
+      content="default-src 'none'; script-src 'self'; style-src 'self'; object-src 'none'"
     />
     <meta name="viewport" content="width=device-width,initial-scale=1" />
-    <title>公司大脑</title>
-    <link rel="stylesheet" href="fonts.css" />
-    <style>
-      * {
-        box-sizing: border-box;
-      }
-      body {
-        margin: 0;
-        background: #faf9f5;
-        color: #29251f;
-        font: 14px var(--font-ui);
-        min-height: 100vh;
-        display: grid;
-        place-items: center;
-      }
-      header {
-        position: absolute;
-        inset: 0 0 auto;
-        height: 42px;
-        display: flex;
-        justify-content: flex-end;
-        -webkit-app-region: drag;
-      }
-      button {
-        -webkit-app-region: no-drag;
-        font: inherit;
-        cursor: pointer;
-        border: 1px solid #d9cfc3;
-        border-radius: 9px;
-        padding: 11px 20px;
-        background: #fff;
-        color: #51473c;
-        box-shadow: 0 2px 0 #dfd6ca;
-        transition:
-          transform 100ms ease-out,
-          background-color 100ms ease-out;
-      }
-      button:hover {
-        background: #f2e9df;
-      }
-      button:active {
-        transform: translateY(2px) scale(0.97);
-        box-shadow: none;
-      }
-      button:focus-visible {
-        outline: 2px solid #a65035;
-        outline-offset: 3px;
-      }
-      button:disabled {
-        opacity: 0.55;
-        cursor: wait;
-      }
-      header button {
-        width: 46px;
-        border: 0;
-        border-radius: 0;
-        padding: 0;
-        box-shadow: none;
-        background: transparent;
-        font-size: 18px;
-      }
-      main {
-        text-align: center;
-        padding: 32px;
-        max-width: 520px;
-      }
-      svg {
-        color: #b86b4c;
-        margin-bottom: 24px;
-      }
-      h1 {
-        font-size: 27px;
-        margin: 0 0 14px;
-        font-weight: 600;
-      }
-      p {
-        line-height: 1.9;
-        color: #756c61;
-        margin: 0 0 26px;
-      }
-      .activity {
-        display: inline-block;
-        width: 20px;
-        height: 20px;
-        border: 2px solid #e7d8c9;
-        border-top-color: #b86b4c;
-        border-radius: 50%;
-        animation: turn 0.8s linear infinite;
-      }
-      .actions {
-        display: flex;
-        justify-content: center;
-        gap: 12px;
-      }
-      .primary {
-        background: #ad563a;
-        color: #fff;
-        border-color: #ad563a;
-        box-shadow: 0 2px 0 #86432e;
-      }
-      .primary:hover {
-        background: #95482f;
-      }
-      [hidden] {
-        display: none !important;
-      }
-      @keyframes turn {
-        to {
-          transform: rotate(360deg);
-        }
-      }
-      :root:not([data-desktop="win32"]) header {
-        display: none;
-      }
-      @media (prefers-reduced-motion: reduce) {
-        button {
-          transition: none;
-        }
-        .activity {
-          animation: none;
-          border-style: dotted;
-        }
-      }
-    </style>
+    <title>公司大脑 · 启动</title>
+    <script src="startup.js" defer></script>
+    <link rel="stylesheet" href="startup.css" />
   </head>
   <body>
-    <header>
-      <button id="minimize" aria-label="最小化">−</button
-      ><button id="close" aria-label="关闭">×</button>
-    </header>
-    <main>
-      <svg
-        width="56"
-        height="56"
-        viewBox="0 0 48 48"
-        fill="none"
-        stroke="currentColor"
-        stroke-width="2"
-        aria-hidden="true"
-      >
-        <path d="m24 4 17 10v20L24 44 7 34V14zM7 14l17 10 17-10M24 24v20" />
-      </svg>
-      <h1 id="title">正在打开公司大脑</h1>
-      <p id="detail">正在连接公司工作空间，首次启动可能需要几秒。</p>
-      <span
-        id="activity"
-        class="activity"
-        role="status"
-        aria-label="正在连接"
-      ></span>
-      <div id="actions" class="actions" hidden>
-        <button id="retry" class="primary">重新连接</button
-        ><button id="exit">关闭窗口</button>
+    <div id="dsh-startup-root">
+      <div class="dsu-plate" aria-hidden="true"></div>
+      <div class="dsu-watermark" aria-hidden="true"><i></i><i></i><i></i></div>
+      <div class="dsu-frame" aria-hidden="true">
+        <i></i><i></i><i></i><i></i>
       </div>
-    </main>
-    <script src="startup.js"></script>
+      <header class="window-controls">
+        <button id="minimize" aria-label="最小化">−</button
+        ><button id="maximize" aria-label="最大化或还原">□</button
+        ><button id="close" aria-label="关闭">×</button>
+      </header>
+      <div class="dsu-brand">
+        <b>CORPORATE</b><span>SYNTHESIZE INTELLIGENCE</span><b>BRAIN OS</b
+        ><small>公司大脑 <i> / </i> <span id="version"></span></small>
+      </div>
+      <button id="skip" class="skip">跳过动画 <span>SKIP ▸</span></button>
+      <div class="dsu-reticle" aria-hidden="true"><i></i></div>
+      <main class="dsu-center" aria-live="polite" aria-atomic="true">
+        <div class="eyebrow" id="phase">SECURE CONNECTION</div>
+        <h1 id="title">正在打开公司大脑<span class="caret">_</span></h1>
+        <div class="dsu-rule" aria-hidden="true"></div>
+        <p id="detail">正在建立安全连接，页面就绪后自动进入。</p>
+        <div id="actions" hidden>
+          <button id="retry">重新连接 <span>RETRY ↗</span></button>
+        </div>
+        <p id="error-code"></p>
+      </main>
+      <div class="dsu-meta">
+        <span id="step">[ 01 / 02 ] CONNECTING</span
+        ><span id="attempt">本地启动 · 即刻响应</span>
+      </div>
+      <footer>
+        <span>你的对话与草稿保留在本机</span><b>COMPANY WORKSPACE <i></i></b>
+      </footer>
+      <div class="dsu-progress" aria-hidden="true"><i></i></div>
+    </div>
   </body>
 </html>

@@ -12,8 +12,39 @@ ipcRenderer.on("window:appearance", (_event, state) => {
 window.addEventListener("DOMContentLoaded", applyWindowAppearance, {
   once: true,
 });
+// Signal usable content without waiting for images, fonts or the load event.
+// This also supports older company UIs during a rolling server/client update.
+window.addEventListener(
+  "DOMContentLoaded",
+  () => {
+    let signaled = false;
+    const painted = () => {
+      const root = document.getElementById("root");
+      if (
+        signaled ||
+        (root ? !root.childElementCount : !document.body?.childElementCount)
+      )
+        return;
+      signaled = true;
+      observer.disconnect();
+      requestAnimationFrame(() =>
+        requestAnimationFrame(() => ipcRenderer.send("startup:painted")),
+      );
+    };
+    const observer = new MutationObserver(painted);
+    observer.observe(document.documentElement, {
+      childList: true,
+      subtree: true,
+    });
+    painted();
+  },
+  { once: true },
+);
 contextBridge.exposeInMainWorld("brainDesktop", {
   retryStartup: () => ipcRenderer.invoke("startup:retry"),
+  readAppearance: () => ipcRenderer.invoke("appearance:read"),
+  writeAppearance: (theme) => ipcRenderer.invoke("appearance:write", theme),
+  previewStartup: () => ipcRenderer.invoke("startup:preview"),
   allowBootstrap: process.env.BRAIN_VERIFY === "1",
   canChangeServer:
     process.env.BRAIN_VERIFY === "1" || process.env.BRAIN_ADMIN_SETUP === "1",

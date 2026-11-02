@@ -1,4 +1,9 @@
-import type { DshMode, LocalState, LocalWorkspace, WorkspaceAccess } from "./types";
+import type {
+  DshMode,
+  LocalState,
+  LocalWorkspace,
+  WorkspaceAccess,
+} from "./types";
 import { normalizeSkin } from "./skins";
 
 export const DSH_MODE_OPTIONS: ReadonlyArray<{
@@ -72,7 +77,9 @@ export function normalizeAccess(value: unknown): WorkspaceAccess {
   return "edit";
 }
 
-export function normalizeLocalState(value: Partial<LocalState> | null | undefined): LocalState {
+export function normalizeLocalState(
+  value: Partial<LocalState> | null | undefined,
+): LocalState {
   const workspaceInput = Array.isArray(value?.workspaces)
     ? value.workspaces
     : [];
@@ -89,7 +96,9 @@ export function normalizeLocalState(value: Partial<LocalState> | null | undefine
       folder: typeof workspace.folder === "string" ? workspace.folder : null,
       access: normalizeAccess(workspace.access),
     }));
-  const normalizedWorkspaces = workspaces.length ? workspaces : [defaultWorkspace()];
+  const normalizedWorkspaces = workspaces.length
+    ? workspaces
+    : [defaultWorkspace()];
   const activeWorkspaceId = normalizedWorkspaces.some(
     (workspace) => workspace.id === value?.activeWorkspaceId,
   )
@@ -97,14 +106,21 @@ export function normalizeLocalState(value: Partial<LocalState> | null | undefine
     : normalizedWorkspaces[0].id;
   const settings = (value?.settings ?? {}) as Partial<LocalState["settings"]>;
   return {
-    conversations: Array.isArray(value?.conversations) ? value.conversations : [],
+    conversations: Array.isArray(value?.conversations)
+      ? value.conversations
+      : [],
     drafts: Array.isArray(value?.drafts) ? value.drafts : [],
     installed: Array.isArray(value?.installed) ? value.installed : [],
     projects: Array.isArray(value?.projects) ? value.projects : [],
     workspaces: normalizedWorkspaces,
     activeWorkspaceId,
     settings: {
-      theme: settings.theme === "dark" ? "dark" : "light",
+      theme:
+        settings.theme === "dark"
+          ? "dark"
+          : settings.theme === "light"
+            ? "light"
+            : "default",
       skin: normalizeSkin(settings.skin),
       model: typeof settings.model === "string" ? settings.model : "",
       mode: normalizeMode(settings.mode),

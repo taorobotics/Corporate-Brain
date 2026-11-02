@@ -719,6 +719,10 @@ async function waitFor(test, label, timeout = 12000) {
   assert.equal(await js(`document.documentElement.dataset.theme`), "dark");
   await key("Escape");
   await selectOption("外观", "浅色");
+  await selectOption("外观", "默认（浅色）");
+  assert.equal(await js(`document.documentElement.dataset.theme`), "light");
+  await waitFor(() => js(`window.brainDesktop.readAppearance().then(theme => theme === 'default')`), "default startup appearance saved");
+  checks.push("Default/light/dark appearance selection saves native startup preference; default remains light");
   checks.push(
     "Theme dropdown updates local preferences and renders readable dark menu states",
   );

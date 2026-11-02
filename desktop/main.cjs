@@ -7,7 +7,13 @@ const {
   shell,
 } = require("electron");
 const { DesktopUpdates } = require("./updates.cjs");
-const { loadCompanyWindow, isStartupSender } = require("./startup.cjs");
+const {
+  loadCompanyWindow,
+  isStartupSender,
+  skipStartup,
+  startupState,
+} = require("./startup.cjs");
+const { readAppearance, writeAppearance } = require("./appearance.cjs");
 const { basename, join, relative } = require("node:path");
 const fs = require("node:fs/promises");
 const fsSync = require("node:fs");
@@ -249,7 +255,8 @@ ipcMain.handle("directory:select", async (event) => {
   });
   return selected.canceled ? null : selected.filePaths[0];
 });
-const workspaceText = /\.(?:txt|md|markdown|csv|json|ya?ml|js|jsx|ts|tsx|css|html?|xml|py|java|go|rs|sql|sh|ps1|toml|ini|conf|log)$/i;
+const workspaceText =
+  /\.(?:txt|md|markdown|csv|json|ya?ml|js|jsx|ts|tsx|css|html?|xml|py|java|go|rs|sql|sh|ps1|toml|ini|conf|log)$/i;
 const workspaceImage = /\.(png|jpe?g|webp|gif)$/i;
 const ignoredWorkspaceDirectories = new Set([
   ".git",
@@ -272,26 +279,36 @@ async function inspectWorkspace(rootPath) {
     throw new Error("工作区目录无效，请重新选择目录");
   const root = await fs.realpath(rootPath);
   const rootStat = await fs.stat(root);
-  if (!rootStat.isDirectory()) throw new Error("工作区路径不是目录，请重新选择");
+  if (!rootStat.isDirectory())
+    throw new Error("工作区路径不是目录，请重新选择");
   const files = [];
   let totalBytes = 0;
   let skipped = 0;
   let truncated = false;
   async function walk(current) {
-    if (files.length >= WORKSPACE_MAX_FILES || totalBytes >= WORKSPACE_MAX_TOTAL_BYTES) {
+    if (
+      files.length >= WORKSPACE_MAX_FILES ||
+      totalBytes >= WORKSPACE_MAX_TOTAL_BYTES
+    ) {
       truncated = true;
       return;
     }
     const entries = await fs.readdir(current, { withFileTypes: true });
     entries.sort((left, right) => left.name.localeCompare(right.name, "en"));
     for (const entry of entries) {
-      if (files.length >= WORKSPACE_MAX_FILES || totalBytes >= WORKSPACE_MAX_TOTAL_BYTES) {
+      if (
+        files.length >= WORKSPACE_MAX_FILES ||
+        totalBytes >= WORKSPACE_MAX_TOTAL_BYTES
+      ) {
         truncated = true;
         return;
       }
       if (entry.name === "." || entry.name === "..") continue;
       if (entry.isDirectory()) {
-        if (ignoredWorkspaceDirectories.has(entry.name) || entry.name.startsWith(".")) {
+        if (
+          ignoredWorkspaceDirectories.has(entry.name) ||
+          entry.name.startsWith(".")
+        ) {
           skipped += 1;
           continue;
         }
@@ -310,8 +327,13 @@ async function inspectWorkspace(rootPath) {
         continue;
       }
       const stat = await fs.stat(fullPath);
-      const limit = imageMatch ? WORKSPACE_MAX_IMAGE_BYTES : WORKSPACE_MAX_TEXT_BYTES;
-      if (stat.size > limit || totalBytes + stat.size > WORKSPACE_MAX_TOTAL_BYTES) {
+      const limit = imageMatch
+        ? WORKSPACE_MAX_IMAGE_BYTES
+        : WORKSPACE_MAX_TEXT_BYTES;
+      if (
+        stat.size > limit ||
+        totalBytes + stat.size > WORKSPACE_MAX_TOTAL_BYTES
+      ) {
         skipped += 1;
         truncated = true;
         continue;
@@ -320,7 +342,8 @@ async function inspectWorkspace(rootPath) {
       totalBytes += bytes.length;
       if (imageMatch) {
         const extension = imageMatch[1].toLowerCase();
-        const mime = extension === "jpg" || extension === "jpeg" ? "jpeg" : extension;
+        const mime =
+          extension === "jpg" || extension === "jpeg" ? "jpeg" : extension;
         files.push({
           name,
           size: bytes.length,
@@ -371,7 +394,23 @@ ipcMain.on("window:action", (event, action) => {
 });
 ipcMain.handle("startup:retry", (event) => {
   if (!isStartupSender(win, event)) throw new Error("未授权窗口");
-  return loadCompanyWindow(win, address);
+  if (startupState(win)?.phase !== "error") return;
+  void loadCompanyWindow(win, address).catch(console.error);
+});
+ipcMain.on("startup:skip", (event) => {
+  if (isStartupSender(win, event)) skipStartup(win);
+});
+ipcMain.handle("appearance:read", (event) => {
+  sender(event);
+  return readAppearance(origin);
+});
+ipcMain.handle("appearance:write", (event, theme) => {
+  sender(event);
+  writeAppearance(origin, theme);
+});
+ipcMain.handle("startup:preview", (event) => {
+  sender(event);
+  return loadCompanyWindow(win, address, { preview: true });
 });
 ipcMain.on("edit:action", (event, action) => {
   sender(event);
@@ -462,7 +501,7 @@ function createMainWindow() {
     frame: process.platform !== "win32",
     roundedCorners: true,
     hasShadow: true,
-    backgroundColor: "#fbfaf8",
+    backgroundColor: readAppearance(origin) === "dark" ? "#0b0b0c" : "#e5e3df",
     title: "公司大脑",
     webPreferences: {
       preload: join(__dirname, "preload.cjs"),
@@ -492,9 +531,9 @@ function createMainWindow() {
     },
   });
   const publishWindowAppearance = () => {
-    if (win.isDestroyed()) return;
-    win.webContents.send("window:appearance", {
-      expanded: win.isMaximized() || win.isFullScreen(),
+    if (owner.isDestroyed()) return;
+    owner.webContents.send("window:appearance", {
+      expanded: owner.isMaximized() || owner.isFullScreen(),
     });
   };
   win.webContents.on("did-finish-load", publishWindowAppearance);
@@ -508,7 +547,10 @@ function createMainWindow() {
   }
   win.webContents.setWindowOpenHandler(() => ({ action: "deny" }));
   win.webContents.on("will-navigate", (event, next) => {
-    if (new URL(next).origin !== origin) event.preventDefault();
+    if (new URL(next).origin !== company) event.preventDefault();
+  });
+  win.webContents.on("will-redirect", (event, next) => {
+    if (new URL(next).origin !== company) event.preventDefault();
   });
   win.webContents.session.setPermissionRequestHandler(
     (_contents, _permission, callback) => callback(false),
@@ -582,7 +624,7 @@ function createMainWindow() {
     });
   Menu.setApplicationMenu(Menu.buildFromTemplate(menu));
   if (process.platform === "win32") win.setMenuBarVisibility(false);
-  void loadCompanyWindow(win, address);
+  void loadCompanyWindow(win, address).catch(console.error);
 }
 function openServerSetup() {
   if (setupWindow && !setupWindow.isDestroyed()) {

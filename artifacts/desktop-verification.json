@@ -22,6 +22,7 @@
     "UI source selection, local draft and package preview submit workflow",
     "Company-scope review through the real UI",
     "Published package downloaded and installed locally",
+    "Default/light/dark appearance selection saves native startup preference; default remains light",
     "Theme dropdown updates local preferences and renders readable dark menu states",
     "62 skins: search, live preview without persistence, cancel, artwork, dark mode, native save/reload, restore Claude default",
     "Window controls persist after logout, during connection, after a failed response and after retry",

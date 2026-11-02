@@ -8,7 +8,7 @@ export const emptyState = (): LocalState => ({
   projects: [],
   workspaces: [defaultWorkspace()],
   activeWorkspaceId: defaultWorkspace().id,
-  settings: { theme: "light", skin: DEFAULT_SKIN, model: "", mode: "standard" },
+  settings: { theme: "default", skin: DEFAULT_SKIN, model: "", mode: "standard" },
 });
 export const localKey = (userId: string) => `${location.origin}:${userId}`;
 let database: Promise<IDBDatabase> | undefined;

@@ -2,6 +2,9 @@ import type { LocalState } from "../shared/types";
 declare global {
   interface Window {
     brainDesktop?: {
+      readAppearance?(): Promise<string>;
+      writeAppearance?(theme: string): Promise<void>;
+      previewStartup?(): Promise<void>;
       allowBootstrap?: boolean;
       canChangeServer?: boolean;
       updates?: import("../shared/updates").UpdateBridge;
@@ -14,7 +17,12 @@ declare global {
       selectDirectory(): Promise<string | null>;
       inspectWorkspace(folder: string): Promise<{
         root: string;
-        files: { name: string; size: number; content: string; image?: string }[];
+        files: {
+          name: string;
+          size: number;
+          content: string;
+          image?: string;
+        }[];
         skipped: number;
         truncated: boolean;
       }>;

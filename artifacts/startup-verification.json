@@ -1,11 +1,15 @@
 {
   "result": "passed",
   "checks": [
-    "Local startup page is visible while network response is pending",
-    "Successful navigation replaces startup without a fixed delay",
-    "Remote renderer cannot invoke startup-only IPC",
-    "Timed-out navigation restores local recovery screen",
-    "Recovery button reconnects through real preload IPC"
+    "Warm startup remains responsive offline; default ignores dark OS; minimal isolated preload",
+    "Painted app reveals while a subresource is still pending; skip never exposes a blank navigation",
+    "Remote renderer is rejected by startup-only retry IPC",
+    "Timeout leaves actionable local screen and real retry button reconnects",
+    "Transient HTTP 503 automatically retries and recovers",
+    "Explicit dark persists per company; invalid preferences rejected; preview closes without navigation",
+    "Default restores warm appearance; reduced-motion disables rotation",
+    "Superseded attempts cannot replace a successful newer navigation",
+    "Certificate failures never bypass TLS; closing cancels attempts and destroys overlay"
   ],
   "productionModelsCalled": false
 }
