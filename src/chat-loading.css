@@ -92,10 +92,6 @@
 .reasoning-text {
   white-space: pre-wrap;
   overflow-wrap: anywhere;
-  max-height: 340px;
-  overflow: auto;
-  scrollbar-width: thin;
-  padding-right: 8px;
 }
 .thinking-tool-icon {
   padding-top: 4px;

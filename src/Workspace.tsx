@@ -2,6 +2,7 @@ import { useEffect, useRef, useState, type FormEvent } from "react";
 import {
   Plus,
   ArrowUp,
+  ArrowDown,
   Sparkle,
   Folder,
   BookOpen,
@@ -67,6 +68,7 @@ import {
 } from "../shared/chat-progress";
 import MessageContent from "./MessageContent";
 import { getSkin } from "../shared/skins";
+import { useChatScroll } from "./useChatScroll";
 
 export default function Workspace(props: WorkspaceProps) {
   const {
@@ -107,8 +109,13 @@ export default function Workspace(props: WorkspaceProps) {
     } | null>(null);
   const [taskKind, setTaskKind] = useState<"chat" | "image" | "video">("chat"),
     [taskError, setTaskError] = useState("");
-  const filesRef = useRef<HTMLInputElement>(null),
-    messagesRef = useRef<HTMLDivElement>(null);
+  const filesRef = useRef<HTMLInputElement>(null);
+  const {
+    containerRef: messagesRef,
+    contentRef,
+    showLatest,
+    jumpToLatest,
+  } = useChatScroll(page === "chat" ? (conversationId ?? "new") : null);
   const activeRequest = useRef<AbortController | null>(null);
   const mounted = useRef(true);
   useEffect(() => {
@@ -146,12 +153,6 @@ export default function Workspace(props: WorkspaceProps) {
     window.addEventListener("focus", reload);
     return () => window.removeEventListener("focus", reload);
   }, [page]);
-  useEffect(() => {
-    messagesRef.current?.scrollTo({
-      top: messagesRef.current.scrollHeight,
-      behavior: "smooth",
-    });
-  }, [conversation?.messages.length, busy]);
   function patchSettings(value: Partial<typeof state.settings>) {
     setState((s) => ({ ...s, settings: { ...s.settings, ...value } }));
   }
@@ -252,6 +253,7 @@ export default function Workspace(props: WorkspaceProps) {
   }
   async function send() {
     if (!text.trim() || busy || activeRequest.current) return;
+    jumpToLatest();
     setTaskError("");
     let current = conversation;
     if (!current) {
@@ -393,7 +395,7 @@ export default function Workspace(props: WorkspaceProps) {
                   ...system,
                   ...updated.messages
                     .slice(-40)
-                  .filter((m) => m.content.trim())
+                    .filter((m) => m.content.trim())
                     .map((m) => ({ role: m.role, content: m.content })),
                 ],
                 attachments: modelAttachments,
@@ -578,112 +580,130 @@ export default function Workspace(props: WorkspaceProps) {
                 <SidebarSimple size={21} />
               </IconButton>
             </header>
-            <div className="messages" ref={messagesRef}>
-              {!conversation?.messages.length && (
-                <div className="chat-welcome">
-                  <Sparkle size={38} weight="duotone" />
-                  <h1>今天，一起完成些什么？</h1>
-                  <p>从一个想法开始，让公司的知识与技能帮你推进工作。</p>
-                  <div className="suggestions">
-                    {[
-                      { text: "制作一张产品海报", icon: Images },
-                      { text: "整理视频脚本和分镜", icon: FileText },
-                      { text: "把成功经验整理成技能", icon: Sparkle },
-                    ].map(({ text: suggestion, icon: Icon }) => (
-                      <button
-                        key={suggestion}
-                        onClick={() => setText(suggestion)}
-                      >
-                        <Icon size={19} />
-                        {suggestion}
-                        <ArrowRight size={16} />
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              )}
-              {conversation?.messages.map((message) => (
-                <div key={message.id} className={`message ${message.role}`}>
-                  <span className="message-avatar">
-                    {message.role === "user" ? (
-                      <UserCircle size={26} />
-                    ) : message.trace ? (
-                      <GrokBall emotion="19" size={36} active={false} />
-                    ) : (
-                      <Sparkle size={25} weight="fill" />
-                    )}
-                  </span>
-                  <div className="message-body">
-                    {message.trace && (
-                      <ThinkingProcess
-                        items={message.trace.items}
-                        status={message.trace.status}
-                        elapsed={message.trace.elapsed}
-                      />
-                    )}
-                    <MessageContent content={message.content} />
-                    {message.attachments?.some((a) => a.image) && (
-                      <div className="message-attachments">
-                        {message.attachments
-                          .filter((a) => a.image)
-                          .map((a, index) => (
-                            <button
-                              key={index}
-                              onClick={() => setPreview(a.image!)}
-                              title={a.name}
-                            >
-                              <img src={a.image} alt={a.name} />
-                              <span>{a.name}</span>
-                            </button>
-                          ))}
-                      </div>
-                    )}
-                    {message.image && (
-                      <>
+            <div
+              className="messages"
+              ref={messagesRef}
+              tabIndex={0}
+              role="region"
+              aria-label="对话内容"
+            >
+              <div className="messages-content" ref={contentRef}>
+                {!conversation?.messages.length && (
+                  <div className="chat-welcome">
+                    <Sparkle size={38} weight="duotone" />
+                    <h1>今天，一起完成些什么？</h1>
+                    <p>从一个想法开始，让公司的知识与技能帮你推进工作。</p>
+                    <div className="suggestions">
+                      {[
+                        { text: "制作一张产品海报", icon: Images },
+                        { text: "整理视频脚本和分镜", icon: FileText },
+                        { text: "把成功经验整理成技能", icon: Sparkle },
+                      ].map(({ text: suggestion, icon: Icon }) => (
                         <button
-                          className="generated-image"
-                          onClick={() => setPreview(message.image!)}
+                          key={suggestion}
+                          onClick={() => setText(suggestion)}
                         >
-                          <img
-                            src={message.image}
-                            alt="生成成果，点击展开预览"
-                          />
-                          <ArrowsOutSimple size={20} />
+                          <Icon size={19} />
+                          {suggestion}
+                          <ArrowRight size={16} />
                         </button>
-                        <div className="image-actions">
-                          <Button
-                            onClick={() => void saveImage(message.image!)}
-                          >
-                            <DownloadSimple size={16} />
-                            保存到本地
-                          </Button>
-                          <Button disabled title="NAS 归档服务尚未接通">
-                            <Folder size={16} />
-                            归档 NAS
-                          </Button>
-                        </div>
-                      </>
-                    )}
+                      ))}
+                    </div>
                   </div>
-                </div>
-              ))}
-              {pendingReply &&
-                pendingReply.conversationId === conversation?.id && (
-                  <ChatLoading
-                    request={pendingReply}
-                    stop={() => activeRequest.current?.abort()}
-                  />
                 )}
-              {taskError && taskConversationId === conversation?.id && (
-                <div className="task-error" role="alert">
-                  {taskError}
-                  <button onClick={() => navigate("models")}>
-                    模型与服务 <ArrowRight size={14} />
-                  </button>
-                </div>
-              )}
+                {conversation?.messages.map((message) => (
+                  <div key={message.id} className={`message ${message.role}`}>
+                    <span className="message-avatar">
+                      {message.role === "user" ? (
+                        <UserCircle size={26} />
+                      ) : message.trace ? (
+                        <GrokBall emotion="19" size={36} active={false} />
+                      ) : (
+                        <Sparkle size={25} weight="fill" />
+                      )}
+                    </span>
+                    <div className="message-body">
+                      {message.trace && (
+                        <ThinkingProcess
+                          items={message.trace.items}
+                          status={message.trace.status}
+                          elapsed={message.trace.elapsed}
+                        />
+                      )}
+                      <MessageContent content={message.content} />
+                      {message.attachments?.some((a) => a.image) && (
+                        <div className="message-attachments">
+                          {message.attachments
+                            .filter((a) => a.image)
+                            .map((a, index) => (
+                              <button
+                                key={index}
+                                onClick={() => setPreview(a.image!)}
+                                title={a.name}
+                              >
+                                <img src={a.image} alt={a.name} />
+                                <span>{a.name}</span>
+                              </button>
+                            ))}
+                        </div>
+                      )}
+                      {message.image && (
+                        <>
+                          <button
+                            className="generated-image"
+                            onClick={() => setPreview(message.image!)}
+                          >
+                            <img
+                              src={message.image}
+                              alt="生成成果，点击展开预览"
+                            />
+                            <ArrowsOutSimple size={20} />
+                          </button>
+                          <div className="image-actions">
+                            <Button
+                              onClick={() => void saveImage(message.image!)}
+                            >
+                              <DownloadSimple size={16} />
+                              保存到本地
+                            </Button>
+                            <Button disabled title="NAS 归档服务尚未接通">
+                              <Folder size={16} />
+                              归档 NAS
+                            </Button>
+                          </div>
+                        </>
+                      )}
+                    </div>
+                  </div>
+                ))}
+                {pendingReply &&
+                  pendingReply.conversationId === conversation?.id && (
+                    <ChatLoading
+                      request={pendingReply}
+                      stop={() => activeRequest.current?.abort()}
+                    />
+                  )}
+                {taskError && taskConversationId === conversation?.id && (
+                  <div className="task-error" role="alert">
+                    {taskError}
+                    <button onClick={() => navigate("models")}>
+                      模型与服务 <ArrowRight size={14} />
+                    </button>
+                  </div>
+                )}
+              </div>
             </div>
             <div className="composer-wrap">
+              {showLatest && (
+                <button
+                  className="chat-jump-latest"
+                  type="button"
+                  onClick={jumpToLatest}
+                >
+                  <ArrowDown size={16} />
+                  回到最新内容
+                </button>
+              )}
               <div className="composer">
                 {(attachments.length > 0 || activeSkill) && (
                   <div className="attachment-row">

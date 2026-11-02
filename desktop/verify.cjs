@@ -579,6 +579,14 @@ async function waitFor(test, label, timeout = 12000) {
     features: [],
   });
   win.setContentSize(1586, 992);
+  await require("./verify-chat-scroll.cjs")({
+    web,
+    win,
+    js,
+    waitFor,
+    capture,
+    checks,
+  });
   await click("新建任务");
   await waitFor(
     () =>
@@ -592,6 +600,13 @@ async function waitFor(test, label, timeout = 12000) {
     () => js(`!!document.querySelector('.chat-loading')`),
     "return to live stream",
   );
+  await waitFor(
+    () =>
+      js(
+        `(() => {const el=document.querySelector('.messages');return el.scrollHeight-el.clientHeight-el.scrollTop <= 2;})()`,
+      ),
+    "reopened conversation follows its own live reply",
+  );
   await js(`window.__emitProgress({type:'text',text:'这是逐段到达的回答。'})`);
   await waitFor(() => has("这是逐段到达的回答。"), "answer streams separately");
   await js(`window.__finishLoadingFixture()`);
@@ -602,9 +617,21 @@ async function waitFor(test, label, timeout = 12000) {
       ),
     "settled response",
   );
+  await waitFor(
+    () =>
+      js(
+        `(() => {const el=document.querySelector('.messages');return el.scrollHeight-el.clientHeight-el.scrollTop <= 2;})()`,
+      ),
+    "final response remains at the end",
+  );
   await js(`document.querySelector('.thinking-toggle').click()`);
   assert.equal(await has("找到 2 个来源"), true);
   await fill('textarea[aria-label="任务输入"]', "加载项验收：失败清理");
+  await js(`document.querySelector('.messages').scrollTop=0`);
+  await waitFor(
+    () => js(`!!document.querySelector('.chat-jump-latest')`),
+    "reading history before sending again",
+  );
   await js(`document.querySelector('[aria-label="发送任务"]').click()`);
   await waitFor(
     () =>
@@ -612,6 +639,13 @@ async function waitFor(test, label, timeout = 12000) {
         `document.querySelector('.chat-loading')?.dataset.phase === 'waiting'`,
       ),
     "second request",
+  );
+  await waitFor(
+    () =>
+      js(
+        `(() => {const el=document.querySelector('.messages');return el.scrollHeight-el.clientHeight-el.scrollTop <= 2;})()`,
+      ),
+    "sending a message restores following",
   );
   await js(
     `window.__emitProgress({type:'reasoning',id:'error-r',text:'错误前收到的思考。'});window.__emitProgress({type:'text',text:'错误前收到的部分回答。'});window.__finishLoadingFixture(true)`,
