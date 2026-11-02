@@ -1,0 +1,34 @@
+{
+  "version": "0.11.6",
+  "result": "passed",
+  "scope": "Real authenticated production HTTP chat endpoint and actual original image; isolated QA session, standard mode",
+  "model": "deepseek-flash",
+  "reasoningEvents": 3331,
+  "textEvents": 824,
+  "toolCalls": 10,
+  "heartbeatCount": 5,
+  "lastProgressMs": 76255,
+  "usage": {
+    "inputTokens": 692,
+    "outputTokens": 1338,
+    "totalTokens": 14958
+  },
+  "completionEvent": true,
+  "answerCharacters": 1295,
+  "biologyTermsPresent": true,
+  "originalImageBytes": 144088,
+  "elapsedMs": 76338,
+  "answerReview": {
+    "concreteImageAnalysis": true,
+    "completeQuestionAnswered": true,
+    "incompleteQuestionIdentified": true
+  },
+  "transport": "Production application HTTP on server loopback; production HTTPS health and frontend verified separately",
+  "privacy": {
+    "imageIncluded": false,
+    "answerIncluded": false,
+    "reasoningIncluded": false,
+    "credentialsIncluded": false,
+    "existingConversationsModified": false
+  }
+}

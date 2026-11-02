@@ -1,0 +1,150 @@
+{
+  "version": "0.11.6",
+  "verifiedAt": "2026-11-02T12:04:33.536Z",
+  "sourceCommit": "6f13d7c907002295d6e9bc9c7ea12d7a34328435",
+  "status": "cloud-fix-verified-release-blocked",
+  "completeReleaseVerified": false,
+  "releasePublished": false,
+  "releaseDraft": true,
+  "latestPublishedVersion": "0.11.5",
+  "workflow": "https://github.com/taorobotics/Corporate-Brain/actions/runs/41440164756",
+  "blocker": {
+    "kind": "github-actions-billing",
+    "message": "The job was not started because recent account payments have failed or your spending limit needs to be increased. Please check the 'Billing & plans' section in your settings",
+    "jobStarted": false,
+    "requiredAction": "Repository account owner must restore Actions billing or available spending limit, then rerun the same tagged workflow."
+  },
+  "cloud": {
+    "version": "0.11.6",
+    "verifiedAt": "2026-11-02T11:59:25.751Z",
+    "health": {
+      "status": "ok",
+      "version": "0.11.6",
+      "chatStorage": "device-only"
+    },
+    "frontendMatchesLocalBuild": true,
+    "checks": [
+      {
+        "path": "/assets/index-C21FeQFm.js",
+        "sha256": "ae02bd1420fea0f03487aa847dc883894d4db2234475c59d9f739fb2368f5389"
+      },
+      {
+        "path": "/assets/index-E5PNOWHq.css",
+        "sha256": "8524ec1d6fbfe0bb1ca08fb70b12f25b4ca807cd3332e511fe188cbbc44300a0"
+      }
+    ],
+    "systemFontPriorityMatchesBuild": true,
+    "networkMode": "Physical interface and actual company IP; original HTTPS certificate verified; system proxy unchanged"
+  },
+  "preservation": {
+    "version": "0.11.6",
+    "dataPreserved": true,
+    "rowCounts": {
+      "users": 3,
+      "departments": 2
+    },
+    "encryptionKeyPreserved": true,
+    "backup": "/opt/corporate-brain/backups/before-v0.11.6-20261102T115853Z"
+  },
+  "models": {
+    "modelSettingsPreserved": true,
+    "modelCredentialsPreserved": true
+  },
+  "serverPackage": {
+    "artifact": "Corporate-Brain-Server-0.11.6.zip",
+    "sha256": "896a1c0ad591a1a5bb8a82bda933344580e951897ca16b0832b7d6cabed0be27",
+    "bytes": 19286496,
+    "source": "Built locally from the exact tagged source after tests and production build; uploaded to unpublished draft",
+    "sourceCommit": "6f13d7c907002295d6e9bc9c7ea12d7a34328435"
+  },
+  "productionImage": {
+    "version": "0.11.6",
+    "result": "passed",
+    "scope": "Real authenticated production HTTP chat endpoint and actual original image; isolated QA session, standard mode",
+    "model": "deepseek-flash",
+    "reasoningEvents": 3331,
+    "textEvents": 824,
+    "toolCalls": 10,
+    "heartbeatCount": 5,
+    "lastProgressMs": 76255,
+    "usage": {
+      "inputTokens": 692,
+      "outputTokens": 1338,
+      "totalTokens": 14958
+    },
+    "completionEvent": true,
+    "answerCharacters": 1295,
+    "biologyTermsPresent": true,
+    "originalImageBytes": 144088,
+    "elapsedMs": 76338,
+    "answerReview": {
+      "concreteImageAnalysis": true,
+      "completeQuestionAnswered": true,
+      "incompleteQuestionIdentified": true
+    },
+    "transport": "Production application HTTP on server loopback; production HTTPS health and frontend verified separately",
+    "privacy": {
+      "imageIncluded": false,
+      "answerIncluded": false,
+      "reasoningIncluded": false,
+      "credentialsIncluded": false,
+      "existingConversationsModified": false
+    }
+  },
+  "validation": {
+    "backendTests": 42,
+    "build": "passed",
+    "desktopChecks": 34,
+    "desktopResult": "passed",
+    "startupResult": "passed",
+    "fullHistorySecretScan": "passed; 82 commits; no findings",
+    "localWindows": {
+      "version": "0.11.6",
+      "result": "passed",
+      "scope": "Local packaging, source byte allowlist, product metadata and installer UI only; insufficient for publishing a complete release",
+      "sourceCommit": "6f13d7c907002295d6e9bc9c7ea12d7a34328435",
+      "artifact": "Corporate-Brain-Setup-0.11.6-x64.exe",
+      "bytes": 119371994,
+      "sha256": "85822d71078924af69782e8f513267ea7875bbcce8e1f331207d2f187d53fb0e",
+      "metadata": {
+        "ProductName": "公司大脑",
+        "ProductVersion": "0.11.6.0",
+        "FileDescription": "公司大脑",
+        "SignatureStatus": "NotSigned"
+      },
+      "installerUiChecks": [
+        "Primary and secondary buttons visibly depress and recover without activating",
+        "Native welcome page, privacy and license links are visible",
+        "Native path page shows actual space, directory and shortcut selection",
+        "Cancellation requires confirmation and exits before installing"
+      ],
+      "realInstallUpgradeUninstall": false,
+      "macPackagesVerified": false,
+      "published": false
+    },
+    "macPackages": "pending",
+    "windowsInstallUpgradeUninstall": "pending disposable CI runner",
+    "companyUpdateMirror": "Kept on published v0.11.5; never exposed incomplete v0.11.6"
+  },
+  "deploymentNotes": [
+    "Preservation check initially rejected randomized encrypted secret bytes; actual credentials and settings verified equal in memory.",
+    "Failed deployment attempts restored v0.11.5; final LF-normalized deployment succeeded and passed production image request."
+  ],
+  "privacy": {
+    "privateImagePublished": false,
+    "modelCredentialsPublished": false,
+    "employeeConversationsModified": false,
+    "systemNetworkSettingsChanged": false
+  },
+  "remaining": [
+    "Restore GitHub Actions billing and rerun exact v0.11.6 source.",
+    "Complete all native builds and required checks, publish four verified packages and checksums.",
+    "Verify company mirror and old-client actual discovery/download, save official Windows package.",
+    "Reconcile cloud package receipt with final official server artifact before declaring complete delivery."
+  ],
+  "limits": [
+    "Already failed requests must be sent again.",
+    "The fix is on the company cloud server; separate Mac mini deployment remains unchanged.",
+    "Windows is not trusted-signed; Mac signing and notarization status must remain explicit."
+  ]
+}
