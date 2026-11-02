@@ -1456,129 +1456,6 @@ code {
   margin: 20px auto;
   max-width: 850px;
 }
-.working-thoughts {
-  display: flex;
-  align-items: flex-start;
-  gap: 14px;
-  max-width: 850px;
-  margin: 20px auto 24px;
-  padding: 14px 16px;
-  border: 1px solid var(--line);
-  border-radius: 16px;
-  background: color-mix(in srgb, var(--panel) 94%, var(--side));
-  box-shadow: 0 5px 18px #25231f08;
-}
-.working-thoughts.is-error {
-  border-color: #e2b8a8;
-  background: #fff7f3;
-}
-.grok-ball-host {
-  display: grid;
-  place-items: center;
-  flex: 0 0 auto;
-  overflow: visible;
-}
-.grok-ball-host > svg {
-  width: 100%;
-  height: 100%;
-  overflow: visible;
-}
-.working-thoughts-body {
-  min-width: 0;
-  flex: 1;
-}
-.working-thoughts-heading {
-  display: flex;
-  align-items: baseline;
-  gap: 9px;
-  margin: 3px 0 9px;
-}
-.working-thoughts-heading strong {
-  font-size: 13px;
-}
-.working-thoughts-heading span {
-  color: var(--muted);
-  font-size: 11px;
-}
-.thinking-steps {
-  display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 8px;
-}
-.thinking-step {
-  position: relative;
-  display: flex;
-  gap: 7px;
-  min-width: 0;
-  color: #a2a49c;
-  font-size: 11px;
-}
-.thinking-step:not(:last-child)::after {
-  content: "";
-  position: absolute;
-  top: 8px;
-  left: 18px;
-  right: -8px;
-  height: 1px;
-  background: var(--line);
-}
-.thinking-step-mark {
-  z-index: 1;
-  display: grid;
-  place-items: center;
-  width: 16px;
-  height: 16px;
-  flex: 0 0 auto;
-  border: 1px solid var(--line);
-  border-radius: 50%;
-  background: var(--panel);
-  color: var(--panel);
-}
-.thinking-step b,
-.thinking-step small {
-  display: block;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-.thinking-step b {
-  font-weight: 600;
-}
-.thinking-step small {
-  margin-top: 2px;
-  color: var(--muted);
-  font-size: 10px;
-}
-.thinking-step.active {
-  color: var(--ink);
-}
-.thinking-step.active .thinking-step-mark {
-  border-color: var(--accent);
-  box-shadow: 0 0 0 4px color-mix(in srgb, var(--accent) 16%, transparent);
-}
-.thinking-step.done {
-  color: var(--ink);
-}
-.thinking-step.done .thinking-step-mark {
-  border-color: #75906d;
-  background: #75906d;
-}
-.thinking-step.done:not(:last-child)::after {
-  background: #9ab294;
-}
-.thinking-step.error {
-  color: #a34f3f;
-}
-.thinking-step.error .thinking-step-mark {
-  border-color: #c87a68;
-  background: #fff0eb;
-}
-.thinking-disclaimer {
-  display: block;
-  margin-top: 9px;
-  color: var(--muted);
-  font-size: 10px;
-}
 .task-error {
   border: 1px solid #ead6cd;
   border-radius: 10px;
@@ -2644,10 +2521,6 @@ tbody > tr:hover {
   color: #e6b59b;
   border-color: #584134;
 }
-:root[data-theme="dark"] .working-thoughts.is-error {
-  background: #3e3028;
-  border-color: #68473b;
-}
 :root[data-theme="dark"] .message-markdown pre {
   background: #20221e;
 }
@@ -2656,9 +2529,6 @@ tbody > tr:hover {
 }
 :root[data-theme="dark"] .message-table tbody tr:nth-child(even) {
   background: #292b26;
-}
-:root[data-theme="dark"] .thinking-step.error .thinking-step-mark {
-  background: #4b332d;
 }
 :root[data-theme="dark"] .card-icon {
   background: #383a31;
@@ -2879,18 +2749,6 @@ tbody > tr:hover {
   .message-table-bar-row {
     grid-template-columns: minmax(60px, 0.35fr) minmax(70px, 1fr) auto;
     gap: 7px;
-  }
-  .working-thoughts {
-    margin-left: 0;
-    margin-right: 0;
-    padding: 11px;
-  }
-  .thinking-steps {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    row-gap: 9px;
-  }
-  .thinking-step:nth-child(2)::after {
-    display: none;
   }
   .composer-tools {
     gap: 2px;

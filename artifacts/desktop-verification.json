@@ -12,6 +12,7 @@
     "Native maximize and fullscreen use straight edges; restored windows recover small corners",
     "Custom composer selects workspaces, DSH modes and permission levels with keyboard and pointer",
     "Empty model picker explains configuration and opens the real model settings",
+    "DSH inline whale, state ring and text shimmer follow the real pending request; survive rerenders, respect reduced motion, stay scoped to the conversation and disappear on success/failure",
     "Configured model picker filters by task kind and persists selection; QA fixtures never call a model",
     "Top edit menu restores the original input target and invokes its native action; account menu supports keyboard navigation",
     "Admin page retains the shared Windows controls without duplicating native macOS controls",

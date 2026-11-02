@@ -1,0 +1,151 @@
+/* Fish mark, StateDot and TextShimmer adapted from DeepSeek Harness 0.2.0-rc.2.
+   MIT © 2026 DeepSeek. See vendor/dsh-chat.LICENSE and THIRD_PARTY_NOTICES.txt. */
+.chat-loading {
+  padding-block: 8px 16px;
+}
+.chat-loading .chat-loading-avatar {
+  color: #4d6bfe;
+  padding-top: 2px;
+}
+.chat-loading-body {
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+  min-width: 0;
+}
+.chat-loading-model {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--ink);
+  overflow-wrap: anywhere;
+}
+.chat-loading-status {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  color: var(--muted);
+  font-size: 14px;
+  line-height: 24px;
+}
+.chat-loading-elapsed {
+  margin-left: 5px;
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+.dsh-loading-spinner {
+  flex: none;
+}
+.dsh-loading-spinner-motion {
+  transform-origin: center;
+  animation: dsh-loading-spin 1.5s linear infinite;
+}
+.dsh-loading-spinner-track,
+.dsh-loading-spinner-arc {
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+}
+.dsh-loading-spinner-track {
+  opacity: 0.25;
+}
+.dsh-loading-spinner-arc {
+  stroke-dasharray: 12 150;
+  animation: dsh-loading-dash 1.5s ease-in-out infinite;
+}
+.dsh-loading-text {
+  position: relative;
+  display: inline-grid;
+  width: max-content;
+  max-width: 100%;
+  min-width: 0;
+}
+.dsh-loading-decoration {
+  position: absolute;
+  inset: 0;
+  overflow: clip;
+  pointer-events: none;
+  user-select: none;
+}
+.dsh-loading-sweep {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  color: var(--ink);
+  mask-image: linear-gradient(
+    105deg,
+    transparent 0%,
+    black 40% 60%,
+    transparent 100%
+  );
+  transform: translateX(-100%);
+  animation-name: dsh-loading-sweep;
+}
+.dsh-loading-highlight {
+  display: block;
+  width: 100%;
+  height: 100%;
+  transform: translateX(100%);
+  animation-name: dsh-loading-highlight;
+  white-space: nowrap;
+}
+.dsh-loading-sweep,
+.dsh-loading-highlight {
+  animation-duration: 1.5s;
+  animation-delay: 0.3s;
+  animation-timing-function: steps(48, end);
+  animation-iteration-count: infinite;
+}
+@keyframes dsh-loading-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+@keyframes dsh-loading-dash {
+  0%,
+  100% {
+    stroke-dasharray: 12 150;
+    stroke-dashoffset: 0;
+  }
+  50% {
+    stroke-dasharray: 24 150;
+    stroke-dashoffset: -6;
+  }
+}
+@keyframes dsh-loading-sweep {
+  0% {
+    transform: translateX(-100%);
+  }
+  66.6667%,
+  100% {
+    transform: translateX(100%);
+  }
+}
+@keyframes dsh-loading-highlight {
+  0% {
+    transform: translateX(100%);
+  }
+  66.6667%,
+  100% {
+    transform: translateX(-100%);
+  }
+}
+:root[data-theme="dark"] .chat-loading .chat-loading-avatar {
+  color: #8096ff;
+}
+@media (prefers-reduced-motion: reduce) {
+  .dsh-loading-decoration {
+    display: none;
+  }
+  .dsh-loading-spinner-motion,
+  .dsh-loading-spinner-arc,
+  .dsh-loading-sweep,
+  .dsh-loading-highlight {
+    animation: none;
+  }
+  .dsh-loading-spinner-arc {
+    stroke-dasharray: 18 150;
+    stroke-dashoffset: -3;
+  }
+}

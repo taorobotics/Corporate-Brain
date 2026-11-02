@@ -13,7 +13,6 @@ import {
   SidebarSimple,
   DownloadSimple,
   ArrowLeft,
-  Check,
   FileText,
   CircleNotch,
   UserCircle,
@@ -58,21 +57,10 @@ import {
   Field,
 } from "./components";
 import SkillEditor from "./SkillEditor";
-import GrokBall from "./GrokBall";
+import ChatLoading, { type PendingReply } from "./ChatLoading";
 import MessageContent from "./MessageContent";
 import { getSkin } from "../shared/skins";
 
-type ThinkingStep = {
-  label: string;
-  detail: string;
-  emotion: string;
-};
-type ThinkingState = {
-  steps: ThinkingStep[];
-  active: number;
-  done?: boolean;
-  error?: boolean;
-};
 export default function Workspace(props: WorkspaceProps) {
   const {
     user,
@@ -103,7 +91,8 @@ export default function Workspace(props: WorkspaceProps) {
     [projectDialog, setProjectDialog] = useState(false),
     [selectedProject, setSelectedProject] = useState<string | null>(null),
     [workspaceDialog, setWorkspaceDialog] = useState(false),
-    [thinking, setThinking] = useState<ThinkingState | null>(null),
+    [pendingReply, setPendingReply] = useState<PendingReply | null>(null),
+    [taskConversationId, setTaskConversationId] = useState<string | null>(null),
     [lastUsage, setLastUsage] = useState<{
       inputTokens?: number;
       outputTokens?: number;
@@ -112,9 +101,7 @@ export default function Workspace(props: WorkspaceProps) {
   const [taskKind, setTaskKind] = useState<"chat" | "image" | "video">("chat"),
     [taskError, setTaskError] = useState("");
   const filesRef = useRef<HTMLInputElement>(null),
-    messagesRef = useRef<HTMLDivElement>(null),
-    thinkingTimer = useRef<ReturnType<typeof setInterval> | null>(null),
-    thinkingClearTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+    messagesRef = useRef<HTMLDivElement>(null);
   const conversation = state.conversations.find((c) => c.id === conversationId);
   const taskModels = connections.filter(
     (c) => c.enabled && c.kind === taskKind,
@@ -149,10 +136,6 @@ export default function Workspace(props: WorkspaceProps) {
       behavior: "smooth",
     });
   }, [conversation?.messages.length, busy]);
-  useEffect(() => () => {
-    if (thinkingTimer.current) clearInterval(thinkingTimer.current);
-    if (thinkingClearTimer.current) clearTimeout(thinkingClearTimer.current);
-  });
   function patchSettings(value: Partial<typeof state.settings>) {
     setState((s) => ({ ...s, settings: { ...s.settings, ...value } }));
   }
@@ -164,71 +147,6 @@ export default function Workspace(props: WorkspaceProps) {
         item.id === workspace.id ? { ...item, ...value } : item,
       ),
     }));
-  }
-  function thinkingSteps(): ThinkingStep[] {
-    const mode =
-      DSH_MODE_OPTIONS.find((option) => option.value === state.settings.mode) ??
-      DSH_MODE_OPTIONS[0];
-    return [
-      {
-        label: "接收任务",
-        detail: "整理当前问题和对话上下文",
-        emotion: "31",
-      },
-      {
-        label: "分析任务",
-        detail: `使用${mode.label}规划本轮处理方式`,
-        emotion: "30",
-      },
-      {
-        label: attachments.length ? "读取附件" : "检查工具",
-        detail: attachments.length
-          ? `准备 ${attachments.length} 个附件`
-          : "准备文件、联网和模型能力",
-        emotion: attachments.length ? "40" : "36",
-      },
-      {
-        label: "整理回复",
-        detail: "生成结果并返回给你",
-        emotion: "39",
-      },
-    ];
-  }
-  function startThinking() {
-    if (thinkingTimer.current) clearInterval(thinkingTimer.current);
-    if (thinkingClearTimer.current) clearTimeout(thinkingClearTimer.current);
-    const steps = thinkingSteps();
-    setThinking({ steps, active: 0 });
-    thinkingTimer.current = setInterval(() => {
-      setThinking((current) => {
-        if (!current || current.done || current.error) return current;
-        return {
-          ...current,
-          active: Math.min(current.active + 1, current.steps.length - 1),
-        };
-      });
-    }, 1400);
-  }
-  function finishThinking(error = false) {
-    if (thinkingTimer.current) {
-      clearInterval(thinkingTimer.current);
-      thinkingTimer.current = null;
-    }
-    setThinking((current) =>
-      current
-        ? {
-            ...current,
-            active: error ? current.active : current.steps.length - 1,
-            done: !error,
-            error,
-          }
-        : current,
-    );
-    if (thinkingClearTimer.current) clearTimeout(thinkingClearTimer.current);
-    thinkingClearTimer.current = setTimeout(
-      () => setThinking(null),
-      error ? 1600 : 700,
-    );
   }
   async function chooseWorkspaceFolder() {
     if (!window.brainDesktop) {
@@ -329,6 +247,7 @@ export default function Workspace(props: WorkspaceProps) {
       };
       setConversationId(current.id);
     }
+    setTaskConversationId(current.id);
     const sentAttachments = attachments.map((attachment) => ({
       ...attachment,
     }));
@@ -366,7 +285,13 @@ export default function Workspace(props: WorkspaceProps) {
       return;
     }
     setBusy(true);
-    startThinking();
+    setPendingReply({
+      conversationId: updated.id,
+      phase: "preparing",
+      kind: taskKind,
+      modelName: model.name,
+      startedAt: Date.now(),
+    });
     try {
       const workspaceAttachments =
         taskKind === "chat" ? await readWorkspaceContext(text) : [];
@@ -390,6 +315,9 @@ export default function Workspace(props: WorkspaceProps) {
             },
           ]
         : [];
+      setPendingReply((current) =>
+        current ? { ...current, phase: "waiting" } : null,
+      );
       const response =
         taskKind === "image"
           ? await api("/generate/image", {
@@ -423,11 +351,10 @@ export default function Workspace(props: WorkspaceProps) {
           c.id === updated.id ? { ...c, messages: [...c.messages, result] } : c,
         ),
       }));
-      finishThinking();
     } catch (e) {
-      finishThinking(true);
       setTaskError((e as Error).message);
     } finally {
+      setPendingReply(null);
       setBusy(false);
     }
   }
@@ -655,65 +582,11 @@ export default function Workspace(props: WorkspaceProps) {
                   </div>
                 </div>
               ))}
-              {thinking && (
-                <div
-                  className={`working-thoughts ${thinking.error ? "is-error" : ""}`}
-                  aria-live="polite"
-                >
-                  <GrokBall
-                    emotion={
-                      thinking.error
-                        ? "34"
-                        : thinking.done
-                          ? "33"
-                          : thinking.steps[thinking.active].emotion
-                    }
-                    size={58}
-                  />
-                  <div className="working-thoughts-body">
-                    <div className="working-thoughts-heading">
-                      <strong>
-                        {thinking.error
-                          ? "处理遇到问题"
-                          : thinking.done
-                            ? "任务完成"
-                            : thinking.steps[thinking.active].label}
-                      </strong>
-                      <span>DSH 工作状态</span>
-                    </div>
-                    <div className="thinking-steps">
-                      {thinking.steps.map((step, index) => {
-                        const status =
-                          thinking.error && index === thinking.active
-                            ? "error"
-                            : thinking.done || index < thinking.active
-                              ? "done"
-                              : index === thinking.active
-                                ? "active"
-                                : "pending";
-                        return (
-                          <div
-                            className={`thinking-step ${status}`}
-                            key={step.label}
-                          >
-                            <span className="thinking-step-mark">
-                              {status === "done" ? <Check size={12} /> : ""}
-                            </span>
-                            <span>
-                              <b>{step.label}</b>
-                              <small>{step.detail}</small>
-                            </span>
-                          </div>
-                        );
-                      })}
-                    </div>
-                    <small className="thinking-disclaimer">
-                      这里显示任务阶段，不展示模型的隐性思维内容。
-                    </small>
-                  </div>
-                </div>
-              )}
-              {taskError && (
+              {pendingReply &&
+                pendingReply.conversationId === conversation?.id && (
+                  <ChatLoading request={pendingReply} />
+                )}
+              {taskError && taskConversationId === conversation?.id && (
                 <div className="task-error" role="alert">
                   {taskError}
                   <button onClick={() => navigate("models")}>

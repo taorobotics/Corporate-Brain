@@ -454,6 +454,117 @@ async function waitFor(test, label, timeout = 12000) {
   );
   await key("Escape");
   await selectOption("任务类型", "对话");
+  // Control only the generation response in this disposable window. Never call a provider.
+  await js(`(() => {
+    window.__loadingOriginalFetch = window.fetch;
+    window.fetch = (input, options) => String(input) === '/api/generate/chat'
+      ? new Promise(resolve => { window.__finishLoadingFixture = (failed = false) => resolve(new Response(JSON.stringify(failed ? {error:'隔离验收：模拟请求失败'} : {content:'这是隔离验收回复，未调用真实模型。'}), {status:failed ? 503 : 200,headers:{'Content-Type':'application/json'}})); })
+      : window.__loadingOriginalFetch(input, options);
+  })()`);
+  await fill('textarea[aria-label="任务输入"]', "加载项验收：等待完成后再回复");
+  await js(`document.querySelector('[aria-label="发送任务"]').click()`);
+  await waitFor(
+    () =>
+      js(
+        `document.querySelector('.chat-loading')?.dataset.phase === 'waiting'`,
+      ),
+    "DSH inline loader waits for response",
+  );
+  assert.equal(
+    await js(
+      `!!document.querySelector('.working-thoughts,.thinking-steps,.grok-ball-host')`,
+    ),
+    false,
+  );
+  await fill('textarea[aria-label="任务输入"]', "输入草稿触发重绘");
+  await waitFor(
+    () =>
+      js(
+        `parseInt(document.querySelector('.chat-loading-elapsed')?.textContent) >= 2`,
+      ),
+    "loading survives normal rerenders",
+  );
+  await capture("client-chat-loading-light.png");
+  await js(`document.documentElement.dataset.theme='dark'`);
+  await capture("client-chat-loading-dark.png");
+  await js(`document.documentElement.dataset.theme='light'`);
+  win.setContentSize(900, 760);
+  await capture("client-chat-loading-narrow.png");
+  assert.equal(
+    await js(`document.documentElement.scrollWidth <= innerWidth + 1`),
+    true,
+  );
+  await web.debugger.sendCommand("Emulation.setEmulatedMedia", {
+    features: [{ name: "prefers-reduced-motion", value: "reduce" }],
+  });
+  assert.equal(
+    await js(
+      `getComputedStyle(document.querySelector('.dsh-loading-spinner-motion')).animationName`,
+    ),
+    "none",
+  );
+  assert.equal(
+    await js(
+      `getComputedStyle(document.querySelector('.dsh-loading-decoration')).display`,
+    ),
+    "none",
+  );
+  await web.debugger.sendCommand("Emulation.setEmulatedMedia", {
+    features: [],
+  });
+  win.setContentSize(1586, 992);
+  await click("新建任务");
+  await waitFor(
+    () =>
+      js(
+        `!!document.querySelector('.chat-welcome') && !document.querySelector('.chat-loading')`,
+      ),
+    "new conversation has no foreign request indicator",
+  );
+  await click("加载项验收：等待完成后再回复");
+  await waitFor(
+    () => js(`!!document.querySelector('.chat-loading')`),
+    "return to pending conversation",
+  );
+  await js(`window.__finishLoadingFixture()`);
+  await waitFor(
+    () =>
+      js(
+        `!document.querySelector('.chat-loading') && document.body.innerText.includes('这是隔离验收回复')`,
+      ),
+    "answer replaces loader without stale completion card",
+  );
+  await fill('textarea[aria-label="任务输入"]', "加载项验收：失败清理");
+  await js(`document.querySelector('[aria-label="发送任务"]').click()`);
+  await waitFor(
+    () =>
+      js(
+        `document.querySelector('.chat-loading')?.dataset.phase === 'waiting'`,
+      ),
+    "second request loader",
+  );
+  await js(`window.__finishLoadingFixture(true)`);
+  await waitFor(
+    () =>
+      js(
+        `!document.querySelector('.chat-loading') && !!document.querySelector('.task-error')`,
+      ),
+    "failed request removes loader",
+  );
+  await click("新建任务");
+  await waitFor(
+    () =>
+      js(
+        `!!document.querySelector('.chat-welcome') && !document.querySelector('.task-error,.chat-loading')`,
+      ),
+    "new conversation has no stale error or completion",
+  );
+  await js(
+    `window.fetch=window.__loadingOriginalFetch; delete window.__loadingOriginalFetch; delete window.__finishLoadingFixture;`,
+  );
+  checks.push(
+    "DSH inline whale, state ring and text shimmer follow the real pending request; survive rerenders, respect reduced motion, stay scoped to the conversation and disappear on success/failure",
+  );
   for (const fixture of modelFixtures)
     await request(`/connections/${fixture.id}`, {}, "DELETE");
   await js(`location.reload()`);

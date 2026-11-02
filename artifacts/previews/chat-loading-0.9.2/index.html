@@ -1,0 +1,157 @@
+<!doctype html><html lang="zh-CN" data-theme="light"><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>公司大脑 · DSH 对话加载预览</title><style>
+:root{--bg:#faf9f5;--side:#f3f0e9;--panel:#fff;--ink:#25251f;--muted:#8b8a82;--line:#e6e2d9;color-scheme:light}
+:root[data-theme=dark]{--bg:#1f201d;--side:#282923;--panel:#30312b;--ink:#eeeade;--muted:#aaa99d;--line:#42433b;color-scheme:dark}
+*{box-sizing:border-box}body{margin:0;font:14px "Microsoft YaHei",system-ui,sans-serif;background:var(--bg);color:var(--ink)}button{font:inherit;cursor:pointer;color:inherit}header{height:64px;border-bottom:1px solid var(--line);padding:0 36px;display:flex;align-items:center;gap:18px}header strong{font-size:17px}header span{color:var(--muted);font-size:12px}.stage{max-width:920px;margin:0 auto;padding:60px 35px 24px;height:calc(100vh - 150px);display:flex;flex-direction:column}.transcript{flex:1}.message{display:flex;align-items:flex-start;gap:14px;margin:0 auto 30px;max-width:850px;font-size:14px}.message-avatar{padding-top:3px;flex-shrink:0}.message-body{min-width:0;flex:1}.message.user{flex-direction:row-reverse}.message.user .message-body{flex:0 1 auto;max-width:82%;background:var(--side);border-radius:15px;padding:14px 18px;line-height:1.7}.answer{display:none;line-height:1.8;color:var(--ink);margin-left:44px}.composer{border:1px solid var(--line);border-radius:18px;background:var(--panel);padding:22px;color:var(--muted);height:125px;box-shadow:0 8px 25px #00000004}.tools{display:flex;align-items:center;gap:24px;font-size:12px;margin-top:36px}.tools b{color:var(--ink);font-weight:400}.hint{font-size:11px;text-align:center;color:var(--muted);margin-top:12px}.toolbar{display:flex;align-items:center;justify-content:center;gap:12px;height:86px;border-top:1px solid var(--line);flex-wrap:wrap}.toolbar button{padding:8px 16px;border:1px solid var(--line);border-radius:8px;background:var(--panel)}.toolbar button:hover{border-color:var(--muted)}.toolbar small{color:var(--muted)}/* Fish mark, StateDot and TextShimmer adapted from DeepSeek Harness 0.2.0-rc.2.
+   MIT © 2026 DeepSeek. See vendor/dsh-chat.LICENSE and THIRD_PARTY_NOTICES.txt. */
+.chat-loading {
+  padding-block: 8px 16px;
+}
+.chat-loading .chat-loading-avatar {
+  color: #4d6bfe;
+  padding-top: 2px;
+}
+.chat-loading-body {
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+  min-width: 0;
+}
+.chat-loading-model {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--ink);
+  overflow-wrap: anywhere;
+}
+.chat-loading-status {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  color: var(--muted);
+  font-size: 14px;
+  line-height: 24px;
+}
+.chat-loading-elapsed {
+  margin-left: 5px;
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+.dsh-loading-spinner {
+  flex: none;
+}
+.dsh-loading-spinner-motion {
+  transform-origin: center;
+  animation: dsh-loading-spin 1.5s linear infinite;
+}
+.dsh-loading-spinner-track,
+.dsh-loading-spinner-arc {
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+}
+.dsh-loading-spinner-track {
+  opacity: 0.25;
+}
+.dsh-loading-spinner-arc {
+  stroke-dasharray: 12 150;
+  animation: dsh-loading-dash 1.5s ease-in-out infinite;
+}
+.dsh-loading-text {
+  position: relative;
+  display: inline-grid;
+  width: max-content;
+  max-width: 100%;
+  min-width: 0;
+}
+.dsh-loading-decoration {
+  position: absolute;
+  inset: 0;
+  overflow: clip;
+  pointer-events: none;
+  user-select: none;
+}
+.dsh-loading-sweep {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  color: var(--ink);
+  mask-image: linear-gradient(
+    105deg,
+    transparent 0%,
+    black 40% 60%,
+    transparent 100%
+  );
+  transform: translateX(-100%);
+  animation-name: dsh-loading-sweep;
+}
+.dsh-loading-highlight {
+  display: block;
+  width: 100%;
+  height: 100%;
+  transform: translateX(100%);
+  animation-name: dsh-loading-highlight;
+  white-space: nowrap;
+}
+.dsh-loading-sweep,
+.dsh-loading-highlight {
+  animation-duration: 1.5s;
+  animation-delay: 0.3s;
+  animation-timing-function: steps(48, end);
+  animation-iteration-count: infinite;
+}
+@keyframes dsh-loading-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+@keyframes dsh-loading-dash {
+  0%,
+  100% {
+    stroke-dasharray: 12 150;
+    stroke-dashoffset: 0;
+  }
+  50% {
+    stroke-dasharray: 24 150;
+    stroke-dashoffset: -6;
+  }
+}
+@keyframes dsh-loading-sweep {
+  0% {
+    transform: translateX(-100%);
+  }
+  66.6667%,
+  100% {
+    transform: translateX(100%);
+  }
+}
+@keyframes dsh-loading-highlight {
+  0% {
+    transform: translateX(100%);
+  }
+  66.6667%,
+  100% {
+    transform: translateX(-100%);
+  }
+}
+:root[data-theme="dark"] .chat-loading .chat-loading-avatar {
+  color: #8096ff;
+}
+@media (prefers-reduced-motion: reduce) {
+  .dsh-loading-decoration {
+    display: none;
+  }
+  .dsh-loading-spinner-motion,
+  .dsh-loading-spinner-arc,
+  .dsh-loading-sweep,
+  .dsh-loading-highlight {
+    animation: none;
+  }
+  .dsh-loading-spinner-arc {
+    stroke-dasharray: 18 150;
+    stroke-dashoffset: -3;
+  }
+}
+
+</style><header><strong>公司大脑</strong><span>对话加载预览 · 示例内容</span></header><main class="stage"><section class="transcript"><div class="message user"><div class="message-body">请帮我整理这份项目资料，并列出下一步计划。</div></div><div id="pending"><div class="message assistant chat-loading" data-phase="waiting" aria-busy="true"><span class="message-avatar chat-loading-avatar" aria-hidden="true"><svg viewBox="0 0 23.16 17.04" width="30" height="23" fill="currentColor"><path d="M22.9168 1.43018C22.6713 1.31018 22.5658 1.53918 22.4223 1.65519C22.3733 1.69269 22.3318 1.74169 22.2903 1.78669C21.9317 2.1697 21.5127 2.42121 20.9657 2.39121C20.1657 2.34621 19.4827 2.59771 18.8787 3.20973C18.7502 2.45521 18.3236 2.0047 17.6746 1.71569C17.3351 1.56568 16.9916 1.41518 16.7536 1.08867C16.5876 0.856163 16.5421 0.597155 16.4591 0.341647C16.4061 0.187643 16.3536 0.0301382 16.1761 0.00363739C15.9836 -0.0263635 15.9081 0.135141 15.8326 0.270145C15.5306 0.822162 15.4136 1.43018 15.4251 2.0462C15.4516 3.43174 16.0366 4.53527 17.1991 5.3203C17.3311 5.4103 17.3651 5.5003 17.3236 5.63181C17.2441 5.90231 17.1501 6.16482 17.0671 6.43533C17.0141 6.60784 16.9351 6.64584 16.7501 6.57033C16.1121 6.30383 15.5611 5.90931 15.074 5.4328C14.2475 4.63328 13.5 3.75075 12.568 3.05973C12.349 2.89822 12.13 2.74822 11.9034 2.60522C10.9524 1.68169 12.028 0.923165 12.277 0.833162C12.5375 0.739159 12.3675 0.41615 11.5259 0.42015C10.6844 0.42365 9.91439 0.705658 8.93286 1.08117C8.78935 1.13767 8.63835 1.17867 8.48384 1.21267C7.59332 1.04367 6.66829 1.00617 5.70226 1.11517C3.88321 1.31768 2.43016 2.1777 1.36213 3.64575C0.0790928 5.4103 -0.222916 7.41536 0.146595 9.50642C0.535106 11.7105 1.66014 13.535 3.38869 14.9616C5.18125 16.4406 7.24581 17.1657 9.60138 17.0266C11.0319 16.9441 12.6245 16.7526 14.421 15.2321C14.874 15.4576 15.3496 15.5476 16.1381 15.6151C16.7456 15.6716 17.3306 15.5851 17.7836 15.4911C18.4931 15.3411 18.4441 14.6841 18.1876 14.5636C16.1081 13.595 16.5646 13.9891 16.1496 13.67C17.2061 12.42 18.8202 10.1979 19.3182 7.17235C19.3672 6.83834 19.4297 6.36783 19.4222 6.09732C19.4182 5.93231 19.4562 5.86831 19.6447 5.84931C20.1657 5.78931 20.6712 5.64681 21.1357 5.3913C22.4833 4.65528 23.0268 3.44624 23.1548 1.9972C23.1738 1.77569 23.1508 1.54668 22.9168 1.43018ZM11.1749 14.4736C9.15936 12.889 8.18184 12.3675 7.77832 12.39C7.40081 12.4125 7.46881 12.8445 7.55182 13.126C7.63882 13.404 7.75182 13.5955 7.91033 13.8396C8.01983 14.0011 8.09533 14.2411 7.80083 14.4216C7.15181 14.8231 6.02327 14.2866 5.97027 14.2601C4.65673 13.4865 3.5587 12.4655 2.78467 11.069C2.03715 9.72493 1.60314 8.28289 1.53164 6.74384C1.51264 6.37233 1.62214 6.24082 1.99215 6.17332C2.47916 6.08332 2.98118 6.06432 3.46769 6.13582C5.52476 6.43633 7.27581 7.35586 8.74385 8.8129C9.58188 9.64243 10.2159 10.634 10.8689 11.6025C11.5634 12.631 12.3105 13.611 13.262 14.4146C13.598 14.6961 13.866 14.9101 14.1225 15.0681C13.349 15.1546 12.058 15.1731 11.1749 14.4746L11.1749 14.4736ZM12.141 8.25988C12.141 8.09488 12.273 7.96338 12.439 7.96338C12.4765 7.96338 12.5105 7.97088 12.541 7.98188C12.5825 7.99688 12.6205 8.01938 12.6505 8.05338C12.7035 8.10588 12.7335 8.18088 12.7335 8.25988C12.7335 8.42489 12.6015 8.55639 12.4355 8.55639C12.2695 8.55639 12.141 8.42489 12.141 8.25988ZM15.1415 9.79893C14.949 9.87793 14.7565 9.94544 14.5715 9.95294C14.2845 9.96794 13.9715 9.85143 13.8015 9.70893C13.5375 9.48742 13.3485 9.36342 13.2695 8.97691C13.2355 8.8119 13.2545 8.55639 13.2845 8.40989C13.3525 8.09438 13.277 7.89187 13.0545 7.70787C12.8735 7.55786 12.643 7.51636 12.39 7.51636C12.2955 7.51636 12.209 7.47486 12.1445 7.44136C12.039 7.38886 11.9519 7.25735 12.035 7.09585C12.0615 7.04335 12.19 6.91584 12.22 6.89334C12.5635 6.69784 12.9595 6.76184 13.326 6.90834C13.6655 7.04735 13.9225 7.30236 14.292 7.66287C14.6695 8.09838 14.7375 8.21838 14.9525 8.54539C15.1225 8.8009 15.277 9.06341 15.3831 9.36392C15.4471 9.55142 15.3641 9.70493 15.1415 9.79893Z"></path></svg></span><div class="message-body chat-loading-body"><span class="chat-loading-model">DeepSeek Flash</span><div class="chat-loading-status"><svg class="dsh-loading-spinner" viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><g class="dsh-loading-spinner-motion"><circle class="dsh-loading-spinner-track" cx="12" cy="12" r="9"></circle><circle class="dsh-loading-spinner-arc" cx="12" cy="12" r="9"></circle></g></svg><span class="dsh-loading-text" role="status" aria-live="polite"><span>正在思考</span><span class="dsh-loading-decoration" aria-hidden="true"><span class="dsh-loading-sweep"><span class="dsh-loading-highlight">正在思考</span></span></span></span><span class="chat-loading-elapsed" aria-hidden="true">0 秒</span></div></div></div></div><div class="answer" id="answer">资料整理完成。接下来可以先确认项目目标，再按优先级安排负责人和交付时间。<br><small>这是用于演示加载结束的示例回复。</small></div></section><div class="composer">继续提问…<div class="tools"><span>＋</span><span>技能</span><span>对话</span><b>DeepSeek Flash</b><span>标准模式</span></div></div><p class="hint">演示页面不会连接服务器或调用模型</p></main><nav class="toolbar"><button id="light">暖色</button><button id="dark">深色</button><button id="finish">模拟回复完成</button><button id="replay">重新加载</button><small>加载随请求结束，完成后不保留流程卡片</small></nav><script>
+let start=Date.now();let ended=false;function theme(t){document.documentElement.dataset.theme=t}function tick(){if(!ended)document.querySelector('.chat-loading-elapsed').textContent=Math.floor((Date.now()-start)/1000)+' 秒'}setInterval(tick,1000);function finish(){ended=true;document.getElementById('pending').hidden=true;document.getElementById('answer').style.display='block'}function replay(){start=Date.now();ended=false;document.getElementById('pending').hidden=false;document.getElementById('answer').style.display='none';tick()}document.getElementById('light').onclick=()=>theme('light');document.getElementById('dark').onclick=()=>theme('dark');document.getElementById('finish').onclick=finish;document.getElementById('replay').onclick=replay;window.preview={theme,finish,replay,seek(ms){document.querySelector('.chat-loading-elapsed').textContent=Math.floor(ms/1000)+' 秒';for(const a of document.getAnimations()){a.pause();a.currentTime=ms;}}};</script></html>
