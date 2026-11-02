@@ -10,8 +10,7 @@
   background: #e5e3df;
   color: var(--entry-ui-ink);
   z-index: 20;
-  font-family:
-    "Bahnschrift", "DIN Alternate", "Microsoft YaHei", "PingFang SC", sans-serif;
+  font-family: var(--font-ui);
 }
 .entry-experience[data-theme="dark"] {
   --entry-ui-bg: #1c1f1c;
@@ -34,7 +33,7 @@
   color: inherit;
 }
 .entry-experience .window-caption {
-  font-size: 10px;
+  font-size: 12px;
   opacity: 0.55;
 }
 .entry-experience .window-buttons button {
@@ -52,16 +51,12 @@
   border: 0;
   background: transparent;
   padding: 10px 0 10px 14px;
-  font:
-    11px "Microsoft YaHei",
-    sans-serif;
+  font: 13px var(--font-ui);
   color: inherit;
   cursor: pointer;
 }
 .entry-skip span {
-  font:
-    9px "Consolas",
-    monospace;
+  font: 11px var(--font-ui);
   letter-spacing: 2px;
   margin-left: 15px;
   opacity: 0.65;
@@ -129,16 +124,14 @@
 }
 .entry-experience .auth-card .eyebrow {
   color: var(--entry-ui-muted);
-  font:
-    9px "Consolas",
-    monospace;
+  font: 11px var(--font-ui);
   letter-spacing: 3px;
   display: flex;
   gap: 8px;
   align-items: center;
 }
 .entry-experience .auth-card h1 {
-  font-size: clamp(24px, 2.8vw, 37px);
+  font-size: clamp(26px, 3vw, 39px);
   line-height: 1.4;
   letter-spacing: 3px;
   font-weight: 500;
@@ -146,7 +139,7 @@
   color: inherit;
 }
 .entry-experience .auth-card > p {
-  font-size: 12px;
+  font-size: 14px;
   color: var(--entry-ui-muted);
   line-height: 1.8;
   margin: 0 0 24px;
@@ -161,7 +154,7 @@
 }
 .entry-experience .auth-card label {
   color: var(--entry-ui-muted);
-  font-size: 11px;
+  font-size: 13px;
   letter-spacing: 1.3px;
 }
 .entry-experience .auth-card input {
@@ -172,10 +165,7 @@
   background: color-mix(in srgb, var(--entry-ui-bg) 65%, transparent);
   color: var(--entry-ui-ink);
   padding: 10px 14px;
-  font:
-    15px "Consolas",
-    "Microsoft YaHei",
-    monospace;
+  font: 16px var(--font-ui);
   outline: none;
   box-shadow: none;
 }
@@ -194,7 +184,7 @@
   background: var(--entry-ui-ink);
   color: var(--entry-ui-bg);
   padding: 0 18px;
-  font-size: 13px;
+  font-size: 15px;
   box-shadow: none;
   transition: transform 120ms cubic-bezier(0.23, 1, 0.32, 1);
 }
@@ -202,7 +192,7 @@
   transform: translateY(2px) scale(0.99);
 }
 .entry-experience .auth-foot {
-  font-size: 10px;
+  font-size: 12px;
   color: var(--entry-ui-muted);
   line-height: 1.8;
   margin: 18px 0 0;
@@ -210,13 +200,13 @@
 }
 .entry-experience .auth-legal {
   color: inherit;
-  font-size: 10px;
+  font-size: 12px;
   margin-left: 0;
   float: right;
   border-bottom: 1px solid var(--entry-ui-border);
 }
 .entry-experience .auth-card .error {
-  font-size: 12px;
+  font-size: 14px;
   color: var(--entry-ui-accent);
   margin: 0;
 }
@@ -236,14 +226,10 @@
   padding: 12px 22px;
   background: var(--entry-ui-bg);
   color: var(--entry-ui-ink);
-  font:
-    13px "Microsoft YaHei",
-    sans-serif;
+  font: 15px var(--font-ui);
 }
 .entry-recovery span {
-  font:
-    9px "Consolas",
-    monospace;
+  font: 11px var(--font-ui);
   opacity: 0.6;
   margin-left: 20px;
 }
@@ -279,7 +265,7 @@
     bottom: 14%;
   }
   .entry-experience .auth-card h1 {
-    font-size: 28px;
+    font-size: 30px;
   }
   .entry-experience .auth-card {
     padding: 22px 0;
@@ -297,7 +283,7 @@
     padding: 16px 0;
   }
   .entry-experience .auth-card h1 {
-    font-size: 25px;
+    font-size: 27px;
     margin: 14px 0 8px;
   }
   .entry-experience .auth-card > p {
@@ -325,14 +311,14 @@
     padding: 24px 16px;
   }
   .entry-experience .auth-card h1 {
-    font-size: 25px;
+    font-size: 27px;
   }
   .entry-skip {
     top: 9%;
     right: 7%;
   }
   .entry-experience .auth-foot {
-    font-size: 9px;
+    font-size: 11px;
   }
   .entry-recovery {
     top: 64%;

@@ -1,0 +1,257 @@
+{
+  "version": "0.11.4",
+  "scope": "Actual Electron UI with disposable server and profile; no production accounts",
+  "samples": [
+    {
+      "name": "login-light",
+      "metrics": {
+        ".auth-card h1": {
+          "fontFamily": "\"PingFang SC\", \"Microsoft YaHei\", \"Noto Sans SC\", \"Segoe UI\", Arial, sans-serif",
+          "fontSize": "39px",
+          "x": 792,
+          "y": 305.94268798828125,
+          "width": 532.8125,
+          "height": 54.59375
+        },
+        ".auth-card label": {
+          "fontFamily": "\"PingFang SC\", \"Microsoft YaHei\", \"Noto Sans SC\", \"Segoe UI\", Arial, sans-serif",
+          "fontSize": "13px",
+          "x": 792,
+          "y": 421.72393798828125,
+          "width": 532.8125,
+          "height": 71
+        },
+        ".auth-card input": {
+          "fontFamily": "\"PingFang SC\", \"Microsoft YaHei\", \"Noto Sans SC\", \"Segoe UI\", Arial, sans-serif",
+          "fontSize": "16px",
+          "x": 792,
+          "y": 446.72393798828125,
+          "width": 532.8125,
+          "height": 46
+        },
+        ".auth-card .button.primary": {
+          "fontFamily": "\"PingFang SC\", \"Microsoft YaHei\", \"Noto Sans SC\", \"Segoe UI\", Arial, sans-serif",
+          "fontSize": "15px",
+          "x": 792,
+          "y": 603.7239379882812,
+          "width": 532.8125,
+          "height": 48
+        },
+        ".entry-skip": {
+          "fontFamily": "\"PingFang SC\", \"Microsoft YaHei\", \"Noto Sans SC\", \"Segoe UI\", Arial, sans-serif",
+          "fontSize": "13px",
+          "x": 1223.875,
+          "y": 81,
+          "width": 132.609375,
+          "height": 37
+        }
+      },
+      "platformFonts": [
+        {
+          "familyName": "Microsoft YaHei",
+          "glyphCount": 6,
+          "isCustomFont": false,
+          "postScriptName": "MicrosoftYaHei"
+        }
+      ]
+    },
+    {
+      "name": "login-dark",
+      "metrics": {
+        ".auth-card h1": {
+          "fontFamily": "\"PingFang SC\", \"Microsoft YaHei\", \"Noto Sans SC\", \"Segoe UI\", Arial, sans-serif",
+          "fontSize": "39px",
+          "x": 792,
+          "y": 305.8125,
+          "width": 532.8125,
+          "height": 54.59375
+        },
+        ".auth-card label": {
+          "fontFamily": "\"PingFang SC\", \"Microsoft YaHei\", \"Noto Sans SC\", \"Segoe UI\", Arial, sans-serif",
+          "fontSize": "13px",
+          "x": 792,
+          "y": 421.59375,
+          "width": 532.8125,
+          "height": 71
+        },
+        ".auth-card input": {
+          "fontFamily": "\"PingFang SC\", \"Microsoft YaHei\", \"Noto Sans SC\", \"Segoe UI\", Arial, sans-serif",
+          "fontSize": "16px",
+          "x": 792,
+          "y": 446.59375,
+          "width": 532.8125,
+          "height": 46
+        },
+        ".auth-card .button.primary": {
+          "fontFamily": "\"PingFang SC\", \"Microsoft YaHei\", \"Noto Sans SC\", \"Segoe UI\", Arial, sans-serif",
+          "fontSize": "15px",
+          "x": 792,
+          "y": 603.59375,
+          "width": 532.8125,
+          "height": 48
+        },
+        ".entry-skip": {
+          "fontFamily": "\"PingFang SC\", \"Microsoft YaHei\", \"Noto Sans SC\", \"Segoe UI\", Arial, sans-serif",
+          "fontSize": "13px",
+          "x": 1223.875,
+          "y": 81,
+          "width": 132.609375,
+          "height": 37
+        }
+      },
+      "platformFonts": [
+        {
+          "familyName": "Microsoft YaHei",
+          "glyphCount": 6,
+          "isCustomFont": false,
+          "postScriptName": "MicrosoftYaHei"
+        }
+      ]
+    },
+    {
+      "name": "login-narrow",
+      "metrics": {
+        ".auth-card h1": {
+          "fontFamily": "\"PingFang SC\", \"Microsoft YaHei\", \"Noto Sans SC\", \"Segoe UI\", Arial, sans-serif",
+          "fontSize": "27px",
+          "x": 410,
+          "y": 200.203125,
+          "width": 360.8125,
+          "height": 37.796875
+        },
+        ".auth-card label": {
+          "fontFamily": "\"PingFang SC\", \"Microsoft YaHei\", \"Noto Sans SC\", \"Segoe UI\", Arial, sans-serif",
+          "fontSize": "13px",
+          "x": 410,
+          "y": 285.1875,
+          "width": 360.8125,
+          "height": 65
+        },
+        ".auth-card input": {
+          "fontFamily": "\"PingFang SC\", \"Microsoft YaHei\", \"Noto Sans SC\", \"Segoe UI\", Arial, sans-serif",
+          "fontSize": "16px",
+          "x": 410,
+          "y": 310.1875,
+          "width": 360.8125,
+          "height": 40
+        },
+        ".auth-card .button.primary": {
+          "fontFamily": "\"PingFang SC\", \"Microsoft YaHei\", \"Noto Sans SC\", \"Segoe UI\", Arial, sans-serif",
+          "fontSize": "15px",
+          "x": 410,
+          "y": 443.1875,
+          "width": 360.8125,
+          "height": 48
+        },
+        ".entry-skip": {
+          "fontFamily": "\"PingFang SC\", \"Microsoft YaHei\", \"Noto Sans SC\", \"Segoe UI\", Arial, sans-serif",
+          "fontSize": "13px",
+          "x": 639.84375,
+          "y": 57.59375,
+          "width": 132.609375,
+          "height": 37
+        }
+      },
+      "platformFonts": [
+        {
+          "familyName": "Microsoft YaHei",
+          "glyphCount": 6,
+          "isCustomFont": false,
+          "postScriptName": "MicrosoftYaHei"
+        }
+      ]
+    },
+    {
+      "name": "startup-light",
+      "metrics": {
+        ".entry-headline": {
+          "fontFamily": "\"PingFang SC\", \"Microsoft YaHei\", \"Noto Sans SC\", \"Segoe UI\", Arial, sans-serif",
+          "fontSize": "32px",
+          "x": 524,
+          "y": 685,
+          "width": 370,
+          "height": 42
+        },
+        ".entry-detail": {
+          "fontFamily": "\"PingFang SC\", \"Microsoft YaHei\", \"Noto Sans SC\", \"Segoe UI\", Arial, sans-serif",
+          "fontSize": "14px",
+          "x": 420,
+          "y": 758.796875,
+          "width": 600,
+          "height": 23.796875
+        },
+        ".native-skip": {
+          "fontFamily": "\"PingFang SC\", \"Microsoft YaHei\", \"Noto Sans SC\", \"Segoe UI\", Arial, sans-serif",
+          "fontSize": "13px",
+          "x": 1215,
+          "y": 81,
+          "width": 138.609375,
+          "height": 37
+        },
+        ".entry-footer-note": {
+          "fontFamily": "\"PingFang SC\", \"Microsoft YaHei\", \"Noto Sans SC\", \"Segoe UI\", Arial, sans-serif",
+          "fontSize": "12px",
+          "x": 627.6875,
+          "y": 832.8125,
+          "width": 160.8125,
+          "height": 19.1875
+        }
+      },
+      "platformFonts": [
+        {
+          "familyName": "Microsoft YaHei",
+          "glyphCount": 10,
+          "isCustomFont": false,
+          "postScriptName": "MicrosoftYaHei"
+        }
+      ]
+    },
+    {
+      "name": "startup-dark",
+      "metrics": {
+        ".entry-headline": {
+          "fontFamily": "\"PingFang SC\", \"Microsoft YaHei\", \"Noto Sans SC\", \"Segoe UI\", Arial, sans-serif",
+          "fontSize": "32px",
+          "x": 524,
+          "y": 685,
+          "width": 370,
+          "height": 42
+        },
+        ".entry-detail": {
+          "fontFamily": "\"PingFang SC\", \"Microsoft YaHei\", \"Noto Sans SC\", \"Segoe UI\", Arial, sans-serif",
+          "fontSize": "14px",
+          "x": 420,
+          "y": 758.796875,
+          "width": 600,
+          "height": 23.796875
+        },
+        ".native-skip": {
+          "fontFamily": "\"PingFang SC\", \"Microsoft YaHei\", \"Noto Sans SC\", \"Segoe UI\", Arial, sans-serif",
+          "fontSize": "13px",
+          "x": 1215,
+          "y": 81,
+          "width": 138.609375,
+          "height": 37
+        },
+        ".entry-footer-note": {
+          "fontFamily": "\"PingFang SC\", \"Microsoft YaHei\", \"Noto Sans SC\", \"Segoe UI\", Arial, sans-serif",
+          "fontSize": "12px",
+          "x": 627.6875,
+          "y": 832.8125,
+          "width": 160.8125,
+          "height": 19.1875
+        }
+      },
+      "platformFonts": [
+        {
+          "familyName": "Microsoft YaHei",
+          "glyphCount": 10,
+          "isCustomFont": false,
+          "postScriptName": "MicrosoftYaHei"
+        }
+      ]
+    }
+  ],
+  "result": "passed",
+  "extraRemoteFontsAdded": false
+}

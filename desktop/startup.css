@@ -2,7 +2,7 @@ body {
   margin: 0;
   background: transparent;
   color: #20221e;
-  font-family: "Microsoft YaHei", "PingFang SC", sans-serif;
+  font-family: var(--font-ui);
 }
 :root[data-theme="dark"] body {
   color: #f0efe9;
@@ -41,13 +41,11 @@ button {
   z-index: 30;
   background: transparent;
   border: 0;
-  font-size: 11px;
+  font-size: 13px;
   padding: 10px;
 }
 .native-skip span {
-  font:
-    9px "Consolas",
-    monospace;
+  font: 11px var(--font-ui);
   letter-spacing: 2px;
   margin-left: 15px;
 }
@@ -67,20 +65,16 @@ body:not(.intro-done) .native-skip {
   border: 1px solid currentColor;
   background: transparent;
   padding: 12px 22px;
-  font-size: 13px;
+  font-size: 15px;
   transition: transform 120ms cubic-bezier(0.23, 1, 0.32, 1);
 }
 #actions button span {
-  font:
-    9px "Consolas",
-    monospace;
+  font: 11px var(--font-ui);
   opacity: 0.6;
   margin-left: 20px;
 }
 #error-code {
-  font:
-    10px "Consolas",
-    monospace;
+  font: 12px var(--font-ui);
   opacity: 0.6;
   margin-top: 16px;
 }

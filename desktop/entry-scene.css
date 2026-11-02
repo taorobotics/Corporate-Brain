@@ -17,8 +17,7 @@
   overflow: hidden;
   isolation: isolate;
   color: var(--entry-ink);
-  font-family:
-    "Bahnschrift", "DIN Alternate", "Microsoft YaHei", "PingFang SC", sans-serif;
+  font-family: var(--font-ui, "PingFang SC", "Microsoft YaHei", sans-serif);
   font-synthesis: none;
   user-select: none;
   background: var(--entry-bg);
@@ -136,10 +135,7 @@
 }
 .entry-brand small {
   display: block;
-  font:
-    9px/2.4 "Consolas",
-    "Menlo",
-    monospace;
+  font: 11px/2.4 var(--font-ui, sans-serif);
   letter-spacing: 2.2px;
 }
 .entry-brand-os {
@@ -148,10 +144,7 @@
 .entry-brand p {
   color: var(--entry-muted);
   margin: 25px 0 0;
-  font:
-    9px/1.5 "Consolas",
-    "Menlo",
-    monospace;
+  font: 11px/1.5 var(--font-ui, sans-serif);
   letter-spacing: 2px;
 }
 .entry-brand b {
@@ -162,10 +155,7 @@
   position: absolute;
   right: 6%;
   top: 16%;
-  font:
-    9px/1.8 "Consolas",
-    "Menlo",
-    monospace;
+  font: 10px/1.8 var(--font-ui, sans-serif);
   letter-spacing: 1px;
   text-align: right;
 }
@@ -249,9 +239,7 @@
 }
 .entry-coordinate {
   position: absolute;
-  font:
-    8px "Consolas",
-    monospace;
+  font: 10px var(--font-ui, sans-serif);
   letter-spacing: 1.6px;
   color: var(--entry-muted);
 }
@@ -312,16 +300,13 @@
     transform 450ms var(--entry-ease);
 }
 .entry-kicker {
-  font:
-    9px "Consolas",
-    "Menlo",
-    monospace;
+  font: 10px var(--font-ui, sans-serif);
   letter-spacing: 4px;
   color: var(--entry-muted);
 }
 .entry-status h1 {
   font-weight: 450;
-  font-size: clamp(18px, 2.1vw, 29px);
+  font-size: clamp(20px, 2.3vw, 32px);
   letter-spacing: 5px;
   margin: 15px 0 17px;
   line-height: 1.4;
@@ -340,7 +325,7 @@
   background: var(--entry-hair);
 }
 .entry-detail {
-  font-size: 12px;
+  font-size: 14px;
   line-height: 1.7;
   margin: 12px auto 0;
   max-width: 600px;
@@ -355,10 +340,7 @@
   justify-content: space-between;
   gap: 16px;
   align-items: flex-end;
-  font:
-    9px/1.6 "Consolas",
-    "Menlo",
-    monospace;
+  font: 11px/1.6 var(--font-ui, sans-serif);
   letter-spacing: 1.4px;
   color: var(--entry-muted);
 }
@@ -368,7 +350,10 @@
 }
 .entry-signature span {
   display: block;
-  font-size: 8px;
+  font-size: 10px;
+}
+.entry-footer-note {
+  font-size: 12px;
 }
 .entry-signature b {
   color: var(--entry-accent);
@@ -442,17 +427,11 @@
   margin-bottom: 28px;
 }
 .entry-intro-mark span {
-  font:
-    21px/1.6 "Bahnschrift",
-    "DIN Alternate",
-    sans-serif;
+  font: 23px/1.6 var(--font-ui, sans-serif);
   letter-spacing: 9px;
 }
 .entry-intro-mark small {
-  font:
-    11px/1.8 "Microsoft YaHei",
-    "PingFang SC",
-    sans-serif;
+  font: 13px/1.8 var(--font-ui, sans-serif);
   letter-spacing: 4px;
   opacity: 0.5;
   margin-top: 14px;
@@ -519,10 +498,7 @@
     transform 650ms var(--entry-ease);
 }
 .entry-auth-caption > span {
-  font:
-    10px "Consolas",
-    "Menlo",
-    monospace;
+  font: 11px var(--font-ui, sans-serif);
   letter-spacing: 5px;
   color: var(--entry-muted);
 }
@@ -537,7 +513,7 @@
 }
 .entry-auth-caption small {
   color: var(--entry-muted);
-  font-size: 12px;
+  font-size: 14px;
   letter-spacing: 2px;
 }
 .entry-scene[phase="auth"] .entry-object,
@@ -573,9 +549,7 @@
   pointer-events: none;
 }
 .entry-welcome > span {
-  font:
-    10px "Consolas",
-    monospace;
+  font: 11px var(--font-ui, sans-serif);
   letter-spacing: 9px;
 }
 .entry-welcome strong {
@@ -628,9 +602,7 @@
   color: var(--entry-accent);
 }
 .entry-welcome small {
-  font:
-    12px "Microsoft YaHei",
-    sans-serif;
+  font: 14px var(--font-ui, sans-serif);
   letter-spacing: 5px;
 }
 .entry-scene[phase="ready"] .entry-object,
@@ -869,7 +841,7 @@
     font-size: 22px;
   }
   .entry-brand small {
-    font-size: 7px;
+    font-size: 9px;
   }
   .entry-brand p {
     display: none;
