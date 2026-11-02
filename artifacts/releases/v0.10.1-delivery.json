@@ -1,0 +1,140 @@
+{
+  "version": "0.10.1",
+  "sourceCommit": "9465667e00daea93c32ce09c712fc54071fb58ed",
+  "verifiedAt": "2026-11-02T06:27:44.858Z",
+  "localWindows": {
+    "artifact": "Corporate-Brain-Setup-0.10.1-x64.exe",
+    "sha256": "bb590f2c4c7ed5a8cb7e120c0afe376124dd6e22c08fcf924d9627d945977d28",
+    "bytes": 119371418,
+    "companyPreconfigured": true,
+    "signature": "NotSigned",
+    "checks": "Packaged source bytes, allowed files, company server, metadata and installer UI; full lifecycle on disposable CI runner",
+    "localUIAttempts": 2,
+    "firstAttempt": "Native offscreen pressed-button capture contained no changed pixels",
+    "secondAttempt": "Passed all four checks"
+  },
+  "cloud": {
+    "version": "0.10.1",
+    "verifiedAt": "2026-11-02T06:23:16.953Z",
+    "health": {
+      "status": "ok",
+      "version": "0.10.1",
+      "chatStorage": "device-only"
+    },
+    "frontendMatchesLocalBuild": true,
+    "checks": [
+      {
+        "path": "/assets/index-DFunZ4Kb.js",
+        "sha256": "44948df9e95848b812c483d1d43f00f4e86c56d6b3993e7fcc6b48b5722c485e"
+      },
+      {
+        "path": "/assets/index-B4NWIAxt.css",
+        "sha256": "c593ba5e777ebd3979937c0fe17868780e70e18e2c1f18f0f0ba691cae285e61"
+      }
+    ],
+    "backup": "/opt/corporate-brain/backups/before-v0.10.1-20261102T062156Z",
+    "dataPreserved": true,
+    "usersPreserved": 3,
+    "departmentsPreserved": 2,
+    "encryptionKeyPreserved": true,
+    "packageSha256": "d003ef17fe85a52ec2c2fa13d9ff18ad35754d011da69fddfbff0f5b80ede2d0"
+  },
+  "liveLoginAndChatProcess": {
+    "version": "0.10.1",
+    "verifiedAt": "2026-11-02T06:24:16.249Z",
+    "origin": "https://191-223-41-179.nip.io",
+    "result": "passed",
+    "scope": "Actual cloud UI login and DSH chat loader with a controlled generation response in an isolated client profile",
+    "testAccountLoginPassed": true,
+    "chatLoaderVisible": true,
+    "loaderRemovedAfterReply": true,
+    "reasoningAndSourcesVisible": true,
+    "grokBallVisible": true,
+    "tracePreserved": true,
+    "cinematicLoginVisible": true,
+    "welcomeRevealCompleted": true,
+    "connectionRetries": 0,
+    "updates": {
+      "status": "unavailable",
+      "note": "Native update bridge is covered by CI, not this remote web-renderer smoke"
+    },
+    "productionModelsCalled": false,
+    "profile": "disposable isolated web profile",
+    "runtime": "Electron web renderer against actual cloud UI; native preload and external-link behavior tested by platform CI",
+    "networkMode": "Direct connection in QA profile only; system proxy unchanged"
+  },
+  "liveModels": {
+    "version": "0.10.0",
+    "verifiedAt": "2026-11-02T06:09:05.255Z",
+    "scope": "Live short arithmetic smoke through authenticated cloud endpoint; stores timing/counts only, no provider credentials or reasoning text",
+    "productionModelsCalled": true,
+    "reports": [
+      {
+        "model": "deepseek-flash",
+        "result": "passed",
+        "firstReasoningMs": 6877,
+        "firstTextMs": 6877,
+        "elapsedMs": 7046,
+        "reasoningEvents": 14,
+        "reasoningCharacters": 105,
+        "toolEvents": 0,
+        "answerCorrect": true,
+        "providerReasoningExposed": true
+      },
+      {
+        "model": "deepseek-v4-pro",
+        "result": "passed",
+        "firstReasoningMs": 5296,
+        "firstTextMs": 6093,
+        "elapsedMs": 6093,
+        "reasoningEvents": 59,
+        "reasoningCharacters": 534,
+        "toolEvents": 0,
+        "answerCorrect": true,
+        "providerReasoningExposed": true
+      }
+    ],
+    "backendAndUIUnchangedInPatch": true,
+    "gitDiffChecked": true
+  },
+  "desktop": {
+    "checks": 33,
+    "sourceLinkCheck": "Source links reach the system browser; credential-bearing URLs and non-web protocols are rejected without opening an application window",
+    "streamCheck": "Real streamed reasoning/tool event fixtures, source links, expandable disclosure, separate answer, static reduced-motion Grok-ball, local trace reload, partial error/cancel, no-reasoning fallback and conversation isolation",
+    "consoleErrors": [],
+    "productionModelsCalled": false
+  },
+  "preview": {
+    "directory": "artifacts/previews/chat-loading-0.10.0",
+    "video": "grok-thinking.mp4",
+    "width": 1200,
+    "height": 760,
+    "frames": 240,
+    "fps": 30,
+    "durationSeconds": 8,
+    "usesProductComponent": true,
+    "demoContent": true
+  },
+  "security": {
+    "historyScan": {
+      "tool": "Gitleaks 8.30.1",
+      "commitsScanned": 69,
+      "throughCommit": "9465667e00daea93c32ce09c712fc54071fb58ed",
+      "findings": 0
+    },
+    "historicalReleaseAudit": {
+      "scope": "Published verification reports, installer digest correspondence and file manifests. Historical binaries were not re-extracted during this review.",
+      "reportsReviewed": 70
+    }
+  },
+  "limits": [
+    "Search/tool UI uses explicit isolated event fixtures; live arithmetic probes intentionally did not invoke web tools.",
+    "Additional native cloud QA attempts had intermittent navigation/login timeouts. One native 0.10.1 run completed, and the final remote-web UI smoke passed. Successful QA used a disposable profile with direct networking and focus emulation; system network settings and the installed employee client were unchanged.",
+    "Local installer checks do not replace or uninstall the employee installation.",
+    "Windows unsigned; macOS ad-hoc signed and not notarized.",
+    "Company private-repository update feed remains unconfigured; use the local installer for desktop version updates."
+  ],
+  "releaseWorkflowAttempts": 2,
+  "initialWindowsCI": "Timed out while verifying the synthetic update download and hash before the source-link tests",
+  "retryWindowsCI": "Passed desktop interactions and full installer lifecycle on the same tagged source"
+}
