@@ -89,6 +89,7 @@ async function waitFor(check, label) {
     await new Promise((done) => setTimeout(done, 350));
     await writeFile(join(shots, name), (await overlay().capturePage()).toPNG());
   }
+  await new Promise(done => setTimeout(done, 3700));
   await capture("client-startup.png");
   await evalOverlay("document.getElementById('skip').click()");
   await waitFor(
@@ -167,6 +168,7 @@ async function waitFor(check, label) {
     await evalOverlay("document.documentElement.dataset.theme"),
     "dark",
   );
+  await new Promise(done => setTimeout(done, 3700));
   await capture("client-startup-dark.png");
   await evalOverlay("document.getElementById('skip').click()");
   await waitFor(
@@ -198,7 +200,7 @@ async function waitFor(check, label) {
   });
   assert.equal(
     await evalOverlay(
-      "getComputedStyle(document.querySelector('.dsu-reticle i')).animationName",
+      "getComputedStyle(document.querySelector('.orbit-one')).animationName",
     ),
     "none",
   );

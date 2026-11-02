@@ -5,6 +5,7 @@ const { readAppearance } = require("./appearance.cjs");
 const page = join(__dirname, "startup.html");
 const pageUrl = pathToFileURL(page).href;
 const sessions = new WeakMap();
+const entryContexts = new WeakMap();
 
 function isStartupSender(owner, event) {
   const wc = sessions.get(owner)?.view.webContents;
@@ -70,6 +71,8 @@ async function loadCompanyWindow(
 ) {
   sessions.get(owner)?.dispose();
   if (owner.isDestroyed()) return;
+  const context = { startedAt: Date.now(), skipped: false };
+  entryContexts.set(owner, context);
   const view = new WebContentsView({
     webPreferences: {
       preload: join(__dirname, "startup-preload.cjs"),
@@ -112,6 +115,7 @@ async function loadCompanyWindow(
     state: {},
     skip() {
       skipped = true;
+      context.skipped = true;
       if (preview || session.state.phase === "ready") session.dispose();
       else send({ ...session.state, skipped: true });
     },
@@ -138,7 +142,11 @@ async function loadCompanyWindow(
   view.webContents.on("will-navigate", (event) => event.preventDefault());
   try {
     await view.webContents.loadFile(page, {
-      query: { theme, version: require("./package.json").version },
+      query: {
+        theme,
+        version: require("./package.json").version,
+        startedAt: String(context.startedAt),
+      },
     });
     if (!active()) return;
     view.setBackgroundColor("#00000000");
@@ -252,4 +260,6 @@ module.exports = {
   skipStartup,
   startupState,
   connectionFailure,
+  entryContext: (owner) =>
+    entryContexts.get(owner) || { startedAt: Date.now(), skipped: false },
 };

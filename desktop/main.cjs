@@ -12,6 +12,7 @@ const {
   isStartupSender,
   skipStartup,
   startupState,
+  entryContext,
 } = require("./startup.cjs");
 const { readAppearance, writeAppearance } = require("./appearance.cjs");
 const { basename, join, relative } = require("node:path");
@@ -403,6 +404,10 @@ ipcMain.on("startup:skip", (event) => {
 ipcMain.handle("appearance:read", (event) => {
   sender(event);
   return readAppearance(origin);
+});
+ipcMain.handle("entry:context", (event) => {
+  sender(event);
+  return entryContext(win);
 });
 ipcMain.handle("appearance:write", (event, theme) => {
   sender(event);

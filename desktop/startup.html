@@ -2,51 +2,32 @@
 <html lang="zh-CN">
   <head>
     <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
     <meta
       http-equiv="Content-Security-Policy"
-      content="default-src 'none'; script-src 'self'; style-src 'self'; object-src 'none'"
+      content="default-src 'none'; script-src 'self'; style-src 'self' 'unsafe-inline'; object-src 'none'"
     />
-    <meta name="viewport" content="width=device-width,initial-scale=1" />
     <title>公司大脑 · 启动</title>
-    <script src="startup.js" defer></script>
+    <link rel="stylesheet" href="entry-scene.css" />
     <link rel="stylesheet" href="startup.css" />
+    <script src="entry-scene.js" defer></script>
+    <script src="startup.js" defer></script>
   </head>
   <body>
-    <div id="dsh-startup-root">
-      <div class="dsu-plate" aria-hidden="true"></div>
-      <div class="dsu-watermark" aria-hidden="true"><i></i><i></i><i></i></div>
-      <div class="dsu-frame" aria-hidden="true">
-        <i></i><i></i><i></i><i></i>
-      </div>
-      <header class="window-controls">
-        <button id="minimize" aria-label="最小化">−</button
-        ><button id="maximize" aria-label="最大化或还原">□</button
-        ><button id="close" aria-label="关闭">×</button>
-      </header>
-      <div class="dsu-brand">
-        <b>CORPORATE</b><span>SYNTHESIZE INTELLIGENCE</span><b>BRAIN OS</b
-        ><small>公司大脑 <i> / </i> <span id="version"></span></small>
-      </div>
-      <button id="skip" class="skip">跳过动画 <span>SKIP ▸</span></button>
-      <div class="dsu-reticle" aria-hidden="true"><i></i></div>
-      <main class="dsu-center" aria-live="polite" aria-atomic="true">
-        <div class="eyebrow" id="phase">SECURE CONNECTION</div>
-        <h1 id="title">正在打开公司大脑<span class="caret">_</span></h1>
-        <div class="dsu-rule" aria-hidden="true"></div>
-        <p id="detail">正在建立安全连接，页面就绪后自动进入。</p>
-        <div id="actions" hidden>
-          <button id="retry">重新连接 <span>RETRY ↗</span></button>
-        </div>
-        <p id="error-code"></p>
-      </main>
-      <div class="dsu-meta">
-        <span id="step">[ 01 / 02 ] CONNECTING</span
-        ><span id="attempt">本地启动 · 即刻响应</span>
-      </div>
-      <footer>
-        <span>你的对话与草稿保留在本机</span><b>COMPANY WORKSPACE <i></i></b>
-      </footer>
-      <div class="dsu-progress" aria-hidden="true"><i></i></div>
+    <brain-entry-scene
+      id="scene"
+      phase="connecting"
+      headline="正在打开公司大脑"
+    ></brain-entry-scene>
+    <header class="window-controls">
+      <button id="minimize" aria-label="最小化">−</button
+      ><button id="maximize" aria-label="最大化或还原">□</button
+      ><button id="close" aria-label="关闭">×</button>
+    </header>
+    <button id="skip" class="native-skip">跳过动画 <span>SKIP ▸</span></button>
+    <div id="actions" hidden>
+      <button id="retry">重新连接 <span>RETRY ↗</span></button>
+      <p id="error-code"></p>
     </div>
   </body>
 </html>

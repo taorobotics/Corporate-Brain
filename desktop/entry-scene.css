@@ -1,0 +1,937 @@
+/* Shared cinematic sequence. DSH dossier palette/layout: src/vendor/dsh-startup.LICENSE.
+   Long timings belong to the user-requested opening film; controls stay immediate. */
+.entry-scene {
+  --entry-bg: #e5e3df;
+  --entry-paper: #f4f2ee;
+  --entry-ink: #171816;
+  --entry-muted: #6d6b65;
+  --entry-hair: rgba(40, 39, 32, 0.18);
+  --entry-soft: rgba(40, 39, 32, 0.075);
+  --entry-panel: rgba(255, 255, 255, 0.52);
+  --entry-accent: #bc541f;
+  --entry-ease: cubic-bezier(0.23, 1, 0.32, 1);
+  --entry-in-out: cubic-bezier(0.77, 0, 0.175, 1);
+  position: absolute;
+  inset: 0;
+  display: block;
+  overflow: hidden;
+  isolation: isolate;
+  color: var(--entry-ink);
+  font-family:
+    "Bahnschrift", "DIN Alternate", "Microsoft YaHei", "PingFang SC", sans-serif;
+  font-synthesis: none;
+  user-select: none;
+  background: var(--entry-bg);
+}
+.entry-scene[theme="dark"] {
+  --entry-bg: #0c0e0e;
+  --entry-paper: #1b1e1d;
+  --entry-ink: #f0efe9;
+  --entry-muted: #a2a59f;
+  --entry-hair: rgba(231, 231, 213, 0.2);
+  --entry-soft: rgba(231, 231, 213, 0.075);
+  --entry-panel: rgba(255, 255, 255, 0.035);
+  --entry-accent: #f79b5a;
+}
+.entry-scene *,
+.entry-scene *::before,
+.entry-scene *::after {
+  box-sizing: border-box;
+}
+.entry-scene svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+  stroke: currentColor;
+  stroke-width: 1.1;
+}
+.entry-paper {
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(ellipse at 74% 13%, var(--entry-paper), transparent 65%),
+    linear-gradient(145deg, var(--entry-paper), var(--entry-bg));
+}
+.entry-grid {
+  position: absolute;
+  inset: 0;
+  opacity: 0.45;
+  background-image:
+    linear-gradient(var(--entry-soft) 1px, transparent 1px),
+    linear-gradient(90deg, var(--entry-soft) 1px, transparent 1px);
+  background-size: 96px 96px;
+  mask-image: radial-gradient(ellipse at 50% 45%, black, transparent 69%);
+}
+.entry-panels {
+  position: absolute;
+  inset: 5.5% 4%;
+  perspective: 1100px;
+}
+.entry-panels i {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  border: 1px solid var(--entry-soft);
+  background: linear-gradient(160deg, var(--entry-panel), transparent 78%);
+}
+.entry-panels i:nth-child(1) {
+  left: 0;
+  width: 13%;
+}
+.entry-panels i:nth-child(2) {
+  left: 61%;
+  width: 18%;
+}
+.entry-panels i:nth-child(3) {
+  left: 81%;
+  width: 15%;
+}
+.entry-panels i:nth-child(4) {
+  right: 0;
+  width: 2%;
+  background: var(--entry-soft);
+}
+.entry-frame {
+  position: absolute;
+  inset: 56px 24px 24px;
+  pointer-events: none;
+}
+.entry-frame i {
+  position: absolute;
+  width: 17px;
+  height: 17px;
+  border: solid var(--entry-hair);
+}
+.entry-frame i:nth-child(1) {
+  top: 0;
+  left: 0;
+  border-width: 1px 0 0 1px;
+}
+.entry-frame i:nth-child(2) {
+  top: 0;
+  right: 0;
+  border-width: 1px 1px 0 0;
+}
+.entry-frame i:nth-child(3) {
+  bottom: 0;
+  left: 0;
+  border-width: 0 0 1px 1px;
+}
+.entry-frame i:nth-child(4) {
+  bottom: 0;
+  right: 0;
+  border-width: 0 1px 1px 0;
+}
+.entry-brand {
+  position: absolute;
+  left: 6%;
+  top: 10%;
+  line-height: 0.94;
+  letter-spacing: -1.4px;
+}
+.entry-brand > span {
+  display: block;
+  font-size: clamp(25px, 3.4vw, 46px);
+  font-weight: 700;
+}
+.entry-brand small {
+  display: block;
+  font:
+    9px/2.4 "Consolas",
+    "Menlo",
+    monospace;
+  letter-spacing: 2.2px;
+}
+.entry-brand-os {
+  font-weight: 350;
+}
+.entry-brand p {
+  color: var(--entry-muted);
+  margin: 25px 0 0;
+  font:
+    9px/1.5 "Consolas",
+    "Menlo",
+    monospace;
+  letter-spacing: 2px;
+}
+.entry-brand b {
+  color: var(--entry-accent);
+  padding: 0 5px;
+}
+.entry-edition {
+  position: absolute;
+  right: 6%;
+  top: 16%;
+  font:
+    9px/1.8 "Consolas",
+    "Menlo",
+    monospace;
+  letter-spacing: 1px;
+  text-align: right;
+}
+.entry-edition span {
+  color: var(--entry-muted);
+}
+.entry-object {
+  position: absolute;
+  left: calc(50% - 200px);
+  top: calc(42% - 200px);
+  width: 400px;
+  height: 400px;
+  transition:
+    transform 850ms var(--entry-in-out),
+    opacity 250ms var(--entry-ease);
+}
+.entry-orbit {
+  position: absolute;
+  border-radius: 50%;
+}
+.orbit-one {
+  inset: 0;
+  border: 1px solid var(--entry-hair);
+  border-bottom-color: transparent;
+  transform: rotate(-45deg);
+  animation: entry-orbit 26s linear infinite;
+}
+.orbit-one::before,
+.orbit-one::after {
+  content: "";
+  position: absolute;
+  width: 7px;
+  height: 7px;
+  border: 1px solid var(--entry-accent);
+  background: var(--entry-bg);
+  top: 49%;
+  left: -4px;
+}
+.orbit-one::after {
+  left: auto;
+  right: -4px;
+  width: 4px;
+  height: 4px;
+  background: var(--entry-accent);
+}
+.orbit-one i {
+  position: absolute;
+  left: 50%;
+  top: -5px;
+  height: 10px;
+  border-left: 1px solid var(--entry-accent);
+}
+.orbit-one i:nth-child(2) {
+  top: auto;
+  bottom: -5px;
+}
+.orbit-two {
+  inset: 20px;
+  border: 1px dashed var(--entry-hair);
+  animation: entry-orbit 60s linear infinite reverse;
+}
+.orbit-three {
+  inset: 55px;
+  border: 1px solid var(--entry-soft);
+}
+.entry-cross {
+  position: absolute;
+  background: var(--entry-hair);
+}
+.cross-x {
+  height: 1px;
+  width: 440px;
+  left: -20px;
+  top: 50%;
+}
+.cross-y {
+  width: 1px;
+  height: 440px;
+  left: 50%;
+  top: -20px;
+}
+.entry-coordinate {
+  position: absolute;
+  font:
+    8px "Consolas",
+    monospace;
+  letter-spacing: 1.6px;
+  color: var(--entry-muted);
+}
+.coordinate-a {
+  left: -17px;
+  top: 14%;
+}
+.coordinate-b {
+  right: -17px;
+  bottom: 14%;
+}
+.entry-core {
+  position: absolute;
+  inset: 115px;
+  perspective: 500px;
+  animation: entry-float 7s ease-in-out infinite;
+}
+.entry-core-front,
+.entry-core-shadow {
+  position: absolute;
+  inset: 0;
+  transform: rotateX(12deg) rotateY(-18deg);
+}
+.entry-core-front {
+  color: var(--entry-ink);
+}
+.entry-core-front svg {
+  stroke-width: 1.25;
+}
+.entry-core-shadow {
+  transform: translate(18px, 22px) rotateX(12deg) rotateY(-18deg);
+  color: var(--entry-accent);
+  opacity: 0.32;
+}
+.entry-scan {
+  position: absolute;
+  top: 12%;
+  left: 12%;
+  width: 76%;
+  height: 1px;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    var(--entry-accent),
+    transparent
+  );
+  animation: entry-scan 4.5s var(--entry-in-out) infinite;
+  opacity: 0.6;
+}
+.entry-status {
+  position: absolute;
+  top: 72%;
+  left: 16%;
+  right: 16%;
+  text-align: center;
+  transition:
+    opacity 200ms ease,
+    transform 450ms var(--entry-ease);
+}
+.entry-kicker {
+  font:
+    9px "Consolas",
+    "Menlo",
+    monospace;
+  letter-spacing: 4px;
+  color: var(--entry-muted);
+}
+.entry-status h1 {
+  font-weight: 450;
+  font-size: clamp(18px, 2.1vw, 29px);
+  letter-spacing: 5px;
+  margin: 15px 0 17px;
+  line-height: 1.4;
+}
+.entry-status h1 i {
+  display: inline-block;
+  background: var(--entry-accent);
+  width: 9px;
+  height: 2px;
+  margin: 0 0 5px 13px;
+}
+.entry-rule {
+  margin: auto;
+  max-width: 440px;
+  height: 1px;
+  background: var(--entry-hair);
+}
+.entry-detail {
+  font-size: 12px;
+  line-height: 1.7;
+  margin: 12px auto 0;
+  max-width: 600px;
+  color: var(--entry-muted);
+}
+.entry-footer {
+  position: absolute;
+  bottom: 48px;
+  left: 6%;
+  right: 6%;
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  align-items: flex-end;
+  font:
+    9px/1.6 "Consolas",
+    "Menlo",
+    monospace;
+  letter-spacing: 1.4px;
+  color: var(--entry-muted);
+}
+.entry-signature {
+  text-align: right;
+  color: var(--entry-ink);
+}
+.entry-signature span {
+  display: block;
+  font-size: 8px;
+}
+.entry-signature b {
+  color: var(--entry-accent);
+  margin-left: 8px;
+}
+.entry-meter {
+  display: flex;
+  gap: 3px;
+  height: 15px;
+  align-items: flex-end;
+  margin-bottom: 10px;
+}
+.entry-meter i {
+  width: 2px;
+  height: 100%;
+  background: var(--entry-accent);
+  animation: entry-meter 1.5s ease-in-out infinite alternate;
+  transform-origin: bottom;
+}
+.entry-meter i:nth-child(2) {
+  animation-delay: -0.3s;
+  height: 60%;
+}
+.entry-meter i:nth-child(3) {
+  animation-delay: -0.7s;
+  height: 80%;
+}
+.entry-meter i:nth-child(4) {
+  animation-delay: -1.1s;
+  height: 50%;
+}
+.entry-meter i:nth-child(5) {
+  animation-delay: -0.5s;
+  height: 70%;
+}
+.entry-progress {
+  position: absolute;
+  left: 35%;
+  width: 30%;
+  height: 2px;
+  bottom: 24px;
+  background: var(--entry-soft);
+  overflow: hidden;
+}
+.entry-progress i {
+  display: block;
+  height: 100%;
+  width: 25%;
+  background: var(--entry-accent);
+  animation: entry-progress 2.8s var(--entry-in-out) infinite;
+}
+.entry-intro {
+  position: absolute;
+  inset: 0;
+  background: #0c0e0e;
+  color: #eeeae0;
+  z-index: 8;
+  pointer-events: none;
+}
+.entry-intro-mark {
+  position: absolute;
+  inset: calc(50% - 125px) 0 auto;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+.entry-intro-mark svg {
+  width: 135px;
+  height: 135px;
+  margin-bottom: 28px;
+}
+.entry-intro-mark span {
+  font:
+    21px/1.6 "Bahnschrift",
+    "DIN Alternate",
+    sans-serif;
+  letter-spacing: 9px;
+}
+.entry-intro-mark small {
+  font:
+    11px/1.8 "Microsoft YaHei",
+    "PingFang SC",
+    sans-serif;
+  letter-spacing: 4px;
+  opacity: 0.5;
+  margin-top: 14px;
+}
+.entry-intro-line {
+  position: absolute;
+  top: 49%;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, #a7d1c8, transparent);
+}
+.entry-wash {
+  position: absolute;
+  inset: 0;
+  background: var(--entry-paper);
+  opacity: 0;
+  z-index: 9;
+  pointer-events: none;
+}
+.entry-playing .entry-intro {
+  animation: entry-intro-out 3.6s var(--entry-ease) both;
+}
+.entry-playing .entry-intro-mark {
+  animation: entry-mark-in 2.4s var(--entry-ease) both;
+}
+.entry-playing .entry-intro-mark svg {
+  animation: entry-draw 1.5s var(--entry-ease) both;
+}
+.entry-playing .entry-intro-line {
+  animation: entry-light-line 2.7s var(--entry-in-out) both;
+}
+.entry-playing .entry-wash {
+  animation: entry-wash 3.6s var(--entry-ease) both;
+}
+.entry-playing .entry-brand,
+.entry-playing .entry-edition,
+.entry-playing .entry-footer {
+  animation: entry-arrive 850ms 2.55s var(--entry-ease) both;
+}
+.entry-playing .entry-panels i {
+  animation: entry-panel-in 1.25s 2.1s var(--entry-ease) both;
+}
+.entry-playing .entry-panels i:nth-child(2) {
+  animation-delay: 2.2s;
+}
+.entry-playing .entry-panels i:nth-child(3) {
+  animation-delay: 2.3s;
+}
+.entry-playing .entry-panels i:nth-child(4) {
+  animation-delay: 2.4s;
+}
+.entry-playing .entry-core-front {
+  animation: entry-core-in 1.2s 2.4s var(--entry-ease) both;
+}
+.entry-auth-caption {
+  position: absolute;
+  left: 8%;
+  top: 69%;
+  opacity: 0;
+  transform: translateY(18px);
+  transition:
+    opacity 350ms ease,
+    transform 650ms var(--entry-ease);
+}
+.entry-auth-caption > span {
+  font:
+    10px "Consolas",
+    "Menlo",
+    monospace;
+  letter-spacing: 5px;
+  color: var(--entry-muted);
+}
+.entry-auth-caption strong {
+  display: block;
+  font-size: clamp(27px, 3.7vw, 52px);
+  letter-spacing: -1px;
+  line-height: 1.5;
+}
+.entry-auth-caption strong span {
+  color: var(--entry-accent);
+}
+.entry-auth-caption small {
+  color: var(--entry-muted);
+  font-size: 12px;
+  letter-spacing: 2px;
+}
+.entry-scene[phase="auth"] .entry-object,
+.entry-scene[phase="verifying"] .entry-object {
+  transform: translateX(-24vw) scale(0.84);
+}
+.entry-scene[phase="auth"] .entry-status,
+.entry-scene[phase="verifying"] .entry-status {
+  opacity: 0;
+  transform: translateY(12px);
+}
+.entry-scene[phase="auth"] .entry-auth-caption,
+.entry-scene[phase="verifying"] .entry-auth-caption {
+  opacity: 1;
+  transform: translateY(0);
+}
+.entry-scene[phase="auth"] .entry-edition,
+.entry-scene[phase="verifying"] .entry-edition {
+  opacity: 0 !important;
+}
+.entry-scene[phase="error"] .entry-object {
+  opacity: 0.3;
+}
+.entry-scene[phase="error"] .entry-progress i,
+.entry-scene[phase="error"] .entry-meter i {
+  animation-play-state: paused;
+}
+.entry-welcome {
+  position: absolute;
+  inset: 28% 10% auto;
+  text-align: center;
+  opacity: 0;
+  pointer-events: none;
+}
+.entry-welcome > span {
+  font:
+    10px "Consolas",
+    monospace;
+  letter-spacing: 9px;
+}
+.entry-welcome strong {
+  position: relative;
+  display: block;
+  font-weight: 700;
+  font-size: clamp(55px, 8vw, 116px);
+  line-height: 0.97;
+  letter-spacing: -4px;
+  margin: 25px 0;
+}
+.entry-welcome strong::before,
+.entry-welcome strong::after {
+  content: "YOUR NEXT\A GREAT IDEA.";
+  white-space: pre;
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  pointer-events: none;
+  color: #469aa7;
+  clip-path: inset(38% 0 44%);
+}
+.entry-welcome strong::after {
+  color: var(--entry-accent);
+  clip-path: inset(64% 0 21%);
+}
+.entry-scene[phase="ready"] .entry-welcome strong::before {
+  animation: entry-color-split 850ms 150ms var(--entry-ease) both;
+}
+.entry-scene[phase="ready"] .entry-welcome strong::after {
+  animation: entry-color-split 850ms 250ms var(--entry-ease) both reverse;
+}
+@keyframes entry-color-split {
+  0%,
+  100% {
+    opacity: 0;
+    transform: translateX(0);
+  }
+  30% {
+    opacity: 0.55;
+    transform: translateX(7px);
+  }
+  60% {
+    opacity: 0.25;
+    transform: translateX(-3px);
+  }
+}
+.entry-welcome em {
+  font-style: normal;
+  color: var(--entry-accent);
+}
+.entry-welcome small {
+  font:
+    12px "Microsoft YaHei",
+    sans-serif;
+  letter-spacing: 5px;
+}
+.entry-scene[phase="ready"] .entry-object,
+.entry-scene[phase="ready"] .entry-status,
+.entry-scene[phase="ready"] .entry-auth-caption {
+  opacity: 0;
+}
+.entry-scene[phase="ready"] .entry-welcome {
+  animation: entry-welcome-in 650ms var(--entry-ease) both;
+}
+.entry-scene[phase="ready"] .entry-progress i {
+  width: 100%;
+  animation: none;
+}
+.entry-shutters {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  z-index: 10;
+  pointer-events: none;
+}
+.entry-shutters i {
+  flex: 1;
+  background: var(--entry-ink);
+  transform: translateY(102%);
+}
+.entry-scene[data-exit="true"] .entry-shutters i {
+  animation: entry-shutter 850ms var(--entry-in-out) both;
+  animation-delay: calc(var(--shutter) * 28ms);
+}
+.entry-scene[data-exit="true"] {
+  background: transparent;
+}
+.entry-scene[data-exit="true"] > :not(.entry-shutters) {
+  opacity: 0 !important;
+  transition: opacity 200ms 320ms ease;
+}
+.entry-skipped .entry-intro,
+.entry-skipped .entry-wash {
+  display: none;
+}
+.entry-skipped .entry-brand,
+.entry-skipped .entry-edition,
+.entry-skipped .entry-footer,
+.entry-skipped .entry-panels i,
+.entry-skipped .entry-core-front {
+  animation: none;
+}
+@keyframes entry-intro-out {
+  0%,
+  57% {
+    opacity: 1;
+  }
+  79%,
+  100% {
+    opacity: 0;
+    visibility: hidden;
+  }
+}
+@keyframes entry-mark-in {
+  0% {
+    opacity: 0;
+    transform: translateY(12px) scale(0.94);
+  }
+  18%,
+  75% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-8px) scale(1.06);
+  }
+}
+@keyframes entry-draw {
+  from {
+    clip-path: inset(100% 0 0);
+  }
+  to {
+    clip-path: inset(0);
+  }
+}
+@keyframes entry-light-line {
+  0%,
+  40% {
+    opacity: 0;
+    transform: scaleX(0.08);
+  }
+  65% {
+    opacity: 0.6;
+    transform: scaleX(1);
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-25vh) scaleX(1);
+  }
+}
+@keyframes entry-wash {
+  0%,
+  52% {
+    opacity: 0;
+  }
+  65% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+@keyframes entry-arrive {
+  from {
+    opacity: 0;
+    transform: translateY(18px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+@keyframes entry-panel-in {
+  from {
+    opacity: 0;
+    transform: translateY(12%) rotateY(-14deg);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) rotateY(0);
+  }
+}
+@keyframes entry-core-in {
+  from {
+    opacity: 0;
+    transform: rotateX(45deg) rotateY(-100deg) scale(0.94);
+  }
+  to {
+    opacity: 1;
+    transform: rotateX(12deg) rotateY(-18deg) scale(1);
+  }
+}
+@keyframes entry-orbit {
+  to {
+    transform: rotate(315deg);
+  }
+}
+@keyframes entry-float {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+@keyframes entry-scan {
+  0%,
+  100% {
+    transform: translateY(0);
+    opacity: 0;
+  }
+  18%,
+  80% {
+    opacity: 0.6;
+  }
+  85% {
+    transform: translateY(280px);
+  }
+}
+@keyframes entry-meter {
+  from {
+    transform: scaleY(0.25);
+  }
+  to {
+    transform: scaleY(1);
+  }
+}
+@keyframes entry-progress {
+  from {
+    transform: translateX(-100%);
+  }
+  to {
+    transform: translateX(500%);
+  }
+}
+@keyframes entry-welcome-in {
+  from {
+    opacity: 0;
+    transform: translateY(28px) scale(0.97);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+@keyframes entry-shutter {
+  0% {
+    transform: translateY(102%);
+  }
+  45%,
+  60% {
+    transform: translateY(0);
+  }
+  100% {
+    transform: translateY(-102%);
+  }
+}
+@media (max-width: 1000px) {
+  .entry-object {
+    transform: scale(0.8);
+  }
+  .entry-scene[phase="auth"] .entry-object,
+  .entry-scene[phase="verifying"] .entry-object {
+    transform: translateX(-25vw) scale(0.65);
+  }
+  .entry-brand {
+    left: 5%;
+  }
+  .entry-brand > span {
+    font-size: 29px;
+  }
+  .entry-auth-caption {
+    left: 6%;
+  }
+  .entry-auth-caption strong {
+    font-size: 32px;
+  }
+  .entry-footer-note {
+    display: none;
+  }
+}
+@media (max-width: 700px) {
+  .entry-brand {
+    top: 8%;
+    left: 7%;
+  }
+  .entry-brand > span {
+    font-size: 22px;
+  }
+  .entry-brand small {
+    font-size: 7px;
+  }
+  .entry-brand p {
+    display: none;
+  }
+  .entry-edition {
+    display: none;
+  }
+  .entry-object {
+    top: calc(41% - 200px);
+    transform: scale(0.65);
+  }
+  .entry-scene[phase="auth"] .entry-object,
+  .entry-scene[phase="verifying"] .entry-object {
+    opacity: 0.14;
+    transform: translateY(10vh) scale(0.9);
+  }
+  .entry-auth-caption {
+    display: none;
+  }
+  .entry-status {
+    left: 8%;
+    right: 8%;
+    top: 70%;
+  }
+  .entry-status h1 {
+    letter-spacing: 2px;
+  }
+  .entry-signature {
+    display: none;
+  }
+  .entry-welcome strong {
+    font-size: 54px;
+    letter-spacing: -2px;
+  }
+  .entry-footer {
+    bottom: 36px;
+  }
+  .entry-frame {
+    inset: 48px 16px 16px;
+  }
+  .entry-progress {
+    bottom: 16px;
+  }
+  .entry-brand {
+    z-index: 1;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .entry-scene *,
+  .entry-scene *::before,
+  .entry-scene *::after {
+    animation: none !important;
+    transition: opacity 120ms ease !important;
+  }
+  .entry-intro,
+  .entry-wash {
+    display: none;
+  }
+  .entry-scene[phase="ready"] .entry-welcome {
+    opacity: 1;
+  }
+  .entry-scene[data-exit="true"] .entry-shutters {
+    display: none;
+  }
+}

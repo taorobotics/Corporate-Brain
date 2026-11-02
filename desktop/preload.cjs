@@ -43,6 +43,7 @@ window.addEventListener(
 contextBridge.exposeInMainWorld("brainDesktop", {
   retryStartup: () => ipcRenderer.invoke("startup:retry"),
   readAppearance: () => ipcRenderer.invoke("appearance:read"),
+  entryContext: () => ipcRenderer.invoke("entry:context"),
   writeAppearance: (theme) => ipcRenderer.invoke("appearance:write", theme),
   previewStartup: () => ipcRenderer.invoke("startup:preview"),
   allowBootstrap: process.env.BRAIN_VERIFY === "1",

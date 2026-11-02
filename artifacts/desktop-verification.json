@@ -5,6 +5,7 @@
   "database": "disposable in-memory",
   "checks": [
     "Pre-login window controls minimize, maximize, restore and request native close on Windows; macOS keeps native controls",
+    "Shared cinematic startup, authentication, profile preparation and welcome reveal replace the old loading screen",
     "First administrator setup and login through UI",
     "Desktop workspace scanner reads text files and excludes dependency directories",
     "Client discovers a fixture release, shows sidebar and details, downloads through authenticated server, verifies SHA-256, and blocks installer execution in development QA",

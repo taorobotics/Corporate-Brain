@@ -1,58 +1,80 @@
 const query = new URLSearchParams(location.search);
-document.documentElement.dataset.theme =
-  query.get("theme") === "dark" ? "dark" : "light";
-const root = document.getElementById("dsh-startup-root");
-const byId = (id) => document.getElementById(id);
-byId("version").textContent = `REV ${query.get("version") || ""}`;
-let lastState = {};
+const theme = query.get("theme") === "dark" ? "dark" : "light";
+document.documentElement.dataset.theme = theme;
+const scene = document.getElementById("scene");
+scene.setAttribute("theme", theme);
+scene.addEventListener("entry-intro-end", () =>
+  document.body.classList.add("intro-done"),
+);
+scene.start(
+  Math.max(0, Date.now() - Number(query.get("startedAt") || Date.now())),
+);
+let lastState = {},
+  previewTimers = [];
+function cancelPreview() {
+  for (const timer of previewTimers) clearTimeout(timer);
+  previewTimers = [];
+}
 window.startup.onState((state) => {
   lastState = state;
-  root.dataset.phase = state.phase;
-  if (state.skipped) root.classList.add("skipped");
-  const titles = {
-    connecting: "正在打开公司大脑",
-    retrying: "连接中断，正在自动重试",
-    error: "暂时无法连接公司服务器",
-    ready: "工作空间已就绪",
-    preview: "欢迎进入公司大脑",
-  };
-  byId("title").textContent = titles[state.phase] || titles.connecting;
-  byId("detail").textContent = state.detail;
-  byId("phase").textContent = {
-    connecting: "SECURE CONNECTION",
-    retrying: "RECONNECTING",
-    error: "CONNECTION PAUSED",
-    ready: "WORKSPACE READY",
-    preview: "STARTUP PREVIEW",
-  }[state.phase];
-  byId("step").textContent =
-    state.phase === "ready" ? "[ 02 / 02 ] READY" : "[ 01 / 02 ] CONNECTING";
-  byId("attempt").textContent = state.attempt
-    ? `连接尝试 ${state.attempt} / ${state.maxAttempts || state.attempt}`
-    : "预览 · 随时跳过";
-  byId("error-code").textContent = state.code ? `连接信息：${state.code}` : "";
-  byId("actions").hidden = state.phase !== "error";
-  byId("retry").disabled = false;
-  byId("skip").hidden = state.phase === "error" || !!state.skipped;
+  // The underlying web UI continues the same timeline. A painted document is
+  // not yet an authenticated workspace, so never show a fake success here.
+  if (state.phase === "ready") return;
+  cancelPreview();
+  scene.setAttribute(
+    "phase",
+    state.phase === "preview" ? "connecting" : state.phase,
+  );
+  scene.setAttribute(
+    "headline",
+    state.phase === "connecting" ? "正在打开公司大脑" : "",
+  );
+  scene.setAttribute("detail", state.detail || "");
+  if (state.phase === "error" || state.skipped) scene.skip();
+  document.getElementById("actions").hidden = state.phase !== "error";
+  document.getElementById("retry").disabled = false;
+  document.getElementById("error-code").textContent = state.code
+    ? `连接信息：${state.code}`
+    : "";
+  document.getElementById("skip").hidden =
+    state.phase === "error" || !!state.skipped;
+  if (state.phase === "preview") {
+    for (const [delay, phase, headline] of [
+      [4400, "profile", "准备你的工作空间"],
+      [6800, "ready", ""],
+    ])
+      previewTimers.push(
+        setTimeout(() => {
+          scene.setAttribute("phase", phase);
+          scene.setAttribute("headline", headline);
+          scene.setAttribute("detail", "动效预览 · 未进行账号验证");
+        }, delay),
+      );
+  }
 });
-byId("retry").addEventListener("click", async () => {
-  byId("retry").disabled = true;
+document.getElementById("retry").addEventListener("click", async () => {
+  document.getElementById("retry").disabled = true;
   try {
     await window.startup.retry();
   } catch {
-    byId("retry").disabled = false;
+    document.getElementById("retry").disabled = false;
   }
 });
-byId("skip").addEventListener("click", () => {
-  root.classList.add("skipped");
-  byId("skip").hidden = true;
+document.getElementById("skip").addEventListener("click", () => {
+  cancelPreview();
+  scene.skip();
+  document.getElementById("skip").hidden = true;
   window.startup.skip();
 });
 document.addEventListener("keydown", (event) => {
-  if (event.key === "Escape") byId("skip").click();
+  if (event.key === "Escape") document.getElementById("skip").click();
 });
 window.addEventListener("online", () => {
-  if (lastState.phase === "error" && lastState.retry) byId("retry").click();
+  if (lastState.phase === "error" && lastState.retry)
+    document.getElementById("retry").click();
 });
 for (const action of ["minimize", "maximize", "close"])
-  byId(action).addEventListener("click", () => window.startup.action(action));
+  document
+    .getElementById(action)
+    .addEventListener("click", () => window.startup.action(action));
+window.addEventListener("pagehide", cancelPreview);

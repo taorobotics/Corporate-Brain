@@ -1,16 +1,18 @@
 import { useState, type FormEvent } from "react";
 import { ArrowRight, LockKey } from "@phosphor-icons/react";
 import { api } from "./api";
-import { Brand, Button, Field, Busy } from "./components";
+import { Button, Field, Busy } from "./components";
 import type { User } from "../shared/types";
 export default function Auth({
   bootstrap,
   onLogin,
   onLegal,
+  onBusy,
 }: {
   bootstrap: boolean;
   onLogin: (user: User) => void;
   onLegal: () => void;
+  onBusy?: (busy: boolean) => void;
 }) {
   const desktopEmployee =
       !!window.brainDesktop && window.brainDesktop.allowBootstrap !== true,
@@ -21,6 +23,7 @@ export default function Auth({
   async function submit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
     setBusy(true);
+    onBusy?.(true);
     setError("");
     const data = Object.fromEntries(new FormData(e.currentTarget));
     try {
@@ -38,14 +41,14 @@ export default function Auth({
       setError((e as Error).message);
     } finally {
       setBusy(false);
+      onBusy?.(false);
     }
   }
   return (
     <main className="auth">
-      <Brand />
       <div className="auth-card">
         <div className="eyebrow">
-          <LockKey size={16} /> 公司工作空间
+          <LockKey size={14} /> WORKSPACE ACCESS / 公司工作空间
         </div>
         <h1>{setup ? "建立你的公司大脑" : "登录公司账号"}</h1>
         <p>

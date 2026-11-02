@@ -45,6 +45,7 @@ import Legal from "./Legal";
 import { useDesktopUpdates, UpdateButton, UpdateDialog } from "./Updates";
 import SkinCenter, { type SkinSelection } from "./Skins";
 import { getSkin, skinTokens } from "../shared/skins";
+import EntryExperience from "./EntryExperience";
 
 const navigation = [
   { id: "chat", label: "新建任务", icon: NotePencil },
@@ -94,6 +95,11 @@ export default function App() {
   const notify = (message: string) => setToast(message);
   const updates = useDesktopUpdates(!!user && !user.mustChange);
   const [legalOpen, setLegalOpen] = useState(false);
+  const [authBusy, setAuthBusy] = useState(false),
+    [enteredUser, setEnteredUser] = useState<string | null>(null);
+  useEffect(() => {
+    if (!user) setEnteredUser(null);
+  }, [user?.id]);
   const [launchTheme, setLaunchTheme] = useState("default");
   useEffect(() => {
     void window.brainDesktop
@@ -319,39 +325,62 @@ export default function App() {
     () => window.brainDesktop?.onMenu(handleMenu),
     [state, updates.state],
   );
-  if (loading)
+  if (loading || startupError || !user || !ready)
     return (
-      <div className="session-screen">
-        <WindowTitleBar />
-        <div className="loading-screen">
-          <Brand />
-          <p>正在连接公司工作空间…</p>
-        </div>
-      </div>
-    );
-  if (startupError)
-    return (
-      <div className="session-screen">
-        <WindowTitleBar />
-        <div className="loading-screen">
-          <Brand />
-          <h2>暂时无法连接公司服务器</h2>
-          <p>{startupError}</p>
-          <Button onClick={() => void initialize()}>重新连接</Button>
-        </div>
-      </div>
-    );
-  if (!user)
-    return (
-      <div className="session-screen">
-        <WindowTitleBar />
-        <Auth
-          bootstrap={bootstrap}
-          onLogin={setUser}
-          onLegal={() => setLegalOpen(true)}
-        />
+      <>
+        <EntryExperience
+          phase={
+            loading
+              ? "connecting"
+              : startupError || localError
+                ? "error"
+                : !user
+                  ? authBusy
+                    ? "verifying"
+                    : "auth"
+                  : !ready
+                    ? "profile"
+                    : "ready"
+          }
+          theme={appearance.theme}
+          headline={localError ? "本机记录暂时无法读取" : undefined}
+          detail={
+            startupError ||
+            localError ||
+            (loading
+              ? "正在建立公司连接，完成后进入登录界面。"
+              : !user
+                ? "使用你的公司账号继续"
+                : !ready
+                  ? "正在验证账号并读取此设备上的个人空间。"
+                  : "账号与本机空间已准备完成。")
+          }
+          action={
+            startupError
+              ? { label: "重新连接", run: () => void initialize() }
+              : localError
+                ? {
+                    label: "重新读取",
+                    run: () => {
+                      setLocalError("");
+                      setLocalLoadVersion((v) => v + 1);
+                    },
+                  }
+                : undefined
+          }
+          onEntered={() => setEnteredUser(user?.id ?? null)}
+        >
+          {!loading && !startupError && !user && (
+            <Auth
+              bootstrap={bootstrap}
+              onLogin={setUser}
+              onLegal={() => setLegalOpen(true)}
+              onBusy={setAuthBusy}
+            />
+          )}
+        </EntryExperience>
         {legalOpen && <Legal close={() => setLegalOpen(false)} />}
-      </div>
+      </>
     );
   const isAdmin = page.startsWith("admin");
   const workspaceProps: WorkspaceProps = {
@@ -372,323 +401,338 @@ export default function App() {
     importRecords: () => importRef.current?.click(),
   };
   return (
-    <div className={`application ${isAdmin ? "admin-app" : ""}`}>
-      {!isAdmin && (
-        <div className="desktop-bar">
-          <IconButton label="后退" onClick={() => history.back()}>
-            <ArrowLeft size={21} />
-          </IconButton>
-          <IconButton label="前进" onClick={() => history.forward()}>
-            <ArrowRight size={21} />
-          </IconButton>
-          <IconButton label="切换侧栏" onClick={() => setSidebar((v) => !v)}>
-            <SidebarSimple size={21} />
-          </IconButton>
-          {["文件", "编辑", "视图", "帮助"].map((label) => (
-            <div key={label} className="menu-anchor">
-              <ActionMenu
-                open={menu === label}
-                onOpenChange={(open) =>
-                  setMenu((current) =>
-                    open ? label : current === label ? "" : current,
-                  )
-                }
-                restoreFocusBeforeAction={label === "编辑"}
-                className="top-menu-popup"
-                trigger={<button className="menu-label">{label}</button>}
-                items={(label === "文件"
-                  ? [
-                      ["新建任务", "new"],
-                      ["导出本地记录", "export"],
-                      ["导入本地记录", "import"],
-                      ...(window.brainDesktop?.canChangeServer
-                        ? [["切换公司服务器", "server"]]
-                        : []),
-                    ]
-                  : label === "视图"
+    <>
+      {enteredUser !== user.id && (
+        <EntryExperience
+          phase="ready"
+          theme={appearance.theme}
+          detail="账号与本机空间已准备完成。"
+          onEntered={() => setEnteredUser(user.id)}
+        />
+      )}
+      <div
+        className={`application ${isAdmin ? "admin-app" : ""}`}
+        inert={enteredUser !== user.id}
+      >
+        {!isAdmin && (
+          <div className="desktop-bar">
+            <IconButton label="后退" onClick={() => history.back()}>
+              <ArrowLeft size={21} />
+            </IconButton>
+            <IconButton label="前进" onClick={() => history.forward()}>
+              <ArrowRight size={21} />
+            </IconButton>
+            <IconButton label="切换侧栏" onClick={() => setSidebar((v) => !v)}>
+              <SidebarSimple size={21} />
+            </IconButton>
+            {["文件", "编辑", "视图", "帮助"].map((label) => (
+              <div key={label} className="menu-anchor">
+                <ActionMenu
+                  open={menu === label}
+                  onOpenChange={(open) =>
+                    setMenu((current) =>
+                      open ? label : current === label ? "" : current,
+                    )
+                  }
+                  restoreFocusBeforeAction={label === "编辑"}
+                  className="top-menu-popup"
+                  trigger={<button className="menu-label">{label}</button>}
+                  items={(label === "文件"
                     ? [
-                        ["切换侧栏", "sidebar"],
-                        ["个人设置", "settings"],
+                        ["新建任务", "new"],
+                        ["导出本地记录", "export"],
+                        ["导入本地记录", "import"],
+                        ...(window.brainDesktop?.canChangeServer
+                          ? [["切换公司服务器", "server"]]
+                          : []),
                       ]
-                    : label === "编辑"
+                    : label === "视图"
                       ? [
-                          ["撤销", "edit:undo"],
-                          ["重做", "edit:redo"],
-                          ["剪切", "edit:cut"],
-                          ["复制", "edit:copy"],
-                          ["粘贴", "edit:paste"],
-                          ["全选", "edit:selectAll"],
+                          ["切换侧栏", "sidebar"],
+                          ["个人设置", "settings"],
                         ]
-                      : [
-                          ...(window.brainDesktop
-                            ? [["检查更新…", "updates"]]
-                            : []),
-                          ["使用帮助", "help"],
-                          ["隐私与许可", "legal"],
-                        ]
-                ).map(([text, action]) => {
-                  const Icon = {
-                    new: NotePencil,
-                    export: DownloadSimple,
-                    import: ArrowRight,
-                    server: Plug,
-                    sidebar: SidebarSimple,
-                    settings: GearSix,
-                    help: Question,
-                    legal: ShieldCheck,
-                    updates: DownloadSimple,
-                    "edit:undo": ArrowUUpLeft,
-                    "edit:redo": ArrowUUpRight,
-                    "edit:cut": Scissors,
-                    "edit:copy": Copy,
-                    "edit:paste": ClipboardText,
-                    "edit:selectAll": SelectionAll,
-                  }[action];
-                  return {
-                    label: text,
-                    onSelect: () => handleMenu(action),
-                    icon: Icon ? <Icon size={17} /> : undefined,
-                    separatorBefore:
-                      action === "server" ||
-                      action === "edit:cut" ||
-                      action === "edit:selectAll",
-                  };
-                })}
-              />
-            </div>
-          ))}
-          <span className="bar-spacer" />
-          {!window.brainDesktop && (
-            <span className="web-indicator">员工网页端</span>
-          )}
-          <WindowControls />
-        </div>
-      )}
-      {isAdmin && <WindowTitleBar />}
-      {isAdmin && (
-        <header className="admin-header">
-          <Brand />
-          <span className="admin-title">管理后台</span>
-          <span className="workspace-name">
-            公司工作区 <CaretDown size={13} />
-          </span>
-          <span className="bar-spacer" />
-          <Button onClick={() => navigate("chat")}>
-            查看员工端 <ArrowRight size={16} />
-          </Button>
-          <div className="admin-person">
-            <UserCircle size={30} />
-            {user.name}
-          </div>
-        </header>
-      )}
-      <div className="app-body">
-        {(sidebar || isAdmin) && (
-          <aside className="sidebar">
-            {!isAdmin && (
-              <div className="sidebar-brand">
-                <Brand />
-                <IconButton
-                  label="搜索本地对话"
-                  onClick={() => {
-                    navigate("chat");
-                    document
-                      .querySelector<HTMLInputElement>(".history-search")
-                      ?.focus();
-                  }}
-                >
-                  <MagnifyingGlass size={20} />
-                </IconButton>
+                      : label === "编辑"
+                        ? [
+                            ["撤销", "edit:undo"],
+                            ["重做", "edit:redo"],
+                            ["剪切", "edit:cut"],
+                            ["复制", "edit:copy"],
+                            ["粘贴", "edit:paste"],
+                            ["全选", "edit:selectAll"],
+                          ]
+                        : [
+                            ...(window.brainDesktop
+                              ? [["检查更新…", "updates"]]
+                              : []),
+                            ["使用帮助", "help"],
+                            ["隐私与许可", "legal"],
+                          ]
+                  ).map(([text, action]) => {
+                    const Icon = {
+                      new: NotePencil,
+                      export: DownloadSimple,
+                      import: ArrowRight,
+                      server: Plug,
+                      sidebar: SidebarSimple,
+                      settings: GearSix,
+                      help: Question,
+                      legal: ShieldCheck,
+                      updates: DownloadSimple,
+                      "edit:undo": ArrowUUpLeft,
+                      "edit:redo": ArrowUUpRight,
+                      "edit:cut": Scissors,
+                      "edit:copy": Copy,
+                      "edit:paste": ClipboardText,
+                      "edit:selectAll": SelectionAll,
+                    }[action];
+                    return {
+                      label: text,
+                      onSelect: () => handleMenu(action),
+                      icon: Icon ? <Icon size={17} /> : undefined,
+                      separatorBefore:
+                        action === "server" ||
+                        action === "edit:cut" ||
+                        action === "edit:selectAll",
+                    };
+                  })}
+                />
               </div>
+            ))}
+            <span className="bar-spacer" />
+            {!window.brainDesktop && (
+              <span className="web-indicator">员工网页端</span>
             )}
-            {isAdmin ? (
-              <nav className="main-nav">
-                {[
-                  {
-                    id: "admin-users",
-                    icon: UserCircle,
-                    label: "部门与员工账号",
-                  },
-                  { id: "admin-models", icon: GearSix, label: "模型与服务" },
-                  { id: "admin-knowledge", icon: BookOpen, label: "公司知识" },
-                  { id: "admin-skills", icon: Sparkle, label: "技能发布" },
-                  { id: "admin-audit", icon: ShieldCheck, label: "操作记录" },
-                ].map(({ id, icon: Icon, label }) => (
-                  <button
-                    className={page === id ? "active" : ""}
-                    key={id}
-                    onClick={() => navigate(id)}
+            <WindowControls />
+          </div>
+        )}
+        {isAdmin && <WindowTitleBar />}
+        {isAdmin && (
+          <header className="admin-header">
+            <Brand />
+            <span className="admin-title">管理后台</span>
+            <span className="workspace-name">
+              公司工作区 <CaretDown size={13} />
+            </span>
+            <span className="bar-spacer" />
+            <Button onClick={() => navigate("chat")}>
+              查看员工端 <ArrowRight size={16} />
+            </Button>
+            <div className="admin-person">
+              <UserCircle size={30} />
+              {user.name}
+            </div>
+          </header>
+        )}
+        <div className="app-body">
+          {(sidebar || isAdmin) && (
+            <aside className="sidebar">
+              {!isAdmin && (
+                <div className="sidebar-brand">
+                  <Brand />
+                  <IconButton
+                    label="搜索本地对话"
+                    onClick={() => {
+                      navigate("chat");
+                      document
+                        .querySelector<HTMLInputElement>(".history-search")
+                        ?.focus();
+                    }}
                   >
-                    <Icon size={23} />
-                    {label}
-                  </button>
-                ))}
-              </nav>
-            ) : (
-              <>
+                    <MagnifyingGlass size={20} />
+                  </IconButton>
+                </div>
+              )}
+              {isAdmin ? (
                 <nav className="main-nav">
-                  {navigation.map(({ id, label, icon: Icon }) => (
+                  {[
+                    {
+                      id: "admin-users",
+                      icon: UserCircle,
+                      label: "部门与员工账号",
+                    },
+                    { id: "admin-models", icon: GearSix, label: "模型与服务" },
+                    {
+                      id: "admin-knowledge",
+                      icon: BookOpen,
+                      label: "公司知识",
+                    },
+                    { id: "admin-skills", icon: Sparkle, label: "技能发布" },
+                    { id: "admin-audit", icon: ShieldCheck, label: "操作记录" },
+                  ].map(({ id, icon: Icon, label }) => (
                     <button
+                      className={page === id ? "active" : ""}
                       key={id}
-                      className={page === id && id !== "chat" ? "active" : ""}
-                      onClick={() => {
-                        if (id === "chat") setConversationId(null);
-                        navigate(id);
-                      }}
+                      onClick={() => navigate(id)}
                     >
-                      <Icon size={22} />
+                      <Icon size={23} />
                       {label}
                     </button>
                   ))}
                 </nav>
-                <div className="history">
-                  <div className="section-label">
-                    最近 <CaretDown size={12} />
-                    <span>仅本机</span>
-                  </div>
-                  <input
-                    className="history-search"
-                    aria-label="搜索本地对话"
-                    placeholder="搜索对话"
-                    onChange={(e) => {
-                      for (const item of document.querySelectorAll<HTMLElement>(
-                        "[data-history-title]",
-                      ))
-                        item.hidden = !item.dataset.historyTitle
-                          ?.toLowerCase()
-                          .includes(e.target.value.toLowerCase());
-                    }}
-                  />
-                  <div className="history-list">
-                    {state.conversations.map((c) => (
+              ) : (
+                <>
+                  <nav className="main-nav">
+                    {navigation.map(({ id, label, icon: Icon }) => (
                       <button
-                        data-history-title={c.title}
-                        className={
-                          conversationId === c.id && page === "chat"
-                            ? "selected"
-                            : ""
-                        }
-                        key={c.id}
+                        key={id}
+                        className={page === id && id !== "chat" ? "active" : ""}
                         onClick={() => {
-                          setConversationId(c.id);
-                          navigate("chat");
+                          if (id === "chat") setConversationId(null);
+                          navigate(id);
                         }}
                       >
-                        {c.title}
+                        <Icon size={22} />
+                        {label}
                       </button>
                     ))}
-                    {!state.conversations.length && (
-                      <p className="history-hint">你的任务会显示在这里</p>
-                    )}
-                  </div>
-                </div>
-              </>
-            )}
-            <div className="sidebar-footer">
-              <UpdateButton model={updates} />
-              <div className="account-area">
-                <ActionMenu
-                  open={accountOpen}
-                  onOpenChange={setAccountOpen}
-                  side="top"
-                  className="account-menu-popup"
-                  header={
-                    <div className="account-summary">
-                      <UserCircle size={32} />
-                      <div>
-                        <strong>{user.name}</strong>
-                        <small>
-                          {user.departmentName} · {user.username}
-                        </small>
-                      </div>
+                  </nav>
+                  <div className="history">
+                    <div className="section-label">
+                      最近 <CaretDown size={12} />
+                      <span>仅本机</span>
                     </div>
-                  }
-                  items={[
-                    {
-                      label: "个人设置",
-                      onSelect: () => navigate("settings"),
-                      icon: <UserCircle size={19} />,
-                    },
-                    {
-                      label: "模型与服务",
-                      onSelect: () => navigate("models"),
-                      icon: <GearSix size={19} />,
-                    },
-                    ...([
-                      "company_admin",
-                      "department_admin",
-                      "department_reviewer",
-                      "company_reviewer",
-                    ].includes(user.role)
-                      ? [
-                          {
-                            label: "管理后台",
-                            icon: <ShieldCheck size={19} />,
-                            onSelect: () =>
-                              navigate(
-                                [
-                                  "department_reviewer",
-                                  "company_reviewer",
-                                ].includes(user.role)
-                                  ? "admin-skills"
-                                  : "admin-users",
-                              ),
-                          },
-                        ]
-                      : []),
-                    {
-                      label: "导出本地记录",
-                      onSelect: () => handleMenu("export"),
-                      icon: <DownloadSimple size={19} />,
-                    },
-                    {
-                      label: "帮助",
-                      onSelect: () => handleMenu("help"),
-                      icon: <Question size={19} />,
-                    },
-                    ...(window.brainDesktop
-                      ? [
-                          {
-                            label: "检查更新…",
-                            onSelect: () => updates.show(),
-                            icon: <DownloadSimple size={19} />,
-                          },
-                        ]
-                      : []),
-                    {
-                      label: "退出登录",
-                      onSelect: () => void logout(),
-                      icon: <SignOut size={19} />,
-                      danger: true,
-                      separatorBefore: true,
-                    },
-                  ]}
-                  trigger={
-                    <button
-                      className="account-trigger"
-                      aria-label="打开账号菜单"
-                    >
-                      <span className="avatar">
-                        <UserCircle size={32} weight="duotone" />
-                      </span>
-                      <span>
-                        <strong>{user.name}</strong>
-                        <small>{user.departmentName}</small>
-                      </span>
-                      <CaretDown size={14} />
-                    </button>
-                  }
-                />
-                <IconButton label="设置" onClick={() => navigate("settings")}>
-                  <GearSix size={21} />
-                </IconButton>
+                    <input
+                      className="history-search"
+                      aria-label="搜索本地对话"
+                      placeholder="搜索对话"
+                      onChange={(e) => {
+                        for (const item of document.querySelectorAll<HTMLElement>(
+                          "[data-history-title]",
+                        ))
+                          item.hidden = !item.dataset.historyTitle
+                            ?.toLowerCase()
+                            .includes(e.target.value.toLowerCase());
+                      }}
+                    />
+                    <div className="history-list">
+                      {state.conversations.map((c) => (
+                        <button
+                          data-history-title={c.title}
+                          className={
+                            conversationId === c.id && page === "chat"
+                              ? "selected"
+                              : ""
+                          }
+                          key={c.id}
+                          onClick={() => {
+                            setConversationId(c.id);
+                            navigate("chat");
+                          }}
+                        >
+                          {c.title}
+                        </button>
+                      ))}
+                      {!state.conversations.length && (
+                        <p className="history-hint">你的任务会显示在这里</p>
+                      )}
+                    </div>
+                  </div>
+                </>
+              )}
+              <div className="sidebar-footer">
+                <UpdateButton model={updates} />
+                <div className="account-area">
+                  <ActionMenu
+                    open={accountOpen}
+                    onOpenChange={setAccountOpen}
+                    side="top"
+                    className="account-menu-popup"
+                    header={
+                      <div className="account-summary">
+                        <UserCircle size={32} />
+                        <div>
+                          <strong>{user.name}</strong>
+                          <small>
+                            {user.departmentName} · {user.username}
+                          </small>
+                        </div>
+                      </div>
+                    }
+                    items={[
+                      {
+                        label: "个人设置",
+                        onSelect: () => navigate("settings"),
+                        icon: <UserCircle size={19} />,
+                      },
+                      {
+                        label: "模型与服务",
+                        onSelect: () => navigate("models"),
+                        icon: <GearSix size={19} />,
+                      },
+                      ...([
+                        "company_admin",
+                        "department_admin",
+                        "department_reviewer",
+                        "company_reviewer",
+                      ].includes(user.role)
+                        ? [
+                            {
+                              label: "管理后台",
+                              icon: <ShieldCheck size={19} />,
+                              onSelect: () =>
+                                navigate(
+                                  [
+                                    "department_reviewer",
+                                    "company_reviewer",
+                                  ].includes(user.role)
+                                    ? "admin-skills"
+                                    : "admin-users",
+                                ),
+                            },
+                          ]
+                        : []),
+                      {
+                        label: "导出本地记录",
+                        onSelect: () => handleMenu("export"),
+                        icon: <DownloadSimple size={19} />,
+                      },
+                      {
+                        label: "帮助",
+                        onSelect: () => handleMenu("help"),
+                        icon: <Question size={19} />,
+                      },
+                      ...(window.brainDesktop
+                        ? [
+                            {
+                              label: "检查更新…",
+                              onSelect: () => updates.show(),
+                              icon: <DownloadSimple size={19} />,
+                            },
+                          ]
+                        : []),
+                      {
+                        label: "退出登录",
+                        onSelect: () => void logout(),
+                        icon: <SignOut size={19} />,
+                        danger: true,
+                        separatorBefore: true,
+                      },
+                    ]}
+                    trigger={
+                      <button
+                        className="account-trigger"
+                        aria-label="打开账号菜单"
+                      >
+                        <span className="avatar">
+                          <UserCircle size={32} weight="duotone" />
+                        </span>
+                        <span>
+                          <strong>{user.name}</strong>
+                          <small>{user.departmentName}</small>
+                        </span>
+                        <CaretDown size={14} />
+                      </button>
+                    }
+                  />
+                  <IconButton label="设置" onClick={() => navigate("settings")}>
+                    <GearSix size={21} />
+                  </IconButton>
+                </div>
               </div>
-            </div>
-          </aside>
-        )}
-        <main className="main-content">
-          {ready ? (
-            page === "skins" ? (
+            </aside>
+          )}
+          <main className="main-content">
+            {page === "skins" ? (
               <SkinCenter
                 current={savedSkin}
                 onApply={applySkin}
@@ -701,131 +745,112 @@ export default function App() {
               <Admin {...workspaceProps} />
             ) : (
               <Workspace {...workspaceProps} />
-            )
-          ) : (
-            <div className="empty">
-              {localError ? (
-                <>
-                  <p>本机记录暂时无法读取</p>
-                  <p className="muted">{localError}</p>
-                  <Button
-                    onClick={() => {
-                      setLocalError("");
-                      setLocalLoadVersion((value) => value + 1);
-                    }}
-                  >
-                    重新读取
-                  </Button>
-                </>
-              ) : (
-                <p>正在读取本机记录…</p>
-              )}
-            </div>
-          )}
-        </main>
-      </div>
-      {activePreview && (
-        <div className="skin-preview-bar" role="region" aria-label="皮肤试用">
-          <span>
-            正在预览 <strong>{getSkin(activePreview.skin).name}</strong> ·
-            尚未保存
-          </span>
-          <Button
-            onClick={() =>
-              setSkinPreview({
-                ...activePreview,
-                theme: activePreview.theme === "dark" ? "light" : "dark",
-              })
-            }
-          >
-            切换明暗
-          </Button>
-          <Button onClick={() => setSkinPreview(null)}>取消预览</Button>
-          <Button primary onClick={() => applySkin(activePreview)}>
-            保存皮肤
-          </Button>
+            )}
+          </main>
         </div>
-      )}
-      <input
-        ref={importRef}
-        hidden
-        type="file"
-        accept="application/json,.json"
-        onChange={(e) => {
-          void importFile(e.target.files?.[0]);
-          e.target.value = "";
-        }}
-      />
-      {toast && (
-        <div className="toast" role="status">
-          <CheckCircle size={20} />
-          {toast}
-          <IconButton label="关闭提示" onClick={() => setToast("")}>
-            <X size={16} />
-          </IconButton>
-        </div>
-      )}
-      <UpdateDialog
-        model={updates}
-        beforeInstall={async () => {
-          if (!ready || loadedProfile.current !== user.id)
-            throw new Error("本地记录尚未就绪，请稍后再安装");
-          await writeLocal(user.id, state);
-        }}
-      />
-      {legalOpen && <Legal close={() => setLegalOpen(false)} />}
-      {passwordOpen && (
-        <Modal
-          title={user.mustChange ? "首次登录，请修改初始密码" : "修改密码"}
-          close={() => {
-            if (!user.mustChange) setPasswordOpen(false);
-          }}
-        >
-          <form
-            onSubmit={async (e) => {
-              e.preventDefault();
-              const data = Object.fromEntries(new FormData(e.currentTarget));
-              try {
-                await api("/auth/password", data);
-                setPasswordOpen(false);
-                setUser(null);
-                notify("密码已修改，请使用新密码登录。");
-              } catch (error) {
-                notify((error as Error).message);
+        {activePreview && (
+          <div className="skin-preview-bar" role="region" aria-label="皮肤试用">
+            <span>
+              正在预览 <strong>{getSkin(activePreview.skin).name}</strong> ·
+              尚未保存
+            </span>
+            <Button
+              onClick={() =>
+                setSkinPreview({
+                  ...activePreview,
+                  theme: activePreview.theme === "dark" ? "light" : "dark",
+                })
               }
+            >
+              切换明暗
+            </Button>
+            <Button onClick={() => setSkinPreview(null)}>取消预览</Button>
+            <Button primary onClick={() => applySkin(activePreview)}>
+              保存皮肤
+            </Button>
+          </div>
+        )}
+        <input
+          ref={importRef}
+          hidden
+          type="file"
+          accept="application/json,.json"
+          onChange={(e) => {
+            void importFile(e.target.files?.[0]);
+            e.target.value = "";
+          }}
+        />
+        {toast && (
+          <div className="toast" role="status">
+            <CheckCircle size={20} />
+            {toast}
+            <IconButton label="关闭提示" onClick={() => setToast("")}>
+              <X size={16} />
+            </IconButton>
+          </div>
+        )}
+        <UpdateDialog
+          model={updates}
+          beforeInstall={async () => {
+            if (!ready || loadedProfile.current !== user.id)
+              throw new Error("本地记录尚未就绪，请稍后再安装");
+            await writeLocal(user.id, state);
+          }}
+        />
+        {legalOpen && <Legal close={() => setLegalOpen(false)} />}
+        {passwordOpen && (
+          <Modal
+            title={user.mustChange ? "首次登录，请修改初始密码" : "修改密码"}
+            close={() => {
+              if (!user.mustChange) setPasswordOpen(false);
             }}
           >
-            <p className="muted">
-              {user.mustChange
-                ? "完成改密后即可使用公司工作空间。"
-                : "修改后会退出所有设备的公司登录。"}
-            </p>
-            <Field label="当前密码">
-              <input
-                name="current"
-                type="password"
-                autoComplete="current-password"
-                required
-              />
-            </Field>
-            <Field label="新密码（至少 12 位）">
-              <input
-                name="password"
-                type="password"
-                autoComplete="new-password"
-                minLength={12}
-                maxLength={128}
-                required
-              />
-            </Field>
-            <footer>
-              <Button primary type="submit">
-                保存并重新登录
-              </Button>
-            </footer>
-          </form>
-        </Modal>
-      )}
-    </div>
+            <form
+              onSubmit={async (e) => {
+                e.preventDefault();
+                const data = Object.fromEntries(new FormData(e.currentTarget));
+                try {
+                  await api("/auth/password", data);
+                  setPasswordOpen(false);
+                  setUser(null);
+                  notify("密码已修改，请使用新密码登录。");
+                } catch (error) {
+                  notify((error as Error).message);
+                }
+              }}
+            >
+              <p className="muted">
+                {user.mustChange
+                  ? "完成改密后即可使用公司工作空间。"
+                  : "修改后会退出所有设备的公司登录。"}
+              </p>
+              <Field label="当前密码">
+                <input
+                  name="current"
+                  type="password"
+                  autoComplete="current-password"
+                  required
+                />
+              </Field>
+              <Field label="新密码（至少 12 位）">
+                <input
+                  name="password"
+                  type="password"
+                  autoComplete="new-password"
+                  minLength={12}
+                  maxLength={128}
+                  required
+                />
+              </Field>
+              <footer>
+                <Button primary type="submit">
+                  保存并重新登录
+                </Button>
+              </footer>
+            </form>
+          </Modal>
+        )}
+      </div>
+    </>
   );
 }

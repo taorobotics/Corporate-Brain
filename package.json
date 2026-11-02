@@ -1,6 +1,6 @@
 {
   "name": "corporate-brain",
-  "version": "0.9.0",
+  "version": "0.9.1",
   "private": true,
   "license": "MIT",
   "repository": {
@@ -68,7 +68,9 @@
       "!node_modules/**/*",
       "appearance.cjs",
       "startup-preload.cjs",
-      "startup.css"
+      "startup.css",
+      "entry-scene.js",
+      "entry-scene.css"
     ],
     "extraResources": [
       {

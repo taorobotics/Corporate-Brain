@@ -62,16 +62,24 @@ async function waitFor(test, label, timeout = 12000) {
       errors.push(event.message);
   });
   const js = (code) => web.executeJavaScript(code, true);
+  const revealed = () =>
+    waitFor(
+      () =>
+        js(`!document.querySelector('.entry-experience[data-phase="ready"]')`),
+      "workspace reveal finished",
+    );
   const has = (text) =>
     js(`document.body.innerText.includes(${JSON.stringify(text)})`);
   const click = (text) =>
     js(
-      `(() => { const item = Array.from(document.querySelectorAll('button,[role="menuitem"]')).find(b => b.textContent.trim() === ${JSON.stringify(text)}); if (!item) throw new Error('Button missing: ' + ${JSON.stringify(text)}); item.click(); })()`,
+      `(() => { const item = Array.from(document.querySelectorAll('button,[role="menuitem"]')).find(b => b.textContent.trim() === ${JSON.stringify(text)} || b.getAttribute('aria-label') === ${JSON.stringify(text)}); if (!item) throw new Error('Button missing: ' + ${JSON.stringify(text)}); item.click(); })()`,
     );
-  const fill = (selector, value) =>
-    js(
+  const fill = async (selector, value) => {
+    await revealed();
+    return js(
       `(() => { const el = document.querySelector(${JSON.stringify(selector)}); if (!el) throw new Error('Field missing: ' + ${JSON.stringify(selector)}); const setter = Object.getOwnPropertyDescriptor(el.tagName === 'TEXTAREA' ? HTMLTextAreaElement.prototype : HTMLInputElement.prototype, 'value').set; setter.call(el, ${JSON.stringify(value)}); el.dispatchEvent(new Event('input', { bubbles: true })); })()`,
     );
+  };
   const request = (path, body, method = body === undefined ? "GET" : "POST") =>
     js(
       `(async () => { const response = await fetch('/api' + ${JSON.stringify(path)}, {method:${JSON.stringify(method)}, headers: {'Content-Type':'application/json'}, body:${body === undefined ? "undefined" : `JSON.stringify(${JSON.stringify(body)})`}}); const result = await response.json(); if (!response.ok) throw new Error(result.error); return result; })()`,
@@ -86,6 +94,7 @@ async function waitFor(test, label, timeout = 12000) {
     await fs.writeFile(join(shots, name), image.toPNG());
   }
   async function verifyWindowControls(label, exercise = false) {
+    await revealed();
     const visible = await js(
       `Array.from(document.querySelectorAll('.window-buttons button')).filter(button => button.getBoundingClientRect().width > 0).map(button => button.getAttribute('aria-label'))`,
     );
@@ -156,6 +165,7 @@ async function waitFor(test, label, timeout = 12000) {
     await new Promise((resolve) => setTimeout(resolve, 160));
   };
   const openSelect = async (label) => {
+    await revealed();
     await waitFor(
       () =>
         js(
@@ -186,6 +196,19 @@ async function waitFor(test, label, timeout = 12000) {
     );
   };
   await waitFor(() => has("建立你的公司大脑"), "setup page");
+  await waitFor(
+    () =>
+      js(
+        `document.querySelector('.entry-experience')?.dataset.introDone === 'true'`,
+      ),
+    "cinematic intro completes without blocking login indefinitely",
+  );
+  assert.equal(
+    await js(
+      `!!document.querySelector('brain-entry-scene') && !document.querySelector('.loading-screen')`,
+    ),
+    true,
+  );
   await verifyWindowControls("Before login", true);
   checks.push(
     "Pre-login window controls minimize, maximize, restore and request native close on Windows; macOS keeps native controls",
@@ -204,6 +227,10 @@ async function waitFor(test, label, timeout = 12000) {
   await fill("input[name=password]", password);
   await click("创建并进入");
   await waitFor(() => has("今天，一起完成些什么"), "initialized workspace");
+  await revealed();
+  checks.push(
+    "Shared cinematic startup, authentication, profile preparation and welcome reveal replace the old loading screen",
+  );
   checks.push("First administrator setup and login through UI");
   const workspaceFixture = join(dir, "workspace-fixture");
   await fs.mkdir(join(workspaceFixture, "node_modules"), { recursive: true });
@@ -721,8 +748,16 @@ async function waitFor(test, label, timeout = 12000) {
   await selectOption("外观", "浅色");
   await selectOption("外观", "默认（浅色）");
   assert.equal(await js(`document.documentElement.dataset.theme`), "light");
-  await waitFor(() => js(`window.brainDesktop.readAppearance().then(theme => theme === 'default')`), "default startup appearance saved");
-  checks.push("Default/light/dark appearance selection saves native startup preference; default remains light");
+  await waitFor(
+    () =>
+      js(
+        `window.brainDesktop.readAppearance().then(theme => theme === 'default')`,
+      ),
+    "default startup appearance saved",
+  );
+  checks.push(
+    "Default/light/dark appearance selection saves native startup preference; default remains light",
+  );
   checks.push(
     "Theme dropdown updates local preferences and renders readable dark menu states",
   );
@@ -835,7 +870,11 @@ async function waitFor(test, label, timeout = 12000) {
   await click("退出登录");
   await waitFor(() => has("登录公司账号"), "logout");
   await verifyWindowControls("Logged-out login page");
-  assert.equal(await js(`document.documentElement.scrollHeight <= innerHeight`), true, "Login title bar must fit without extra document scrolling");
+  assert.equal(
+    await js(`document.documentElement.scrollHeight <= innerHeight`),
+    true,
+    "Login title bar must fit without extra document scrolling",
+  );
   await capture("client-login-window-controls.png");
   // Pause bootstrap so the loading UI can be inspected, then simulate an
   // unreadable server reply. The controls must survive both early returns.
@@ -854,6 +893,11 @@ async function waitFor(test, label, timeout = 12000) {
     () => has("正在连接公司工作空间"),
     "loading before authentication",
   );
+  assert.equal(
+    await js(`document.querySelector('.entry-experience')?.dataset.phase`),
+    "connecting",
+  );
+  assert.equal(await js(`!!document.querySelector('.loading-screen')`), false);
   await verifyWindowControls("Connecting page");
   await web.debugger.sendCommand("Fetch.fulfillRequest", {
     requestId: pausedRequest,

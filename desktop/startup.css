@@ -1,38 +1,14 @@
-/* Adapted from dsh-startup-screen (MIT, 沈宏宏), pinned 7f3d283.
-   Original palette/dossier composition; native loading states and motion adapted.
-   See src/vendor/dsh-startup.LICENSE. No third-party audio or video is included. */
-:root {
-  color-scheme: light;
-  --bg: #e5e3df;
-  --bg-2: #eceae6;
-  --ink: #0a0a0a;
-  --muted: #625f59;
-  --hair: rgba(10, 10, 10, 0.16);
-  --soft: rgba(10, 10, 10, 0.07);
-  --panel: rgba(255, 255, 255, 0.55);
-  --accent: #d45f00;
-  --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
-}
-:root[data-theme="dark"] {
-  color-scheme: dark;
-  --bg: #0b0b0c;
-  --bg-2: #131315;
-  --ink: #f2f1ee;
-  --muted: #aaa8a2;
-  --hair: rgba(255, 255, 255, 0.18);
-  --soft: rgba(255, 255, 255, 0.07);
-  --panel: rgba(255, 255, 255, 0.035);
-  --accent: #ff7500;
-}
-* {
-  box-sizing: border-box;
-}
 body {
   margin: 0;
   background: transparent;
-  color: var(--ink);
-  font-family:
-    "Bahnschrift", "DIN Alternate", "Microsoft YaHei", "PingFang SC", sans-serif;
+  color: #20221e;
+  font-family: "Microsoft YaHei", "PingFang SC", sans-serif;
+}
+:root[data-theme="dark"] body {
+  color: #f0efe9;
+}
+[hidden] {
+  display: none !important;
 }
 button {
   font: inherit;
@@ -40,90 +16,14 @@ button {
   cursor: pointer;
   -webkit-app-region: no-drag;
 }
-[hidden] {
-  display: none !important;
-}
-#dsh-startup-root {
-  position: fixed;
-  inset: 0;
-  overflow: hidden;
-  isolation: isolate;
-}
-.dsu-plate {
-  position: absolute;
-  inset: 0;
-  z-index: -2;
-  background:
-    radial-gradient(120% 90% at 78% 12%, var(--panel), transparent 55%),
-    linear-gradient(168deg, var(--bg-2), var(--bg) 42%);
-}
-.dsu-watermark {
-  position: absolute;
-  inset: 54px 4% 34px;
-  z-index: -1;
-  pointer-events: none;
-}
-.dsu-watermark i {
-  position: absolute;
-  top: 0;
-  bottom: 0;
-  width: 17%;
-  border: 1px solid var(--soft);
-  background: linear-gradient(180deg, var(--panel), transparent);
-  animation: arrive 250ms var(--ease-out) both;
-}
-.dsu-watermark i:nth-child(1) {
-  left: 0;
-  width: 12%;
-}
-.dsu-watermark i:nth-child(2) {
-  right: 20%;
-  animation-delay: 40ms;
-}
-.dsu-watermark i:nth-child(3) {
-  right: 0;
-  animation-delay: 80ms;
-}
-.dsu-frame {
-  position: absolute;
-  inset: 54px 24px 22px;
-  pointer-events: none;
-}
-.dsu-frame i {
-  position: absolute;
-  width: 12px;
-  height: 12px;
-  border-color: var(--hair);
-  border-style: solid;
-}
-.dsu-frame i:nth-child(1) {
-  top: 0;
-  left: 0;
-  border-width: 1px 0 0 1px;
-}
-.dsu-frame i:nth-child(2) {
-  top: 0;
-  right: 0;
-  border-width: 1px 1px 0 0;
-}
-.dsu-frame i:nth-child(3) {
-  bottom: 0;
-  left: 0;
-  border-width: 0 0 1px 1px;
-}
-.dsu-frame i:nth-child(4) {
-  bottom: 0;
-  right: 0;
-  border-width: 0 1px 1px 0;
-}
 .window-controls {
   position: absolute;
   inset: 0 0 auto;
+  z-index: 30;
   height: 40px;
   display: flex;
   justify-content: flex-end;
   -webkit-app-region: drag;
-  z-index: 4;
 }
 .window-controls button {
   border: 0;
@@ -134,258 +34,81 @@ button {
 :root:not([data-desktop="win32"]) .window-controls {
   display: none;
 }
-.dsu-brand {
+.native-skip {
   position: absolute;
-  left: 6%;
-  top: 10%;
-  display: flex;
-  flex-direction: column;
-  line-height: 0.98;
-  animation: arrive 250ms var(--ease-out) both;
-}
-.dsu-brand b {
-  font-size: clamp(24px, 3vw, 44px);
-  letter-spacing: -1px;
-}
-.dsu-brand > span {
-  font-size: 10px;
-  letter-spacing: 1.4px;
-  line-height: 2.2;
-}
-.dsu-brand small {
-  margin-top: 28px;
-  font-size: 10px;
-  letter-spacing: 2px;
-  color: var(--muted);
-}
-.dsu-brand small i {
-  color: var(--accent);
-  font-style: normal;
-}
-.skip {
-  position: absolute;
-  top: 10%;
   right: 6%;
-  border: 0;
+  top: 9%;
+  z-index: 30;
   background: transparent;
-  font-size: 12px;
+  border: 0;
+  font-size: 11px;
   padding: 10px;
-  letter-spacing: 1px;
 }
-.skip span {
-  margin-left: 10px;
-  font-size: 10px;
-}
-.dsu-center {
-  position: absolute;
-  inset: 41% 14% auto;
-  text-align: center;
-  animation: arrive 250ms 80ms var(--ease-out) both;
-}
-.eyebrow {
+.native-skip span {
   font:
-    10px "Consolas",
-    "Menlo",
+    9px "Consolas",
     monospace;
-  letter-spacing: 5px;
-  color: var(--muted);
+  letter-spacing: 2px;
+  margin-left: 15px;
 }
-h1 {
-  font-size: clamp(20px, 2.4vw, 32px);
-  font-weight: 500;
-  letter-spacing: 6px;
-  margin: 20px 0;
+body:not(.intro-done) .window-controls,
+body:not(.intro-done) .native-skip {
+  color: #f0efe9;
 }
-.caret {
-  color: var(--accent);
+#actions {
+  position: absolute;
+  top: 65%;
+  left: 0;
+  right: 0;
+  text-align: center;
+  z-index: 20;
 }
-.dsu-rule {
-  width: min(410px, 80%);
-  height: 1px;
-  background: var(--hair);
-  margin: auto;
+#actions button {
+  border: 1px solid currentColor;
+  background: transparent;
+  padding: 12px 22px;
+  font-size: 13px;
+  transition: transform 120ms cubic-bezier(0.23, 1, 0.32, 1);
 }
-p {
-  font-size: 12px;
-  line-height: 2;
-  color: var(--muted);
-  margin: 24px auto;
-  max-width: 520px;
+#actions button span {
+  font:
+    9px "Consolas",
+    monospace;
+  opacity: 0.6;
+  margin-left: 20px;
 }
 #error-code {
   font:
-    11px "Consolas",
-    "Menlo",
-    monospace;
-  letter-spacing: 1px;
-}
-#actions button {
-  background: transparent;
-  border: 1px solid var(--hair);
-  padding: 11px 18px;
-  font-size: 13px;
-  transition: transform 120ms var(--ease-out);
-}
-#actions button span {
-  margin-left: 15px;
-  font:
     10px "Consolas",
     monospace;
-  color: var(--muted);
+  opacity: 0.6;
+  margin-top: 16px;
 }
-button:active {
-  transform: translateY(1px) scale(0.97);
+.entry-scene[phase="error"] .entry-status {
+  top: 46%;
 }
 button:focus-visible {
-  outline: 2px solid var(--accent);
+  outline: 2px solid #bc541f;
   outline-offset: 4px;
+}
+button:active {
+  transform: translateY(1px) scale(0.98);
 }
 button:disabled {
   opacity: 0.5;
   cursor: wait;
 }
-.dsu-reticle {
-  position: absolute;
-  width: 350px;
-  height: 350px;
-  left: calc(50% - 175px);
-  top: calc(47% - 175px);
-  pointer-events: none;
-  z-index: -1;
-}
-.dsu-reticle i {
-  display: block;
-  width: 100%;
-  height: 100%;
-  border: 1px dashed var(--soft);
-  border-bottom-color: transparent;
-  border-radius: 50%;
-  animation: orbit 24s linear infinite;
-}
-.dsu-meta,
-footer {
-  position: absolute;
-  left: 6%;
-  right: 6%;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 20px;
-  font:
-    10px "Consolas",
-    "Menlo",
-    monospace;
-  color: var(--muted);
-  letter-spacing: 1.5px;
-}
-.dsu-meta {
-  bottom: 100px;
-}
-footer {
-  bottom: 57px;
-  font-size: 10px;
-}
-footer b {
-  font-weight: 400;
-}
-footer i {
-  display: inline-block;
-  margin-left: 10px;
-  width: 18px;
-  height: 4px;
-  background: var(--ink);
-}
-.dsu-progress {
-  position: absolute;
-  height: 2px;
-  bottom: 22px;
-  left: 35%;
-  width: 30%;
-  background: var(--soft);
-  overflow: hidden;
-}
-.dsu-progress i {
-  display: block;
-  width: 35%;
-  height: 100%;
-  background: var(--accent);
-  animation: scan 2s linear infinite;
-}
-[data-phase="error"] .dsu-progress i,
-[data-phase="error"] .dsu-reticle i {
-  animation-play-state: paused;
-}
-[data-phase="ready"] {
-  opacity: 0;
-  transform: scale(1.015);
-  transition:
-    opacity 220ms var(--ease-out),
-    transform 220ms var(--ease-out);
-}
-.skipped .dsu-reticle,
-.skipped .dsu-watermark {
-  display: none;
-}
-.skipped *,
-.skipped[data-phase="ready"] {
-  animation: none !important;
-  transition: none !important;
-}
-@keyframes arrive {
-  from {
-    opacity: 0;
-    transform: translateY(8px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-@keyframes orbit {
-  to {
-    transform: rotate(360deg);
-  }
-}
-@keyframes scan {
-  from {
-    transform: translateX(-100%);
-  }
-  to {
-    transform: translateX(390%);
-  }
-}
 @media (hover: hover) and (pointer: fine) {
   button:hover {
-    background: var(--soft);
+    background: #8882;
   }
   #close:hover {
-    background: #bd2b2b;
+    background: #b83232;
     color: #fff;
   }
 }
 @media (prefers-reduced-motion: reduce) {
-  *,
-  *::before,
-  *::after {
-    animation: none !important;
-  }
-  [data-phase="ready"] {
-    transform: none;
-    transition: opacity 120ms ease;
-  }
   button:active {
     transform: none;
-  }
-}
-@media (max-width: 900px) {
-  .dsu-center {
-    left: 8%;
-    right: 8%;
-  }
-  h1 {
-    letter-spacing: 3px;
-  }
-  .dsu-meta {
-    bottom: 85px;
   }
 }

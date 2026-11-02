@@ -2,6 +2,7 @@ import type { LocalState } from "../shared/types";
 declare global {
   interface Window {
     brainDesktop?: {
+      entryContext?(): Promise<{ startedAt: number; skipped: boolean }>;
       readAppearance?(): Promise<string>;
       writeAppearance?(theme: string): Promise<void>;
       previewStartup?(): Promise<void>;
