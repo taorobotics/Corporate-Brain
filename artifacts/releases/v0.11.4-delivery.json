@@ -1,0 +1,488 @@
+{
+  "version": "0.11.4",
+  "verifiedAt": "2026-11-02T09:52:19.402Z",
+  "sourceCommit": "b4a5fad4c1a3f3395118793558ebdf62a4255fe9",
+  "release": "https://github.com/taorobotics/Corporate-Brain/releases/tag/v0.11.4",
+  "workflow": "https://github.com/taorobotics/Corporate-Brain/actions/runs/41420960650",
+  "workflowConclusion": "success",
+  "completeReleaseVerified": true,
+  "cloud": {
+    "version": "0.11.4",
+    "verifiedAt": "2026-11-02T09:36:53.665Z",
+    "health": {
+      "status": "ok",
+      "version": "0.11.4",
+      "chatStorage": "device-only"
+    },
+    "frontendMatchesLocalBuild": true,
+    "checks": [
+      {
+        "path": "/assets/index-DqTlD6jH.js",
+        "sha256": "c85d4593b71559f4ed60626b7b7317e008488d727aa18c826da671698e6ddd42"
+      },
+      {
+        "path": "/assets/index-BVkE8Tv3.css",
+        "sha256": "fd18f9079abb0ab8016304dfb7b272279b0ef4abb5872fc494f6acfd8e130d12"
+      }
+    ],
+    "systemFontPriorityMatchesBuild": true,
+    "networkMode": "Physical interface and actual company IP; original HTTPS certificate verified; system proxy unchanged"
+  },
+  "preservation": {
+    "version": "0.11.4",
+    "dataPreserved": true,
+    "rowCounts": {
+      "users": 3,
+      "departments": 2
+    },
+    "encryptionKeyPreserved": true,
+    "backup": "/opt/corporate-brain/backups/before-v0.11.4-20261102T093523Z"
+  },
+  "mirror": {
+    "version": "0.11.4",
+    "assets": {
+      "win32-x64": {
+        "name": "Corporate-Brain-Setup-0.11.4-x64.exe",
+        "bytes": 118406521,
+        "sha256": "e4c504a50a4f4fcf2c6e849c983f2f31c074aa34e0f94cdfb7e6cb42a1bdbbb0"
+      },
+      "darwin-arm64": {
+        "name": "Corporate-Brain-0.11.4-macOS-arm64.dmg",
+        "bytes": 138109510,
+        "sha256": "e2f8d3465adcaf6ec9cf2dae4825d0258dc89148a29e1e40b306baddfc2c65e7"
+      },
+      "darwin-x64": {
+        "name": "Corporate-Brain-0.11.4-macOS-x64.dmg",
+        "bytes": 143649080,
+        "sha256": "1844fbac6ececc4975238f48924565f0de2cac434de4ebccc8e74db399018bb2"
+      }
+    },
+    "activatedAt": "2026-11-02T09:48:03.237Z",
+    "source": "company-local-mirror"
+  },
+  "productionStartup": {
+    "scope": "Real Electron main window, native overlay and preload; fresh disposable profile; unmodified production web UI and unauthenticated APIs; existing system proxy and VPN kept enabled",
+    "result": "login-ready",
+    "totalMs": 41191,
+    "bootstrapMs": 10985,
+    "authCheckMs": 11160,
+    "notoRequests": [
+      {
+        "path": "/assets/NotoSansSC-VF-BUkrTrSD.woff2",
+        "startMs": 18992,
+        "error": "net::ERR_CACHE_MISS",
+        "durationMs": 1
+      }
+    ],
+    "successfulNotoDownloads": 0,
+    "typography": {
+      ".auth-card h1": {
+        "fontFamily": "\"PingFang SC\", \"Microsoft YaHei\", \"Noto Sans SC\", \"Segoe UI\", Arial, sans-serif",
+        "fontSize": "39px"
+      },
+      ".auth-card label": {
+        "fontFamily": "\"PingFang SC\", \"Microsoft YaHei\", \"Noto Sans SC\", \"Segoe UI\", Arial, sans-serif",
+        "fontSize": "13px"
+      },
+      ".auth-card input": {
+        "fontFamily": "\"PingFang SC\", \"Microsoft YaHei\", \"Noto Sans SC\", \"Segoe UI\", Arial, sans-serif",
+        "fontSize": "16px"
+      },
+      ".auth-card .button.primary": {
+        "fontFamily": "\"PingFang SC\", \"Microsoft YaHei\", \"Noto Sans SC\", \"Segoe UI\", Arial, sans-serif",
+        "fontSize": "15px"
+      },
+      ".entry-skip": {
+        "fontFamily": "\"PingFang SC\", \"Microsoft YaHei\", \"Noto Sans SC\", \"Segoe UI\", Arial, sans-serif",
+        "fontSize": "13px"
+      }
+    },
+    "networkObservation": "This production sample reached login in 41 seconds; responses through the existing proxy were slow. The only Noto attempt failed immediately with ERR_CACHE_MISS; no successful remote Noto response was observed. No fixed startup-time guarantee is claimed.",
+    "requests": [
+      {
+        "path": "/",
+        "startMs": 804,
+        "status": 200,
+        "error": "net::OK",
+        "durationMs": 11333
+      },
+      {
+        "path": "/assets/index-BVkE8Tv3.css",
+        "startMs": 12140,
+        "status": 200,
+        "error": "net::OK",
+        "durationMs": 3741
+      },
+      {
+        "path": "/assets/index-DqTlD6jH.js",
+        "startMs": 12140,
+        "status": 200,
+        "error": "net::OK",
+        "durationMs": 6764
+      },
+      {
+        "path": "/skins/claude/assets/fonts/inter-normal.woff2",
+        "startMs": 18950,
+        "error": "net::ERR_CACHE_MISS",
+        "durationMs": 0
+      },
+      {
+        "path": "/assets/NotoSansSC-VF-BUkrTrSD.woff2",
+        "startMs": 18992,
+        "error": "net::ERR_CACHE_MISS",
+        "durationMs": 1
+      },
+      {
+        "path": "/skins/claude/assets/fonts/inter-normal.woff2",
+        "startMs": 19014,
+        "status": 200,
+        "error": "net::OK",
+        "durationMs": 2861
+      },
+      {
+        "path": "/api/bootstrap",
+        "startMs": 19019,
+        "status": 200,
+        "error": "net::OK",
+        "durationMs": 10985
+      },
+      {
+        "path": "/api/auth/me",
+        "startMs": 30005,
+        "status": 401,
+        "error": "net::OK",
+        "durationMs": 11160
+      }
+    ],
+    "phases": [
+      {
+        "ms": 19024,
+        "nativePhase": "web",
+        "phase": "connecting",
+        "introDone": "true",
+        "headline": "正在连接公司工作空间",
+        "loginVisible": false
+      },
+      {
+        "ms": 19132,
+        "nativePhase": "ready",
+        "phase": "connecting",
+        "introDone": "true",
+        "headline": "正在连接公司工作空间",
+        "loginVisible": false
+      },
+      {
+        "ms": 19352,
+        "nativePhase": "web",
+        "phase": "connecting",
+        "introDone": "true",
+        "headline": "正在连接公司工作空间",
+        "loginVisible": false
+      },
+      {
+        "ms": 41191,
+        "nativePhase": "web",
+        "phase": "auth",
+        "introDone": "true",
+        "headline": "登录公司账号",
+        "loginVisible": true
+      }
+    ]
+  },
+  "productionOldUpdateModule": {
+    "version": "0.11.4",
+    "sourceClient": "0.9.0",
+    "result": "passed",
+    "verifiedAt": "2026-11-02T09:51:19.105Z",
+    "scope": "Unmodified v0.9.0 native update module running in Electron against production HTTPS; visual checks recorded separately",
+    "realProductionFeed": true,
+    "realProductionDownload": true,
+    "legacyModuleOnly": true,
+    "networkMode": "Temporary SSH tunnel to production nginx; original HTTPS origin and certificate verification preserved",
+    "package": {
+      "name": "Corporate-Brain-Setup-0.11.4-x64.exe",
+      "bytes": 118406521,
+      "sha256": "e4c504a50a4f4fcf2c6e849c983f2f31c074aa34e0f94cdfb7e6cb42a1bdbbb0"
+    },
+    "downloadSeconds": 194.558,
+    "installerExecuted": false,
+    "employeeRecordsTouched": false
+  },
+  "typography": {
+    "version": "0.11.4",
+    "scope": "Actual Electron UI with disposable server and profile; no production accounts",
+    "samples": [
+      {
+        "name": "login-light",
+        "metrics": {
+          ".auth-card h1": {
+            "fontFamily": "\"PingFang SC\", \"Microsoft YaHei\", \"Noto Sans SC\", \"Segoe UI\", Arial, sans-serif",
+            "fontSize": "39px",
+            "x": 792,
+            "y": 305.81292724609375,
+            "width": 532.8125,
+            "height": 54.59375
+          },
+          ".auth-card label": {
+            "fontFamily": "\"PingFang SC\", \"Microsoft YaHei\", \"Noto Sans SC\", \"Segoe UI\", Arial, sans-serif",
+            "fontSize": "13px",
+            "x": 792,
+            "y": 421.59417724609375,
+            "width": 532.8125,
+            "height": 71
+          },
+          ".auth-card input": {
+            "fontFamily": "\"PingFang SC\", \"Microsoft YaHei\", \"Noto Sans SC\", \"Segoe UI\", Arial, sans-serif",
+            "fontSize": "16px",
+            "x": 792,
+            "y": 446.59417724609375,
+            "width": 532.8125,
+            "height": 46
+          },
+          ".auth-card .button.primary": {
+            "fontFamily": "\"PingFang SC\", \"Microsoft YaHei\", \"Noto Sans SC\", \"Segoe UI\", Arial, sans-serif",
+            "fontSize": "15px",
+            "x": 792,
+            "y": 603.5941772460938,
+            "width": 532.8125,
+            "height": 48
+          },
+          ".entry-skip": {
+            "fontFamily": "\"PingFang SC\", \"Microsoft YaHei\", \"Noto Sans SC\", \"Segoe UI\", Arial, sans-serif",
+            "fontSize": "13px",
+            "x": 1223.875,
+            "y": 81,
+            "width": 132.609375,
+            "height": 37
+          }
+        },
+        "platformFonts": [
+          {
+            "familyName": "Microsoft YaHei",
+            "glyphCount": 6,
+            "isCustomFont": false,
+            "postScriptName": "MicrosoftYaHei"
+          }
+        ]
+      },
+      {
+        "name": "login-dark",
+        "metrics": {
+          ".auth-card h1": {
+            "fontFamily": "\"PingFang SC\", \"Microsoft YaHei\", \"Noto Sans SC\", \"Segoe UI\", Arial, sans-serif",
+            "fontSize": "39px",
+            "x": 792,
+            "y": 305.8160095214844,
+            "width": 532.8125,
+            "height": 54.59375
+          },
+          ".auth-card label": {
+            "fontFamily": "\"PingFang SC\", \"Microsoft YaHei\", \"Noto Sans SC\", \"Segoe UI\", Arial, sans-serif",
+            "fontSize": "13px",
+            "x": 792,
+            "y": 421.5972595214844,
+            "width": 532.8125,
+            "height": 71
+          },
+          ".auth-card input": {
+            "fontFamily": "\"PingFang SC\", \"Microsoft YaHei\", \"Noto Sans SC\", \"Segoe UI\", Arial, sans-serif",
+            "fontSize": "16px",
+            "x": 792,
+            "y": 446.5972595214844,
+            "width": 532.8125,
+            "height": 46
+          },
+          ".auth-card .button.primary": {
+            "fontFamily": "\"PingFang SC\", \"Microsoft YaHei\", \"Noto Sans SC\", \"Segoe UI\", Arial, sans-serif",
+            "fontSize": "15px",
+            "x": 792,
+            "y": 603.5972900390625,
+            "width": 532.8125,
+            "height": 48
+          },
+          ".entry-skip": {
+            "fontFamily": "\"PingFang SC\", \"Microsoft YaHei\", \"Noto Sans SC\", \"Segoe UI\", Arial, sans-serif",
+            "fontSize": "13px",
+            "x": 1223.875,
+            "y": 81,
+            "width": 132.609375,
+            "height": 37
+          }
+        },
+        "platformFonts": [
+          {
+            "familyName": "Microsoft YaHei",
+            "glyphCount": 6,
+            "isCustomFont": false,
+            "postScriptName": "MicrosoftYaHei"
+          }
+        ]
+      },
+      {
+        "name": "login-narrow",
+        "metrics": {
+          ".auth-card h1": {
+            "fontFamily": "\"PingFang SC\", \"Microsoft YaHei\", \"Noto Sans SC\", \"Segoe UI\", Arial, sans-serif",
+            "fontSize": "27px",
+            "x": 410,
+            "y": 200.20455932617188,
+            "width": 360.8125,
+            "height": 37.796875
+          },
+          ".auth-card label": {
+            "fontFamily": "\"PingFang SC\", \"Microsoft YaHei\", \"Noto Sans SC\", \"Segoe UI\", Arial, sans-serif",
+            "fontSize": "13px",
+            "x": 410,
+            "y": 285.1889343261719,
+            "width": 360.8125,
+            "height": 65
+          },
+          ".auth-card input": {
+            "fontFamily": "\"PingFang SC\", \"Microsoft YaHei\", \"Noto Sans SC\", \"Segoe UI\", Arial, sans-serif",
+            "fontSize": "16px",
+            "x": 410,
+            "y": 310.1889343261719,
+            "width": 360.8125,
+            "height": 40
+          },
+          ".auth-card .button.primary": {
+            "fontFamily": "\"PingFang SC\", \"Microsoft YaHei\", \"Noto Sans SC\", \"Segoe UI\", Arial, sans-serif",
+            "fontSize": "15px",
+            "x": 410,
+            "y": 443.1889343261719,
+            "width": 360.8125,
+            "height": 48
+          },
+          ".entry-skip": {
+            "fontFamily": "\"PingFang SC\", \"Microsoft YaHei\", \"Noto Sans SC\", \"Segoe UI\", Arial, sans-serif",
+            "fontSize": "13px",
+            "x": 639.84375,
+            "y": 57.59375,
+            "width": 132.609375,
+            "height": 37
+          }
+        },
+        "platformFonts": [
+          {
+            "familyName": "Microsoft YaHei",
+            "glyphCount": 6,
+            "isCustomFont": false,
+            "postScriptName": "MicrosoftYaHei"
+          }
+        ]
+      },
+      {
+        "name": "startup-light",
+        "metrics": {
+          ".entry-headline": {
+            "fontFamily": "\"PingFang SC\", \"Microsoft YaHei\", \"Noto Sans SC\", \"Segoe UI\", Arial, sans-serif",
+            "fontSize": "32px",
+            "x": 524,
+            "y": 685,
+            "width": 370,
+            "height": 42
+          },
+          ".entry-detail": {
+            "fontFamily": "\"PingFang SC\", \"Microsoft YaHei\", \"Noto Sans SC\", \"Segoe UI\", Arial, sans-serif",
+            "fontSize": "14px",
+            "x": 420,
+            "y": 758.796875,
+            "width": 600,
+            "height": 23.796875
+          },
+          ".native-skip": {
+            "fontFamily": "\"PingFang SC\", \"Microsoft YaHei\", \"Noto Sans SC\", \"Segoe UI\", Arial, sans-serif",
+            "fontSize": "13px",
+            "x": 1215,
+            "y": 81,
+            "width": 138.609375,
+            "height": 37
+          },
+          ".entry-footer-note": {
+            "fontFamily": "\"PingFang SC\", \"Microsoft YaHei\", \"Noto Sans SC\", \"Segoe UI\", Arial, sans-serif",
+            "fontSize": "12px",
+            "x": 627.6875,
+            "y": 832.8125,
+            "width": 160.8125,
+            "height": 19.1875
+          }
+        },
+        "platformFonts": [
+          {
+            "familyName": "Microsoft YaHei",
+            "glyphCount": 10,
+            "isCustomFont": false,
+            "postScriptName": "MicrosoftYaHei"
+          }
+        ]
+      },
+      {
+        "name": "startup-dark",
+        "metrics": {
+          ".entry-headline": {
+            "fontFamily": "\"PingFang SC\", \"Microsoft YaHei\", \"Noto Sans SC\", \"Segoe UI\", Arial, sans-serif",
+            "fontSize": "32px",
+            "x": 524,
+            "y": 685,
+            "width": 370,
+            "height": 42
+          },
+          ".entry-detail": {
+            "fontFamily": "\"PingFang SC\", \"Microsoft YaHei\", \"Noto Sans SC\", \"Segoe UI\", Arial, sans-serif",
+            "fontSize": "14px",
+            "x": 420,
+            "y": 758.796875,
+            "width": 600,
+            "height": 23.796875
+          },
+          ".native-skip": {
+            "fontFamily": "\"PingFang SC\", \"Microsoft YaHei\", \"Noto Sans SC\", \"Segoe UI\", Arial, sans-serif",
+            "fontSize": "13px",
+            "x": 1215,
+            "y": 81,
+            "width": 138.609375,
+            "height": 37
+          },
+          ".entry-footer-note": {
+            "fontFamily": "\"PingFang SC\", \"Microsoft YaHei\", \"Noto Sans SC\", \"Segoe UI\", Arial, sans-serif",
+            "fontSize": "12px",
+            "x": 627.6875,
+            "y": 832.8125,
+            "width": 160.8125,
+            "height": 19.1875
+          }
+        },
+        "platformFonts": [
+          {
+            "familyName": "Microsoft YaHei",
+            "glyphCount": 10,
+            "isCustomFont": false,
+            "postScriptName": "MicrosoftYaHei"
+          }
+        ]
+      }
+    ],
+    "result": "passed",
+    "extraRemoteFontsAdded": false
+  },
+  "localTestRuns": {
+    "initial": "37 passed; DSH cancellation fixture timed out",
+    "rerun": "38 passed, no test changes",
+    "desktop": "33 UI and 9 startup checks passed"
+  },
+  "windowsUpgradeChecks": 14,
+  "privacy": {
+    "employeeRecordsTouched": false,
+    "productionModelsCalled": false,
+    "systemNetworkSettingsChanged": false
+  },
+  "signing": {
+    "windows": "NotSigned",
+    "mac": "ad-hoc; not notarized"
+  },
+  "limits": [
+    "Startup timings are observations on this device and network, not guaranteed timings for all employees.",
+    "This production UI check stops at the login form; it does not test a signed-in employee workspace.",
+    "Devices without a suitable installed Chinese font retain the self-hosted fallback."
+  ]
+}

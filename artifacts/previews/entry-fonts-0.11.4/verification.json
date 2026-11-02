@@ -9,7 +9,7 @@
           "fontFamily": "\"PingFang SC\", \"Microsoft YaHei\", \"Noto Sans SC\", \"Segoe UI\", Arial, sans-serif",
           "fontSize": "39px",
           "x": 792,
-          "y": 305.94268798828125,
+          "y": 305.81292724609375,
           "width": 532.8125,
           "height": 54.59375
         },
@@ -17,7 +17,7 @@
           "fontFamily": "\"PingFang SC\", \"Microsoft YaHei\", \"Noto Sans SC\", \"Segoe UI\", Arial, sans-serif",
           "fontSize": "13px",
           "x": 792,
-          "y": 421.72393798828125,
+          "y": 421.59417724609375,
           "width": 532.8125,
           "height": 71
         },
@@ -25,7 +25,7 @@
           "fontFamily": "\"PingFang SC\", \"Microsoft YaHei\", \"Noto Sans SC\", \"Segoe UI\", Arial, sans-serif",
           "fontSize": "16px",
           "x": 792,
-          "y": 446.72393798828125,
+          "y": 446.59417724609375,
           "width": 532.8125,
           "height": 46
         },
@@ -33,7 +33,7 @@
           "fontFamily": "\"PingFang SC\", \"Microsoft YaHei\", \"Noto Sans SC\", \"Segoe UI\", Arial, sans-serif",
           "fontSize": "15px",
           "x": 792,
-          "y": 603.7239379882812,
+          "y": 603.5941772460938,
           "width": 532.8125,
           "height": 48
         },
@@ -62,7 +62,7 @@
           "fontFamily": "\"PingFang SC\", \"Microsoft YaHei\", \"Noto Sans SC\", \"Segoe UI\", Arial, sans-serif",
           "fontSize": "39px",
           "x": 792,
-          "y": 305.8125,
+          "y": 305.8160095214844,
           "width": 532.8125,
           "height": 54.59375
         },
@@ -70,7 +70,7 @@
           "fontFamily": "\"PingFang SC\", \"Microsoft YaHei\", \"Noto Sans SC\", \"Segoe UI\", Arial, sans-serif",
           "fontSize": "13px",
           "x": 792,
-          "y": 421.59375,
+          "y": 421.5972595214844,
           "width": 532.8125,
           "height": 71
         },
@@ -78,7 +78,7 @@
           "fontFamily": "\"PingFang SC\", \"Microsoft YaHei\", \"Noto Sans SC\", \"Segoe UI\", Arial, sans-serif",
           "fontSize": "16px",
           "x": 792,
-          "y": 446.59375,
+          "y": 446.5972595214844,
           "width": 532.8125,
           "height": 46
         },
@@ -86,7 +86,7 @@
           "fontFamily": "\"PingFang SC\", \"Microsoft YaHei\", \"Noto Sans SC\", \"Segoe UI\", Arial, sans-serif",
           "fontSize": "15px",
           "x": 792,
-          "y": 603.59375,
+          "y": 603.5972900390625,
           "width": 532.8125,
           "height": 48
         },
@@ -115,7 +115,7 @@
           "fontFamily": "\"PingFang SC\", \"Microsoft YaHei\", \"Noto Sans SC\", \"Segoe UI\", Arial, sans-serif",
           "fontSize": "27px",
           "x": 410,
-          "y": 200.203125,
+          "y": 200.20455932617188,
           "width": 360.8125,
           "height": 37.796875
         },
@@ -123,7 +123,7 @@
           "fontFamily": "\"PingFang SC\", \"Microsoft YaHei\", \"Noto Sans SC\", \"Segoe UI\", Arial, sans-serif",
           "fontSize": "13px",
           "x": 410,
-          "y": 285.1875,
+          "y": 285.1889343261719,
           "width": 360.8125,
           "height": 65
         },
@@ -131,7 +131,7 @@
           "fontFamily": "\"PingFang SC\", \"Microsoft YaHei\", \"Noto Sans SC\", \"Segoe UI\", Arial, sans-serif",
           "fontSize": "16px",
           "x": 410,
-          "y": 310.1875,
+          "y": 310.1889343261719,
           "width": 360.8125,
           "height": 40
         },
@@ -139,7 +139,7 @@
           "fontFamily": "\"PingFang SC\", \"Microsoft YaHei\", \"Noto Sans SC\", \"Segoe UI\", Arial, sans-serif",
           "fontSize": "15px",
           "x": 410,
-          "y": 443.1875,
+          "y": 443.1889343261719,
           "width": 360.8125,
           "height": 48
         },
