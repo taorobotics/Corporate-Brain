@@ -1,0 +1,125 @@
+{
+  "version": "0.11.5",
+  "verifiedAt": "2026-11-02T11:15:38.583Z",
+  "sourceCommit": "3779b53d5050d6ac8995dcf76a0da221ffa88813",
+  "release": "https://github.com/taorobotics/Corporate-Brain/releases/tag/v0.11.5",
+  "workflow": "https://github.com/taorobotics/Corporate-Brain/actions/runs/41431082092",
+  "workflowConclusion": "success",
+  "completeReleaseVerified": true,
+  "cloud": {
+    "version": "0.11.5",
+    "verifiedAt": "2026-11-02T10:54:28.595Z",
+    "health": {
+      "status": "ok",
+      "version": "0.11.5",
+      "chatStorage": "device-only"
+    },
+    "frontendMatchesLocalBuild": true,
+    "checks": [
+      {
+        "path": "/assets/index-C21FeQFm.js",
+        "sha256": "ae02bd1420fea0f03487aa847dc883894d4db2234475c59d9f739fb2368f5389"
+      },
+      {
+        "path": "/assets/index-E5PNOWHq.css",
+        "sha256": "8524ec1d6fbfe0bb1ca08fb70b12f25b4ca807cd3332e511fe188cbbc44300a0"
+      }
+    ],
+    "systemFontPriorityMatchesBuild": true,
+    "networkMode": "Physical interface and actual company IP; original HTTPS certificate verified; system proxy unchanged"
+  },
+  "preservation": {
+    "version": "0.11.5",
+    "dataPreserved": true,
+    "rowCounts": {
+      "users": 3,
+      "departments": 2
+    },
+    "encryptionKeyPreserved": true,
+    "backup": "/opt/corporate-brain/backups/before-v0.11.5-20261102T105405Z"
+  },
+  "scroll": {
+    "version": "0.11.5",
+    "verifiedAt": "2026-11-02T10:59:29.096Z",
+    "result": "passed",
+    "scope": "Real cloud UI and authenticated APIs; streamed events intercepted only in an isolated test profile",
+    "health": {
+      "status": "ok",
+      "version": "0.11.5",
+      "chatStorage": "device-only"
+    },
+    "checks": [
+      "Chat follows streamed reasoning and answer text, delayed image sizing and window resizing; wheel and keyboard history navigation pause following, with a return-to-latest button and manual near-bottom resume; no nested reasoning scrollbars"
+    ],
+    "finalAnswerFollowed": true,
+    "updates": {
+      "configured": true,
+      "version": "0.11.4"
+    },
+    "productionModelsCalled": false,
+    "employeeRecordsTouched": false,
+    "networkMode": "Temporary SSH tunnel with original HTTPS origin and certificate verification; system network settings unchanged"
+  },
+  "mirror": {
+    "version": "0.11.5",
+    "assets": {
+      "win32-x64": {
+        "name": "Corporate-Brain-Setup-0.11.5-x64.exe",
+        "bytes": 118406555,
+        "sha256": "50ffff381fa2e80b400545491896334fc50546696b4b0cc09e5c26f4815af1ba"
+      },
+      "darwin-arm64": {
+        "name": "Corporate-Brain-0.11.5-macOS-arm64.dmg",
+        "bytes": 138109281,
+        "sha256": "19611fca1fca0ee57bb943ee58e5d409140ae2f4c2ace2957e73416171555ba2"
+      },
+      "darwin-x64": {
+        "name": "Corporate-Brain-0.11.5-macOS-x64.dmg",
+        "bytes": 143649031,
+        "sha256": "7395b99fe436e1134f059a42357ca7382d0cf6d36cecd73d6f59874c34a7b07f"
+      }
+    },
+    "activatedAt": "2026-11-02T11:11:11.639Z",
+    "source": "company-local-mirror"
+  },
+  "productionOldUpdateModule": {
+    "version": "0.11.5",
+    "sourceClient": "0.9.0",
+    "result": "passed",
+    "verifiedAt": "2026-11-02T11:14:32.296Z",
+    "scope": "Unmodified v0.9.0 native update module running in Electron against production HTTPS; visual checks recorded separately",
+    "realProductionFeed": true,
+    "realProductionDownload": true,
+    "legacyModuleOnly": true,
+    "networkMode": "Temporary SSH tunnel to production nginx; original HTTPS origin and certificate verification preserved",
+    "package": {
+      "name": "Corporate-Brain-Setup-0.11.5-x64.exe",
+      "bytes": 118406555,
+      "sha256": "50ffff381fa2e80b400545491896334fc50546696b4b0cc09e5c26f4815af1ba"
+    },
+    "downloadSeconds": 194.407,
+    "installerExecuted": false,
+    "employeeRecordsTouched": false
+  },
+  "validation": {
+    "backendTests": 38,
+    "localDesktopChecks": 34,
+    "localStartupChecks": 9,
+    "intelMacFirstAttempt": "Timed out in the history-before-send UI fixture; all backend tests and previous scrolling checks passed",
+    "retry": "Same tagged source rerun; final native platform checks and packaging all passed"
+  },
+  "privacy": {
+    "employeeRecordsTouched": false,
+    "productionModelsCalled": false,
+    "systemNetworkSettingsChanged": false
+  },
+  "signing": {
+    "windows": "NotSigned",
+    "mac": "ad-hoc; not notarized"
+  },
+  "limits": [
+    "Cloud UI verification uses an isolated authenticated test profile and controlled stream events, not employee conversations.",
+    "Employees must reopen the client to load the new server UI. Client installation requires employee action.",
+    "The independent Mac mini remains on its separately deployed version; network access and automatic startup decisions are pending."
+  ]
+}
