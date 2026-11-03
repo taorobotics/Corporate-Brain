@@ -5,9 +5,13 @@ declare const mirror: {
   versionPattern: RegExp;
   installerName(version: string, target: string): string;
   compare(a: string, b: string): number;
-  validateRelease(value: unknown): DesktopRelease;
-  readManifest(file: string): Promise<DesktopRelease>;
+  validateRelease(value: unknown, channelTarget?: string): DesktopRelease;
+  readManifest(file: string, channelTarget?: string): Promise<DesktopRelease>;
   verifyAsset(file: string, asset: UpdateAsset): Promise<void>;
-  importBundle(input: Readable, directory: string): Promise<DesktopRelease>;
+  importBundle(
+    input: Readable,
+    directory: string,
+    channelTarget?: string,
+  ): Promise<DesktopRelease>;
 };
 export = mirror;

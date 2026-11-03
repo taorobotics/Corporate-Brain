@@ -67,6 +67,7 @@ import {
   type TraceItem,
 } from "../shared/chat-progress";
 import MessageContent from "./MessageContent";
+import MessageActions from "./MessageActions";
 import { getSkin } from "../shared/skins";
 import { useChatScroll } from "./useChatScroll";
 
@@ -278,6 +279,7 @@ export default function Workspace(props: WorkspaceProps) {
       id: crypto.randomUUID(),
       role: "user",
       content,
+      promptText: text.trim(),
       attachments: sentAttachments,
       at: new Date().toISOString(),
     };
@@ -313,6 +315,7 @@ export default function Workspace(props: WorkspaceProps) {
       content: string,
       status: ChatTrace["status"],
       image?: string,
+      usage?: Message["usage"],
     ) => {
       if (!mounted.current) return;
       const result: Message = {
@@ -320,6 +323,9 @@ export default function Workspace(props: WorkspaceProps) {
         role: "assistant",
         content,
         image,
+        connectionId: model.id,
+        modelName: model.name,
+        usage,
         at: new Date().toISOString(),
         ...(taskKind === "chat"
           ? {
@@ -423,6 +429,7 @@ export default function Workspace(props: WorkspaceProps) {
         response.content ?? "图片已生成，可以继续保存。",
         "done",
         response.image,
+        response.usage,
       );
     } catch (e) {
       if (taskKind === "chat")
@@ -672,6 +679,30 @@ export default function Workspace(props: WorkspaceProps) {
                             </Button>
                           </div>
                         </>
+                      )}
+                      {message.role === "assistant" && (
+                        <MessageActions
+                          message={message}
+                          conversation={conversation}
+                          notify={notify}
+                          save={(feedback) =>
+                            setState((s) => ({
+                              ...s,
+                              conversations: s.conversations.map((c) =>
+                                c.id === conversation.id
+                                  ? {
+                                      ...c,
+                                      messages: c.messages.map((m) =>
+                                        m.id === message.id
+                                          ? { ...m, feedback }
+                                          : m,
+                                      ),
+                                    }
+                                  : c,
+                              ),
+                            }))
+                          }
+                        />
                       )}
                     </div>
                   </div>

@@ -1,4 +1,188 @@
 @import url("/fonts.css");
+.message-actions {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-top: 12px;
+  color: var(--muted);
+  font-size: 12px;
+}
+.message-action {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 7px;
+  transition:
+    background 120ms,
+    transform 120ms;
+}
+.message-action:hover {
+  color: var(--ink);
+  background: var(--active);
+}
+.message-action:active {
+  transform: scale(0.92);
+}
+.message-action[aria-pressed="true"] {
+  color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 10%, transparent);
+}
+.message-action:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+.message-meta {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  margin-inline: 8px;
+}
+.message-model {
+  max-width: 160px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  margin-right: 8px;
+}
+.message-actions time {
+  white-space: nowrap;
+}
+.feedback-form {
+  display: grid;
+  gap: 16px;
+}
+.feedback-form p {
+  margin: 0;
+  line-height: 1.65;
+}
+.feedback-form textarea {
+  width: 100%;
+  resize: vertical;
+  min-height: 90px;
+}
+.feedback-consent {
+  display: flex;
+  gap: 9px;
+  align-items: center;
+  line-height: 1.6;
+  cursor: pointer;
+}
+.feedback-consent input {
+  width: 16px;
+  height: 16px;
+  accent-color: var(--accent);
+}
+.feedback-context {
+  background: var(--bg);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 14px;
+  min-width: 0;
+}
+.feedback-context summary {
+  cursor: pointer;
+}
+.feedback-context pre {
+  font: inherit;
+  font-size: 13px;
+  line-height: 1.7;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  max-height: 260px;
+  overflow-y: auto;
+  margin: 0;
+}
+.feedback-context h4 {
+  margin: 14px 0 8px;
+}
+.feedback-table {
+  overflow-x: auto;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+}
+.feedback-table table {
+  width: 100%;
+  min-width: 860px;
+  border-collapse: collapse;
+}
+.feedback-table th,
+.feedback-table td {
+  text-align: left;
+  padding: 16px;
+  vertical-align: top;
+  border-bottom: 1px solid var(--line);
+}
+.feedback-table th {
+  background: var(--bg);
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 500;
+}
+.feedback-table small {
+  display: block;
+  margin-top: 5px;
+  color: var(--muted);
+  font-size: 12px;
+}
+.feedback-table td {
+  font-size: 13px;
+  overflow-wrap: anywhere;
+}
+.feedback-table td:nth-child(2) {
+  max-width: 180px;
+}
+.feedback-table time {
+  font-size: 12px;
+  white-space: nowrap;
+}
+.feedback-description {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  overflow: hidden;
+  max-width: 280px;
+  min-width: 140px;
+  line-height: 1.6;
+}
+.feedback-status {
+  white-space: nowrap;
+  border-radius: 5px;
+  padding: 4px 7px;
+  background: var(--active);
+}
+.feedback-status.pending,
+.feedback-status.processing {
+  color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 10%, var(--panel));
+}
+.feedback-status.resolved {
+  color: #21835a;
+  background: color-mix(in srgb, #21835a 10%, var(--panel));
+}
+.feedback-pagination {
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end;
+  align-items: center;
+  margin-top: 18px;
+}
+.feedback-pagination > span {
+  margin-right: auto;
+  color: var(--muted);
+}
+.feedback-placeholder {
+  text-align: center;
+  padding: 36px;
+  color: var(--muted);
+}
+@media (prefers-reduced-motion: reduce) {
+  .message-action {
+    transition: none;
+  }
+}
 :root {
   font-family: var(--font-ui);
   color: #262724;
@@ -1292,10 +1476,18 @@ code {
   line-height: 1.35;
   font-weight: 650;
 }
-.message-markdown h1 { font-size: 21px; }
-.message-markdown h2 { font-size: 18px; }
-.message-markdown h3 { font-size: 16px; }
-.message-markdown h4 { font-size: 14px; }
+.message-markdown h1 {
+  font-size: 21px;
+}
+.message-markdown h2 {
+  font-size: 18px;
+}
+.message-markdown h3 {
+  font-size: 16px;
+}
+.message-markdown h4 {
+  font-size: 14px;
+}
 .message-markdown ul,
 .message-markdown ol {
   padding-left: 24px;
@@ -1313,7 +1505,11 @@ code {
   padding: 2px 5px;
   border-radius: 5px;
   background: var(--side);
-  font: 0.9em/1.5 ui-monospace, SFMono-Regular, Consolas, monospace;
+  font:
+    0.9em/1.5 ui-monospace,
+    SFMono-Regular,
+    Consolas,
+    monospace;
 }
 .message-markdown pre {
   overflow: auto;

@@ -10,6 +10,7 @@ declare global {
       canChangeServer?: boolean;
       updates?: import("../shared/updates").UpdateBridge;
       edit(action: string): void;
+      copyText?(text: string): Promise<void>;
       readState(id: string): Promise<LocalState | null>;
       writeState(id: string, data: LocalState): Promise<void>;
       selectFiles(): Promise<

@@ -2,6 +2,7 @@ export async function api<T = any>(
   path: string,
   body?: unknown,
   method?: string,
+  timeoutMs = body === undefined ? 20000 : 0,
 ): Promise<T> {
   let response: Response;
   try {
@@ -11,7 +12,7 @@ export async function api<T = any>(
       headers:
         body === undefined ? undefined : { "Content-Type": "application/json" },
       body: body === undefined ? undefined : JSON.stringify(body),
-      signal: body === undefined ? AbortSignal.timeout(20000) : undefined,
+      signal: timeoutMs ? AbortSignal.timeout(timeoutMs) : undefined,
     });
   } catch (error) {
     if ((error as Error).name === "TimeoutError")

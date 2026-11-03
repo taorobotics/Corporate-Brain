@@ -37,8 +37,15 @@ export function useDesktopUpdates(enabled: boolean) {
   const check = async () => {
     setActionError("");
     try {
-      if (bridge) setState(await bridge.check());
-      else if (desktop) {
+      if (bridge) {
+        // Older installed clients already expose their native target via state().
+        // Their session.fetch shares this origin's cookies, so they can use a
+        // verified platform channel without first installing a new executable.
+        const native = await bridge.state();
+        if (Object.hasOwn(labels, native.target))
+          document.cookie = `brain_update_target=${native.target}; Path=/api/desktop-updates; SameSite=Strict${location.protocol === "https:" ? "; Secure" : ""}`;
+        setState(await bridge.check());
+      } else if (desktop) {
         setState((value) => ({ ...value, status: "checking", error: "" }));
         const feed = await api<UpdateFeed>("/desktop-updates/latest");
         setLegacy(feed);

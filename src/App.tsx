@@ -557,6 +557,15 @@ export default function App() {
                       label: "公司知识",
                     },
                     { id: "admin-skills", icon: Sparkle, label: "技能发布" },
+                    ...(user.role === "company_admin"
+                      ? [
+                          {
+                            id: "admin-feedback",
+                            icon: NotePencil,
+                            label: "回答反馈",
+                          },
+                        ]
+                      : []),
                     { id: "admin-audit", icon: ShieldCheck, label: "操作记录" },
                   ].map(({ id, icon: Icon, label }) => (
                     <button

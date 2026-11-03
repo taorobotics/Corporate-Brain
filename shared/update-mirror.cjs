@@ -17,7 +17,15 @@ const compare = (a, b) => {
     if (left[i] !== right[i]) return left[i] - right[i];
   return 0;
 };
-function validateRelease(value) {
+// Full releases always require all three installers. A private per-platform
+// channel is validated against exactly one explicitly selected target.
+function channelTargets(target) {
+  if (target === undefined) return targets;
+  if (!targets.includes(target)) throw new Error("Invalid update target");
+  return [target];
+}
+function validateRelease(value, channelTarget) {
+  const expectedTargets = channelTargets(channelTarget);
   if (
     !value ||
     !versionPattern.test(value.version) ||
@@ -26,11 +34,12 @@ function validateRelease(value) {
     typeof value.publishedAt !== "string" ||
     !Number.isFinite(Date.parse(value.publishedAt)) ||
     !value.assets ||
-    Object.keys(value.assets).sort().join() !== [...targets].sort().join()
+    Object.keys(value.assets).sort().join() !==
+      [...expectedTargets].sort().join()
   )
     throw new Error("Invalid update manifest");
   const assets = {};
-  for (const target of targets) {
+  for (const target of expectedTargets) {
     const asset = value.assets[target];
     if (
       !asset ||
@@ -54,11 +63,14 @@ function validateRelease(value) {
     assets,
   };
 }
-async function readManifest(file) {
+async function readManifest(file, channelTarget) {
   const info = await fs.lstat(file);
   if (!info.isFile() || info.isSymbolicLink() || info.size > 65536)
     throw new Error("Invalid manifest file");
-  return validateRelease(JSON.parse(await fs.readFile(file, "utf8")));
+  return validateRelease(
+    JSON.parse(await fs.readFile(file, "utf8")),
+    channelTarget,
+  );
 }
 async function verifyAsset(file, asset) {
   const info = await fs.lstat(file);
@@ -69,7 +81,8 @@ async function verifyAsset(file, asset) {
   if (hash.digest("hex") !== asset.sha256)
     throw new Error("Installer checksum mismatch");
 }
-async function importBundle(input, directory) {
+async function importBundle(input, directory, channelTarget) {
+  const expectedTargets = channelTargets(channelTarget);
   const root = resolve(directory);
   await fs.mkdir(root, { recursive: true, mode: 0o755 });
   if ((await fs.lstat(root)).isSymbolicLink())
@@ -93,20 +106,25 @@ async function importBundle(input, directory) {
           end < 0 ? chunk : chunk.subarray(0, end),
         ]);
         if (end < 0) continue;
-        release = validateRelease(JSON.parse(header.toString("utf8")));
-        const current = await readManifest(join(root, "latest.json")).catch(
-          (error) => {
-            if (error.code === "ENOENT") return null;
-            throw error;
-          },
+        release = validateRelease(
+          JSON.parse(header.toString("utf8")),
+          channelTarget,
         );
+        const current = await readManifest(
+          join(root, "latest.json"),
+          channelTarget,
+        ).catch((error) => {
+          if (error.code === "ENOENT") return null;
+          throw error;
+        });
         if (current && compare(release.version, current.version) < 0)
           throw new Error("Update downgrade rejected");
         chunk = chunk.subarray(end + 1);
       }
       while (chunk.length) {
-        if (index >= targets.length) throw new Error("Unexpected bundle data");
-        const asset = release.assets[targets[index]];
+        if (index >= expectedTargets.length)
+          throw new Error("Unexpected bundle data");
+        const asset = release.assets[expectedTargets[index]];
         if (!handle) {
           handle = await fs.open(join(stage, asset.name), "wx", 0o644);
           hash = createHash("sha256");
@@ -128,7 +146,7 @@ async function importBundle(input, directory) {
         }
       }
     }
-    if (!release || index !== targets.length || received !== 0)
+    if (!release || index !== expectedTargets.length || received !== 0)
       throw new Error("Incomplete update bundle");
     const manifest = JSON.stringify(release) + "\n";
     await fs.writeFile(join(stage, "manifest.json"), manifest, { mode: 0o644 });
@@ -143,11 +161,11 @@ async function importBundle(input, directory) {
         !existing.isDirectory() ||
         existing.isSymbolicLink() ||
         JSON.stringify(
-          await readManifest(join(destination, "manifest.json")),
+          await readManifest(join(destination, "manifest.json"), channelTarget),
         ) !== JSON.stringify(release)
       )
         throw new Error("Published version is immutable");
-      for (const target of targets)
+      for (const target of expectedTargets)
         await verifyAsset(
           join(destination, release.assets[target].name),
           release.assets[target],
@@ -189,9 +207,11 @@ module.exports = {
   importBundle,
 };
 if (require.main === module) {
-  if (process.argv.length !== 3)
-    throw new Error("Expected fixed update directory");
-  importBundle(process.stdin, process.argv[2])
+  if (![3, 4].includes(process.argv.length))
+    throw new Error(
+      "Expected fixed update directory and optional private channel target",
+    );
+  importBundle(process.stdin, process.argv[2], process.argv[3])
     .then((release) => {
       console.log(
         JSON.stringify({

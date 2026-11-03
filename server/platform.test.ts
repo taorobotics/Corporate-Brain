@@ -117,6 +117,236 @@ test("department accounts, review scopes, publication and local-history boundary
     "company_reviewer",
   );
   await t.test(
+    "answer feedback is consent-bound, idempotent, authenticated and company-admin-only",
+    async () => {
+      const conversationId = crypto.randomUUID(),
+        messageId = crypto.randomUUID();
+      const body = {
+        conversationId,
+        messageId,
+        rating: "unhelpful",
+        category: "accuracy",
+        description: "Feedback fixture <script>alert(1)</script>",
+      };
+      assert.equal((await request("/feedback", body, "", "PUT")).status, 401);
+      assert.equal(
+        (
+          await request(
+            "/feedback",
+            body,
+            a.cookie,
+            "PUT",
+            "https://evil.example",
+          )
+        ).status,
+        403,
+      );
+      assert.equal(
+        (await request("/feedback", { ...body, userId: b.id }, a.cookie, "PUT"))
+          .status,
+        400,
+      );
+      assert.equal(
+        (
+          await request(
+            "/feedback",
+            { ...body, context: { question: "private", answer: "private" } },
+            a.cookie,
+            "PUT",
+          )
+        ).status,
+        400,
+      );
+      assert.equal(
+        (
+          await request(
+            "/feedback",
+            { ...body, includeContext: true },
+            a.cookie,
+            "PUT",
+          )
+        ).status,
+        400,
+      );
+      const created = await request("/feedback", body, a.cookie, "PUT");
+      assert.equal(created.status, 201);
+      assert.equal(created.data.hasContext, false);
+      const again = await request("/feedback", body, a.cookie, "PUT");
+      assert.equal(again.data.id, created.data.id);
+      // Same local IDs from a second user cannot update the first user's feedback.
+      const second = await request("/feedback", body, b.cookie, "PUT");
+      assert.notEqual(second.data.id, created.data.id);
+      for (const cookie of [
+        a.cookie,
+        b.cookie,
+        deptAdmin.cookie,
+        reviewerA.cookie,
+        companyReviewer.cookie,
+      ]) {
+        assert.equal(
+          (await request("/admin/feedback", undefined, cookie)).status,
+          403,
+        );
+        assert.equal(
+          (
+            await request(
+              `/admin/feedback/${created.data.id}`,
+              undefined,
+              cookie,
+            )
+          ).status,
+          403,
+        );
+        assert.equal(
+          (
+            await request(
+              `/admin/feedback/${created.data.id}`,
+              {
+                status: "resolved",
+                adminNote: "injected",
+                updatedAt: new Date().toISOString(),
+              },
+              cookie,
+              "PATCH",
+            )
+          ).status,
+          403,
+        );
+      }
+      const withContext = {
+        ...body,
+        includeContext: true,
+        context: { question: "explicit question", answer: "explicit answer" },
+      };
+      assert.equal(
+        (
+          await request(
+            "/feedback",
+            {
+              ...withContext,
+              context: { ...withContext.context, trace: "private thought" },
+            },
+            a.cookie,
+            "PUT",
+          )
+        ).status,
+        400,
+      );
+      assert.equal(
+        (
+          await request(
+            "/feedback",
+            { ...body, description: "x".repeat(2001) },
+            a.cookie,
+            "PUT",
+          )
+        ).status,
+        400,
+      );
+      assert.equal(
+        (await request("/feedback", withContext, a.cookie, "PUT")).status,
+        200,
+      );
+      const listed = await request(
+        "/admin/feedback?status=pending&rating=unhelpful&search=Feedback",
+        undefined,
+        adminCookie,
+      );
+      assert.equal(listed.data.total, 2);
+      assert.equal(listed.data.rows[0].context, undefined);
+      const detail = (
+        await request(
+          `/admin/feedback/${created.data.id}`,
+          undefined,
+          adminCookie,
+        )
+      ).data;
+      assert.equal(detail.username, a.username);
+      assert.deepEqual(detail.context, withContext.context);
+      const handled = {
+        status: "resolved",
+        adminNote: "handled privately",
+        updatedAt: detail.updatedAt,
+      };
+      assert.equal(
+        (
+          await request(
+            `/admin/feedback/${created.data.id}`,
+            handled,
+            adminCookie,
+            "PATCH",
+          )
+        ).status,
+        200,
+      );
+      assert.equal(
+        (
+          await request(
+            `/admin/feedback/${created.data.id}`,
+            handled,
+            adminCookie,
+            "PATCH",
+          )
+        ).status,
+        409,
+      );
+      // An identical retry must not reopen a resolved item or leak internal handling notes.
+      const retried = await request("/feedback", withContext, a.cookie, "PUT");
+      assert.equal(retried.data.adminNote, undefined);
+      assert.equal(
+        (
+          await request(
+            `/admin/feedback/${created.data.id}`,
+            undefined,
+            adminCookie,
+          )
+        ).data.status,
+        "resolved",
+      );
+      await request(
+        "/feedback",
+        { ...body, rating: "helpful", category: "other" },
+        a.cookie,
+        "PUT",
+      );
+      const changed = (
+        await request(
+          `/admin/feedback/${created.data.id}`,
+          undefined,
+          adminCookie,
+        )
+      ).data;
+      assert.equal(changed.context, null);
+      assert.equal(changed.status, "pending");
+      const audit = (await request("/audit", undefined, adminCookie)).data;
+      assert.ok(!JSON.stringify(audit).includes("explicit answer"));
+      assert.ok(!JSON.stringify(audit).includes("handled privately"));
+      for (let i = 0; i < 21; i++)
+        await request(
+          "/feedback",
+          { ...body, messageId: crypto.randomUUID() },
+          c.cookie,
+          "PUT",
+        );
+      const page2 = (
+        await request("/admin/feedback?page=2", undefined, adminCookie)
+      ).data;
+      assert.equal(page2.rows.length, 3);
+      assert.equal(page2.total, 23);
+      assert.equal(
+        (await request("/admin/feedback?page=-1", undefined, adminCookie))
+          .status,
+        400,
+      );
+      for (let i = 0; i < 10; i++)
+        await request("/feedback", body, c.cookie, "PUT");
+      assert.equal(
+        (await request("/feedback", body, c.cookie, "PUT")).status,
+        429,
+      );
+    },
+  );
+  await t.test(
     "initial credentials are ephemeral, expire, and are absent from API lists and audit",
     async () => {
       const listed = await request("/users", undefined, adminCookie);

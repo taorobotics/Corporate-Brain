@@ -62,6 +62,7 @@ contextBridge.exposeInMainWorld("brainDesktop", {
     },
   },
   edit: (action) => ipcRenderer.send("edit:action", action),
+  copyText: (text) => ipcRenderer.invoke("clipboard:write", text),
   readState: (id) => ipcRenderer.invoke("local:read", id),
   writeState: (id, data) => ipcRenderer.invoke("local:write", id, data),
   selectFiles: () => ipcRenderer.invoke("files:select"),

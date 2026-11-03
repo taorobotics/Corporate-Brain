@@ -69,6 +69,11 @@ export type Message = {
   role: "user" | "assistant";
   content: string;
   image?: string;
+  promptText?: string;
+  connectionId?: string;
+  modelName?: string;
+  usage?: { inputTokens?: number; outputTokens?: number; totalTokens?: number };
+  feedback?: import("./feedback").FeedbackReceipt;
   attachments?: { name: string; content: string; image?: string }[];
   trace?: import("./chat-progress").ChatTrace;
   at: string;

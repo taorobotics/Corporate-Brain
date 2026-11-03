@@ -14,6 +14,7 @@
     "Empty model picker explains configuration and opens the real model settings",
     "Source links reach the system browser; credential-bearing URLs and non-web protocols are rejected without opening an application window",
     "Chat follows streamed reasoning and answer text, delayed image sizing and window resizing; wheel and keyboard history navigation pause following, with a return-to-latest button and manual near-bottom resume; no nested reasoning scrollbars",
+    "Native answer copy/share, thumbs up/down, opt-in question/answer snapshot without reasoning, deduplicated real feedback API, escaped admin table, filters and persisted handling status",
     "Real streamed reasoning/tool event fixtures, source links, expandable disclosure, separate answer, static reduced-motion Grok-ball, local trace reload, partial error/cancel, no-reasoning fallback and conversation isolation",
     "Configured model picker filters by task kind and persists selection; QA fixtures never call a model",
     "Top edit menu restores the original input target and invokes its native action; account menu supports keyboard navigation",

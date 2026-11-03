@@ -5,6 +5,7 @@ const {
   dialog,
   Menu,
   shell,
+  clipboard,
 } = require("electron");
 const { DesktopUpdates } = require("./updates.cjs");
 const {
@@ -384,6 +385,12 @@ ipcMain.handle("file:save", async (event, name, content, base64) => {
     base64 ? Buffer.from(content, "base64") : content,
   );
   return true;
+});
+ipcMain.handle("clipboard:write", (event, text) => {
+  sender(event);
+  if (typeof text !== "string" || text.length > 2_000_000)
+    throw new Error("复制内容无效或过大，请保存为文件");
+  return clipboard.writeText(text);
 });
 ipcMain.on("window:action", (event, action) => {
   if (!isStartupSender(win, event)) sender(event);

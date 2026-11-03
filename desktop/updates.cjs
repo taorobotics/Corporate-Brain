@@ -45,6 +45,7 @@ class DesktopUpdates {
     this.operation = (async () => {
       try {
         const response = await this.request("/api/desktop-updates/latest", {
+          headers: { "X-Brain-Update-Target": this.state.target },
           signal: AbortSignal.timeout(20000),
         });
         if (response.status === 401) throw new Error("请重新登录后检查更新");

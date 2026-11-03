@@ -624,6 +624,7 @@ async function waitFor(test, label, timeout = 12000) {
       ),
     "final response remains at the end",
   );
+  await require("./verify-feedback.cjs")({ js, click, fill, waitFor, request, selectOption, capture, checks });
   await js(`document.querySelector('.thinking-toggle').click()`);
   assert.equal(await has("找到 2 个来源"), true);
   await fill('textarea[aria-label="任务输入"]', "加载项验收：失败清理");

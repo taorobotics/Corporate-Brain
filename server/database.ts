@@ -32,6 +32,16 @@ export function createStore(file: string) {
     CREATE TABLE IF NOT EXISTS skills(id TEXT PRIMARY KEY, name TEXT NOT NULL, description TEXT NOT NULL, version TEXT NOT NULL, instructions TEXT NOT NULL, examples TEXT NOT NULL, test_summary TEXT NOT NULL, required_tools TEXT NOT NULL, author_id TEXT NOT NULL REFERENCES users(id), owner_department_id TEXT NOT NULL REFERENCES departments(id), audience TEXT NOT NULL, targets TEXT NOT NULL, status TEXT NOT NULL, review_note TEXT NOT NULL DEFAULT '', created_at TEXT NOT NULL, previous_id TEXT REFERENCES skills(id));
     CREATE TABLE IF NOT EXISTS connections(id TEXT PRIMARY KEY, name TEXT NOT NULL, base_url TEXT NOT NULL, model TEXT NOT NULL, kind TEXT NOT NULL, departments TEXT NOT NULL, secret TEXT NOT NULL, enabled INTEGER NOT NULL DEFAULT 1);
     CREATE TABLE IF NOT EXISTS audit(id INTEGER PRIMARY KEY AUTOINCREMENT, actor_id TEXT, action TEXT NOT NULL, resource_id TEXT NOT NULL, at TEXT NOT NULL);
+    CREATE TABLE IF NOT EXISTS feedback(
+      id TEXT PRIMARY KEY, user_id TEXT NOT NULL REFERENCES users(id), user_name TEXT NOT NULL, username TEXT NOT NULL,
+      department_name TEXT NOT NULL, conversation_id TEXT NOT NULL, message_id TEXT NOT NULL, model_name TEXT NOT NULL,
+      rating TEXT NOT NULL CHECK(rating IN ('helpful','unhelpful','issue')), category TEXT NOT NULL, description TEXT NOT NULL,
+      context_json TEXT, status TEXT NOT NULL DEFAULT 'pending' CHECK(status IN ('pending','processing','resolved','dismissed')),
+      admin_note TEXT NOT NULL DEFAULT '', handled_by TEXT NOT NULL DEFAULT '', handled_at TEXT,
+      created_at TEXT NOT NULL, updated_at TEXT NOT NULL, UNIQUE(user_id,conversation_id,message_id)
+    );
+    CREATE INDEX IF NOT EXISTS feedback_status_created ON feedback(status,created_at DESC);
+    CREATE INDEX IF NOT EXISTS feedback_created ON feedback(created_at DESC);
   `);
   if (
     !(db.prepare("PRAGMA table_info(users)").all() as { name: string }[]).some(
@@ -41,7 +51,7 @@ export function createStore(file: string) {
     db.exec(
       "ALTER TABLE users ADD COLUMN initial_expires_at INTEGER NOT NULL DEFAULT 0",
     );
-  // No server-side conversation, message, draft, or transcript table.
+  // No automatic chat history storage; feedback contains only explicitly submitted excerpts.
   const keyFile =
     file === ":memory:" ? undefined : join(dirname(file), "secrets.key");
   const key =

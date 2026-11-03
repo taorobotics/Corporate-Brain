@@ -210,6 +210,92 @@ test("company mirror serves authenticated old-client feed, full downloads and ve
   );
   assert.equal((await p.get("/0.12.0/win32-x64")).status, 409);
 });
+test("private platform channels serve verified installers to old and new clients without advertising missing architectures", async (t) => {
+  const f = await mirrorFixture(t);
+  await f.publish(f.manifest("0.11.0"));
+  const target = "darwin-arm64",
+    next = f.manifest("0.12.0");
+  const partial = { ...next, assets: { [target]: next.assets[target] } };
+  const bytes = Buffer.concat([
+    Buffer.from(JSON.stringify(partial) + "\n"),
+    f.bytes,
+  ]);
+  // Partial packages remain invalid in the public, all-platform release flow.
+  assert.throws(() => mirror.validateRelease(partial), /manifest/);
+  assert.throws(() => mirror.validateRelease(partial, "../unsafe"), /target/);
+  const folder = join(f.directory, "channels", target);
+  await mirror.importBundle(Readable.from([bytes]), folder, target);
+  const p = await start(t, {
+    directory: f.directory,
+    fetch: () => {
+      throw new Error("No GitHub");
+    },
+  });
+  assert.equal(
+    (await (await p.get("/latest", { "X-Brain-Update-Target": target })).json())
+      .release.version,
+    "0.12.0",
+  );
+  // A real old Electron session sends its normal auth cookie plus the renderer's platform cookie.
+  const setupResponse = await fetch(`${p.base}/api/auth/login`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      username: "qa-updates",
+      password: "Update-Test-Only-Password",
+    }),
+  });
+  const cookie = setupResponse.headers.get("set-cookie")!.split(";")[0];
+  const legacy = await fetch(`${p.base}/api/desktop-updates/latest`, {
+    headers: { Cookie: `${cookie}; brain_update_target=${target}` },
+  });
+  assert.equal((await legacy.json()).release.version, "0.12.0");
+  assert.equal(
+    (
+      await (
+        await p.get("/latest", { "X-Brain-Update-Target": "darwin-x64" })
+      ).json()
+    ).release.version,
+    "0.11.0",
+  );
+  const full = await p.get(`/0.12.0/${target}`);
+  assert.deepEqual(Buffer.from(await full.arrayBuffer()), f.bytes);
+  const range = await p.get(`/0.12.0/${target}`, {
+    Range: "bytes=7-",
+    "If-Range": `"${partial.assets[target].sha256}"`,
+  });
+  assert.equal(range.status, 206);
+  assert.deepEqual(Buffer.from(await range.arrayBuffer()), f.bytes.subarray(7));
+  assert.equal((await p.get("/0.12.0/darwin-x64")).status, 409);
+  assert.equal(
+    (await p.get("/latest", { "X-Brain-Update-Target": "../unsafe" })).status,
+    400,
+  );
+  await assert.rejects(
+    mirror.importBundle(Readable.from([bytes.subarray(0, -1)]), folder, target),
+    /Incomplete/,
+  );
+  const asset = partial.assets[target];
+  await writeFile(
+    join(folder, next.version, asset.name),
+    Buffer.alloc(asset.bytes),
+  );
+  assert.equal(
+    (await p.get("/latest", { "X-Brain-Update-Target": target })).status,
+    503,
+  );
+  assert.equal((await p.get(`/0.12.0/${target}`)).status, 409);
+  await writeFile(join(folder, next.version, asset.name), f.bytes);
+  await f.publish(f.manifest("0.13.0"));
+  assert.equal(
+    (await (await p.get("/latest", { "X-Brain-Update-Target": target })).json())
+      .release.version,
+    "0.13.0",
+  );
+  assert.equal((await p.get(`/0.13.0/${target}`)).status, 200);
+  assert.equal((await p.get(`/0.12.0/${target}`)).status, 200);
+});
+
 test("mirror publishing is atomic, immutable, bounded, idempotent and rejects downgrades and incomplete/tampered bundles", async (t) => {
   const f = await mirrorFixture(t),
     first = f.manifest();
