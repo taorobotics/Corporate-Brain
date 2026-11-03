@@ -29,3 +29,5 @@ secrets/
 /desktop/legal.html
 /build/windows/generated/
 /build/generated/
+# Generated from the pinned pdfjs-dist dependency during build.
+public/pdf-assets/

@@ -5,6 +5,9 @@ export async function streamChat(
   signal: AbortSignal,
   receive: (event: ChatProgress) => void,
 ): Promise<{ content: string; usage?: ChatUsage }> {
+  const encoded = JSON.stringify(body);
+  if (new TextEncoder().encode(encoded).length > 15 * 1024 * 1024)
+    throw new Error("对话与附件内容过大，请减少附件或在新对话中分批分析。");
   const response = await fetch("/api/generate/chat", {
     method: "POST",
     credentials: "include",
@@ -13,7 +16,7 @@ export async function streamChat(
       "Content-Type": "application/json",
       Accept: "application/x-ndjson",
     },
-    body: JSON.stringify(body),
+    body: encoded,
   });
   if (!response.ok) {
     const data = await response.json().catch(() => ({}));

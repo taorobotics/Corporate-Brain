@@ -1,6 +1,6 @@
 {
   "name": "corporate-brain",
-  "version": "0.14.0",
+  "version": "0.15.0",
   "private": true,
   "license": "MIT",
   "repository": {
@@ -15,13 +15,13 @@
   },
   "scripts": {
     "dev": "node scripts/dev.mjs",
-    "dev:web": "vite --host 127.0.0.1 --port 4173 --strictPort",
+    "dev:web": "node scripts/prepare-document-assets.mjs && vite --host 127.0.0.1 --port 4173 --strictPort",
     "dev:server": "tsx watch server/index.ts",
     "desktop": "node scripts/prepare-legal.mjs && electron .",
-    "build": "node scripts/prepare-legal.mjs && tsc --noEmit && vite build",
+    "build": "node scripts/prepare-document-assets.mjs && node scripts/prepare-legal.mjs && tsc --noEmit && vite build",
     "legal:prepare": "node scripts/prepare-legal.mjs",
     "start": "tsx server/index.ts",
-    "test": "tsx --test --test-concurrency=1 server/platform.test.ts server/skill-import.test.ts server/nas.test.ts server/updates.test.ts server/dsh.test.ts server/chat-stream.test.ts server/chat-deadline.test.ts server/env.test.ts server/deepseek-sync.test.ts shared/workspaces.test.ts shared/skins.test.ts desktop/updates.test.cjs && node scripts/test-nas-worker.mjs",
+    "test": "tsx --test --test-concurrency=1 server/platform.test.ts server/skill-import.test.ts server/nas.test.ts server/documents.test.ts server/updates.test.ts server/dsh.test.ts server/chat-stream.test.ts server/chat-deadline.test.ts server/env.test.ts server/deepseek-sync.test.ts shared/workspaces.test.ts shared/skins.test.ts desktop/updates.test.cjs && node scripts/test-nas-worker.mjs",
     "test:desktop": "node scripts/prepare-legal.mjs && electron desktop/verify-startup.cjs && electron desktop/verify.cjs",
     "test:dsh": "node scripts/verify-dsh.mjs",
     "deepseek:check": "node scripts/check-deepseek-config.mjs",
@@ -29,7 +29,8 @@
     "version:check": "node scripts/version.mjs check",
     "package:win": "npm run build && node scripts/package-desktop.mjs --win nsis",
     "package:win:dir": "npm run build && node scripts/package-desktop.mjs --win --dir",
-    "package:mac": "npm run build && node scripts/package-desktop.mjs --mac dmg"
+    "package:mac": "npm run build && node scripts/package-desktop.mjs --mac dmg",
+    "test:attachments": "electron desktop/verify-attachments.cjs"
   },
   "dependencies": {
     "@base-ui/react": "1.9.0",
@@ -38,8 +39,11 @@
     "@phosphor-icons/react": "^2.1.10",
     "cookie-parser": "^1.4.7",
     "express": "^5.3.0",
+    "pdfjs-dist": "6.5.438",
     "react": "^19.3.1",
     "react-dom": "^19.3.1",
+    "saxes": "6.0.0",
+    "word-extractor": "1.0.4",
     "yaml": "2.9.1",
     "yauzl": "3.4.0",
     "zod": "^4.6.7"

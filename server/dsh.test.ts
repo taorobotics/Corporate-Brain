@@ -151,6 +151,17 @@ test("DSH routes an OpenAI-compatible turn and admits an image attachment", asyn
           "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=",
       },
       { name: "notes.txt", content: "file recognition probe" },
+      {
+        name: "clip.mp4",
+        content: "Sampled video frames; no audio",
+        images: [
+          {
+            label: "00:01.00",
+            image:
+              "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=",
+          },
+        ],
+      },
     ],
   });
   assert.equal(result, "DSH probe OK");
@@ -162,6 +173,7 @@ test("DSH routes an OpenAI-compatible turn and admits an image attachment", asyn
   );
   assert.ok(requests.some((body) => body.includes("probe.png")));
   assert.ok(requests.some((body) => body.includes("notes.txt")));
+  assert.ok(requests.some((body) => body.includes("00:01.00")));
   assert.ok(requests.some((body) => body.includes("image")));
   assert.ok(progress.some((event) => event.type === "reasoning"));
   assert.ok(

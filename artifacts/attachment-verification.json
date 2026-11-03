@@ -1,0 +1,13 @@
+{
+  "version": "0.15.0",
+  "result": "passed",
+  "checks": [
+    "Actual DOC, DOCX, XLSX, PPTX and text PDF inputs parse to expected Unicode text and preview safely",
+    "Real PDF.js worker renders a scanned PDF page with source page label and explicit scope warning",
+    "Real MP4 is decoded and sampled at distinct timestamps: red first scene and blue second scene; no audio claim",
+    "Attachment-only submission and native local history retain all seven extracted files and visual previews after reload"
+  ],
+  "consoleErrors": [],
+  "productionModelsCalled": false,
+  "originalFilesStoredOnServer": false
+}

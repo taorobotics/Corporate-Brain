@@ -72,6 +72,16 @@ import MessageActions from "./MessageActions";
 import { getSkin } from "../shared/skins";
 import { useChatScroll } from "./useChatScroll";
 import Knowledge from "./Knowledge";
+import { readAttachment } from "./attachments";
+import {
+  ATTACHMENT_ACCEPT,
+  modelAttachments as toModelAttachments,
+  visualInputs,
+  validateAttachmentBudget,
+  unsupportedDeepSeekVision,
+  type Attachment,
+} from "../shared/attachments";
+import "./attachments.css";
 
 export default function Workspace(props: WorkspaceProps) {
   const {
@@ -97,9 +107,7 @@ export default function Workspace(props: WorkspaceProps) {
     [skillDraft, setSkillDraft] = useState<Draft | null>(null),
     [detail, setDetail] = useState<Skill | null>(null);
   const [activeSkill, setActiveSkill] = useState<Skill | null>(null),
-    [attachments, setAttachments] = useState<
-      { name: string; content: string; image?: string }[]
-    >([]),
+    [attachments, setAttachments] = useState<Attachment[]>([]),
     [projectDialog, setProjectDialog] = useState(false),
     [importSkill, setImportSkill] = useState(false),
     [selectedProject, setSelectedProject] = useState<string | null>(null),
@@ -114,6 +122,14 @@ export default function Workspace(props: WorkspaceProps) {
   const [taskKind, setTaskKind] = useState<"chat" | "image" | "video">("chat"),
     [taskError, setTaskError] = useState("");
   const filesRef = useRef<HTMLInputElement>(null);
+  const fileRead = useRef<AbortController | null>(null);
+  const [reading, setReading] = useState<{
+    name: string;
+    status: string;
+  } | null>(null);
+  const [attachmentPreview, setAttachmentPreview] = useState<Attachment | null>(
+    null,
+  );
   const {
     containerRef: messagesRef,
     contentRef,
@@ -127,6 +143,7 @@ export default function Workspace(props: WorkspaceProps) {
     return () => {
       mounted.current = false;
       activeRequest.current?.abort();
+      fileRead.current?.abort();
     };
   }, []);
   const conversation = state.conversations.find((c) => c.id === conversationId);
@@ -144,6 +161,9 @@ export default function Workspace(props: WorkspaceProps) {
   useEffect(() => {
     setPreview(null);
     setSearch("");
+    fileRead.current?.abort();
+    setAttachments([]);
+    setReading(null);
   }, [page, conversationId]);
   useEffect(() => {
     if (page !== "models") return;
@@ -224,46 +244,83 @@ export default function Workspace(props: WorkspaceProps) {
       })),
     ];
   }
-  async function chooseFiles(files?: FileList | null) {
+  async function chooseFiles(files?: FileList | File[] | null) {
+    if (fileRead.current || busy) {
+      notify("请等待当前处理完成后再添加文件。");
+      return;
+    }
+    const selected = Array.from(files ?? []);
+    if (!selected.length) return;
+    if (attachments.length + selected.length > 8) {
+      notify("一次最多添加 8 个文件，请分批选择。");
+      return;
+    }
+    const controller = new AbortController();
+    fileRead.current = controller;
+    let accepted = [...attachments];
+    const errors: string[] = [];
     try {
-      let selected: typeof attachments;
-      if (window.brainDesktop && !files)
-        selected = await window.brainDesktop.selectFiles();
-      else {
-        selected = [];
-        for (const file of Array.from(files ?? [])) {
-          if (file.size > 2 * 1024 * 1024)
-            throw new Error("首版单个附件限制 2MB，请使用较小文件");
-          if (file.type.startsWith("image/")) {
-            const image = await new Promise<string>((resolve, reject) => {
-              const reader = new FileReader();
-              reader.onload = () => resolve(String(reader.result));
-              reader.onerror = () => reject(new Error("图片读取失败"));
-              reader.readAsDataURL(file);
-            });
-            selected.push({ name: file.name, content: "", image });
-          } else if (/\.(txt|md|csv|json)$/i.test(file.name))
-            selected.push({ name: file.name, content: await file.text() });
-          else
-            throw new Error(
-              "当前可读取 TXT、Markdown、CSV、JSON 和图片，其余格式解析尚未接通",
-            );
+      for (const file of selected) {
+        if (controller.signal.aborted) break;
+        setReading({ name: file.name, status: "准备读取…" });
+        try {
+          const result = await readAttachment(
+            file,
+            (status) => {
+              if (mounted.current && !controller.signal.aborted)
+                setReading({ name: file.name, status });
+            },
+            AbortSignal.any([controller.signal, AbortSignal.timeout(90000)]),
+          );
+          controller.signal.throwIfAborted();
+          validateAttachmentBudget([...accepted, result]);
+          accepted = [...accepted, result];
+          if (mounted.current) setAttachments(accepted);
+        } catch (error) {
+          if (!controller.signal.aborted)
+            errors.push(`${file.name}：${(error as Error).message}`);
         }
       }
-      setAttachments((current) => [...current, ...selected].slice(0, 8));
-    } catch (e) {
-      notify((e as Error).message);
+    } finally {
+      if (fileRead.current === controller) fileRead.current = null;
+      if (mounted.current) {
+        setReading(null);
+        if (errors.length) notify(errors.join("\n"));
+      }
     }
   }
   async function send() {
-    if (!text.trim() || busy || activeRequest.current) return;
+    if (
+      (!text.trim() && !attachments.length) ||
+      busy ||
+      activeRequest.current ||
+      fileRead.current
+    )
+      return;
+    const requestText =
+      text.trim() || "请分析这些附件，说明主要内容和需要注意的问题。";
+    const currentAttachments = attachments.length
+      ? attachments
+      : (conversation?.messages.findLast(
+          (m) => m.role === "user" && m.attachments?.length,
+        )?.attachments ?? []);
+    if (
+      model &&
+      currentAttachments.some((a) => visualInputs(a).length) &&
+      unsupportedDeepSeekVision(model.baseUrl, model.model)
+    ) {
+      setTaskError(
+        "这些附件包含画面，请在模型选择中切换到 DeepSeek Flash 后发送。DeepSeek Pro 不支持图像输入。",
+      );
+      return;
+    }
     jumpToLatest();
     setTaskError("");
     let current = conversation;
     if (!current) {
       current = {
         id: crypto.randomUUID(),
-        title: text.trim().slice(0, 32),
+        title: (text.trim() || attachments[0]?.name || "附件分析").slice(0, 32),
         messages: [],
         createdAt: new Date().toISOString(),
       };
@@ -274,15 +331,12 @@ export default function Workspace(props: WorkspaceProps) {
       ...attachment,
     }));
     const content =
-      text.trim() +
-      sentAttachments
-        .map((a) => `\n\n附件：${a.name}${a.content ? `\n${a.content}` : ""}`)
-        .join("");
+      requestText + sentAttachments.map((a) => `\n\n附件：${a.name}`).join("");
     const message: Message = {
       id: crypto.randomUUID(),
       role: "user",
       content,
-      promptText: text.trim(),
+      promptText: requestText,
       attachments: sentAttachments,
       at: new Date().toISOString(),
     };
@@ -365,14 +419,17 @@ export default function Workspace(props: WorkspaceProps) {
     });
     try {
       const workspaceAttachments =
-        taskKind === "chat" ? await readWorkspaceContext(text) : [];
-      const modelAttachments = [
-        ...sentAttachments.slice(
+        taskKind === "chat" && currentAttachments.length < 8
+          ? await readWorkspaceContext(requestText)
+          : [];
+      const modelAttachments = toModelAttachments([
+        ...currentAttachments,
+        ...workspaceAttachments.slice(
           0,
-          Math.max(0, 8 - workspaceAttachments.length),
+          Math.max(0, 8 - currentAttachments.length),
         ),
-        ...workspaceAttachments,
-      ].slice(0, 8);
+      ]);
+      validateAttachmentBudget(modelAttachments);
       if (activeSkill) {
         await api(`/skills/${activeSkill.id}/download`);
         if (activeSkill.requiredTools.length)
@@ -397,7 +454,22 @@ export default function Workspace(props: WorkspaceProps) {
                   ...updated.messages
                     .slice(-40)
                     .filter((m) => m.content.trim())
-                    .map((m) => ({ role: m.role, content: m.content })),
+                    .map((m) => ({
+                      role: m.role,
+                      content:
+                        m.id === message.id
+                          ? requestText
+                          : (
+                              m.content +
+                              (m.role === "user" && m.attachments?.length
+                                ? "\n\n此前附件文字：\n" +
+                                  m.attachments
+                                    .map((a) => `${a.name}\n${a.content}`)
+                                    .join("\n")
+                                    .slice(0, 40000)
+                                : "")
+                            ).slice(0, 80000),
+                    })),
                 ],
                 attachments: modelAttachments,
                 mode: state.settings.mode,
@@ -634,20 +706,25 @@ export default function Workspace(props: WorkspaceProps) {
                         />
                       )}
                       <MessageContent content={message.content} />
-                      {message.attachments?.some((a) => a.image) && (
+                      {!!message.attachments?.length && (
                         <div className="message-attachments">
-                          {message.attachments
-                            .filter((a) => a.image)
-                            .map((a, index) => (
-                              <button
-                                key={index}
-                                onClick={() => setPreview(a.image!)}
-                                title={a.name}
-                              >
-                                <img src={a.image} alt={a.name} />
-                                <span>{a.name}</span>
-                              </button>
-                            ))}
+                          {message.attachments.map((a, index) => (
+                            <button
+                              key={index}
+                              onClick={() => setAttachmentPreview(a)}
+                              title={a.name}
+                            >
+                              {a.image || a.images?.[0] ? (
+                                <img
+                                  src={a.image ?? a.images?.[0].image}
+                                  alt={a.name}
+                                />
+                              ) : (
+                                <FileText size={26} />
+                              )}
+                              <span>{a.name}</span>
+                            </button>
+                          ))}
                         </div>
                       )}
                       {message.image && (
@@ -731,13 +808,41 @@ export default function Workspace(props: WorkspaceProps) {
                   回到最新内容
                 </button>
               )}
-              <div className="composer">
+              <div
+                className="composer"
+                onDragOver={(e) => {
+                  if (e.dataTransfer.types.includes("Files"))
+                    e.preventDefault();
+                }}
+                onDrop={(e) => {
+                  if (e.dataTransfer.files.length) {
+                    e.preventDefault();
+                    void chooseFiles(e.dataTransfer.files);
+                  }
+                }}
+              >
                 {(attachments.length > 0 || activeSkill) && (
                   <div className="attachment-row">
                     {attachments.map((a, index) => (
-                      <span className="chip" key={index}>
-                        <Paperclip size={15} />
-                        {a.name}
+                      <span className="chip attachment-chip" key={index}>
+                        <button
+                          type="button"
+                          onClick={() => setAttachmentPreview(a)}
+                          title={`查看 ${a.name}`}
+                        >
+                          {a.kind === "video" ? (
+                            <VideoCamera size={16} />
+                          ) : (
+                            <Paperclip size={15} />
+                          )}
+                          <span>
+                            {a.name}
+                            <small>
+                              {a.summary ?? "已读取"}
+                              {a.warnings?.length ? " · 有读取范围说明" : ""}
+                            </small>
+                          </span>
+                        </button>
                         <IconButton
                           label={`移除 ${a.name}`}
                           onClick={() =>
@@ -764,11 +869,32 @@ export default function Workspace(props: WorkspaceProps) {
                     )}
                   </div>
                 )}
+                {reading && (
+                  <div className="attachment-reading" role="status">
+                    <CircleNotch className="spin" size={17} />
+                    <span>
+                      {reading.name}
+                      <small>{reading.status}</small>
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => fileRead.current?.abort()}
+                    >
+                      取消读取
+                    </button>
+                  </div>
+                )}
                 <textarea
                   aria-label="任务输入"
                   placeholder="描述你想完成的工作，添加文件，或选择技能"
                   value={text}
                   onChange={(e) => setText(e.target.value)}
+                  onPaste={(e) => {
+                    if (e.clipboardData.files.length) {
+                      e.preventDefault();
+                      void chooseFiles(e.clipboardData.files);
+                    }
+                  }}
                   onKeyDown={(e) => {
                     if (
                       e.key === "Enter" &&
@@ -783,10 +909,8 @@ export default function Workspace(props: WorkspaceProps) {
                 <div className="composer-tools">
                   <IconButton
                     label="添加文件"
-                    onClick={() => {
-                      if (window.brainDesktop) void chooseFiles();
-                      else filesRef.current?.click();
-                    }}
+                    disabled={!!reading || busy}
+                    onClick={() => filesRef.current?.click()}
                   >
                     <Plus size={23} />
                   </IconButton>
@@ -901,7 +1025,9 @@ export default function Workspace(props: WorkspaceProps) {
                   <button
                     className="send"
                     aria-label="发送任务"
-                    disabled={!text.trim() || busy}
+                    disabled={
+                      (!text.trim() && !attachments.length) || busy || !!reading
+                    }
                     onClick={() => void send()}
                   >
                     {busy ? (
@@ -914,7 +1040,7 @@ export default function Workspace(props: WorkspaceProps) {
               </div>
               <div className="composer-note">
                 <HardDrives size={12} />
-                记录保存在本机 · 调用时向所选服务发送必要内容
+                支持 Word、PDF、表格、图片与短视频 · Office 由公司服务临时解析
               </div>
             </div>
           </section>
@@ -1535,12 +1661,58 @@ export default function Workspace(props: WorkspaceProps) {
         hidden
         ref={filesRef}
         type="file"
+        aria-label="选择附件"
+        accept={ATTACHMENT_ACCEPT}
         multiple
         onChange={(e) => {
           void chooseFiles(e.target.files);
           e.target.value = "";
         }}
       />
+      {attachmentPreview && (
+        <Modal
+          title={attachmentPreview.name}
+          close={() => setAttachmentPreview(null)}
+          wide
+        >
+          <div className="attachment-preview">
+            <p>{attachmentPreview.summary ?? "已读取附件"}</p>
+            {!!attachmentPreview.warnings?.length && (
+              <div className="attachment-notes">
+                {attachmentPreview.warnings.map((note, i) => (
+                  <p key={i}>{note}</p>
+                ))}
+              </div>
+            )}
+            {!!visualInputs(attachmentPreview).length && (
+              <div className="attachment-frames">
+                {visualInputs(attachmentPreview).map((frame, i) => (
+                  <button
+                    key={i}
+                    type="button"
+                    onClick={() => {
+                      setPreview(frame.image);
+                      setAttachmentPreview(null);
+                    }}
+                  >
+                    <img src={frame.image} alt={frame.label} />
+                    <span>{frame.label}</span>
+                  </button>
+                ))}
+              </div>
+            )}
+            {attachmentPreview.content && (
+              <pre tabIndex={0} aria-label="已读取的附件内容">
+                {attachmentPreview.content}
+              </pre>
+            )}
+            <p className="muted">
+              Office
+              文档由公司服务临时解析，不保存原文件。发送后，提取的文字和画面会交给所选模型分析。
+            </p>
+          </div>
+        </Modal>
+      )}
       {skillDraft && (
         <SkillEditor
           {...props}

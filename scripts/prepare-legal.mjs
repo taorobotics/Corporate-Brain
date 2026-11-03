@@ -60,6 +60,7 @@ for (const name of [
   "react-dom",
   "@base-ui/react",
   "@phosphor-icons/react",
+  "pdfjs-dist",
 ])
   visit(locate("", name));
 let notices =

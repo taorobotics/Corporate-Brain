@@ -9,11 +9,13 @@ import { dshProgress } from "./dsh-progress";
 import type { DshMode, WorkspaceAccess } from "../shared/types";
 import { createChatDeadline } from "./chat-deadline";
 import { materializeSkill, type SkillResources } from "./skill-library";
+import { visualInputs } from "../shared/attachments";
 
 export type DshAttachment = {
   name: string;
   content?: string;
   image?: string;
+  images?: { label: string; image: string }[];
 };
 
 export type DshMessage = {
@@ -264,7 +266,7 @@ export class DshManager {
       : "";
     const textParts = [
       system,
-      options.attachments.some((attachment) => attachment.image)
+      options.attachments.some((attachment) => visualInputs(attachment).length)
         ? "图片处理提示：原图已作为图像输入提供。请先直接分析能看清的内容，普通识图或题目讲解不要默认变成编程任务。仅在必要时使用工具旋转、裁剪；不要反复放大同一区域或猜测模糊、截断的文字。无法确定的部分请明确说明，并请用户补充清晰完整的图片。若用户明确要求编程、文件操作或联网，仍按其要求使用所需工具。"
         : "",
       history ? `此前对话记录：\n${history}` : "",
@@ -276,13 +278,13 @@ export class DshManager {
     ];
     let fileIndex = 0;
     for (const attachment of options.attachments) {
-      if (attachment.image) {
-        blocks.push(imageBlock(attachment.image));
-        blocks.push({ type: "text", text: `图片附件：${attachment.name}` });
-        continue;
+      for (const visual of visualInputs(attachment)) {
+        blocks.push({ type: "text", text: `附件画面：${visual.label}` });
+        blocks.push(imageBlock(visual.image));
       }
+      if (!attachment.content) continue;
       const fileName = safeName(
-        attachment.name,
+        `attachment-${fileIndex++}-${attachment.name}.txt`,
         `attachment-${fileIndex++}.txt`,
       );
       const path = join(workspace, fileName);

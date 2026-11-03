@@ -75,7 +75,7 @@ export type Message = {
   modelName?: string;
   usage?: { inputTokens?: number; outputTokens?: number; totalTokens?: number };
   feedback?: import("./feedback").FeedbackReceipt;
-  attachments?: { name: string; content: string; image?: string }[];
+  attachments?: import("./attachments").Attachment[];
   trace?: import("./chat-progress").ChatTrace;
   at: string;
 };

@@ -16,6 +16,13 @@ import type { User, Skill, Connection } from "../shared/types";
 import { mountUpdates } from "./updates";
 import { mountFeedback } from "./feedback";
 import { mountNas, type NasOptions } from "./nas";
+import { mountDocuments } from "./documents";
+import {
+  visualInputs,
+  validateAttachmentBudget,
+  unsupportedDeepSeekVision,
+  ATTACHMENT_CONTEXT_RULE,
+} from "../shared/attachments";
 import { DshManager, DshUnavailableError } from "./dsh";
 import { syncDeepSeekConnections } from "./deepseek-sync";
 import type { ChatProgress } from "../shared/chat-progress";
@@ -36,7 +43,25 @@ const attachment = z
   .object({
     name: z.string().trim().min(1).max(200),
     content: z.string().max(2_000_000).default(""),
-    image: z.string().max(12_000_000).optional(),
+    image: z
+      .string()
+      .max(12_000_000)
+      .regex(/^data:image\/(?:png|jpeg|webp|gif);base64,[A-Za-z0-9+/\r\n]+=*$/)
+      .optional(),
+    images: z
+      .array(
+        z
+          .object({
+            label: z.string().max(200),
+            image: z
+              .string()
+              .max(1_400_000)
+              .regex(/^data:image\/(?:jpeg|png|webp);base64,[A-Za-z0-9+/]+=*$/),
+          })
+          .strict(),
+      )
+      .max(8)
+      .optional(),
   })
   .strict();
 const password = z.string().min(12, "密码至少 12 位").max(128);
@@ -347,6 +372,7 @@ export function createPlatform(
   mountUpdates(app, options.updates);
   mountFeedback(app, store, getActor, fail);
   mountNas(app, store, getActor, fail, options.nas);
+  mountDocuments(app, store, getActor, fail);
   app.post("/api/auth/logout", (req, res) => {
     db.prepare("DELETE FROM sessions WHERE token_hash=?").run(
       tokenHash(req.cookies.brain_session),
@@ -841,6 +867,22 @@ export function createPlatform(
       .strict()
       .parse(req.body);
     const row = getConnection(data.connectionId, actor, "chat");
+    try {
+      validateAttachmentBudget(data.attachments);
+    } catch (error) {
+      fail(413, (error as Error).message);
+    }
+    const visuals = data.attachments.flatMap(visualInputs);
+    if (visuals.length && unsupportedDeepSeekVision(row.base_url, row.model))
+      fail(
+        400,
+        "当前 DeepSeek 模型不支持图像输入。请切换 DeepSeek Flash 后分析图片、PDF 页面或视频画面。",
+      );
+    if (data.attachments.length)
+      data.messages.unshift({
+        role: "system",
+        content: ATTACHMENT_CONTEXT_RULE,
+      });
     let skillResources: SkillResources | undefined;
     if (data.skillId) {
       const skill = skillById(data.skillId);
@@ -901,7 +943,7 @@ export function createPlatform(
       let usage:
         | { inputTokens?: number; outputTokens?: number; totalTokens?: number }
         | undefined;
-      const hasImageAttachment = data.attachments.some((item) => item.image);
+      const hasImageAttachment = visuals.length > 0;
       try {
         if (!dsh) throw new DshUnavailableError("DSH 已由管理员停用");
         const result = await dsh.runDetailed({
@@ -952,12 +994,10 @@ export function createPlatform(
             ...message,
             content: [
               { type: "text", text: `${message.content}${textAttachments}` },
-              ...data.attachments
-                .filter((item) => item.image)
-                .map((item) => ({
-                  type: "image_url",
-                  image_url: { url: item.image },
-                })),
+              ...visuals.flatMap((item) => [
+                { type: "text", text: `附件画面：${item.label}` },
+                { type: "image_url", image_url: { url: item.image } },
+              ]),
             ],
           };
         });
