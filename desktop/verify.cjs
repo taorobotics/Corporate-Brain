@@ -213,6 +213,7 @@ async function waitFor(test, label, timeout = 12000) {
   checks.push(
     "Pre-login window controls minimize, maximize, restore and request native close on Windows; macOS keeps native controls",
   );
+  assert.equal(await js("getComputedStyle(document.querySelector('.auth-card .brand-mark')).backgroundColor.replaceAll(' ', '')"), "rgba(0,0,0,0)", "Login logo must show the page through its transparent spaces");
   await capture("client-login-window-controls.png");
   await click("隐私与许可");
   await waitFor(() => has("公司大脑隐私说明"), "pre-login privacy policy");

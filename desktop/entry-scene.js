@@ -4,7 +4,7 @@
 (() => {
   if (customElements.get("brain-entry-scene")) return;
   const logo = location.protocol === "file:" ? "./brand/logo.png" : "/brand/logo.png";
-  const mark = `<span class="entry-logo-plate"><img class="entry-logo" src="${logo}" width="512" height="512" alt="" decoding="sync"></span>`;
+  const mark = `<span class="entry-logo-wrap"><img class="entry-logo" src="${logo}" width="512" height="512" alt="" decoding="sync"></span>`;
   class EntryScene extends HTMLElement {
     static get observedAttributes() {
       return ["theme", "phase", "headline", "detail"];

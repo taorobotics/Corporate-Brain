@@ -84,6 +84,7 @@ async function waitFor(check, label) {
     () => evalOverlay("Array.from(document.querySelectorAll('.entry-logo')).length === 2 && Array.from(document.querySelectorAll('.entry-logo')).every(img => img.complete && img.naturalWidth === 512)"),
     "bundled company logo loads offline under startup CSP",
   );
+  assert.equal(await evalOverlay("getComputedStyle(document.querySelector('.entry-logo-wrap')).backgroundColor.replaceAll(' ', '')"), "rgba(0,0,0,0)", "Startup logo must not have a white plate");
   checks.push(
     "Warm startup remains responsive offline; default ignores dark OS; minimal isolated preload",
   );
