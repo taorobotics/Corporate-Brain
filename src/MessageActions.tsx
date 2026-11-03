@@ -5,7 +5,6 @@ import {
   ThumbsUp,
   ThumbsDown,
   ShareNetwork,
-  ChatTeardropText,
   Database,
   DownloadSimple,
 } from "@phosphor-icons/react";
@@ -112,6 +111,9 @@ export default function MessageActions({
     setError("");
     setDialog("feedback");
   }
+  const negativeFeedback =
+    message.feedback?.rating === "unhelpful" ||
+    message.feedback?.rating === "issue";
   const time = new Date(message.at);
   const total =
     message.usage?.totalTokens ??
@@ -165,19 +167,13 @@ export default function MessageActions({
           "没有帮助",
           <ThumbsDown
             size={17}
-            weight={
-              message.feedback?.rating === "unhelpful" ? "fill" : "regular"
-            }
+            weight={negativeFeedback ? "fill" : "regular"}
           />,
-          () => openFeedback("unhelpful"),
-          message.feedback?.rating === "unhelpful",
-          busy,
-        )}
-        {action(
-          "反馈问题",
-          <ChatTeardropText size={17} />,
-          () => openFeedback(message.feedback?.rating ?? "issue"),
-          message.feedback?.rating === "issue",
+          () =>
+            openFeedback(
+              message.feedback?.rating === "issue" ? "issue" : "unhelpful",
+            ),
+          negativeFeedback,
           busy,
         )}
         {action(

@@ -11,6 +11,10 @@ module.exports = async ({
   capture,
   checks,
 }) => {
+  assert.deepEqual(
+    await js(`Array.from(document.querySelectorAll('.message-actions .message-action'), button => button.getAttribute('aria-label'))`),
+    ["复制回答", "有帮助", "没有帮助", "分享回答"],
+  );
   await click("复制回答");
   await waitFor(
     () => js(`document.body.innerText.includes('已复制')`),
@@ -117,7 +121,25 @@ module.exports = async ({
       ),
     "feedback selection survives page navigation",
   );
+  // Issue feedback remains editable through the single thumbs-down entry.
+  await click("没有帮助");
+  await selectOption("评价", "问题反馈");
+  await click("提交反馈");
+  await waitFor(() => js(`!document.querySelector('.modal')`), "issue saved");
+  assert.equal((await request("/admin/feedback")).rows[0].rating, "issue");
+  assert.equal(
+    await js(`document.querySelector('.message-action[aria-label="没有帮助"]').getAttribute('aria-pressed')`),
+    "true",
+  );
+  await click("没有帮助");
+  await waitFor(
+    () => js(`document.querySelector('.modal')?.textContent.includes('问题反馈')`),
+    "issue rating retained when reopened through thumbs down",
+  );
+  await capture("answer-feedback-single-entry.png");
+  await js(`document.querySelector('.modal [aria-label="关闭弹窗"]').click()`);
+  await capture("answer-actions-single-feedback.png");
   checks.push(
-    "Native answer copy/share, thumbs up/down, opt-in question/answer snapshot without reasoning, deduplicated real feedback API, escaped admin table, filters and persisted handling status",
+    "Four answer actions with a single thumbs-down feedback entry; native copy/share, helpful/unhelpful and issue feedback editing, opt-in question/answer snapshot without reasoning, deduplicated real feedback API, escaped admin table, filters and persisted handling status",
   );
 };
