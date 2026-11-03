@@ -1,0 +1,453 @@
+{
+  "version": "0.17.1",
+  "sourceCommit": "aa128330d72324b65eade2c8beb9adf06e53eb6e",
+  "recordedAt": "2026-11-03T09:26:05.298Z",
+  "result": "private-lan-delivered; complete-github-release-blocked",
+  "brand": {
+    "master": "assets/brand/logo-master.png",
+    "sha256": "5d72bf4e50bb9a0681c72b3fcea6ca89414669ae5d7c94f9c51eb9fe25128d1a",
+    "surfaces": [
+      "employee sidebar",
+      "admin header",
+      "authentication",
+      "offline native startup",
+      "web startup",
+      "conversation welcome",
+      "company connection",
+      "browser favicon",
+      "Windows executable/window/taskbar/installer/uninstaller/shortcuts",
+      "macOS application icon"
+    ],
+    "whitePlate": true,
+    "themeIndependent": true,
+    "externalImageRequests": false,
+    "windowsIcoSizes": [
+      16,
+      20,
+      24,
+      32,
+      40,
+      48,
+      64,
+      128,
+      256
+    ],
+    "macIcnsSizes": [
+      16,
+      32,
+      64,
+      128,
+      256,
+      512,
+      1024
+    ]
+  },
+  "packages": [
+    {
+      "name": "Corporate-Brain-Setup-0.17.1-x64.exe",
+      "sha256": "8664c39c7b3351e9029125aa3f1aafec25adc4230ea85d9e684519fc20d9b84e",
+      "bytes": 119887525
+    },
+    {
+      "name": "Corporate-Brain-0.17.1-macOS-arm64.dmg",
+      "sha256": "05a30b643eedf47db22bab96765d0af0f3987e0007d064e5f9fa9c483aa8bd23",
+      "bytes": 138181195
+    },
+    {
+      "name": "Corporate-Brain-Server-0.17.1.zip",
+      "sha256": "4b5ef7d72b85783655bf3acc5ebd970fb85c2b52e0b6963266860ae3a03d338d",
+      "bytes": 22505045
+    }
+  ],
+  "deployment": {
+    "health": {
+      "status": "ok",
+      "version": "0.17.1",
+      "chatStorage": "device-only"
+    },
+    "dataPreserved": true,
+    "modelSettingsPreserved": true,
+    "modelCredentialsPreserved": true,
+    "avatarAssetsVerified": 100,
+    "backupCompleted": true,
+    "writeBoundary": "Company project directory on Mac mini; other projects and existing cloud server unchanged",
+    "httpsBrandAssets": {
+      "version": "0.17.1",
+      "result": "passed",
+      "checkedAt": "2026-11-03T09:23:21.507Z",
+      "tlsVerified": true,
+      "health": {
+        "status": "ok",
+        "version": "0.17.1",
+        "chatStorage": "device-only"
+      },
+      "assets": [
+        {
+          "name": "brand/logo.png",
+          "bytes": 179208,
+          "sha256": "1272ed57463544f3224d592c5e56704996e6c584b6d31826aa515dd16db9d752"
+        },
+        {
+          "name": "favicon.ico",
+          "bytes": 80630,
+          "sha256": "3e6f1e5792abbc94e62915091a1a4190485c311d381c73b62eae02b525d9ea5a"
+        },
+        {
+          "name": "apple-touch-icon.png",
+          "bytes": 27442,
+          "sha256": "1b07ebecaac968e1c1f134b1ad512e578cbaa76c24867008d02c7f62db33fc66"
+        }
+      ],
+      "checks": [
+        "Actual LAN HTTPS serves all three generated brand assets with matching SHA-256; no TLS bypass"
+      ]
+    }
+  },
+  "verification": {
+    "unitTests": {
+      "node": {
+        "passed": 68,
+        "failed": 0
+      },
+      "python": {
+        "passed": 5,
+        "failed": 0
+      }
+    },
+    "windowsPackage": {
+      "version": "0.17.1",
+      "result": "passed",
+      "scope": "Windows local package, full Electron UI, startup and installer UI; complete release still requires disposable lifecycle and Intel Mac verification",
+      "sourceCommit": "aa128330d72324b65eade2c8beb9adf06e53eb6e",
+      "artifact": "Corporate-Brain-Setup-0.17.1-x64.exe",
+      "bytes": 119887525,
+      "sha256": "8664c39c7b3351e9029125aa3f1aafec25adc4230ea85d9e684519fc20d9b84e",
+      "metadata": {
+        "ProductName": "公司大脑",
+        "ProductVersion": "0.17.1.0",
+        "FileDescription": "公司大脑",
+        "SignatureStatus": "NotSigned"
+      },
+      "installerUiChecks": [
+        "Primary and secondary buttons visibly depress and recover without activating",
+        "Native welcome page, privacy and license links are visible",
+        "Native path page shows actual space, directory and shortcut selection",
+        "Cancellation requires confirmation and exits before installing"
+      ],
+      "realInstallUpgradeUninstall": false,
+      "published": false,
+      "desktopVerification": {
+        "result": "passed",
+        "runtime": "Electron real window + real preload bridge",
+        "productionModelsCalled": false,
+        "database": "disposable in-memory",
+        "checks": [
+          "Pre-login window controls minimize, maximize, restore and request native close on Windows; macOS keeps native controls",
+          "Shared cinematic startup, authentication, profile preparation and welcome reveal replace the old loading screen",
+          "First administrator setup and login through UI",
+          "Desktop workspace scanner reads text files and excludes dependency directories",
+          "Client discovers a fixture release, shows sidebar and details, downloads through authenticated server, verifies SHA-256, and blocks installer execution in development QA",
+          "Native maximize and fullscreen use straight edges; restored windows recover small corners",
+          "Custom composer selects workspaces, DSH modes and permission levels with keyboard and pointer",
+          "Empty model picker explains configuration and opens the real model settings",
+          "Source links reach the system browser; credential-bearing URLs and non-web protocols are rejected without opening an application window",
+          "Process is bounded to 220px/160px, follows reasoning internally, pauses on wheel/keyboard and resumes without moving the outer chat; first answer collapses once and manual reopening persists; outer answer, images and resize follow while manual chat reading remains stable",
+          "Native answer copy/share, thumbs up/down, opt-in question/answer snapshot without reasoning, deduplicated real feedback API, escaped admin table, filters and persisted handling status",
+          "Real streamed reasoning/tool event fixtures, source links, expandable disclosure, separate answer, static reduced-motion Grok-ball, local trace reload, partial error/cancel, no-reasoning fallback and conversation isolation",
+          "Configured model picker filters by task kind and persists selection; QA fixtures never call a model",
+          "Top edit menu restores the original input target and invokes its native action; account menu supports keyboard navigation",
+          "Admin page retains the shared Windows controls without duplicating native macOS controls",
+          "Admin dropdown filters and form values work; portalled menus preserve dialog Escape handling",
+          "Company model authorization shows department names and keeps checkboxes at their intended size",
+          "Unconfigured generation is explicit; message persisted on the local disk",
+          "Local history restored after reloading",
+          "Conversation preview defaults closed, opens from an image, resizes with keyboard and closes",
+          "UI source selection, local draft and package preview submit workflow",
+          "Company-scope review through the real UI",
+          "Published package downloaded and installed locally",
+          "NAS admin creates an encrypted source with explicit department scope; employee browsing supports breadcrumbs, nested directories, metadata, name search and blocked links in light/dark narrow layouts; no NAS file content or model call",
+          "GitHub and actual ZIP upload previews preserve references/license, require acknowledgement, publish or submit for review, install locally and fit a dark narrow window",
+          "Default/light/dark appearance selection saves native startup preference; default remains light",
+          "Theme dropdown updates local preferences and renders readable dark menu states",
+          "62 skins: search, live preview without persistence, cancel, artwork, dark mode, native save/reload, restore Claude default",
+          "Window controls persist after logout, during connection, after a failed response and after retry",
+          "Skin preferences are isolated per employee; new employee receives Claude default",
+          "First login change; second employee isolated; IPC rejects another employee profile",
+          "Another employee installs the shared Skill without author history",
+          "Non-conversation screens do not open the far-right preview",
+          "900px desktop viewport has no document overflow",
+          "Dropdown collision positioning stays inside a 900px desktop viewport",
+          "Online pre-login and offline company-connection windows expose original license and privacy policy with isolated local legal viewer",
+          "Native company server setup rejects insecure remote HTTP and connects to the verified company API"
+        ],
+        "consoleErrors": [],
+        "screenshots": "Isolated synthetic verification output"
+      },
+      "startupVerification": {
+        "result": "passed",
+        "checks": [
+          "Warm startup remains responsive offline; default ignores dark OS; minimal isolated preload",
+          "Painted app reveals while a subresource is still pending; skip never exposes a blank navigation",
+          "Remote renderer is rejected by startup-only retry IPC",
+          "Timeout leaves actionable local screen and real retry button reconnects",
+          "Transient HTTP 503 automatically retries and recovers",
+          "Explicit dark persists per company; invalid preferences rejected; preview closes without navigation",
+          "Default restores warm appearance; reduced-motion disables rotation",
+          "Superseded attempts cannot replace a successful newer navigation",
+          "Certificate failures never bypass TLS; closing cancels attempts and destroys overlay"
+        ],
+        "productionModelsCalled": false
+      },
+      "checks": [
+        "ASAR file allowlist and source bytes including approved local logo",
+        "Windows ICO contains nine resolutions and installer uses identical brand ICO",
+        "Executable product name and version match release",
+        "Full Windows desktop UI and native clipboard passed; no console errors",
+        "Offline native startup loads the local logo under CSP"
+      ]
+    },
+    "macArm64Package": {
+      "version": "0.17.1",
+      "architecture": "arm64",
+      "platform": "darwin",
+      "os": "27.0.1",
+      "sourceCommit": "aa128330d72324b65eade2c8beb9adf06e53eb6e",
+      "workflowRun": null,
+      "createdAt": "2026-11-03T09:18:16.092Z",
+      "artifact": "Corporate-Brain-0.17.1-macOS-arm64.dmg",
+      "bytes": 138181195,
+      "sha256": "05a30b643eedf47db22bab96765d0af0f3987e0007d064e5f9fa9c483aa8bd23",
+      "signing": "ad-hoc",
+      "developerIdSigned": false,
+      "notarized": false,
+      "physicalEmployeeMacTested": false,
+      "files": [
+        "appearance.cjs",
+        "brand/app-icon.png",
+        "brand/logo.png",
+        "entry-scene.css",
+        "entry-scene.js",
+        "fonts.css",
+        "fonts/NotoSansSC-VF.woff2",
+        "fonts/OFL.txt",
+        "fonts/source.json",
+        "legal.html",
+        "legal/CODE_SIGNING_POLICY.md",
+        "legal/LICENSE",
+        "legal/PRIVACY.md",
+        "legal/THIRD_PARTY_NOTICES.txt",
+        "main.cjs",
+        "package.json",
+        "preload.cjs",
+        "production.cjs",
+        "server-preload.cjs",
+        "server-setup.html",
+        "server-setup.js",
+        "startup-preload.cjs",
+        "startup.cjs",
+        "startup.css",
+        "startup.html",
+        "startup.js",
+        "updates.cjs"
+      ],
+      "checks": [
+        "DMG integrity, native architecture, bundle version and ad-hoc code signature",
+        "Bundled MIT, privacy and dependency notices match source; Electron/Chromium notices retained",
+        "Client-only ASAR allowlist: no company database, credentials or development dependencies",
+        "Packaged company URL matches release configuration; first launch loads an isolated company fixture and opens administrator connection UI with isolated preload and Chinese fonts",
+        "Packaged client rejects insecure remote company URLs"
+      ],
+      "firstLaunch": {
+        "title": "连接公司大脑",
+        "heading": "公司大脑未配置",
+        "bridge": "function",
+        "node": "undefined",
+        "font": "\"PingFang SC\", \"Microsoft YaHei\", \"Noto Sans SC\", \"Segoe UI\", Arial, sans-serif"
+      },
+      "desktopVerification": {
+        "result": "passed",
+        "runtime": "Electron real window + real preload bridge",
+        "productionModelsCalled": false,
+        "database": "disposable in-memory",
+        "checks": [
+          "Pre-login window controls minimize, maximize, restore and request native close on Windows; macOS keeps native controls",
+          "Shared cinematic startup, authentication, profile preparation and welcome reveal replace the old loading screen",
+          "First administrator setup and login through UI",
+          "Desktop workspace scanner reads text files and excludes dependency directories",
+          "Client discovers a fixture release, shows sidebar and details, downloads through authenticated server, verifies SHA-256, and blocks installer execution in development QA",
+          "Custom composer selects workspaces, DSH modes and permission levels with keyboard and pointer",
+          "Empty model picker explains configuration and opens the real model settings",
+          "Source links reach the system browser; credential-bearing URLs and non-web protocols are rejected without opening an application window",
+          "Process is bounded to 220px/160px, follows reasoning internally, pauses on wheel/keyboard and resumes without moving the outer chat; first answer collapses once and manual reopening persists; outer answer, images and resize follow while manual chat reading remains stable",
+          "Native answer copy/share, thumbs up/down, opt-in question/answer snapshot without reasoning, deduplicated real feedback API, escaped admin table, filters and persisted handling status",
+          "Real streamed reasoning/tool event fixtures, source links, expandable disclosure, separate answer, static reduced-motion Grok-ball, local trace reload, partial error/cancel, no-reasoning fallback and conversation isolation",
+          "Configured model picker filters by task kind and persists selection; QA fixtures never call a model",
+          "Top edit menu restores the original input target and invokes its native action; account menu supports keyboard navigation",
+          "Admin page retains the shared Windows controls without duplicating native macOS controls",
+          "Admin dropdown filters and form values work; portalled menus preserve dialog Escape handling",
+          "Company model authorization shows department names and keeps checkboxes at their intended size",
+          "Unconfigured generation is explicit; message persisted on the local disk",
+          "Local history restored after reloading",
+          "Conversation preview defaults closed, opens from an image, resizes with keyboard and closes",
+          "UI source selection, local draft and package preview submit workflow",
+          "Company-scope review through the real UI",
+          "Published package downloaded and installed locally",
+          "NAS admin creates an encrypted source with explicit department scope; employee browsing supports breadcrumbs, nested directories, metadata, name search and blocked links in light/dark narrow layouts; no NAS file content or model call",
+          "GitHub and actual ZIP upload previews preserve references/license, require acknowledgement, publish or submit for review, install locally and fit a dark narrow window",
+          "Default/light/dark appearance selection saves native startup preference; default remains light",
+          "Theme dropdown updates local preferences and renders readable dark menu states",
+          "62 skins: search, live preview without persistence, cancel, artwork, dark mode, native save/reload, restore Claude default",
+          "Window controls persist after logout, during connection, after a failed response and after retry",
+          "Skin preferences are isolated per employee; new employee receives Claude default",
+          "First login change; second employee isolated; IPC rejects another employee profile",
+          "Another employee installs the shared Skill without author history",
+          "Non-conversation screens do not open the far-right preview",
+          "900px desktop viewport has no document overflow",
+          "Dropdown collision positioning stays inside a 900px desktop viewport",
+          "Online pre-login and offline company-connection windows expose original license and privacy policy with isolated local legal viewer",
+          "Native company server setup rejects insecure remote HTTP and connects to the verified company API"
+        ],
+        "consoleErrors": [],
+        "screenshots": "Isolated synthetic verification output"
+      },
+      "startupVerification": {
+        "result": "passed",
+        "checks": [
+          "Warm startup remains responsive offline; default ignores dark OS; minimal isolated preload",
+          "Painted app reveals while a subresource is still pending; skip never exposes a blank navigation",
+          "Remote renderer is rejected by startup-only retry IPC",
+          "Timeout leaves actionable local screen and real retry button reconnects",
+          "Transient HTTP 503 automatically retries and recovers",
+          "Explicit dark persists per company; invalid preferences rejected; preview closes without navigation",
+          "Default restores warm appearance; reduced-motion disables rotation",
+          "Superseded attempts cannot replace a successful newer navigation",
+          "Certificate failures never bypass TLS; closing cancels attempts and destroys overlay"
+        ],
+        "productionModelsCalled": false
+      }
+    },
+    "profileWindows": {
+      "version": "0.17.1",
+      "result": "passed",
+      "checks": [
+        "New account receives a real local preset; 100 choices, Chinese search and name/avatar save update sidebar and account API",
+        "Cancel discards unsaved edits; English search, actual file picker, crop controls and normalized custom avatar persist on server",
+        "Reload retains server profile; custom avatar can return to preset; 640px dark layout has no horizontal overflow"
+      ],
+      "consoleErrors": [],
+      "syntheticAccountsOnly": true,
+      "externalImageRequests": false
+    },
+    "profileMac": {
+      "version": "0.17.1",
+      "result": "passed",
+      "checks": [
+        "New account receives a real local preset; 100 choices, Chinese search and name/avatar save update sidebar and account API",
+        "Cancel discards unsaved edits; English search, actual file picker, crop controls and normalized custom avatar persist on server",
+        "Reload retains server profile; custom avatar can return to preset; 640px dark layout has no horizontal overflow"
+      ],
+      "consoleErrors": [],
+      "syntheticAccountsOnly": true,
+      "externalImageRequests": false
+    },
+    "productionUiWindows": {
+      "version": "0.17.1",
+      "result": "passed",
+      "platform": "win32",
+      "checks": [
+        "Native directory selection, original material upload and model-driven source generation through real UI",
+        "Changing pages keeps native collection active; all 4 files verified on disk before server directory disappears",
+        "Settings and My Works show native account-specific location and saved receipt"
+      ],
+      "taskStatus": "saved",
+      "fileCount": 4,
+      "realProviderCalls": 0,
+      "syntheticFixtureProvider": true,
+      "serverFilesRemoved": true
+    },
+    "productionUiMac": {
+      "version": "0.17.1",
+      "result": "passed",
+      "platform": "darwin",
+      "checks": [
+        "Native directory selection, original material upload and model-driven source generation through real UI",
+        "Changing pages keeps native collection active; all 4 files verified on disk before server directory disappears",
+        "Settings and My Works show native account-specific location and saved receipt"
+      ],
+      "taskStatus": "saved",
+      "fileCount": 4,
+      "realProviderCalls": 0,
+      "syntheticFixtureProvider": true,
+      "serverFilesRemoved": true
+    },
+    "macVideoRegression": {
+      "platform": "darwin",
+      "arch": "arm64",
+      "seconds": 3,
+      "frames": 72,
+      "width": 1280,
+      "height": 720,
+      "audio": true,
+      "sourceRetained": true,
+      "materialRetained": true,
+      "rendererTempRemoved": true,
+      "networkBlocked": true,
+      "nodeUnavailable": true,
+      "elapsedMs": 894,
+      "video": "Isolated synthetic verification output",
+      "sha256": "d170d88adc3915053998d42a47497fd7eea12f58510cfedaa7d4b0cbad8d7609",
+      "bytes": 135833
+    },
+    "authenticatedUpdateDownloads": {
+      "version": "0.17.1",
+      "result": "passed",
+      "results": [
+        {
+          "platform": "win32-x64",
+          "bytes": 119887525,
+          "sha256": "8664c39c7b3351e9029125aa3f1aafec25adc4230ea85d9e684519fc20d9b84e"
+        },
+        {
+          "platform": "darwin-arm64",
+          "bytes": 138181195,
+          "sha256": "05a30b643eedf47db22bab96765d0af0f3987e0007d064e5f9fa9c483aa8bd23"
+        }
+      ],
+      "checks": [
+        "Authenticated LAN feed advertises 0.17.1; full Windows and Mac downloads match advertised sizes and SHA-256"
+      ],
+      "checkedAt": "2026-11-03T09:24:03.402Z"
+    },
+    "secretScan": {
+      "tool": "Gitleaks 8.30.1",
+      "scope": "All reachable history and staged delivery changes",
+      "findings": 0
+    }
+  },
+  "delivery": {
+    "windowsAndMacArm64ChannelsActivated": true,
+    "authenticatedFullDownloadsAndHashesVerified": true,
+    "windowsSigned": false,
+    "macSigning": "ad-hoc; not notarized",
+    "originalLicense": "MIT; third-party licenses retained",
+    "includesCompanyData": false,
+    "includesFfmpegExecutable": false
+  },
+  "completeGithubRelease": {
+    "published": false,
+    "draftOnly": true,
+    "workflow": "https://github.com/taorobotics/Corporate-Brain/actions/runs/41609509390",
+    "blockedBy": "GitHub Actions: recent account payments failed or spending limit requires increase",
+    "outstanding": [
+      "Native Intel Mac installer and verification",
+      "Disposable Windows install/upgrade/uninstall lifecycle verification",
+      "All required platform checks and complete assets before publishing as latest"
+    ],
+    "uploadedDraft": {
+      "id": 432490534,
+      "url": "https://github.com/taorobotics/Corporate-Brain/releases/tag/untagged-c0908312d00566becd1d",
+      "assetCount": 5,
+      "allRemoteSizesAndSha256Match": true
+    }
+  }
+}
