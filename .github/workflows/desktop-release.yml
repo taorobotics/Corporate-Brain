@@ -86,6 +86,7 @@ jobs:
       - run: npm test
       - run: npm run build
       - run: npm run test:desktop
+      - run: npm run test:profile
       - name: Build Windows installer
         if: matrix.platform == 'Windows'
         run: node scripts/package-desktop.mjs --win nsis --x64 --publish never

@@ -1,0 +1,4 @@
+# Verified synthetic password used only by desktop/verify-attachments.cjs against
+# server/qa.ts (:memory: database). Not a real deployment credential.
+# Exact historical fingerprint only; no path-wide or generic-key suppression.
+a42361aa7fc9ec4d2490f38bad4308bc956c5e28:desktop/verify-attachments.cjs:generic-api-key:85

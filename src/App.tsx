@@ -46,6 +46,7 @@ import { useDesktopUpdates, UpdateButton, UpdateDialog } from "./Updates";
 import SkinCenter, { type SkinSelection } from "./Skins";
 import { getSkin, skinTokens } from "../shared/skins";
 import EntryExperience from "./EntryExperience";
+import { Avatar } from "./Profile";
 
 const navigation = [
   { id: "chat", label: "新建任务", icon: NotePencil },
@@ -56,6 +57,7 @@ const navigation = [
 ];
 export type WorkspaceProps = {
   user: User;
+  updateUser: (user: User) => void;
   state: LocalState;
   setState: React.Dispatch<React.SetStateAction<LocalState>>;
   page: string;
@@ -385,6 +387,7 @@ export default function App() {
   const isAdmin = page.startsWith("admin");
   const workspaceProps: WorkspaceProps = {
     user,
+    updateUser: setUser,
     state,
     setState,
     page,
@@ -518,7 +521,7 @@ export default function App() {
               查看员工端 <ArrowRight size={16} />
             </Button>
             <div className="admin-person">
-              <UserCircle size={30} />
+              <Avatar user={user} size={30} />
               {user.name}
             </div>
           </header>
@@ -647,7 +650,7 @@ export default function App() {
                     className="account-menu-popup"
                     header={
                       <div className="account-summary">
-                        <UserCircle size={32} />
+                        <Avatar user={user} size={32} />
                         <div>
                           <strong>{user.name}</strong>
                           <small>
@@ -721,9 +724,7 @@ export default function App() {
                         className="account-trigger"
                         aria-label="打开账号菜单"
                       >
-                        <span className="avatar">
-                          <UserCircle size={32} weight="duotone" />
-                        </span>
+                        <Avatar user={user} size={36} />
                         <span>
                           <strong>{user.name}</strong>
                           <small>{user.departmentName}</small>

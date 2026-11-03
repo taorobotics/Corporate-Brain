@@ -1,0 +1,16 @@
+IPAS profile avatar collection
+
+Source website: https://ipaslogo.com/
+Companion project: https://github.com/s1dashu/ip-as-logo-skill
+Upstream project author: s1dashu
+Retrieved: 2026-11-03
+Upstream commit: 798d4e65b271a9fdf9a09836f43920d718936686
+
+The website states: "Free to download and use commercially."
+The companion project's README states: "Visit our website to download ready-made logos for free. Every logo is free for commercial use."
+Statement source: https://github.com/s1dashu/ip-as-logo-skill/blob/798d4e65b271a9fdf9a09836f43920d718936686/README.md
+
+This distribution includes 100 randomly selected, distinct public catalog images, downloaded unmodified from the website's official 512px display collection. Chinese descriptive labels were added by Corporate Brain. Original names, source URLs, selection seed and SHA-256 hashes are recorded in docs/assets/ipas-avatar-sources.json.
+
+The companion skill's source code is MIT-licensed. The website artwork is distributed based on the above explicit download/commercial-use statements; Corporate Brain does not relabel third-party artwork as its own MIT-licensed original work, nor claim exclusive trademark rights.
+Employee-uploaded profile images are private deployment data and are never included in this collection or in release packages.

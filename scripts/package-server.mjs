@@ -15,7 +15,8 @@ try {
     await cp(path, join(stage, path), { recursive: true, filter: source => !/[/\\](?:qa\.ts|[^/\\]+\.test\.(?:ts|py)|__pycache__)$/.test(source) && !source.endsWith('.pyc') });
   }
   await mkdir(join(stage, 'docs/releases'), { recursive: true });
-  for (const path of ['docs/DEPLOYMENT.md', 'docs/NAS.md', 'docs/ATTACHMENTS.md', 'docs/RELEASE-POLICY.md', 'docs/UPDATE-DISTRIBUTION.md', 'docs/PRIVACY.md', 'docs/CODE_SIGNING_POLICY.md', 'docs/dependency-licenses.json', `docs/releases/v${version}.md`]) await cp(path, join(stage, path));
+  for (const path of ['docs/DEPLOYMENT.md', 'docs/NAS.md', 'docs/ATTACHMENTS.md', 'docs/PROFILES.md', 'docs/RELEASE-POLICY.md', 'docs/UPDATE-DISTRIBUTION.md', 'docs/PRIVACY.md', 'docs/CODE_SIGNING_POLICY.md', 'docs/dependency-licenses.json', `docs/releases/v${version}.md`]) await cp(path, join(stage, path));
+  await cp('docs/assets', join(stage, 'docs/assets'), { recursive: true });
   await mkdir(join(stage, 'scripts'), { recursive: true });
   await cp('scripts/setup-update-publisher.sh', join(stage, 'scripts/setup-update-publisher.sh'));
   if (process.platform === 'win32') {

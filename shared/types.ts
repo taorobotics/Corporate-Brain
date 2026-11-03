@@ -17,6 +17,7 @@ export type User = {
   username: string;
   name: string;
   departmentId: string;
+  avatar?: string;
   departmentName: string;
   role: Role;
   enabled: number;

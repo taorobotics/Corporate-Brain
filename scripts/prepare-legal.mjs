@@ -83,6 +83,7 @@ notices += `\n\n========== DSH skin catalog, selected artwork and Claude fonts =
 notices += `\n\n========== DSH startup screen (6shenhonghong9/dsh-startup-screen, MIT; pinned commit 7f3d2837c1aaef8293abc69093b0a35c80d0f0e8; adapted dossier layout and palette, no third-party audio/video) ==========\n${await readFile("src/vendor/dsh-startup.LICENSE", "utf8")}\n`;
 notices += `\n\n========== DeepSeek Harness chat indicator (@deepseek-ai/dsh-client-ui-primitives@0.2.0-rc.2, MIT; adapted FishLogo, StateDot and TextShimmer; https://github.com/deepseek-ai/deepseek-harness) ==========\n${await readFile("src/vendor/dsh-chat.LICENSE", "utf8")}\n`;
 // Normalize formatting only; retain all upstream copyright and license wording.
+notices += `\n\n========== IPAS profile avatars ==========\n${await readFile("src/vendor/ipas-avatars.NOTICE", "utf8")}\n`;
 await writeFile("THIRD_PARTY_NOTICES.txt", notices.replace(/[ \t]+$/gm, "").trimEnd() + "\n");
 await mkdir("desktop/legal", { recursive: true });
 for (const [from, to] of [

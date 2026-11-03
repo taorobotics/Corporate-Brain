@@ -17,6 +17,8 @@ import { mountUpdates } from "./updates";
 import { mountFeedback } from "./feedback";
 import { mountNas, type NasOptions } from "./nas";
 import { mountDocuments } from "./documents";
+import { mountProfile } from "./profile";
+import { defaultAvatar } from "../shared/avatars";
 import {
   visualInputs,
   validateAttachmentBudget,
@@ -116,6 +118,7 @@ function userView(row: Row): User {
     id: row.id,
     username: row.username,
     name: row.name,
+    avatar: row.avatar || defaultAvatar(row.id),
     departmentId: row.department_id,
     departmentName: row.department_name,
     role: row.role,
@@ -369,6 +372,9 @@ export function createPlatform(
     next();
   });
   app.get("/api/auth/me", (req, res) => res.json(getActor(req)));
+  mountProfile(app, store, getActor, fail, (userId) =>
+    userView(userById(userId)!),
+  );
   mountUpdates(app, options.updates);
   mountFeedback(app, store, getActor, fail);
   mountNas(app, store, getActor, fail, options.nas);

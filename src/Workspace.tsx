@@ -46,7 +46,6 @@ import {
   WORKSPACE_ACCESS_OPTIONS,
   estimateTokens,
 } from "../shared/workspaces";
-import { roleNames } from "../shared/types";
 import { api, download } from "./api";
 import {
   Brand,
@@ -82,6 +81,7 @@ import {
   type Attachment,
 } from "../shared/attachments";
 import "./attachments.css";
+import Profile, { Avatar } from "./Profile";
 
 export default function Workspace(props: WorkspaceProps) {
   const {
@@ -690,7 +690,7 @@ export default function Workspace(props: WorkspaceProps) {
                   <div key={message.id} className={`message ${message.role}`}>
                     <span className="message-avatar">
                       {message.role === "user" ? (
-                        <UserCircle size={26} />
+                        <Avatar user={user} size={30} />
                       ) : message.trace ? (
                         <GrokBall emotion="19" size={36} active={false} />
                       ) : (
@@ -1475,16 +1475,12 @@ export default function Workspace(props: WorkspaceProps) {
           <section className="settings-content">
             <PageHeader />
             <h2>账号信息</h2>
-            <div className="profile-heading">
-              <UserCircle size={52} weight="duotone" />
-              <div>
-                <strong>{user.name}</strong>
-                <small>
-                  {user.departmentName} · {roleNames[user.role]}
-                </small>
-              </div>
-              <Button onClick={props.openPassword}>修改密码</Button>
-            </div>
+            <Profile
+              user={user}
+              onSaved={props.updateUser}
+              openPassword={props.openPassword}
+              notify={notify}
+            />
             <div className="setting-row">
               <span>登录账号</span>
               <span>{user.username}</span>
