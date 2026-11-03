@@ -1,0 +1,53 @@
+{
+  "version": "0.17.0",
+  "result": "passed",
+  "taskId": "f1fcdc02-cfa7-4f70-98ad-70382b6647d0",
+  "userId": "283f5d66-236c-46d8-92f8-0fb9330f2fe1",
+  "realModelCalls": 1,
+  "modelName": "DeepSeek Flash",
+  "macMiniRendered": true,
+  "windowsNativeCollector": true,
+  "tlsVerified": true,
+  "files": [
+    {
+      "path": "code/README.md",
+      "size": 279,
+      "sha256": "89627728e2afc7454b68a51053b6e93a946646573f370db425ea86a0985d7a83"
+    },
+    {
+      "path": "code/animation.js",
+      "size": 4836,
+      "sha256": "14bc49f5e40deb40f42f46a15b8dc592a6617b09d826d193ab5efc7bdb918ba1"
+    },
+    {
+      "path": "code/render-settings.json",
+      "size": 87,
+      "sha256": "e17dea36178f1fce3611eb5378d7a03635cfc69fd08ca85c8193463bf115d4a4"
+    },
+    {
+      "path": "materials/brief.txt",
+      "size": 111,
+      "sha256": "271b290605a857a96901101ae01defa75606305a425dc4aace4acf3e905b8f2a"
+    },
+    {
+      "path": "materials/square.png",
+      "size": 525,
+      "sha256": "7d59bdf10749674e6b8afc3defa9da70428c098bb388cb1d2f9ca17119ae985a"
+    },
+    {
+      "path": "output/video.mp4",
+      "size": 91058,
+      "sha256": "4efc9fc15fc2e13e3634fd1b3fd9e4a96a679d8753064b4528c9118fff5153bf"
+    },
+    {
+      "path": "request.txt",
+      "size": 249,
+      "sha256": "076ac2d359c7029c7aaff525b94e4ac0c78157008aa741cc3adaf5d477e33b02"
+    }
+  ],
+  "fileCount": 7,
+  "decodedFrames": 72,
+  "directory": "D:\\Open_Source_Project\\Corporate Brain\\.cache\\live-production-output-v0170\\公司大脑-2026-11-03-f1fcdc02-cfa7-4f70-98ad-70382b6647d0",
+  "serverStatus": "saved",
+  "savedAt": "2026-11-03T08:38:28.529Z"
+}

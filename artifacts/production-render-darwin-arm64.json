@@ -1,0 +1,18 @@
+{
+  "platform": "darwin",
+  "arch": "arm64",
+  "seconds": 3,
+  "frames": 72,
+  "width": 1280,
+  "height": 720,
+  "audio": true,
+  "sourceRetained": true,
+  "materialRetained": true,
+  "rendererTempRemoved": true,
+  "networkBlocked": true,
+  "nodeUnavailable": true,
+  "elapsedMs": 872,
+  "video": "/Users/staff01/CorporateBrainServer/releases/client-build-v0.17.0/.cache/render-verification/task-nkwCBz/output/video.mp4",
+  "sha256": "d170d88adc3915053998d42a47497fd7eea12f58510cfedaa7d4b0cbad8d7609",
+  "bytes": 135833
+}

@@ -1,0 +1,15 @@
+{
+  "version": "0.17.0",
+  "result": "passed",
+  "platform": "win32",
+  "checks": [
+    "Native directory selection, original material upload and model-driven source generation through real UI",
+    "Changing pages keeps native collection active; all 4 files verified on disk before server directory disappears",
+    "Settings and My Works show native account-specific location and saved receipt"
+  ],
+  "taskStatus": "saved",
+  "fileCount": 4,
+  "realProviderCalls": 0,
+  "syntheticFixtureProvider": true,
+  "serverFilesRemoved": true
+}

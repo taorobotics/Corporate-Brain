@@ -1,0 +1,12 @@
+{
+  "version": "0.17.0",
+  "result": "passed",
+  "checks": [
+    "New account receives a real local preset; 100 choices, Chinese search and name/avatar save update sidebar and account API",
+    "Cancel discards unsaved edits; English search, actual file picker, crop controls and normalized custom avatar persist on server",
+    "Reload retains server profile; custom avatar can return to preset; 640px dark layout has no horizontal overflow"
+  ],
+  "consoleErrors": [],
+  "syntheticAccountsOnly": true,
+  "externalImageRequests": false
+}

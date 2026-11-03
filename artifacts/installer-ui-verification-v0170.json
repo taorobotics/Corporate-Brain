@@ -1,0 +1,16 @@
+{
+  "sourceCommit": "e23953a8b43c6665da2a274bcac5cf1015d951d5",
+  "defaultPath": "D:\\software\\Corporate Brain",
+  "checks": [
+    "Primary and secondary buttons visibly depress and recover without activating",
+    "Native welcome page, privacy and license links are visible",
+    "Native path page shows actual space, directory and shortcut selection",
+    "Cancellation requires confirmation and exits before installing"
+  ],
+  "realInstallUpgradeUninstall": false,
+  "physicalEmployeeDeviceTested": false,
+  "mode": "UI-only",
+  "result": "passed",
+  "sha256": "dd3b89e055c24347ee949d71cfab689360074a6866a423c32f1cf676ab2fbc96",
+  "version": "0.17.0"
+}

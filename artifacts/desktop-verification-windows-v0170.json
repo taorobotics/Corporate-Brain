@@ -1,0 +1,17 @@
+{
+  "result": "failed",
+  "checks": [
+    "Pre-login window controls minimize, maximize, restore and request native close on Windows; macOS keeps native controls",
+    "Shared cinematic startup, authentication, profile preparation and welcome reveal replace the old loading screen",
+    "First administrator setup and login through UI",
+    "Desktop workspace scanner reads text files and excludes dependency directories",
+    "Client discovers a fixture release, shows sidebar and details, downloads through authenticated server, verifies SHA-256, and blocks installer execution in development QA",
+    "Native maximize and fullscreen use straight edges; restored windows recover small corners",
+    "Custom composer selects workspaces, DSH modes and permission levels with keyboard and pointer",
+    "Empty model picker explains configuration and opens the real model settings",
+    "Source links reach the system browser; credential-bearing URLs and non-web protocols are rejected without opening an application window",
+    "Process is bounded to 220px/160px, follows reasoning internally, pauses on wheel/keyboard and resumes without moving the outer chat; first answer collapses once and manual reopening persists; outer answer, images and resize follow while manual chat reading remains stable"
+  ],
+  "error": "Timed out: answer copied to native clipboard",
+  "consoleErrors": []
+}
