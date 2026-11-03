@@ -9,6 +9,7 @@ declare global {
       allowBootstrap?: boolean;
       canChangeServer?: boolean;
       updates?: import("../shared/updates").UpdateBridge;
+      production?: import("../shared/production").ProductionBridge;
       edit(action: string): void;
       copyText?(text: string): Promise<void>;
       readState(id: string): Promise<LocalState | null>;

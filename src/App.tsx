@@ -47,6 +47,10 @@ import SkinCenter, { type SkinSelection } from "./Skins";
 import { getSkin, skinTokens } from "../shared/skins";
 import EntryExperience from "./EntryExperience";
 import { Avatar } from "./Profile";
+import Production, {
+  useProduction,
+  type ProductionController,
+} from "./Production";
 
 const navigation = [
   { id: "chat", label: "新建任务", icon: NotePencil },
@@ -54,8 +58,10 @@ const navigation = [
   { id: "knowledge", label: "公司知识", icon: BookOpen },
   { id: "skills", label: "技能中心", icon: Sparkle },
   { id: "works", label: "我的作品", icon: Images },
+  { id: "production", label: "制作中心", icon: Sparkle },
 ];
 export type WorkspaceProps = {
+  production: ProductionController;
   user: User;
   updateUser: (user: User) => void;
   state: LocalState;
@@ -96,6 +102,7 @@ export default function App() {
     loadedProfile = useRef<string | null>(null);
   const notify = (message: string) => setToast(message);
   const updates = useDesktopUpdates(!!user && !user.mustChange);
+  const production = useProduction(user);
   const [legalOpen, setLegalOpen] = useState(false);
   const [authBusy, setAuthBusy] = useState(false),
     [enteredUser, setEnteredUser] = useState<string | null>(null);
@@ -386,6 +393,7 @@ export default function App() {
     );
   const isAdmin = page.startsWith("admin");
   const workspaceProps: WorkspaceProps = {
+    production,
     user,
     updateUser: setUser,
     state,
@@ -750,6 +758,12 @@ export default function App() {
                   setSkinPreview({ ...value, owner: user.id })
                 }
                 back={() => navigate("settings")}
+              />
+            ) : page === "production" ? (
+              <Production
+                user={user}
+                connections={connections}
+                controller={production}
               />
             ) : isAdmin ? (
               <Admin {...workspaceProps} />

@@ -1,0 +1,22 @@
+The original Canvas rendering adapter is MIT licensed with Corporate Brain.
+Electron and Chromium retain their own licences and notices.
+
+The ffmpeg-static 5.3.0 downloader package is GPL-3.0-or-later:
+https://github.com/eugeneware/ffmpeg-static/tree/v5.3.0
+FFmpeg is a separate executable invoked through pipes, not linked into the
+employee client. Its applicable licence depends on the downloaded build.
+The upstream macOS arm64 build reports --enable-gpl, --enable-version3 and
+--enable-nonfree. It is installed for internal server use only; that binary
+is NOT redistributable and MUST NOT be added to source, client installers,
+server update archives, or GitHub Release assets. Administrators may supply
+a separately licensed compatible build using BRAIN_RENDER_FFMPEG.
+No FFmpeg executable or its runtime libraries are included in our releases.
+Obtain upstream build notices and corresponding sources from:
+https://github.com/eugeneware/ffmpeg-static/releases/tag/b6.1.1
+https://ffmpeg.org/legal.html
+
+Remotion is not installed, imported, executed, or distributed. Its adapter
+interface is reserved for future use after the required company licence is
+obtained. There is no Remotion subscription or rendering service charge in
+this implementation. Configured language-model providers may charge for
+code generation under the company's existing API plan.

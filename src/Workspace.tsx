@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import {
   Plus,
+  Code,
   ArrowUp,
   ArrowDown,
   Sparkle,
@@ -31,6 +32,7 @@ import {
   Moon,
 } from "@phosphor-icons/react";
 import { SelectField } from "./Dropdown";
+import { ProductionLocation, ProductionWorks } from "./Production";
 import type { WorkspaceProps } from "./App";
 import type {
   Draft,
@@ -350,9 +352,11 @@ export default function Workspace(props: WorkspaceProps) {
     setText("");
     setAttachments([]);
     if (taskKind === "video") {
-      setTaskError(
-        "视频供应商适配尚未接通。需求已保存在本机，当前没有提交或扣费。",
+      sessionStorage.setItem(
+        `production-draft:${user.id}`,
+        JSON.stringify({ kind: "video", prompt: requestText }),
       );
+      navigate("production");
       return;
     }
     if (!model) {
@@ -926,9 +930,15 @@ export default function Workspace(props: WorkspaceProps) {
                     variant="quiet"
                     side="top"
                     value={taskKind}
-                    onValueChange={(value) =>
-                      setTaskKind(value as typeof taskKind)
-                    }
+                    onValueChange={(value) => {
+                      if (value === "video" || value === "code") {
+                        sessionStorage.setItem(
+                          `production-draft:${user.id}`,
+                          JSON.stringify({ kind: value, prompt: text }),
+                        );
+                        navigate("production");
+                      } else setTaskKind(value as typeof taskKind);
+                    }}
                     options={[
                       {
                         value: "chat",
@@ -945,9 +955,15 @@ export default function Workspace(props: WorkspaceProps) {
                       {
                         value: "video",
                         label: "视频",
-                        description: "视频服务仍在接入，需求可先保存",
+                        description: "Mac mini 代码渲染，成果自动保存本机",
                         icon: <VideoCamera size={18} />,
-                        badge: "接入中",
+                        badge: "免费渲染",
+                      },
+                      {
+                        value: "code",
+                        label: "代码文件",
+                        description: "生成源码并自动保存到本机",
+                        icon: <Code size={18} />,
                       },
                     ]}
                   />
@@ -1415,6 +1431,7 @@ export default function Workspace(props: WorkspaceProps) {
       {page === "works" && (
         <div className="page">
           <PageHeader />
+          <ProductionWorks controller={props.production} />
           {state.conversations.some((c) => c.messages.some((m) => m.image)) ? (
             <div className="card-grid">
               {state.conversations.flatMap((c) =>
@@ -1486,6 +1503,7 @@ export default function Workspace(props: WorkspaceProps) {
               <span>{user.username}</span>
             </div>
             <h2>工作偏好</h2>
+            <ProductionLocation controller={props.production} />
             <div className="setting-row">
               <div>
                 <span>界面皮肤 · {getSkin(state.settings.skin).name}</span>

@@ -1,6 +1,6 @@
 {
   "name": "corporate-brain",
-  "version": "0.16.0",
+  "version": "0.17.0",
   "private": true,
   "license": "MIT",
   "repository": {
@@ -21,7 +21,7 @@
     "build": "node scripts/prepare-document-assets.mjs && node scripts/prepare-legal.mjs && tsc --noEmit && vite build",
     "legal:prepare": "node scripts/prepare-legal.mjs",
     "start": "tsx server/index.ts",
-    "test": "tsx --test --test-concurrency=1 server/platform.test.ts server/profile.test.ts server/skill-import.test.ts server/nas.test.ts server/documents.test.ts server/updates.test.ts server/dsh.test.ts server/chat-stream.test.ts server/chat-deadline.test.ts server/env.test.ts server/deepseek-sync.test.ts shared/workspaces.test.ts shared/skins.test.ts desktop/updates.test.cjs && node scripts/test-nas-worker.mjs",
+    "test": "tsx --test --test-concurrency=1 server/platform.test.ts server/profile.test.ts server/production.test.ts desktop/production.test.cjs server/skill-import.test.ts server/nas.test.ts server/documents.test.ts server/updates.test.ts server/dsh.test.ts server/chat-stream.test.ts server/chat-deadline.test.ts server/env.test.ts server/deepseek-sync.test.ts shared/workspaces.test.ts shared/skins.test.ts desktop/updates.test.cjs && node scripts/test-nas-worker.mjs",
     "test:desktop": "node scripts/prepare-legal.mjs && electron desktop/verify-startup.cjs && electron desktop/verify.cjs",
     "test:dsh": "node scripts/verify-dsh.mjs",
     "deepseek:check": "node scripts/check-deepseek-config.mjs",
@@ -31,7 +31,9 @@
     "package:win:dir": "npm run build && node scripts/package-desktop.mjs --win --dir",
     "package:mac": "npm run build && node scripts/package-desktop.mjs --mac dmg",
     "test:attachments": "electron desktop/verify-attachments.cjs",
-    "test:profile": "electron desktop/verify-profile.cjs"
+    "test:profile": "electron desktop/verify-profile.cjs",
+    "test:production": "electron desktop/verify-production.cjs",
+    "test:render": "node --import tsx scripts/verify-render.mjs"
   },
   "dependencies": {
     "@base-ui/react": "1.9.0",
@@ -40,6 +42,7 @@
     "@phosphor-icons/react": "^2.1.10",
     "cookie-parser": "^1.4.7",
     "express": "^5.3.0",
+    "ffmpeg-static": "5.3.0",
     "pdfjs-dist": "6.5.438",
     "react": "^19.3.1",
     "react-dom": "^19.3.1",
@@ -78,7 +81,8 @@
       "startup-preload.cjs",
       "startup.css",
       "entry-scene.js",
-      "entry-scene.css"
+      "entry-scene.css",
+      "production.cjs"
     ],
     "extraResources": [
       {

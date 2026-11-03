@@ -8,6 +8,7 @@ const {
   clipboard,
 } = require("electron");
 const { DesktopUpdates } = require("./updates.cjs");
+const { ProductionLocal } = require("./production.cjs");
 const {
   loadCompanyWindow,
   isStartupSender,
@@ -112,6 +113,60 @@ ipcMain.handle("company:legal", (event) => {
   return legalWindow.loadFile(join(__dirname, "legal.html"));
 });
 let lastVerifiedUser = null;
+const productionProfiles = new Map();
+async function productionProfile(event, userId) {
+  sender(event);
+  const expectedOrigin = origin;
+  if (!/^[0-9a-f-]{36}$/i.test(userId)) throw new Error("员工标识无效");
+  const verify = async () => {
+    if (origin !== expectedOrigin || !win || win.isDestroyed())
+      throw new Error("公司连接已更换，成果回传已暂停");
+    const response = await win.webContents.session.fetch(
+      `${origin}/api/auth/me`,
+      {
+        credentials: "include",
+        redirect: "error",
+        signal: AbortSignal.timeout(10000),
+      },
+    );
+    if (!response.ok) throw new Error("请重新登录后保存成果");
+    const user = await response.json();
+    if (user.id !== userId || user.mustChange || !user.enabled)
+      throw new Error("成果账号与当前登录不匹配");
+  };
+  await verify();
+  const key = createHash("sha256").update(`${origin}:${userId}`).digest("hex");
+  if (!productionProfiles.has(key))
+    productionProfiles.set(
+      key,
+      new ProductionLocal({
+        file: join(app.getPath("userData"), "profiles", key, "production.json"),
+        origin,
+        fetch: (...args) => win.webContents.session.fetch(...args),
+        verify,
+      }),
+    );
+  return productionProfiles.get(key);
+}
+ipcMain.handle("production:state", async (event, userId) =>
+  (await productionProfile(event, userId)).state(),
+);
+ipcMain.handle("production:choose", async (event, userId) => {
+  const local = await productionProfile(event, userId);
+  const result = await dialog.showOpenDialog(win, {
+    title: "选择成果自动保存位置",
+    properties: ["openDirectory", "createDirectory"],
+  });
+  return result.canceled ? local.state() : local.choose(result.filePaths[0]);
+});
+ipcMain.handle("production:collect", async (event, userId, id) =>
+  (await productionProfile(event, userId)).collect(id),
+);
+ipcMain.handle("production:open", async (event, userId, id) => {
+  const folder = await (await productionProfile(event, userId)).directory(id);
+  const error = await shell.openPath(folder);
+  if (error) throw new Error("文件夹无法打开");
+});
 const writes = new Map();
 const LOCAL_PROFILE_TIMEOUT_MS = 10_000;
 
@@ -202,6 +257,8 @@ ipcMain.handle("local:write", async (event, userId, data) => {
     conversations: data.conversations,
     drafts: data.drafts,
     projects: data.projects,
+    workspaces: data.workspaces,
+    activeWorkspaceId: data.activeWorkspaceId,
     installed: data.installed,
     settings: data.settings,
   });

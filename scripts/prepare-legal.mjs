@@ -1,14 +1,29 @@
 import assert from "node:assert/strict";
 import { cp, mkdir, readFile, readdir, writeFile } from "node:fs/promises";
 import { join } from "node:path";
+import { createHash } from "node:crypto";
 const lock = JSON.parse(await readFile("package-lock.json", "utf8"));
 const packages = lock.packages;
+// This legacy package uses `licenses: [{ type: 'BSD' }]`, omitted by npm's
+// lock format. Its shipped LICENSE is the complete BSD 3-Clause text.
+const legacyLicense = await readFile(
+  "node_modules/parse-cache-control/LICENSE",
+  "utf8",
+);
+const reviewedLegacy =
+  packages["node_modules/parse-cache-control"]?.version === "1.0.1" &&
+  createHash("sha256").update(legacyLicense).digest("hex") ===
+    "111f42b37daecc6c387d037ef25955bd269e7f9a46a736d5257a23560534763f";
 const inventory = Object.entries(packages)
   .filter(([path]) => path)
   .map(([path, value]) => ({
     name: path.split("node_modules/").at(-1),
     version: value.version,
-    license: value.license || "UNKNOWN",
+    license:
+      value.license ||
+      (path === "node_modules/parse-cache-control" && reviewedLegacy
+        ? "BSD-3-Clause (reviewed shipped LICENSE)"
+        : "UNKNOWN"),
     scope: value.dev ? "development" : "runtime",
     path,
   }))
@@ -84,7 +99,12 @@ notices += `\n\n========== DSH startup screen (6shenhonghong9/dsh-startup-screen
 notices += `\n\n========== DeepSeek Harness chat indicator (@deepseek-ai/dsh-client-ui-primitives@0.2.0-rc.2, MIT; adapted FishLogo, StateDot and TextShimmer; https://github.com/deepseek-ai/deepseek-harness) ==========\n${await readFile("src/vendor/dsh-chat.LICENSE", "utf8")}\n`;
 // Normalize formatting only; retain all upstream copyright and license wording.
 notices += `\n\n========== IPAS profile avatars ==========\n${await readFile("src/vendor/ipas-avatars.NOTICE", "utf8")}\n`;
-await writeFile("THIRD_PARTY_NOTICES.txt", notices.replace(/[ \t]+$/gm, "").trimEnd() + "\n");
+notices += `\n\n========== Server-only video rendering ==========\n${await readFile("src/vendor/canvas-rendering.NOTICE", "utf8")}\n`;
+notices += `\n\n========== parse-cache-control 1.0.1 (server downloader, BSD-3-Clause) ==========\n${legacyLicense}\n`;
+await writeFile(
+  "THIRD_PARTY_NOTICES.txt",
+  notices.replace(/[ \t]+$/gm, "").trimEnd() + "\n",
+);
 await mkdir("desktop/legal", { recursive: true });
 for (const [from, to] of [
   ["LICENSE", "LICENSE"],

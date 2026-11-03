@@ -2495,6 +2495,13 @@
       "path": "node_modules/@deepseek-ai/schemastery"
     },
     {
+      "name": "@derhuerst/http-basic",
+      "version": "8.2.4",
+      "license": "MIT",
+      "scope": "runtime",
+      "path": "node_modules/@derhuerst/http-basic"
+    },
+    {
       "name": "@earendil-works/pi-ai",
       "version": "0.87.1",
       "license": "MIT",
@@ -4633,7 +4640,7 @@
       "name": "buffer-from",
       "version": "1.1.2",
       "license": "MIT",
-      "scope": "development",
+      "scope": "runtime",
       "path": "node_modules/buffer-from"
     },
     {
@@ -4719,6 +4726,13 @@
       "license": "Apache-2.0",
       "scope": "development",
       "path": "node_modules/canonicalize"
+    },
+    {
+      "name": "caseless",
+      "version": "0.12.0",
+      "license": "Apache-2.0",
+      "scope": "runtime",
+      "path": "node_modules/caseless"
     },
     {
       "name": "cborg",
@@ -4873,6 +4887,20 @@
       "license": "MIT",
       "scope": "development",
       "path": "node_modules/concat-map"
+    },
+    {
+      "name": "concat-stream",
+      "version": "2.0.0",
+      "license": "MIT",
+      "scope": "runtime",
+      "path": "node_modules/concat-stream"
+    },
+    {
+      "name": "readable-stream",
+      "version": "3.6.2",
+      "license": "MIT",
+      "scope": "runtime",
+      "path": "node_modules/concat-stream/node_modules/readable-stream"
     },
     {
       "name": "content-disposition",
@@ -5519,6 +5547,34 @@
       "path": "node_modules/fflate"
     },
     {
+      "name": "ffmpeg-static",
+      "version": "5.3.0",
+      "license": "GPL-3.0-or-later",
+      "scope": "runtime",
+      "path": "node_modules/ffmpeg-static"
+    },
+    {
+      "name": "agent-base",
+      "version": "6.0.2",
+      "license": "MIT",
+      "scope": "runtime",
+      "path": "node_modules/ffmpeg-static/node_modules/agent-base"
+    },
+    {
+      "name": "env-paths",
+      "version": "2.2.1",
+      "license": "MIT",
+      "scope": "runtime",
+      "path": "node_modules/ffmpeg-static/node_modules/env-paths"
+    },
+    {
+      "name": "https-proxy-agent",
+      "version": "5.0.1",
+      "license": "MIT",
+      "scope": "runtime",
+      "path": "node_modules/ffmpeg-static/node_modules/https-proxy-agent"
+    },
+    {
       "name": "figures",
       "version": "6.1.0",
       "license": "MIT",
@@ -5867,6 +5923,20 @@
       "license": "MIT",
       "scope": "development",
       "path": "node_modules/http-proxy-agent"
+    },
+    {
+      "name": "http-response-object",
+      "version": "3.0.2",
+      "license": "MIT",
+      "scope": "runtime",
+      "path": "node_modules/http-response-object"
+    },
+    {
+      "name": "@types/node",
+      "version": "10.17.60",
+      "license": "MIT",
+      "scope": "runtime",
+      "path": "node_modules/http-response-object/node_modules/@types/node"
     },
     {
       "name": "http2-wrapper",
@@ -6772,6 +6842,13 @@
       "path": "node_modules/pako"
     },
     {
+      "name": "parse-cache-control",
+      "version": "1.0.1",
+      "license": "BSD-3-Clause (reviewed shipped LICENSE)",
+      "scope": "runtime",
+      "path": "node_modules/parse-cache-control"
+    },
+    {
       "name": "parse-ms",
       "version": "4.0.0",
       "license": "MIT",
@@ -7027,7 +7104,7 @@
       "name": "progress",
       "version": "2.0.3",
       "license": "MIT",
-      "scope": "development",
+      "scope": "runtime",
       "path": "node_modules/progress"
     },
     {
@@ -7678,7 +7755,7 @@
       "name": "string_decoder",
       "version": "1.1.1",
       "license": "MIT",
-      "scope": "development",
+      "scope": "runtime",
       "path": "node_modules/string_decoder"
     },
     {
@@ -7934,6 +8011,13 @@
       "path": "node_modules/typed-array-buffer"
     },
     {
+      "name": "typedarray",
+      "version": "0.0.6",
+      "license": "MIT",
+      "scope": "runtime",
+      "path": "node_modules/typedarray"
+    },
+    {
       "name": "typescript",
       "version": "7.0.2",
       "license": "Apache-2.0",
@@ -8021,7 +8105,7 @@
       "name": "util-deprecate",
       "version": "1.0.2",
       "license": "MIT",
-      "scope": "development",
+      "scope": "runtime",
       "path": "node_modules/util-deprecate"
     },
     {

@@ -18,6 +18,7 @@ import { mountFeedback } from "./feedback";
 import { mountNas, type NasOptions } from "./nas";
 import { mountDocuments } from "./documents";
 import { mountProfile } from "./profile";
+import { mountProduction, ProductionError } from "./production";
 import { defaultAvatar } from "../shared/avatars";
 import {
   visualInputs,
@@ -211,6 +212,11 @@ export function createPlatform(
         return res.status(403).json({ error: "请求来源未授权" });
       if (
         !req.is("application/json") &&
+        !(
+          req.method === "PUT" &&
+          /^\/api\/production\/[0-9a-f-]{36}\/materials\/\d+$/.test(req.path) &&
+          req.is("application/octet-stream")
+        ) &&
         !(req.path === "/api/skill-imports/zip" && req.is("application/zip"))
       )
         return res.status(415).json({ error: "需要 JSON 请求" });
@@ -846,6 +852,54 @@ export function createPlatform(
       fail(502, `模型服务返回 ${response!.status}，请检查模型标识、余额和权限`);
     return response!.json() as Promise<Row>;
   }
+  const production = mountProduction(app, db, getActor, {
+    root:
+      process.env.BRAIN_PRODUCTION_ROOT ||
+      join(dirname(options.database ?? ".data/platform.sqlite"), "production"),
+    authorize(owner, connectionId) {
+      const row = userById(owner);
+      if (!row || !row.enabled || !row.department_enabled || row.must_change)
+        fail(403, "员工账号当前不可用");
+      getConnection(connectionId, userView(row), "chat");
+    },
+    async generate(owner, connectionId, messages, signal) {
+      const actor = userById(owner);
+      if (
+        !actor ||
+        !actor.enabled ||
+        !actor.department_enabled ||
+        actor.must_change
+      )
+        fail(403, "员工账号当前不可用");
+      const row = getConnection(connectionId, userView(actor), "chat");
+      const response = await fetch(`${row.base_url}/chat/completions`, {
+        method: "POST",
+        redirect: "error",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${store.decrypt(row.secret)}`,
+        },
+        body: JSON.stringify({
+          model: row.model,
+          messages,
+          stream: false,
+          max_tokens: 12000,
+        }),
+        signal: AbortSignal.any([signal, AbortSignal.timeout(240_000)]),
+      });
+      if (!response.ok)
+        throw new ProductionError(
+          502,
+          `模型服务返回 ${response.status}，请检查模型配置或余额`,
+        );
+      const result = (await response.json()) as Row;
+      const content = result.choices?.[0]?.message?.content;
+      if (typeof content !== "string" || content.length > 5_000_000)
+        throw new ProductionError(502, "模型未返回有效的代码内容");
+      store.audit(owner, "production.generated", connectionId);
+      return content;
+    },
+  });
   app.post("/api/generate/chat", async (req, res) => {
     const actor = getActor(req);
     const data = z
@@ -1101,6 +1155,8 @@ export function createPlatform(
         });
       if (error instanceof ApiError)
         return res.status(error.status).json({ error: error.message });
+      if (error instanceof ProductionError)
+        return res.status(error.status).json({ error: error.message });
       if (error instanceof SkillImportError)
         return res.status(error.status).json({ error: error.message });
       if (error instanceof Error && error.message.includes("UNIQUE constraint"))
@@ -1113,5 +1169,5 @@ export function createPlatform(
       res.status(500).json({ error: "服务暂时无法处理，请重试" });
     },
   );
-  return { app, store, library };
+  return { app, store, library, production };
 }

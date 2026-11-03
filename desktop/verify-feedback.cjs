@@ -16,10 +16,6 @@ module.exports = async ({
     () => js(`document.body.innerText.includes('已复制')`),
     "copy success acknowledgement",
   );
-  assert.equal(
-    await clipboard.readText(),
-    "这是隔离验收回复，未调用真实模型。",
-  );
   await waitFor(
     async () =>
       (await clipboard.readText()) === "这是隔离验收回复，未调用真实模型。",

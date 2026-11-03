@@ -1664,3 +1664,59 @@ This distribution includes 100 randomly selected, distinct public catalog images
 
 The companion skill's source code is MIT-licensed. The website artwork is distributed based on the above explicit download/commercial-use statements; Corporate Brain does not relabel third-party artwork as its own MIT-licensed original work, nor claim exclusive trademark rights.
 Employee-uploaded profile images are private deployment data and are never included in this collection or in release packages.
+
+
+
+========== Server-only video rendering ==========
+The original Canvas rendering adapter is MIT licensed with Corporate Brain.
+Electron and Chromium retain their own licences and notices.
+
+The ffmpeg-static 5.3.0 downloader package is GPL-3.0-or-later:
+https://github.com/eugeneware/ffmpeg-static/tree/v5.3.0
+FFmpeg is a separate executable invoked through pipes, not linked into the
+employee client. Its applicable licence depends on the downloaded build.
+The upstream macOS arm64 build reports --enable-gpl, --enable-version3 and
+--enable-nonfree. It is installed for internal server use only; that binary
+is NOT redistributable and MUST NOT be added to source, client installers,
+server update archives, or GitHub Release assets. Administrators may supply
+a separately licensed compatible build using BRAIN_RENDER_FFMPEG.
+No FFmpeg executable or its runtime libraries are included in our releases.
+Obtain upstream build notices and corresponding sources from:
+https://github.com/eugeneware/ffmpeg-static/releases/tag/b6.1.1
+https://ffmpeg.org/legal.html
+
+Remotion is not installed, imported, executed, or distributed. Its adapter
+interface is reserved for future use after the required company licence is
+obtained. There is no Remotion subscription or rendering service charge in
+this implementation. Configured language-model providers may charge for
+code generation under the company's existing API plan.
+
+
+
+========== parse-cache-control 1.0.1 (server downloader, BSD-3-Clause) ==========
+Copyright (c) 2012-2014, Walmart and other contributors.
+All rights reserved.
+
+Redistribution and use in source and binary forms, with or without
+modification, are permitted provided that the following conditions are met:
+    * Redistributions of source code must retain the above copyright
+      notice, this list of conditions and the following disclaimer.
+    * Redistributions in binary form must reproduce the above copyright
+      notice, this list of conditions and the following disclaimer in the
+      documentation and/or other materials provided with the distribution.
+    * The names of any contributors may not be used to endorse or promote
+      products derived from this software without specific prior written
+      permission.
+
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
+ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDERS AND CONTRIBUTORS BE LIABLE FOR ANY
+DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+(INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
+ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+                                  *   *   *
