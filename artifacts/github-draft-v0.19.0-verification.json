@@ -1,0 +1,39 @@
+{
+  "version": "0.19.0",
+  "sourceCommit": "91ce059dbfd0c0bcf8eb53503efec91dc878bf3e",
+  "result": "passed",
+  "scope": "Draft upload integrity; incomplete release not published",
+  "releaseId": 432903691,
+  "url": "https://github.com/taorobotics/Corporate-Brain/releases/tag/untagged-19577117f7898ca0aa27",
+  "assets": [
+    {
+      "name": "Corporate-Brain-0.19.0-macOS-arm64.dmg",
+      "bytes": 138644157,
+      "sha256": "c826ced2036b9963dc9e24bf45a32af827e5df88fa3664cba784447b0076641a"
+    },
+    {
+      "name": "Corporate-Brain-Server-0.19.0.zip",
+      "bytes": 22544121,
+      "sha256": "24c8503c1c4e70b7fd57bd84c376a71d3131c528334f7f74934e603b6eda34b5"
+    },
+    {
+      "name": "Corporate-Brain-Setup-0.19.0-x64.exe",
+      "bytes": 120000189,
+      "sha256": "4e977aa647f83acd3fbe0e29d5f73ba08f184057392dd08369a36b7163af826e"
+    },
+    {
+      "name": "release-verification-0.19.0.json",
+      "bytes": 22615,
+      "sha256": "2363183c67adc3f61eafeaac0514e1afe71b73f141d06cb8108c742644d5655c"
+    },
+    {
+      "name": "SHA256SUMS.txt",
+      "bytes": 308,
+      "sha256": "4ed56aa689a3708fe976ced964a18e631e8ed1fe4822c251752f12595d7b4ca4"
+    }
+  ],
+  "draft": true,
+  "published": false,
+  "latestChanged": false,
+  "checkedAt": "2026-11-03T15:53:24.997Z"
+}
