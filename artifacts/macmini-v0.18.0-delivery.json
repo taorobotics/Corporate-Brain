@@ -1,0 +1,458 @@
+{
+  "version": "0.18.0",
+  "sourceCommit": "7ed5dd8173bd98ab0ffee50a8ee4384f52fb1f84",
+  "recordedAt": "2026-11-03T10:49:32.188Z",
+  "result": "server-and-mac-private-lan-delivered; complete-github-release-blocked",
+  "changes": [
+    "Unified AI conversation replaces task type and DSH mode pickers",
+    "Selected conversation model routes natural-language requests to authorized chat/image/code/video capabilities; DSH tool profile is internal",
+    "In-chat production cards retain native original-material upload, validated local file collection and immediate server cleanup after ACK",
+    "Automatic vision selection among authorized connections; explicit errors for missing image service, local folder, original media or write permission"
+  ],
+  "packages": [
+    {
+      "name": "Corporate-Brain-Setup-0.18.0-x64.exe",
+      "sha256": "cf89f573cce02de37db3ee7604e21f247445c133d08b73b7db58325c10be3953",
+      "bytes": 119999787
+    },
+    {
+      "name": "Corporate-Brain-0.18.0-macOS-arm64.dmg",
+      "sha256": "62cbaccc6b5b226ecb923e4364631182964b90a9fa891851c3fd48937d106103",
+      "bytes": 138643841
+    },
+    {
+      "name": "Corporate-Brain-Server-0.18.0.zip",
+      "sha256": "0b11ff683ac82a59a141d35f9ac41497f7fba3a32dfba871a490668fb68ce2c6",
+      "bytes": 22541098
+    }
+  ],
+  "deployment": {
+    "health": {
+      "status": "ok",
+      "version": "0.18.0",
+      "chatStorage": "device-only"
+    },
+    "dataPreserved": true,
+    "modelSettingsPreserved": true,
+    "modelCredentialsPreserved": true,
+    "backupCompleted": true,
+    "counts": {
+      "users": 3,
+      "departments": 13,
+      "nas_sources": 14,
+      "skills": 3
+    },
+    "writeBoundary": "Company project directory on Mac mini; other projects and existing cloud server unchanged",
+    "httpsUiAssets": {
+      "version": "0.18.0",
+      "result": "passed",
+      "checkedAt": "2026-11-03T10:46:14.051Z",
+      "tlsVerified": true,
+      "health": {
+        "status": "ok",
+        "version": "0.18.0",
+        "chatStorage": "device-only"
+      },
+      "indexSha256": "59028b137f5a82abb18822538caf06ec4ba7fca14579a7efc321d897d325d79c",
+      "assets": [
+        {
+          "path": "/assets/index-DW5OLjUK.js",
+          "bytes": 954268,
+          "sha256": "ec1f4c3d2f8da4553b8eedc7c03a7f2583556767a378d24ab79ad61b815c0d6a"
+        },
+        {
+          "path": "/assets/index-C_jfdF0w.css",
+          "bytes": 92525,
+          "sha256": "afc2e8e180e574ad71509cf2169c7decceab9588e6e51577c2bf67fc6291dfa0"
+        }
+      ],
+      "checks": [
+        "Deployed HTTPS index and entry JavaScript/CSS match the verified automatic conversation build; strict TLS verification enabled"
+      ]
+    },
+    "actualModelRouting": {
+      "version": "0.18.0",
+      "result": "passed",
+      "providerName": "LinoRoute",
+      "actualProviderCalls": 4,
+      "syntheticPromptsOnly": true,
+      "cases": [
+        {
+          "expected": "chat",
+          "actual": "chat",
+          "mode": "standard",
+          "status": 200
+        },
+        {
+          "expected": "code",
+          "actual": "code",
+          "mode": "standard",
+          "status": 200
+        },
+        {
+          "expected": "video",
+          "actual": "video",
+          "mode": "standard",
+          "status": 200
+        },
+        {
+          "expected": "image",
+          "status": 409,
+          "result": "Missing image service reported explicitly; no generation attempted"
+        }
+      ],
+      "productionTasksCreated": 0,
+      "checkedAt": "2026-11-03T10:44:29.275Z"
+    }
+  },
+  "verification": {
+    "unitTests": {
+      "node": {
+        "passed": 69,
+        "failed": 0
+      },
+      "python": {
+        "passed": 5,
+        "failed": 0
+      }
+    },
+    "windowsPackage": {
+      "version": "0.18.0",
+      "result": "partial",
+      "scope": "Windows local package, automatic task UI, startup and installer UI; full desktop blocked by unavailable system clipboard; lifecycle and Intel Mac verification outstanding",
+      "sourceCommit": "7ed5dd8173bd98ab0ffee50a8ee4384f52fb1f84",
+      "artifact": "Corporate-Brain-Setup-0.18.0-x64.exe",
+      "bytes": 119999787,
+      "sha256": "cf89f573cce02de37db3ee7604e21f247445c133d08b73b7db58325c10be3953",
+      "metadata": {
+        "ProductName": "公司大脑",
+        "ProductVersion": "0.18.0.0",
+        "FileDescription": "公司大脑",
+        "SignatureStatus": "NotSigned"
+      },
+      "installerUiChecks": [
+        "Primary and secondary buttons visibly depress and recover without activating",
+        "Native welcome page, privacy and license links are visible",
+        "Native path page shows actual space, directory and shortcut selection",
+        "Cancellation requires confirmation and exits before installing"
+      ],
+      "realInstallUpgradeUninstall": false,
+      "published": false,
+      "desktopVerification": {
+        "result": "failed",
+        "checks": [
+          "Pre-login window controls minimize, maximize, restore and request native close on Windows; macOS keeps native controls",
+          "Shared cinematic startup, authentication, profile preparation and welcome reveal replace the old loading screen",
+          "First administrator setup and login through UI",
+          "Desktop workspace scanner reads text files and excludes dependency directories",
+          "Client discovers a fixture release, shows sidebar and details, downloads through authenticated server, verifies SHA-256, and blocks installer execution in development QA",
+          "Native maximize and fullscreen use straight edges; restored windows recover small corners",
+          "Unified AI automatic composer removes task/mode selectors while retaining accessible workspace and permission choices",
+          "Empty model picker explains configuration and opens the real model settings",
+          "Source links reach the system browser; credential-bearing URLs and non-web protocols are rejected without opening an application window",
+          "Process is bounded to 220px/160px, follows reasoning internally, pauses on wheel/keyboard and resumes without moving the outer chat; first answer collapses once and manual reopening persists; outer answer, images and resize follow while manual chat reading remains stable"
+        ],
+        "error": "Timed out: answer copied to native clipboard",
+        "consoleErrors": []
+      },
+      "startupVerification": {
+        "result": "passed",
+        "checks": [
+          "Warm startup remains responsive offline; default ignores dark OS; minimal isolated preload",
+          "Painted app reveals while a subresource is still pending; skip never exposes a blank navigation",
+          "Remote renderer is rejected by startup-only retry IPC",
+          "Timeout leaves actionable local screen and real retry button reconnects",
+          "Transient HTTP 503 automatically retries and recovers",
+          "Explicit dark persists per company; invalid preferences rejected; preview closes without navigation",
+          "Default restores warm appearance; reduced-motion disables rotation",
+          "Superseded attempts cannot replace a successful newer navigation",
+          "Certificate failures never bypass TLS; closing cancels attempts and destroys overlay"
+        ],
+        "productionModelsCalled": false
+      },
+      "automaticUi": {
+        "version": "0.18.0",
+        "result": "passed",
+        "platform": "win32",
+        "checks": [
+          "Native directory selection, original material upload and model-driven source generation through real UI",
+          "Changing pages keeps native collection active; all 4 files verified on disk before server directory disappears",
+          "Settings and My Works show native account-specific location and saved receipt",
+          "Unified chat performs actual model routing, uploads original material, creates code, shows progress, saves verified files locally and removes server files without task or mode selectors",
+          "Chat automatically dispatches image creation to the authorized image connection and displays the returned image in place"
+        ],
+        "taskStatus": "saved",
+        "fileCount": 4,
+        "realProviderCalls": 0,
+        "syntheticFixtureProvider": true,
+        "serverFilesRemoved": true
+      },
+      "clipboardUnavailable": true,
+      "checks": [
+        "ASAR file allowlist and source bytes including approved local logo",
+        "Windows ICO contains nine resolutions and installer uses identical brand ICO",
+        "Executable product name and version match release",
+        "Windows automatic routing, image/code production and local saving passed; full desktop run blocked at system clipboard readback",
+        "Offline native startup loads the local logo under CSP"
+      ]
+    },
+    "macArm64Package": {
+      "version": "0.18.0",
+      "architecture": "arm64",
+      "platform": "darwin",
+      "os": "27.0.1",
+      "sourceCommit": "7ed5dd8173bd98ab0ffee50a8ee4384f52fb1f84",
+      "workflowRun": null,
+      "createdAt": "2026-11-03T10:45:00.022Z",
+      "artifact": "Corporate-Brain-0.18.0-macOS-arm64.dmg",
+      "bytes": 138643841,
+      "sha256": "62cbaccc6b5b226ecb923e4364631182964b90a9fa891851c3fd48937d106103",
+      "signing": "ad-hoc",
+      "developerIdSigned": false,
+      "notarized": false,
+      "physicalEmployeeMacTested": false,
+      "files": [
+        "appearance.cjs",
+        "brand/app-icon.png",
+        "brand/logo.png",
+        "entry-scene.css",
+        "entry-scene.js",
+        "fonts.css",
+        "fonts/NotoSansSC-VF.woff2",
+        "fonts/OFL.txt",
+        "fonts/source.json",
+        "legal.html",
+        "legal/CODE_SIGNING_POLICY.md",
+        "legal/LICENSE",
+        "legal/PRIVACY.md",
+        "legal/THIRD_PARTY_NOTICES.txt",
+        "main.cjs",
+        "package.json",
+        "preload.cjs",
+        "production.cjs",
+        "server-preload.cjs",
+        "server-setup.html",
+        "server-setup.js",
+        "startup-preload.cjs",
+        "startup.cjs",
+        "startup.css",
+        "startup.html",
+        "startup.js",
+        "updates.cjs"
+      ],
+      "checks": [
+        "DMG integrity, native architecture, bundle version and ad-hoc code signature",
+        "Bundled MIT, privacy and dependency notices match source; Electron/Chromium notices retained",
+        "Client-only ASAR allowlist: no company database, credentials or development dependencies",
+        "Packaged company URL matches release configuration; first launch loads an isolated company fixture and opens administrator connection UI with isolated preload and Chinese fonts",
+        "Packaged client rejects insecure remote company URLs"
+      ],
+      "firstLaunch": {
+        "title": "连接公司大脑",
+        "heading": "公司大脑未配置",
+        "bridge": "function",
+        "node": "undefined",
+        "font": "\"PingFang SC\", \"Microsoft YaHei\", \"Noto Sans SC\", \"Segoe UI\", Arial, sans-serif"
+      },
+      "desktopVerification": {
+        "result": "passed",
+        "runtime": "Electron real window + real preload bridge",
+        "productionModelsCalled": false,
+        "database": "disposable in-memory",
+        "checks": [
+          "Pre-login window controls minimize, maximize, restore and request native close on Windows; macOS keeps native controls",
+          "Shared cinematic startup, authentication, profile preparation and welcome reveal replace the old loading screen",
+          "First administrator setup and login through UI",
+          "Desktop workspace scanner reads text files and excludes dependency directories",
+          "Client discovers a fixture release, shows sidebar and details, downloads through authenticated server, verifies SHA-256, and blocks installer execution in development QA",
+          "Unified AI automatic composer removes task/mode selectors while retaining accessible workspace and permission choices",
+          "Empty model picker explains configuration and opens the real model settings",
+          "Source links reach the system browser; credential-bearing URLs and non-web protocols are rejected without opening an application window",
+          "Process is bounded to 220px/160px, follows reasoning internally, pauses on wheel/keyboard and resumes without moving the outer chat; first answer collapses once and manual reopening persists; outer answer, images and resize follow while manual chat reading remains stable",
+          "Four answer actions with a single thumbs-down feedback entry; native copy/share, helpful/unhelpful and issue feedback editing, opt-in question/answer snapshot without reasoning, deduplicated real feedback API, escaped admin table, filters and persisted handling status",
+          "Real streamed reasoning/tool event fixtures, source links, expandable disclosure, separate answer, static reduced-motion Grok-ball, local trace reload, partial error/cancel, no-reasoning fallback and conversation isolation",
+          "Conversation model picker persists selection; image connections are reserved for automatic dispatch; QA fixtures never call a real model",
+          "Top edit menu restores the original input target and invokes its native action; account menu supports keyboard navigation",
+          "Admin page retains the shared Windows controls without duplicating native macOS controls",
+          "Admin dropdown filters and form values work; portalled menus preserve dialog Escape handling",
+          "Company model authorization shows department names and keeps checkboxes at their intended size",
+          "Unconfigured generation is explicit; message persisted on the local disk",
+          "Local history restored after reloading",
+          "Conversation preview defaults closed, opens from an image, resizes with keyboard and closes",
+          "UI source selection, local draft and package preview submit workflow",
+          "Company-scope review through the real UI",
+          "Published package downloaded and installed locally",
+          "NAS admin creates an encrypted source with explicit department scope; employee browsing supports breadcrumbs, nested directories, metadata, name search and blocked links in light/dark narrow layouts; no NAS file content or model call",
+          "GitHub and actual ZIP upload previews preserve references/license, require acknowledgement, publish or submit for review, install locally and fit a dark narrow window",
+          "Default/light/dark appearance selection saves native startup preference; default remains light",
+          "Theme dropdown updates local preferences and renders readable dark menu states",
+          "62 skins: search, live preview without persistence, cancel, artwork, dark mode, native save/reload, restore Claude default",
+          "Window controls persist after logout, during connection, after a failed response and after retry",
+          "Skin preferences are isolated per employee; new employee receives Claude default",
+          "First login change; second employee isolated; IPC rejects another employee profile",
+          "Another employee installs the shared Skill without author history",
+          "Non-conversation screens do not open the far-right preview",
+          "900px desktop viewport has no document overflow",
+          "Dropdown collision positioning stays inside a 900px desktop viewport",
+          "Online pre-login and offline company-connection windows expose original license and privacy policy with isolated local legal viewer",
+          "Native company server setup rejects insecure remote HTTP and connects to the verified company API"
+        ],
+        "consoleErrors": [],
+        "screenshots": "Isolated synthetic verification output"
+      },
+      "startupVerification": {
+        "result": "passed",
+        "checks": [
+          "Warm startup remains responsive offline; default ignores dark OS; minimal isolated preload",
+          "Painted app reveals while a subresource is still pending; skip never exposes a blank navigation",
+          "Remote renderer is rejected by startup-only retry IPC",
+          "Timeout leaves actionable local screen and real retry button reconnects",
+          "Transient HTTP 503 automatically retries and recovers",
+          "Explicit dark persists per company; invalid preferences rejected; preview closes without navigation",
+          "Default restores warm appearance; reduced-motion disables rotation",
+          "Superseded attempts cannot replace a successful newer navigation",
+          "Certificate failures never bypass TLS; closing cancels attempts and destroys overlay"
+        ],
+        "productionModelsCalled": false
+      }
+    },
+    "profileWindows": {
+      "version": "0.18.0",
+      "result": "passed",
+      "checks": [
+        "New account receives a real local preset; 100 choices, Chinese search and name/avatar save update sidebar and account API",
+        "Cancel discards unsaved edits; English search, actual file picker, crop controls and normalized custom avatar persist on server",
+        "Reload retains server profile; custom avatar can return to preset; 640px dark layout has no horizontal overflow"
+      ],
+      "consoleErrors": [],
+      "syntheticAccountsOnly": true,
+      "externalImageRequests": false
+    },
+    "profileMac": {
+      "version": "0.18.0",
+      "result": "passed",
+      "checks": [
+        "New account receives a real local preset; 100 choices, Chinese search and name/avatar save update sidebar and account API",
+        "Cancel discards unsaved edits; English search, actual file picker, crop controls and normalized custom avatar persist on server",
+        "Reload retains server profile; custom avatar can return to preset; 640px dark layout has no horizontal overflow"
+      ],
+      "consoleErrors": [],
+      "syntheticAccountsOnly": true,
+      "externalImageRequests": false
+    },
+    "productionUiWindows": {
+      "version": "0.18.0",
+      "result": "passed",
+      "platform": "win32",
+      "checks": [
+        "Native directory selection, original material upload and model-driven source generation through real UI",
+        "Changing pages keeps native collection active; all 4 files verified on disk before server directory disappears",
+        "Settings and My Works show native account-specific location and saved receipt",
+        "Unified chat performs actual model routing, uploads original material, creates code, shows progress, saves verified files locally and removes server files without task or mode selectors",
+        "Chat automatically dispatches image creation to the authorized image connection and displays the returned image in place"
+      ],
+      "taskStatus": "saved",
+      "fileCount": 4,
+      "realProviderCalls": 0,
+      "syntheticFixtureProvider": true,
+      "serverFilesRemoved": true
+    },
+    "productionUiMac": {
+      "version": "0.18.0",
+      "result": "passed",
+      "platform": "darwin",
+      "checks": [
+        "Native directory selection, original material upload and model-driven source generation through real UI",
+        "Changing pages keeps native collection active; all 4 files verified on disk before server directory disappears",
+        "Settings and My Works show native account-specific location and saved receipt",
+        "Unified chat performs actual model routing, uploads original material, creates code, shows progress, saves verified files locally and removes server files without task or mode selectors",
+        "Chat automatically dispatches image creation to the authorized image connection and displays the returned image in place",
+        "Mac unified chat routes video intent, performs real Canvas/FFmpeg rendering, saves video and source locally and removes the server task"
+      ],
+      "taskStatus": "saved",
+      "fileCount": 4,
+      "realProviderCalls": 0,
+      "syntheticFixtureProvider": true,
+      "serverFilesRemoved": true
+    },
+    "macVideoRegression": {
+      "platform": "darwin",
+      "arch": "arm64",
+      "seconds": 3,
+      "frames": 72,
+      "width": 1280,
+      "height": 720,
+      "audio": true,
+      "sourceRetained": true,
+      "materialRetained": true,
+      "rendererTempRemoved": true,
+      "networkBlocked": true,
+      "nodeUnavailable": true,
+      "elapsedMs": 921,
+      "video": "Isolated synthetic verification output",
+      "sha256": "d170d88adc3915053998d42a47497fd7eea12f58510cfedaa7d4b0cbad8d7609",
+      "bytes": 135833
+    },
+    "authenticatedUpdateDownloads": {
+      "version": "0.18.0",
+      "result": "passed",
+      "results": [
+        {
+          "platform": "win32-x64",
+          "version": "0.17.3",
+          "bytes": 119999824,
+          "sha256": "ddd11f724959d8ccbcd74411b27845d367c2bb15e695d46dfe48cf078b06511b"
+        },
+        {
+          "platform": "darwin-arm64",
+          "version": "0.18.0",
+          "bytes": 138643841,
+          "sha256": "62cbaccc6b5b226ecb923e4364631182964b90a9fa891851c3fd48937d106103"
+        }
+      ],
+      "checks": [
+        "Authenticated LAN Mac feed advertises 0.18.0; Windows remains 0.17.3; both complete downloads match advertised sizes and SHA-256"
+      ],
+      "checkedAt": "2026-11-03T10:47:25.805Z"
+    },
+    "secretScan": {
+      "tool": "Gitleaks 8.30.1",
+      "scope": "All reachable history and staged product/delivery changes",
+      "findings": 0
+    }
+  },
+  "delivery": {
+    "macArm64ChannelActivated": true,
+    "windowsNewChannelActivated": false,
+    "windowsChannelVersion": "0.17.3",
+    "sharedServerUiAppliesToExistingClients": true,
+    "authenticatedFullDownloadsAndHashesVerified": true,
+    "windowsSigned": false,
+    "macSigning": "ad-hoc; not notarized",
+    "originalLicense": "MIT; third-party licenses retained",
+    "includesCompanyData": false
+  },
+  "limitations": [
+    "No production image-generation service is configured; real image intent returns a clear HTTP 409, while synthetic authorized image generation passed on both desktop platforms",
+    "Windows full desktop verification stopped at unavailable native system clipboard readback; automatic image/code UI, profile, startup, package and installer UI passed; new Windows update channel not activated",
+    "After reopening a saved conversation, original binary materials must be reattached for production; parsed attachment snapshots cannot replace original media"
+  ],
+  "completeGithubRelease": {
+    "published": false,
+    "draftOnly": true,
+    "workflow": "https://github.com/taorobotics/Corporate-Brain/actions/runs/41621254476",
+    "blockedBy": "GitHub Actions: recent account payments failed or spending limit requires increase",
+    "outstanding": [
+      "Restore Windows system clipboard and finish full Windows desktop verification",
+      "Native Intel Mac installer and verification",
+      "Disposable Windows install/upgrade/uninstall lifecycle verification",
+      "All required platform checks and complete assets before publishing as latest"
+    ],
+    "uploadedDraft": {
+      "id": 432570725,
+      "url": "https://github.com/taorobotics/Corporate-Brain/releases/tag/untagged-88829405569938f92a3f",
+      "assetCount": 5,
+      "allRemoteSizesAndSha256Match": true
+    }
+  }
+}
