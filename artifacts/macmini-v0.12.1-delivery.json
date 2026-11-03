@@ -1,0 +1,131 @@
+{
+  "version": "0.12.1",
+  "sourceCommit": "d54671bc5341dc62be70a67eba2d769e41c842f1",
+  "result": "passed",
+  "checkedAt": "2026-11-03T03:28:06.486Z",
+  "scope": "Private LAN Windows and Apple Silicon delivery; not a complete public GitHub Release",
+  "origin": "https://192.168.20.21:14443",
+  "serverUpgrade": {
+    "version": "0.12.1",
+    "result": "passed",
+    "verifiedAt": "2026-11-03T03:24:11.963Z",
+    "sourceCommit": "d54671bc5341dc62be70a67eba2d769e41c842f1",
+    "serverArchiveSha256": "a37d61f228b0601c8a98e88312b171d5b546304bf3ac12772e9f2961cf717e7f",
+    "health": {
+      "status": "ok",
+      "version": "0.12.1",
+      "chatStorage": "device-only"
+    },
+    "counts": {
+      "users": 3,
+      "departments": 2
+    },
+    "dataPreserved": true,
+    "modelSettingsPreserved": true,
+    "modelCredentialsPreserved": true,
+    "backup": "/Users/staff01/CorporateBrainServer/backups/before-v0.12.1-2026-11-03T03-24-11-329Z",
+    "writeBoundary": "/Users/staff01/CorporateBrainServer"
+  },
+  "unitTests": {
+    "passed": 44,
+    "failed": 0
+  },
+  "windowsDesktopChecks": 35,
+  "macDesktopChecks": 34,
+  "windowsInstallerUiChecks": 4,
+  "macPackageChecks": 5,
+  "native": {
+    "win32-old": {
+      "version": "0.12.0",
+      "checks": [
+        "Default LAN URL, actual OS TLS trust, login and chat rendered",
+        "Actual deployed UI restores saved trace in a bounded scrollable process panel with accessible collapse/expand controls",
+        "Old packaged client legacy selected-text copy works",
+        "Actual feedback submission with opt-in excerpt, admin table and persisted handling state",
+        "Unmodified 0.12.0 packaged client discovers 0.12.1, fully downloads and verifies SHA-256 through Mac mini"
+      ],
+      "update": {
+        "version": "0.12.1",
+        "bytes": 119373169,
+        "sha256": "7980ca26d668ba33ebaa17aa28351744511a915d6b3a1c3f89c4f0ad1e131e3a",
+        "target": "win32-x64",
+        "status": "ready"
+      },
+      "certificateErrorsIgnored": false
+    },
+    "win32-new": {
+      "version": "0.12.1",
+      "checks": [
+        "Default LAN URL, actual OS TLS trust, login and chat rendered",
+        "Actual deployed UI restores saved trace in a bounded scrollable process panel with accessible collapse/expand controls",
+        "Native bounded clipboard bridge works",
+        "Actual feedback submission with opt-in excerpt, admin table and persisted handling state"
+      ],
+      "certificateErrorsIgnored": false
+    },
+    "darwin-old": {
+      "version": "0.12.0",
+      "checks": [
+        "Default LAN URL, actual OS TLS trust, login and chat rendered",
+        "Actual deployed UI restores saved trace in a bounded scrollable process panel with accessible collapse/expand controls",
+        "Old packaged client legacy selected-text copy works",
+        "Actual feedback submission with opt-in excerpt, admin table and persisted handling state",
+        "Unmodified 0.12.0 packaged client discovers 0.12.1, fully downloads and verifies SHA-256 through Mac mini"
+      ],
+      "update": {
+        "version": "0.12.1",
+        "bytes": 136879727,
+        "sha256": "f05c164fe3159d02dc86fc01b989825bc47fad72d8d165b1ec78580317c7b16c",
+        "target": "darwin-arm64",
+        "status": "ready"
+      },
+      "certificateErrorsIgnored": false
+    },
+    "darwin-new": {
+      "version": "0.12.1",
+      "checks": [
+        "Default LAN URL, actual OS TLS trust, login and chat rendered",
+        "Actual deployed UI restores saved trace in a bounded scrollable process panel with accessible collapse/expand controls",
+        "Native bounded clipboard bridge works",
+        "Actual feedback submission with opt-in excerpt, admin table and persisted handling state"
+      ],
+      "certificateErrorsIgnored": false
+    }
+  },
+  "channels": {
+    "win32-x64": {
+      "name": "Corporate-Brain-Setup-0.12.1-x64.exe",
+      "bytes": 119373169,
+      "sha256": "7980ca26d668ba33ebaa17aa28351744511a915d6b3a1c3f89c4f0ad1e131e3a"
+    },
+    "darwin-arm64": {
+      "name": "Corporate-Brain-0.12.1-macOS-arm64.dmg",
+      "bytes": 136879727,
+      "sha256": "f05c164fe3159d02dc86fc01b989825bc47fad72d8d165b1ec78580317c7b16c"
+    }
+  },
+  "installerUiRetry": {
+    "initialAttempt": "Failed: page changed during button capture",
+    "unchangedInstallerRetry": "passed"
+  },
+  "thinkingPanel": {
+    "maxHeight": 220,
+    "narrowMaxHeight": 160,
+    "autoCollapseOnAnswer": true,
+    "internalScrollIsolated": true,
+    "previewScreenshots": [
+      "client-thinking-panel-light.png",
+      "client-thinking-panel-dark.png",
+      "client-thinking-panel-narrow.png"
+    ]
+  },
+  "windowsTrustedSignature": false,
+  "macSigning": "ad-hoc",
+  "macNotarized": false,
+  "windowsInstallUpgradeUninstallPerformed": false,
+  "intelMacPublished": false,
+  "githubSyncPausedByUser": true,
+  "cloudServerRetained": true,
+  "temporaryVerificationAccountRemoved": true,
+  "companyDatabaseOrKeysDistributed": false
+}
