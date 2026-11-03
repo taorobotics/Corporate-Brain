@@ -1,0 +1,209 @@
+{
+  "version": "0.14.0",
+  "sourceCommit": "d22debd8b1249a3b2a5eb36876b157196a6eeda9",
+  "result": "delivered-with-pending-items",
+  "checkedAt": "2026-11-03T05:24:19.589Z",
+  "scope": "Private LAN Windows and Apple Silicon delivery; not a complete public GitHub Release",
+  "serverUpgrade": {
+    "version": "0.14.0",
+    "result": "passed",
+    "dataPreserved": true,
+    "modelSettingsPreserved": true,
+    "modelCredentialsPreserved": true
+  },
+  "unitTests": {
+    "nodePassed": 49,
+    "pythonPassed": 5,
+    "failed": 0
+  },
+  "windowsDesktopChecks": 37,
+  "macDesktopChecks": 36,
+  "windowsStartupChecks": 9,
+  "macStartupChecks": 9,
+  "windowsInstallerUiChecks": 4,
+  "macPackageChecks": 5,
+  "testHistory": {
+    "firstNodeRun": "Existing randomized test port hit fetch bad port; affected test and entire suite rerun passed",
+    "windowsClipboard": "Initial full-client runs stopped at OS clipboard. Independent Windows API OpenClipboard returns access denied (5), including with desktop handle. PowerShell 7 does not resolve it. Remaining client checks ran separately; clipboard is explicitly unverified on this Windows environment."
+  },
+  "native": {
+    "win32-old": {
+      "version": "0.13.0",
+      "result": "passed-with-environment-limit",
+      "checks": [
+        "Default LAN URL, actual OS TLS trust, login and chat rendered",
+        "Actual deployed UI restores saved trace in a bounded scrollable process panel with accessible collapse/expand controls",
+        "Actual feedback submission with opt-in excerpt, admin table and persisted handling state",
+        "Actual three GitHub libraries appear company-wide, install with persistent native state, and expose GitHub/ZIP import UI",
+        "Actual NAS directory loads for the assigned department; even a company administrator cannot browse another department source; credentials never return to client",
+        "Unmodified 0.13.0 packaged client discovers 0.14.0, fully downloads and verifies SHA-256 through Mac mini"
+      ],
+      "clipboard": {
+        "result": "blocked",
+        "reason": "Windows OpenClipboard independently fails with error 5 (access denied); no clipboard content was logged"
+      },
+      "update": {
+        "version": "0.14.0",
+        "bytes": 119373580,
+        "sha256": "fd62abf7705e9832ca4a2b7ebd7727f8cb5e367d637fe2bfce94869c9fc2e784",
+        "target": "win32-x64",
+        "status": "ready"
+      },
+      "nas": {
+        "authorizedDirectoryRendered": true,
+        "adminImplicitAccessBlocked": true,
+        "fileContentsRead": false,
+        "nasWritesPerformed": false
+      },
+      "certificateErrorsIgnored": false,
+      "checkedAt": "2026-11-03T05:21:02.934Z"
+    },
+    "win32-new": {
+      "version": "0.14.0",
+      "result": "passed-with-environment-limit",
+      "checks": [
+        "Default LAN URL, actual OS TLS trust, login and chat rendered",
+        "Actual deployed UI restores saved trace in a bounded scrollable process panel with accessible collapse/expand controls",
+        "Actual feedback submission with opt-in excerpt, admin table and persisted handling state",
+        "Actual three GitHub libraries appear company-wide, install with persistent native state, and expose GitHub/ZIP import UI",
+        "Actual NAS directory loads for the assigned department; even a company administrator cannot browse another department source; credentials never return to client"
+      ],
+      "clipboard": {
+        "result": "blocked",
+        "reason": "Windows OpenClipboard independently fails with error 5 (access denied); no clipboard content was logged"
+      },
+      "nas": {
+        "authorizedDirectoryRendered": true,
+        "adminImplicitAccessBlocked": true,
+        "fileContentsRead": false,
+        "nasWritesPerformed": false
+      },
+      "certificateErrorsIgnored": false,
+      "checkedAt": "2026-11-03T05:16:48.205Z"
+    },
+    "darwin-old": {
+      "version": "0.13.0",
+      "result": "passed",
+      "checks": [
+        "Default LAN URL, actual OS TLS trust, login and chat rendered",
+        "Actual deployed UI restores saved trace in a bounded scrollable process panel with accessible collapse/expand controls",
+        "Old packaged client legacy selected-text copy works",
+        "Actual feedback submission with opt-in excerpt, admin table and persisted handling state",
+        "Actual three GitHub libraries appear company-wide, install with persistent native state, and expose GitHub/ZIP import UI",
+        "Actual NAS directory loads for the assigned department; even a company administrator cannot browse another department source; credentials never return to client",
+        "Unmodified 0.13.0 packaged client discovers 0.14.0, fully downloads and verifies SHA-256 through Mac mini"
+      ],
+      "update": {
+        "version": "0.14.0",
+        "bytes": 136880026,
+        "sha256": "8fdada0750cc52e8f28d8eee929145b185aedf49161de27718d4a696e4f69375",
+        "target": "darwin-arm64",
+        "status": "ready"
+      },
+      "nas": {
+        "authorizedDirectoryRendered": true,
+        "adminImplicitAccessBlocked": true,
+        "fileContentsRead": false,
+        "nasWritesPerformed": false
+      },
+      "certificateErrorsIgnored": false,
+      "checkedAt": "2026-11-03T05:20:22.338Z"
+    },
+    "darwin-new": {
+      "version": "0.14.0",
+      "result": "passed",
+      "checks": [
+        "Default LAN URL, actual OS TLS trust, login and chat rendered",
+        "Actual deployed UI restores saved trace in a bounded scrollable process panel with accessible collapse/expand controls",
+        "Native bounded clipboard bridge works",
+        "Actual feedback submission with opt-in excerpt, admin table and persisted handling state",
+        "Actual three GitHub libraries appear company-wide, install with persistent native state, and expose GitHub/ZIP import UI",
+        "Actual NAS directory loads for the assigned department; even a company administrator cannot browse another department source; credentials never return to client"
+      ],
+      "nas": {
+        "authorizedDirectoryRendered": true,
+        "adminImplicitAccessBlocked": true,
+        "fileContentsRead": false,
+        "nasWritesPerformed": false
+      },
+      "certificateErrorsIgnored": false,
+      "checkedAt": "2026-11-03T05:06:37.424Z"
+    }
+  },
+  "channels": {
+    "win32-x64": {
+      "name": "Corporate-Brain-Setup-0.14.0-x64.exe",
+      "bytes": 119373580,
+      "sha256": "fd62abf7705e9832ca4a2b7ebd7727f8cb5e367d637fe2bfce94869c9fc2e784"
+    },
+    "darwin-arm64": {
+      "name": "Corporate-Brain-0.14.0-macOS-arm64.dmg",
+      "bytes": 136880026,
+      "sha256": "8fdada0750cc52e8f28d8eee929145b185aedf49161de27718d4a696e4f69375"
+    }
+  },
+  "updateDistribution": {
+    "result": "passed",
+    "originalClients": "0.13.0",
+    "targets": [
+      "win32-x64",
+      "darwin-arm64"
+    ],
+    "fullyDownloadedAndHashVerified": true,
+    "installersExecuted": false
+  },
+  "nas": {
+    "status": "configured-with-pending-sources",
+    "departmentsConfigured": 11,
+    "sourcesConfigured": 12,
+    "sourcesEnabled": 10,
+    "departmentsWithEnabledSources": 9,
+    "pendingSources": 2,
+    "employeeMembershipsChanged": false,
+    "pendingReasons": [
+      "One requested share does not exist",
+      "One account failed authentication with the supplied credentials"
+    ],
+    "accessVerification": {
+      "result": "passed",
+      "testedDepartments": 11,
+      "allowedRoots": 10,
+      "crossDepartmentRequestsDenied": 100,
+      "disabledSourcesDenied": 22,
+      "namesOrContentsLogged": false,
+      "nasWritesPerformed": false,
+      "modelRequestsPerformed": false,
+      "temporaryAccountsRemoved": true,
+      "remainingUsers": 3,
+      "checkedAt": "2026-11-03T05:05:23.340Z"
+    },
+    "credentialsEncrypted": true,
+    "temporaryServerPlaintextRemoved": true,
+    "nasAclChanged": false,
+    "filesRead": false,
+    "nasWritesPerformed": false,
+    "modelRequestsPerformed": false
+  },
+  "limitations": [
+    {
+      "platform": "win32",
+      "check": "OS clipboard",
+      "status": "blocked-by-Windows-environment",
+      "reason": "Windows OpenClipboard independently fails with error 5 (access denied); no clipboard content was logged"
+    }
+  ],
+  "previewScreenshots": [
+    "nas-admin-synthetic.png",
+    "nas-browser-synthetic.png",
+    "nas-browser-dark-narrow.png"
+  ],
+  "windowsTrustedSignature": false,
+  "macSigning": "ad-hoc",
+  "macNotarized": false,
+  "windowsInstallUpgradeUninstallPerformed": false,
+  "intelMacPublished": false,
+  "githubSyncPausedByUser": true,
+  "cloudServerRetained": true,
+  "temporaryVerificationAccountsRemoved": true,
+  "companyDatabaseOrKeysDistributed": false
+}
