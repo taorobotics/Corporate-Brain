@@ -30,6 +30,7 @@ import { Button, Empty, Field, Modal, Search, Busy } from "./components";
 import { SelectField } from "./Dropdown";
 import { SkillSourceDetails } from "./SkillImport";
 import FeedbackAdmin from "./FeedbackAdmin";
+import { KnowledgeAdmin } from "./Knowledge";
 const statusNames = {
   pending: "待审核",
   published: "已发布",
@@ -484,38 +485,12 @@ export default function Admin(props: WorkspaceProps) {
           )}
         </>
       )}
-      {page === "admin-knowledge" && (
-        <>
-          <div className="notice">
-            <BookOpen size={24} />
-            <div>
-              <strong>NAS 接入尚未配置</strong>
-              <p>
-                需要实际 NAS
-                的协议、内网地址、共享目录和获准账号。当前没有同步或上传任何文件。
-              </p>
-            </div>
-          </div>
-          <div className="settings-content">
-            <h2>接入前准备</h2>
-            <div className="setting-row">
-              <span>资料源</span>
-              <span className="muted">等待实际 NAS 环境</span>
-            </div>
-            <div className="setting-row">
-              <span>部门授权</span>
-              <span className="muted">由来源目录和部门权限共同控制</span>
-            </div>
-            <div className="setting-row">
-              <span>员工聊天</span>
-              <span>留在员工本机，不加入知识库</span>
-            </div>
-            <p className="muted">
-              协议连接、文档解析、检索与归档服务尚未实现。不会把配置表单保存当作连接成功。
-            </p>
-          </div>
-        </>
-      )}
+      {page === "admin-knowledge" &&
+        (companyAdmin ? (
+          <KnowledgeAdmin departments={departments} notify={notify} />
+        ) : (
+          <p>需要公司管理员权限。</p>
+        ))}
       {page === "admin-skills" && (
         <>
           <div className="tabs">

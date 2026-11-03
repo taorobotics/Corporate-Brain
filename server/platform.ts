@@ -15,6 +15,7 @@ import {
 import type { User, Skill, Connection } from "../shared/types";
 import { mountUpdates } from "./updates";
 import { mountFeedback } from "./feedback";
+import { mountNas, type NasOptions } from "./nas";
 import { DshManager, DshUnavailableError } from "./dsh";
 import { syncDeepSeekConnections } from "./deepseek-sync";
 import type { ChatProgress } from "../shared/chat-progress";
@@ -157,6 +158,7 @@ export function createPlatform(
     updates?: import("./updates").UpdateOptions;
     chatTimeouts?: { idleMs?: number; maxMs?: number };
     skillLibrary?: SkillLibraryOptions;
+    nas?: NasOptions;
   } = {},
 ) {
   const store = createStore(options.database ?? ".data/platform.sqlite");
@@ -344,6 +346,7 @@ export function createPlatform(
   app.get("/api/auth/me", (req, res) => res.json(getActor(req)));
   mountUpdates(app, options.updates);
   mountFeedback(app, store, getActor, fail);
+  mountNas(app, store, getActor, fail, options.nas);
   app.post("/api/auth/logout", (req, res) => {
     db.prepare("DELETE FROM sessions WHERE token_hash=?").run(
       tokenHash(req.cookies.brain_session),

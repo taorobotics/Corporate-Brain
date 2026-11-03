@@ -1051,6 +1051,77 @@ async function waitFor(test, label, timeout = 12000) {
   await click("安装");
   await waitFor(() => has("技能已安装到当前设备"), "installed");
   checks.push("Published package downloaded and installed locally");
+  // Real UI and API, with synthetic SMB results from the disposable QA server.
+  await js(`location.hash='admin-knowledge'`);
+  await waitFor(() => has("添加资料源"), "NAS administration");
+  await click("添加资料源");
+  await fill('input[name="name"]', "部门资料验收");
+  await fill('input[name="host"]', "192.168.1.10");
+  await fill('input[name="share"]', "资料验收");
+  await fill('input[name="username"]', "fixture-reader");
+  await fill('input[name="password"]', "Synthetic-NAS-Fixture");
+  await js(
+    `(()=>{const label=[...document.querySelectorAll('.knowledge-departments label')].find(e=>e.textContent.includes(${JSON.stringify(actor.departmentName)}));if(!label)throw Error('Department checkbox missing');label.querySelector('input').click();document.querySelector('input[name=enabled]').click()})()`,
+  );
+  await click("保存");
+  await waitFor(
+    () =>
+      js(
+        `!document.querySelector('.modal') && !!document.querySelector('.knowledge-admin-table')`,
+      ),
+    "NAS source saved",
+  );
+  await click("检查连接");
+  await waitFor(() => has("连接正常"), "NAS connection checked");
+  await capture("nas-admin-synthetic.png");
+  await js(`location.hash='knowledge'`);
+  await waitFor(() => has("部门资料验收"), "authorized NAS source");
+  await js(`document.querySelector('.knowledge-source').click()`);
+  await waitFor(() => has("项目手册"), "NAS directory listing");
+  assert.equal(
+    await js(
+      `[...document.querySelectorAll('.knowledge-entry')].find(e=>e.textContent.includes('受限链接')).disabled`,
+    ),
+    true,
+  );
+  await click("项目手册");
+  await waitFor(() => has("使用说明.txt"), "NAS child directory");
+  await click("使用说明.txt");
+  await waitFor(() => has("文件信息"), "NAS metadata dialog");
+  assert.ok(await has("尚未开放内容预览"));
+  await click("关闭");
+  await click("上一级");
+  await waitFor(() => has("部门说明.txt"), "NAS parent navigation");
+  await fill('input[aria-label="搜索当前目录的名称"]', "部门说明");
+  await js(`document.querySelector('.knowledge-search').requestSubmit()`);
+  await waitFor(
+    () => js(`document.querySelectorAll('.knowledge-entry').length===1`),
+    "NAS current-directory search",
+  );
+  await capture("nas-browser-synthetic.png");
+  await js(`location.hash='settings'`);
+  await waitFor(() => has("本地记录与备份"), "NAS preview theme settings");
+  await selectOption("外观", "深色");
+  await js(`location.hash='knowledge'`);
+  await waitFor(() => has("部门资料验收"), "NAS source in dark theme");
+  await js(`document.querySelector('.knowledge-source').click()`);
+  await waitFor(() => has("项目手册"), "dark NAS directory");
+  assert.equal(await js(`document.documentElement.dataset.theme`), "dark");
+  win.setContentSize(900, 720);
+  await capture("nas-browser-dark-narrow.png");
+  assert.equal(
+    await js(`document.documentElement.scrollWidth>innerWidth`),
+    false,
+  );
+  win.setContentSize(1586, 992);
+  await js(`location.hash='settings'`);
+  await waitFor(() => has("本地记录与备份"), "restore NAS preview theme");
+  await selectOption("外观", "浅色");
+  checks.push(
+    "NAS admin creates an encrypted source with explicit department scope; employee browsing supports breadcrumbs, nested directories, metadata, name search and blocked links in light/dark narrow layouts; no NAS file content or model call",
+  );
+  await js(`location.hash='skills'`);
+  await waitFor(() => has("导入技能"), "return to skills after NAS checks");
   await require("./verify-skill-import.cjs")({
     js,
     click,

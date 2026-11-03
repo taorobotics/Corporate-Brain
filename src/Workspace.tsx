@@ -71,6 +71,7 @@ import MessageContent from "./MessageContent";
 import MessageActions from "./MessageActions";
 import { getSkin } from "../shared/skins";
 import { useChatScroll } from "./useChatScroll";
+import Knowledge from "./Knowledge";
 
 export default function Workspace(props: WorkspaceProps) {
   const {
@@ -1105,17 +1106,9 @@ export default function Workspace(props: WorkspaceProps) {
             <button className="active">公司资料</button>
             <span className="tab-note">按部门与资料权限开放</span>
           </div>
-          <Empty
-            icon={<BookOpen size={36} />}
-            title="公司知识尚未连接"
-            detail="NAS 地址、目录与访问账号配置后，会在这里展示你有权使用的资料。"
-            action={
-              user.role === "company_admin" ? (
-                <Button onClick={() => navigate("admin-knowledge")}>
-                  查看接入状态
-                </Button>
-              ) : undefined
-            }
+          <Knowledge
+            admin={user.role === "company_admin"}
+            navigate={navigate}
           />
         </div>
       )}

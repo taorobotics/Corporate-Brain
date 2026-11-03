@@ -1,0 +1,227 @@
+.knowledge-scope {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 14px 16px;
+  margin: 16px 0 20px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.6;
+}
+.knowledge-scope svg {
+  flex: none;
+  margin-top: 2px;
+}
+.knowledge-toolbar,
+.knowledge-search {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  margin: 14px 0;
+}
+.knowledge-breadcrumbs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+  flex: 1;
+  min-width: 0;
+}
+.knowledge-crumb {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  min-width: 0;
+}
+.knowledge-breadcrumbs button {
+  background: transparent;
+  border: 0;
+  color: inherit;
+  padding: 4px;
+  overflow-wrap: anywhere;
+  cursor: pointer;
+}
+.knowledge-breadcrumbs button:hover {
+  text-decoration: underline;
+}
+.knowledge-search .search {
+  flex: 1;
+  min-width: 120px;
+}
+.knowledge-loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  min-height: 180px;
+  color: var(--muted);
+}
+.knowledge-sources {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(245px, 1fr));
+  gap: 18px;
+  margin-top: 26px;
+}
+.knowledge-source {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 13px;
+  text-align: left;
+  padding: 24px;
+  border: 1px solid var(--line);
+  background: var(--panel);
+  color: inherit;
+  border-radius: 16px;
+  cursor: pointer;
+  transition:
+    border-color 0.15s,
+    transform 0.15s;
+}
+.knowledge-source:hover {
+  border-color: var(--accent);
+  transform: translateY(-2px);
+}
+.knowledge-source > span {
+  font-size: 13px;
+  color: var(--muted);
+}
+.knowledge-source strong {
+  font-size: 17px;
+}
+.knowledge-source svg {
+  color: var(--accent);
+}
+.knowledge-count {
+  font-size: 12px;
+  color: var(--muted);
+  padding: 12px 0;
+}
+.knowledge-files table {
+  min-width: 650px;
+  width: 100%;
+  table-layout: fixed;
+}
+.knowledge-files th:first-child {
+  width: 48%;
+}
+.knowledge-files th:nth-child(2) {
+  width: 15%;
+}
+.knowledge-files th:nth-child(3) {
+  width: 12%;
+}
+.knowledge-entry {
+  display: flex;
+  gap: 9px;
+  align-items: center;
+  max-width: 100%;
+  border: 0;
+  background: transparent;
+  text-align: left;
+  color: inherit;
+  cursor: pointer;
+  padding: 6px 0;
+}
+.knowledge-entry svg {
+  flex: none;
+  color: var(--accent);
+}
+.knowledge-entry span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.knowledge-entry:hover span {
+  text-decoration: underline;
+}
+.knowledge-entry:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+.knowledge-files td {
+  font-size: 13px;
+}
+.knowledge-file-info {
+  padding: 18px 0;
+  overflow-wrap: anywhere;
+}
+.knowledge-admin-table {
+  min-width: 900px;
+}
+.knowledge-admin-table td {
+  max-width: 300px;
+  overflow-wrap: anywhere;
+}
+.knowledge-admin-table small {
+  display: block;
+  color: var(--muted);
+  margin-top: 6px;
+}
+.knowledge-form {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0 20px;
+}
+.knowledge-departments {
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 16px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px 22px;
+}
+.knowledge-departments label,
+.knowledge-enable {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+}
+.knowledge-departments input,
+.knowledge-enable input {
+  width: 16px;
+  height: 16px;
+  flex: none;
+  accent-color: var(--accent);
+}
+.knowledge-enable {
+  margin: 18px 0;
+}
+.knowledge-admin .toolbar {
+  flex-wrap: wrap;
+}
+.knowledge-admin .inline-actions {
+  flex-wrap: wrap;
+}
+.knowledge-browser .notice {
+  justify-content: space-between;
+}
+@media (max-width: 950px) {
+  .knowledge-form {
+    grid-template-columns: 1fr;
+  }
+  .knowledge-search {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr) auto;
+  }
+  .knowledge-search .search {
+    min-width: 0;
+  }
+  .knowledge-toolbar {
+    align-items: flex-start;
+  }
+  .knowledge-sources {
+    grid-template-columns: 1fr;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .knowledge-source {
+    transition: none;
+  }
+  .knowledge-source:hover {
+    transform: none;
+  }
+}

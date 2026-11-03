@@ -1,0 +1,8 @@
+# Optional read-only NAS connector; install into a project-owned environment.
+# SMB passwords and company configuration never belong in this file.
+smbprotocol==1.15.0
+pyspnego==0.12.4
+cryptography==50.0.2
+cffi==2.0.0
+pycparser==2.23
+typing-extensions==4.16.0

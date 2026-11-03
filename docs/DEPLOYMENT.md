@@ -25,6 +25,8 @@ npm run desktop 启动桌面开发版。员工分发包在构建时读取 `BRAIN
 | BRAIN_UPDATE_SOURCE | public | 公开仓库默认读取 GitHub Release；可设置 private/disabled 关闭公开源，私有模式仍需 BRAIN_GITHUB_TOKEN |
 | BRAIN_DSH_ENABLED | 1 | 启用完整 DSH Agent 路由；设为 0 时回退到原 OpenAI 兼容聊天适配器 |
 | BRAIN_DSH_HOME | .cache/dsh-runtime | DSH 会话、附件和临时工作区根目录；应放在服务器私有、可清理的位置，不纳入发布包 |
+| BRAIN_NAS_PYTHON | python3 | NAS 目录连接使用的 Python 解释器，生产环境建议绝对路径 |
+| BRAIN_NAS_PYTHON_PATH | 未设置 | 本项目安装的可选 SMB 依赖目录，详见 [NAS 接入](NAS.md) |
 | DEEPSEEK_API_KEY | 未配置 | DSH 的 `web_search` 需要的 DeepSeek 搜索凭据；不配置时联网工具会据实返回不可用 |
 | DEEPSEEK_SEARCH_BASE_URL | DeepSeek 默认搜索地址 | 可选的 DeepSeek Messages 兼容搜索网关；与公司对话模型地址分开配置 |
 

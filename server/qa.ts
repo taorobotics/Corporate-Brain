@@ -27,6 +27,45 @@ const fixtureFiles: Record<string, string> = {
 const { app, library } = createPlatform({
   database: ":memory:",
   origins,
+  nas: {
+    list: async (_source, path, search) => ({
+      entries: (path
+        ? [
+            {
+              name: "使用说明.txt",
+              directory: false,
+              blocked: false,
+              bytes: 1200,
+              modified: "2026-11-03T00:00:00Z",
+            },
+          ]
+        : [
+            {
+              name: "项目手册",
+              directory: true,
+              blocked: false,
+              bytes: 0,
+              modified: null,
+            },
+            {
+              name: "部门说明.txt",
+              directory: false,
+              blocked: false,
+              bytes: 256,
+              modified: "2026-11-03T00:00:00Z",
+            },
+            {
+              name: "受限链接",
+              directory: true,
+              blocked: true,
+              bytes: 0,
+              modified: null,
+            },
+          ]
+      ).filter((e) => e.name.includes(search)),
+      truncated: false,
+    }),
+  },
   skillLibrary: {
     root: skillRoot,
     fetch: async (input) => {
