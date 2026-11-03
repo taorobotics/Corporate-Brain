@@ -1,0 +1,112 @@
+{
+  "version": "0.12.0",
+  "sourceCommit": "72a827ad07e9085a082a92df7c85c901bb97b96f",
+  "result": "passed",
+  "checkedAt": "2026-11-03T03:02:10.704Z",
+  "scope": "Private LAN Windows and Apple Silicon delivery; not a complete public GitHub Release",
+  "origin": "https://192.168.20.21:14443",
+  "serverUpgrade": {
+    "version": "0.12.0",
+    "result": "passed",
+    "verifiedAt": "2026-11-03T02:51:14.240Z",
+    "sourceCommit": "72a827ad07e9085a082a92df7c85c901bb97b96f",
+    "serverArchiveSha256": "e47ffcaa0e61e3b24024b0aea256348ad534a4a46f381be2b332a49ad29deb07",
+    "health": {
+      "status": "ok",
+      "version": "0.12.0",
+      "chatStorage": "device-only"
+    },
+    "counts": {
+      "users": 3,
+      "departments": 2
+    },
+    "dataPreserved": true,
+    "modelSettingsPreserved": true,
+    "modelCredentialsPreserved": true,
+    "backup": "/Users/staff01/CorporateBrainServer/backups/before-v0.12.0-2026-11-03T02-51-11-595Z",
+    "writeBoundary": "/Users/staff01/CorporateBrainServer"
+  },
+  "unitTests": {
+    "passed": 44,
+    "failed": 0
+  },
+  "windowsDesktopChecks": 35,
+  "macDesktopChecks": 34,
+  "windowsInstallerUiChecks": 4,
+  "macPackageChecks": 5,
+  "native": {
+    "win32-old": {
+      "version": "0.11.6",
+      "checks": [
+        "Default LAN URL, actual OS TLS trust, login and chat rendered",
+        "Old packaged client legacy selected-text copy works",
+        "Actual feedback submission with opt-in excerpt, admin table and persisted handling state",
+        "Unmodified 0.11.6 packaged client discovers 0.12.0, fully downloads and verifies SHA-256 through Mac mini"
+      ],
+      "update": {
+        "version": "0.12.0",
+        "bytes": 119373205,
+        "sha256": "fe6bd9071cc2a029ced4bd23dda13741b7a9bbce365c40d4e327093e01a485f6",
+        "target": "win32-x64",
+        "status": "ready"
+      },
+      "certificateErrorsIgnored": false
+    },
+    "win32-new": {
+      "version": "0.12.0",
+      "checks": [
+        "Default LAN URL, actual OS TLS trust, login and chat rendered",
+        "Native bounded clipboard bridge works",
+        "Actual feedback submission with opt-in excerpt, admin table and persisted handling state"
+      ],
+      "certificateErrorsIgnored": false
+    },
+    "darwin-old": {
+      "version": "0.11.6",
+      "checks": [
+        "Default LAN URL, actual OS TLS trust, login and chat rendered",
+        "Old packaged client legacy selected-text copy works",
+        "Actual feedback submission with opt-in excerpt, admin table and persisted handling state",
+        "Unmodified 0.11.6 packaged client discovers 0.12.0, fully downloads and verifies SHA-256 through Mac mini"
+      ],
+      "update": {
+        "version": "0.12.0",
+        "bytes": 136879696,
+        "sha256": "f7784666a2e9b693c33e23625333182ade7877af40e0d402ebd70c4643e9cf52",
+        "target": "darwin-arm64",
+        "status": "ready"
+      },
+      "certificateErrorsIgnored": false
+    },
+    "darwin-new": {
+      "version": "0.12.0",
+      "checks": [
+        "Default LAN URL, actual OS TLS trust, login and chat rendered",
+        "Native bounded clipboard bridge works",
+        "Actual feedback submission with opt-in excerpt, admin table and persisted handling state"
+      ],
+      "certificateErrorsIgnored": false
+    }
+  },
+  "channels": {
+    "win32-x64": {
+      "name": "Corporate-Brain-Setup-0.12.0-x64.exe",
+      "bytes": 119373205,
+      "sha256": "fe6bd9071cc2a029ced4bd23dda13741b7a9bbce365c40d4e327093e01a485f6"
+    },
+    "darwin-arm64": {
+      "name": "Corporate-Brain-0.12.0-macOS-arm64.dmg",
+      "bytes": 136879696,
+      "sha256": "f7784666a2e9b693c33e23625333182ade7877af40e0d402ebd70c4643e9cf52"
+    }
+  },
+  "windowsTrustedSignature": false,
+  "macSigning": "ad-hoc",
+  "macNotarized": false,
+  "windowsInstallUpgradeUninstallPerformed": false,
+  "intelMacPublished": false,
+  "githubSyncPausedByUser": true,
+  "cloudServerRetained": true,
+  "temporaryVerificationAccountRemoved": true,
+  "companyDatabaseOrKeysDistributed": false
+}
