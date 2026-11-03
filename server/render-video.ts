@@ -3,6 +3,7 @@ import { createRequire } from "node:module";
 import { resolve, join } from "node:path";
 import { mkdir, rm, writeFile, access } from "node:fs/promises";
 const require = createRequire(import.meta.url);
+export class RenderFailure extends Error {}
 export type RenderRequest = {
   directory: string;
   seconds: number;
@@ -19,9 +20,14 @@ export interface VideoRenderer {
 export async function renderCanvasVideo(request: RenderRequest) {
   const electron = process.env.BRAIN_RENDER_ELECTRON || require("electron");
   const ffmpeg = process.env.BRAIN_RENDER_FFMPEG || require("ffmpeg-static");
-  if (!electron || !ffmpeg) throw new Error("渲染组件尚未安装");
-  await access(electron);
-  await access(ffmpeg);
+  if (!electron || !ffmpeg)
+    throw new RenderFailure("渲染组件尚未安装，请联系管理员");
+  try {
+    await access(electron);
+    await access(ffmpeg);
+  } catch {
+    throw new RenderFailure("渲染组件文件不可用，请联系管理员");
+  }
   const scratch = join(request.directory, ".render");
   await mkdir(scratch, { recursive: true, mode: 0o700 });
   const config = join(scratch, "config.json");
@@ -115,7 +121,15 @@ export async function renderCanvasVideo(request: RenderRequest) {
         else if (code === 0) resolvePromise();
         else
           reject(
-            new Error(`Canvas 渲染失败 (${code}): ` + errorText.slice(-500)),
+            new RenderFailure(
+              /SyntaxError/.test(errorText)
+                ? "视频渲染失败：动画代码存在语法错误"
+                : /ReferenceError/.test(errorText)
+                  ? "视频渲染失败：动画使用了未定义的变量或不支持的接口"
+                  : /Encoder failed/.test(errorText)
+                    ? "视频编码失败，请重试或检查素材格式"
+                    : "视频渲染未完成，请重试；原始素材已保留",
+            ),
           );
       });
     });

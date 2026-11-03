@@ -163,6 +163,9 @@ ipcMain.handle("production:choose", async (event, userId) => {
 ipcMain.handle("production:collect", async (event, userId, id) =>
   (await productionProfile(event, userId)).collect(id),
 );
+ipcMain.handle("production:preview", async (event, userId, id, path) =>
+  (await productionProfile(event, userId)).preview(id, path),
+);
 ipcMain.handle("production:open", async (event, userId, id) => {
   const folder = await (await productionProfile(event, userId)).directory(id);
   const error = await shell.openPath(folder);

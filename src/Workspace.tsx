@@ -497,6 +497,7 @@ export default function Workspace(props: WorkspaceProps) {
           controller.signal,
           (task) => {
             productionTaskId = task.id;
+            props.production.track(task);
           },
         );
         productionTaskId = task.id;
@@ -504,7 +505,7 @@ export default function Workspace(props: WorkspaceProps) {
           type: "tool",
           id: task.id,
           name: plan.kind === "video" ? "Mac mini 视频制作" : "生成代码文件",
-          status: "done",
+          status: "running",
         });
         saveReply(
           plan.kind === "video"
@@ -818,25 +819,39 @@ export default function Workspace(props: WorkspaceProps) {
                       {message.role === "user" ? (
                         <Avatar user={user} size={30} />
                       ) : message.trace ? (
-                        <GrokBall emotion="19" size={36} active={false} />
+                        <GrokBall
+                          emotion="19"
+                          size={36}
+                          active={
+                            !!message.productionTaskId &&
+                            props.production.tasks.some(
+                              (task) =>
+                                task.id === message.productionTaskId &&
+                                !["saved", "failed", "cancelled"].includes(
+                                  task.status,
+                                ),
+                            )
+                          }
+                        />
                       ) : (
                         <Sparkle size={25} weight="fill" />
                       )}
                     </span>
                     <div className="message-body">
-                      {message.trace && (
+                      {message.trace && !message.productionTaskId && (
                         <ThinkingProcess
                           items={message.trace.items}
                           status={message.trace.status}
                           elapsed={message.trace.elapsed}
                         />
                       )}
-                      <MessageContent content={message.content} />
+                      {!message.productionTaskId && (
+                        <MessageContent content={message.content} />
+                      )}
                       {message.productionTaskId && (
                         <ChatProduction
                           id={message.productionTaskId}
                           controller={props.production}
-                          details={() => navigate("production")}
                         />
                       )}
                       {!!message.attachments?.length && (

@@ -66,6 +66,8 @@ contextBridge.exposeInMainWorld("brainDesktop", {
     state: (id) => ipcRenderer.invoke("production:state", id),
     chooseDirectory: (id) => ipcRenderer.invoke("production:choose", id),
     collect: (id, task) => ipcRenderer.invoke("production:collect", id, task),
+    preview: (id, task, path) =>
+      ipcRenderer.invoke("production:preview", id, task, path),
     open: (id, task) => ipcRenderer.invoke("production:open", id, task),
   },
   copyText: (text) => ipcRenderer.invoke("clipboard:write", text),

@@ -1,20 +1,9 @@
 import { useEffect, useRef, useState } from "react";
-import {
-  FilmStrip,
-  Code,
-  FolderOpen,
-  ArrowClockwise,
-  UploadSimple,
-  CheckCircle,
-} from "@phosphor-icons/react";
-import type { User, Connection } from "../shared/types";
-import type {
-  ProductionTask,
-  ProductionLocal,
-  ProductionKind,
-} from "../shared/production";
-import { PRODUCTION_STATUS } from "../shared/production";
-import { Button, Field, Modal } from "./components";
+import { FolderOpen, ArrowClockwise } from "@phosphor-icons/react";
+import type { User } from "../shared/types";
+import type { ProductionTask, ProductionLocal } from "../shared/production";
+import { PRODUCTION_STATUS, productionSteps } from "../shared/production";
+import { Button, Modal } from "./components";
 import { api } from "./api";
 import "./production.css";
 
@@ -23,6 +12,7 @@ export function useProduction(user: User | null) {
     [local, setLocal] = useState<ProductionLocal | null>(null);
   const [error, setError] = useState(""),
     [saving, setSaving] = useState("");
+  const [actionBusy, setActionBusy] = useState("");
   const refreshRef = useRef<() => Promise<void>>(async () => {});
   useEffect(() => {
     setTasks([]);
@@ -66,7 +56,7 @@ export function useProduction(user: User | null) {
     };
     refreshRef.current = refresh;
     void refresh();
-    const timer = window.setInterval(() => void refresh(), 6000);
+    const timer = window.setInterval(() => void refresh(), 2000);
     const online = () => void refresh();
     window.addEventListener("online", online);
     return () => {
@@ -95,12 +85,29 @@ export function useProduction(user: User | null) {
     }
   };
   return {
+    userId: user?.id ?? "",
     tasks,
     local,
     error,
     saving,
     choose,
     open,
+    actionBusy,
+    track: (task: ProductionTask) =>
+      setTasks((list) => [task, ...list.filter((item) => item.id !== task.id)]),
+    action: async (id: string, operation: "start" | "cancel") => {
+      if (actionBusy) return;
+      setActionBusy(id);
+      try {
+        await api(`/production/${id}/${operation}`, {});
+        setError("");
+        await refreshRef.current();
+      } catch (e) {
+        setError((e as Error).message);
+      } finally {
+        setActionBusy("");
+      }
+    },
     refresh: () => refreshRef.current(),
   };
 }
@@ -108,35 +115,209 @@ export type ProductionController = ReturnType<typeof useProduction>;
 export function ChatProduction({
   id,
   controller,
-  details,
 }: {
   id: string;
   controller: ProductionController;
-  details: () => void;
 }) {
+  const [cancel, setCancel] = useState(false);
+  const [preview, setPreview] = useState<{
+    url?: string;
+    text?: string;
+    name: string;
+  } | null>(null);
+  const [previewError, setPreviewError] = useState("");
+  const [previewBusy, setPreviewBusy] = useState(false);
+  useEffect(
+    () => () => {
+      if (preview?.url) URL.revokeObjectURL(preview.url);
+    },
+    [preview?.url],
+  );
   const task = controller.tasks.find((item) => item.id === id);
   const receipt = controller.local?.receipts.find((item) => item.id === id);
-  const status = receipt ? "saved" : task?.status;
+  const status = task?.status ?? (receipt ? "saved" : undefined);
+  const saving = controller.saving === id;
+  const terminal = status && ["saved", "failed", "cancelled"].includes(status);
+  const steps = (
+    task?.steps?.length
+      ? task.steps
+      : productionSteps(task?.kind ?? "code").map((step) =>
+          status === "saved" ? { ...step, status: "done" as const } : step,
+        )
+  ).map((step) =>
+    step.id === "save" && saving
+      ? {
+          ...step,
+          status: "running" as const,
+          detail: "下载所有成果并逐个校验 SHA-256",
+        }
+      : step,
+  );
+  const previewFile = async (path: string) => {
+    setPreviewBusy(true);
+    setPreviewError("");
+    try {
+      const bridge = window.brainDesktop?.production;
+      if (!bridge?.preview)
+        throw Error(
+          "当前客户端请使用“打开成果文件夹”；安装新版客户端后可在这里预览。",
+        );
+      const result = await bridge.preview(controller.userId, id, path);
+      setPreview(
+        result.bytes
+          ? {
+              name: path,
+              url: URL.createObjectURL(
+                new Blob([new Uint8Array(result.bytes)], { type: result.mime }),
+              ),
+            }
+          : { name: path, text: result.content ?? "" },
+      );
+    } catch (e) {
+      setPreviewError((e as Error).message);
+    } finally {
+      setPreviewBusy(false);
+    }
+  };
   return (
     <section
       className="chat-production"
       aria-label="对话制作任务"
       data-status={status ?? "loading"}
     >
-      <strong>{task?.kind === "video" ? "视频与源代码" : "制作成果"}</strong>
+      <div className="workflow-heading">
+        <strong>
+          {task?.kind === "video" ? "视频与源代码" : "项目源文件"}
+        </strong>
+        <span className={`workflow-state ${!terminal ? "is-active" : ""}`}>
+          {status === "saved"
+            ? "已交付"
+            : status === "failed"
+              ? "需要重试"
+              : status === "cancelled"
+                ? "已停止"
+                : "自动执行中"}
+        </span>
+      </div>
       <p role="status">
-        {controller.saving === id
+        {saving
           ? "正在保存到本机并校验文件…"
           : status
             ? PRODUCTION_STATUS[status]
             : "正在读取制作状态…"}
       </p>
-      {task && ["queued", "generating", "rendering"].includes(task.status) && (
-        <progress value={task.progress} max={100} />
+      {task && !terminal && (
+        <progress
+          aria-label="制作进度"
+          value={saving ? 96 : task.status === "ready" ? 94 : task.progress}
+          max={100}
+        />
+      )}
+      <details className="workflow-plan" open={!terminal}>
+        <summary>
+          执行计划 · {steps.length} 步{" "}
+          <span>
+            {steps.filter((step) => step.status === "done").length}/
+            {steps.length}
+          </span>
+        </summary>
+        <ol aria-label="任务执行步骤">
+          {steps.map((step) => (
+            <li key={step.id} data-step={step.id} data-state={step.status}>
+              <span className="workflow-dot" aria-hidden="true">
+                {step.status === "done"
+                  ? "✓"
+                  : step.status === "failed"
+                    ? "!"
+                    : step.status === "cancelled"
+                      ? "−"
+                      : ""}
+              </span>
+              <div>
+                <strong>{step.title}</strong>
+                {step.detail && (
+                  <details className="workflow-detail">
+                    <summary>
+                      {step.status === "failed"
+                        ? "查看失败原因"
+                        : "查看执行内容"}
+                    </summary>
+                    <p>{step.detail}</p>
+                  </details>
+                )}
+              </div>
+              <small>
+                {step.status === "running"
+                  ? "进行中"
+                  : step.status === "done"
+                    ? "已完成"
+                    : step.status === "failed"
+                      ? "失败"
+                      : step.status === "cancelled"
+                        ? "已取消"
+                        : "待执行"}
+              </small>
+            </li>
+          ))}
+        </ol>
+      </details>
+      {task?.status === "rendering" && (
+        <small>
+          渲染进度{" "}
+          {Math.max(
+            0,
+            Math.min(100, Math.round(((task.progress - 15) / 75) * 100)),
+          )}
+          %
+        </small>
       )}
       {receipt && <small>{receipt.directory}</small>}
       {task?.error && <small role="alert">{task.error}</small>}
       {controller.error && <small role="alert">{controller.error}</small>}
+      {!!receipt?.files.length && (
+        <details className="workflow-files">
+          <summary>成果文件 · {receipt.files.length} 个</summary>
+          <ul>
+            {receipt.files.map((file) => (
+              <li key={file.path}>
+                <span>{file.path}</span>
+                <small>{Math.max(1, Math.ceil(file.size / 1024))} KB</small>
+                {(file.path.startsWith("code/") ||
+                  file.path === "output/video.mp4" ||
+                  file.path === "plan.md") && (
+                  <Button
+                    disabled={previewBusy}
+                    onClick={() => void previewFile(file.path)}
+                  >
+                    预览
+                  </Button>
+                )}
+              </li>
+            ))}
+          </ul>
+        </details>
+      )}
+      {preview && (
+        <div className="workflow-preview">
+          <div>
+            <strong>{preview.name}</strong>
+            <Button onClick={() => setPreview(null)}>关闭预览</Button>
+          </div>
+          {preview.url ? (
+            <video
+              src={preview.url}
+              controls
+              preload="metadata"
+              aria-label="制作成片预览"
+            />
+          ) : (
+            <pre>
+              <code>{preview.text}</code>
+            </pre>
+          )}
+        </div>
+      )}
+      {previewError && <small role="alert">{previewError}</small>}
       <div className="production-actions">
         {receipt && (
           <Button onClick={() => void controller.open(id)}>
@@ -144,8 +325,48 @@ export function ChatProduction({
             打开成果文件夹
           </Button>
         )}
-        <Button onClick={details}>查看任务详情</Button>
+        {task && ["failed", "uploading"].includes(task.status) && (
+          <Button
+            disabled={!!controller.actionBusy}
+            onClick={() => void controller.action(id, "start")}
+          >
+            <ArrowClockwise size={17} />
+            在此重试
+          </Button>
+        )}
+        {task && !["saved", "cancelled", "cleaning"].includes(task.status) && (
+          <Button
+            disabled={saving || !!controller.actionBusy}
+            onClick={() => setCancel(true)}
+          >
+            停止任务
+          </Button>
+        )}
+        {task?.status === "ready" && !controller.local?.directory && (
+          <Button onClick={() => void controller.choose()}>选择保存位置</Button>
+        )}
       </div>
+      {cancel && (
+        <Modal title="停止这份任务？" close={() => setCancel(false)}>
+          <p>
+            将停止制作并清理 Mac mini
+            上该任务的临时文件，已经保存到本机的文件会保留。
+          </p>
+          <div className="production-actions">
+            <Button onClick={() => setCancel(false)}>继续制作</Button>
+            <Button
+              primary
+              disabled={!!controller.actionBusy}
+              onClick={() => {
+                setCancel(false);
+                void controller.action(id, "cancel");
+              }}
+            >
+              停止并清理
+            </Button>
+          </div>
+        </Modal>
+      )}
     </section>
   );
 }
@@ -179,374 +400,25 @@ export function ProductionWorks({
 }: {
   controller: ProductionController;
 }) {
+  const ids = [
+    ...new Set([
+      ...controller.tasks.map((task) => task.id),
+      ...(controller.local?.receipts.map((receipt) => receipt.id) ?? []),
+    ]),
+  ];
   return (
     <section className="production-saved">
-      <h2>已保存到这台电脑</h2>
-      {controller.local?.receipts.length ? (
-        controller.local.receipts.map((receipt) => (
-          <div className="production-receipt" key={receipt.id}>
-            <CheckCircle size={22} />
-            <div>
-              <strong>
-                {receipt.files.some((f) => f.path.endsWith("video.mp4"))
-                  ? "视频与源代码"
-                  : "代码成果"}
-              </strong>
-              <small>{receipt.directory}</small>
-              <small>
-                {receipt.files.length} 个文件 ·{" "}
-                {new Date(receipt.savedAt).toLocaleString()}
-              </small>
-            </div>
-            <Button onClick={() => void controller.open(receipt.id)}>
-              打开文件夹
-            </Button>
-          </div>
-        ))
-      ) : (
-        <p className="muted">制作中心的成果保存完成后，会出现在这里。</p>
+      <h2>对话制作成果</h2>
+      <p className="muted">
+        直接在 AI
+        对话中描述需求，执行进度与成果会显示在原对话。这里保留任务记录，方便继续接收和查看。
+      </p>
+      {ids.map((id) => (
+        <ChatProduction key={id} id={id} controller={controller} />
+      ))}
+      {!ids.length && (
+        <p className="muted">在对话中制作代码或视频后，成果会出现在这里。</p>
       )}
     </section>
-  );
-}
-export default function Production({
-  user,
-  connections,
-  controller,
-}: {
-  user: User;
-  connections: Connection[];
-  controller: ProductionController;
-}) {
-  const seed = useRef(
-    (() => {
-      try {
-        return JSON.parse(
-          sessionStorage.getItem(`production-draft:${user.id}`) || "{}",
-        );
-      } catch {
-        return {};
-      }
-    })(),
-  );
-  const [kind, setKind] = useState<ProductionKind>(
-    seed.current.kind === "code" ? "code" : "video",
-  );
-  const [prompt, setPrompt] = useState<string>(seed.current.prompt || ""),
-    [seconds, setSeconds] = useState(10),
-    [connectionId, setConnectionId] = useState("");
-  const [files, setFiles] = useState<File[]>([]),
-    [busy, setBusy] = useState(false),
-    [message, setMessage] = useState(""),
-    [cancelId, setCancelId] = useState("");
-  const models = connections.filter(
-    (item) => item.kind === "chat" && item.enabled,
-  );
-  const model = models.find((item) => item.id === connectionId) || models[0];
-  useEffect(() => {
-    sessionStorage.setItem(
-      `production-draft:${user.id}`,
-      JSON.stringify({ kind, prompt }),
-    );
-  }, [kind, prompt, user.id]);
-  async function submit() {
-    if (!model || !controller.local?.directory || busy) return;
-    setBusy(true);
-    setMessage("正在提交…");
-    try {
-      if (
-        files.length > 8 ||
-        files.some((f) => f.size > 128 * 1024 ** 2 || !f.size) ||
-        files.reduce((s, f) => s + f.size, 0) > 512 * 1024 ** 2
-      )
-        throw Error("最多 8 个素材，每个最多 128 MB，合计最多 512 MB");
-      const task = await api<ProductionTask>("/production", {
-        kind,
-        prompt,
-        seconds,
-        deviceId: controller.local.deviceId,
-        connectionId: model.id,
-        inputs: files.map((f) => ({
-          name: f.name.normalize("NFC"),
-          size: f.size,
-        })),
-      });
-      try {
-        for (let i = 0; i < files.length; i++) {
-          setMessage(`正在上传素材 ${i + 1}/${files.length}：${files[i].name}`);
-          const response = await fetch(
-            `/api/production/${task.id}/materials/${i}`,
-            {
-              method: "PUT",
-              credentials: "include",
-              headers: { "Content-Type": "application/octet-stream" },
-              body: files[i],
-              signal: AbortSignal.timeout(10 * 60_000),
-            },
-          );
-          if (!response.ok)
-            throw Error((await response.json()).error || "素材上传失败");
-        }
-        await api(`/production/${task.id}/start`, {});
-      } catch (error) {
-        // Do not silently delete successfully uploaded materials after a network failure.
-        throw Error(
-          `${(error as Error).message}。任务已保留，可在下方重试或取消后重新提交。`,
-        );
-      }
-      setPrompt("");
-      setFiles([]);
-      setMessage("已提交。可以切换页面，成果完成后会自动保存到这台电脑。");
-      await controller.refresh();
-    } catch (e) {
-      setMessage((e as Error).message);
-      await controller.refresh();
-    } finally {
-      setBusy(false);
-    }
-  }
-  async function action(id: string, operation: "start" | "cancel") {
-    try {
-      await api(`/production/${id}/${operation}`, {});
-      setCancelId("");
-      await controller.refresh();
-    } catch (e) {
-      setMessage((e as Error).message);
-    }
-  }
-  return (
-    <div className="page production-page">
-      <header className="production-heading">
-        <div>
-          <p className="production-eyebrow">公司大脑 · 制作中心</p>
-          <h1>把想法做成文件</h1>
-          <p>Mac mini 负责制作，你的电脑保存成果。</p>
-        </div>
-        <FilmStrip size={44} weight="duotone" />
-      </header>
-      {!window.brainDesktop?.production && (
-        <div className="production-notice" role="status">
-          自动保存需要 0.17.0
-          或更高版本客户端。请先更新客户端，再选择本机文件夹。
-        </div>
-      )}
-      <ProductionLocation controller={controller} />
-      <div className="production-grid">
-        <section className="production-compose">
-          <div className="production-kind" role="group" aria-label="制作类型">
-            <button
-              disabled={busy}
-              className={kind === "video" ? "active" : ""}
-              onClick={() => setKind("video")}
-            >
-              <FilmStrip size={22} />
-              <strong>代码视频</strong>
-              <small>动画、字幕与图文短片</small>
-            </button>
-            <button
-              disabled={busy}
-              className={kind === "code" ? "active" : ""}
-              onClick={() => setKind("code")}
-            >
-              <Code size={22} />
-              <strong>代码文件</strong>
-              <small>完整源码，保存到本机</small>
-            </button>
-          </div>
-          <Field label="你想制作什么？">
-            <textarea
-              rows={7}
-              value={prompt}
-              maxLength={18000}
-              disabled={busy}
-              onChange={(e) => setPrompt(e.target.value)}
-              placeholder={
-                kind === "video"
-                  ? "例如：制作一段 10 秒的产品发布视频，暖白背景，标题逐字出现，最后展示品牌口号。"
-                  : "例如：生成一个可本地打开的产品介绍网页，附运行说明。"
-              }
-            />
-          </Field>
-          <div className="production-options">
-            <Field label="使用模型">
-              <select
-                disabled={busy}
-                value={model?.id || ""}
-                onChange={(e) => setConnectionId(e.target.value)}
-              >
-                {!models.length && <option value="">请先配置对话模型</option>}
-                {models.map((m) => (
-                  <option key={m.id} value={m.id}>
-                    {m.name}
-                  </option>
-                ))}
-              </select>
-            </Field>
-            {kind === "video" && (
-              <Field label="时长">
-                <select
-                  disabled={busy}
-                  value={seconds}
-                  onChange={(e) => setSeconds(Number(e.target.value))}
-                >
-                  {[5, 10, 15, 30, 60].map((s) => (
-                    <option key={s} value={s}>
-                      {s} 秒
-                    </option>
-                  ))}
-                </select>
-              </Field>
-            )}
-          </div>
-          <label className="production-upload">
-            <UploadSimple size={22} />
-            <span>
-              添加原始素材
-              <small>最多 8 个，每个 128 MB · 素材会随成果完整回传</small>
-            </span>
-            <input
-              type="file"
-              multiple
-              disabled={busy}
-              onChange={(e) => {
-                setFiles(Array.from(e.target.files || []));
-                e.target.value = "";
-              }}
-            />
-          </label>
-          {!!files.length && (
-            <ul className="production-files">
-              {files.map((file, i) => (
-                <li key={i}>
-                  <span>
-                    {file.name} · {(file.size / 1024 ** 2).toFixed(1)} MB
-                  </span>
-                  <button
-                    disabled={busy}
-                    onClick={() =>
-                      setFiles((list) => list.filter((_, n) => n !== i))
-                    }
-                    aria-label={`移除 ${file.name}`}
-                  >
-                    ×
-                  </button>
-                </li>
-              ))}
-            </ul>
-          )}
-          <p className="production-help">
-            {kind === "video"
-              ? "免费代码渲染 · 720p / 24 帧。图片、视频可入画，首个音频文件作配乐；其他素材原样回传。模型根据你的说明和文本素材编写动画。"
-              : "代码生成后作为文件交付，请在本机检查后运行。"}
-          </p>
-          <Button
-            primary
-            disabled={
-              busy ||
-              !model ||
-              prompt.trim().length < 2 ||
-              !controller.local?.directory
-            }
-            onClick={() => void submit()}
-          >
-            {busy
-              ? "正在提交…"
-              : kind === "video"
-                ? "交给 Mac mini 制作"
-                : "生成代码文件"}
-          </Button>
-          {message && (
-            <p className="production-notice" role="status">
-              {message}
-            </p>
-          )}
-        </section>
-        <section className="production-tasks">
-          <div className="production-section-heading">
-            <h2>我的制作任务</h2>
-            <Button onClick={() => void controller.refresh()}>
-              <ArrowClockwise size={16} />
-              刷新
-            </Button>
-          </div>
-          {controller.error && (
-            <p className="production-notice" role="alert">
-              {controller.error} 文件尚未确认保存时，服务器会继续保留。
-            </p>
-          )}
-          {!controller.tasks.length && (
-            <div className="production-empty">
-              <FilmStrip size={36} />
-              <p>第一份成果，从一个想法开始</p>
-              <small>关闭客户端不会取消制作，重新打开后继续回传。</small>
-            </div>
-          )}
-          {controller.tasks.map((task) => {
-            const here = task.deviceId === controller.local?.deviceId;
-            const receipt = controller.local?.receipts.find(
-              (r) => r.id === task.id,
-            );
-            return (
-              <article className="production-task" key={task.id}>
-                <div className="production-section-heading">
-                  <strong>
-                    {task.kind === "video" ? "代码视频" : "代码文件"}
-                  </strong>
-                  <time>{new Date(task.createdAt).toLocaleString()}</time>
-                </div>
-                <p className={`production-status status-${task.status}`}>
-                  {controller.saving === task.id
-                    ? "正在保存到本机并校验文件…"
-                    : PRODUCTION_STATUS[task.status]}
-                </p>
-                {["generating", "rendering"].includes(task.status) && (
-                  <progress value={task.progress} max={100} />
-                )}
-                {task.error && <small>{task.error}</small>}
-                {!here && !["saved", "cancelled"].includes(task.status) && (
-                  <small>请在提交任务的电脑上接收成果。</small>
-                )}
-                <div className="production-actions">
-                  {receipt && (
-                    <Button onClick={() => void controller.open(task.id)}>
-                      打开成果文件夹
-                    </Button>
-                  )}
-                  {["failed", "uploading"].includes(task.status) && (
-                    <Button onClick={() => void action(task.id, "start")}>
-                      重试制作
-                    </Button>
-                  )}
-                  {!["saved", "cancelled", "cleaning"].includes(
-                    task.status,
-                  ) && (
-                    <Button
-                      disabled={controller.saving === task.id}
-                      onClick={() => setCancelId(task.id)}
-                    >
-                      取消任务
-                    </Button>
-                  )}
-                </div>
-              </article>
-            );
-          })}
-        </section>
-      </div>
-      {cancelId && (
-        <Modal title="取消这份制作任务？" close={() => setCancelId("")}>
-          <p>
-            取消后会停止制作，并删除 Mac mini
-            上该任务的素材、代码与成果。本机已有文件会保留。
-          </p>
-          <div className="production-actions">
-            <Button onClick={() => setCancelId("")}>继续保留</Button>
-            <Button primary onClick={() => void action(cancelId, "cancel")}>
-              取消并清理
-            </Button>
-          </div>
-        </Modal>
-      )}
-    </div>
   );
 }

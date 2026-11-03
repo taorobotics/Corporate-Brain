@@ -30,15 +30,22 @@ async function fixture(
   const queue = new ProductionQueue(db, {
     root,
     authorize: () => {},
-    generate:
-      generate ??
-      (async () =>
-        JSON.stringify({
-          files: [
-            { path: "README.md", content: "合成验收源码" },
-            { path: "src/main.js", content: "console.log('example')" },
-          ],
-        })),
+    generate: async (...args) =>
+      args[2][0].content.startsWith("Plan the production")
+        ? JSON.stringify({
+            title: "合成执行计划",
+            brief: "生成项目文件并验证交付",
+          })
+        : (
+            generate ??
+            (async () =>
+              JSON.stringify({
+                files: [
+                  { path: "README.md", content: "合成验收源码" },
+                  { path: "src/main.js", content: "console.log('example')" },
+                ],
+              }))
+          )(...args),
   });
   await queue.initialized;
   t.after(async () => {
@@ -160,6 +167,73 @@ test("rejects traversal, reserved paths, duplicate filenames and excess jobs", a
   await queue.cancel(owner, a.id);
   await create();
 });
+
+test("workflow persists the actual plan and stages; completion waits for the matching local receipt", async (t) => {
+  let release!: () => void;
+  const gate = new Promise<void>((resolve) => {
+    release = resolve;
+  });
+  const f = await fixture(t, async () => {
+    await gate;
+    return JSON.stringify({
+      files: [{ path: "main.js", content: "complete" }],
+    });
+  });
+  const task = await f.create();
+  await f.queue.start(f.owner, task.id);
+  for (
+    let i = 0;
+    i < 100 && f.queue.list(f.owner)[0].status !== "generating";
+    i++
+  )
+    await new Promise((r) => setTimeout(r, 5));
+  let current = f.queue.list(f.owner)[0];
+  assert.equal(current.steps?.[0].status, "done");
+  assert.match(current.steps![0].detail!, /合成执行计划/);
+  assert.equal(current.steps?.[1].status, "running");
+  assert.equal(current.steps?.[4].status, "pending");
+  release();
+  current = await f.done(task.id);
+  assert.deepEqual(
+    current.steps?.map((step) => step.status),
+    ["done", "done", "done", "done", "pending"],
+  );
+  const manifest = f.queue.manifest(f.owner, task.id, f.deviceId);
+  assert.ok(manifest.files.some((file) => file.path === "plan.md"));
+  await f.queue.acknowledge(f.owner, task.id, {
+    deviceId: f.deviceId,
+    token: manifest.token,
+    files: manifest.files,
+  });
+  assert.ok(
+    f.queue.list(f.owner)[0].steps?.every((step) => step.status === "done"),
+  );
+});
+
+test("invalid model output has exactly one automatic repair; persistent failure stays at the actual step and can retry", async (t) => {
+  let calls = 0;
+  const f = await fixture(t, async () => {
+    calls++;
+    return calls < 3
+      ? '{"files":'
+      : JSON.stringify({
+          files: [{ path: "README.md", content: "recovered" }],
+        });
+  });
+  const task = await f.create();
+  await f.queue.start(f.owner, task.id);
+  let current = await f.done(task.id);
+  assert.equal(current.status, "failed");
+  assert.equal(calls, 2);
+  assert.equal(current.steps?.[1].status, "failed");
+  assert.equal(current.steps?.[2].status, "pending");
+  assert.match(current.error, /不完整/);
+  await f.queue.start(f.owner, task.id);
+  current = await f.done(task.id);
+  assert.equal(current.status, "ready");
+  assert.equal(calls, 3);
+  assert.equal(current.steps?.[1].status, "done");
+});
 test("model source with unsafe paths is not executed or written outside its task", async (t) => {
   const { queue, owner, create, done } = await fixture(t, async () =>
     JSON.stringify({
@@ -198,8 +272,14 @@ test("server restart preserves ready output and marks interrupted tasks retryabl
   const options = {
     root: join(root, "tasks"),
     authorize: () => {},
-    generate: async () =>
-      JSON.stringify({ files: [{ path: "a.txt", content: "preserved" }] }),
+    generate: async (
+      _owner: string,
+      _connection: string,
+      messages: { content: string }[],
+    ) =>
+      messages[0].content.startsWith("Plan the production")
+        ? JSON.stringify({ title: "重启验收", brief: "生成并保存文件" })
+        : JSON.stringify({ files: [{ path: "a.txt", content: "preserved" }] }),
   };
   const first = new ProductionQueue(db, options);
   await first.initialized;

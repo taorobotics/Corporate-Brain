@@ -47,10 +47,7 @@ import SkinCenter, { type SkinSelection } from "./Skins";
 import { getSkin, skinTokens } from "../shared/skins";
 import EntryExperience from "./EntryExperience";
 import { Avatar } from "./Profile";
-import Production, {
-  useProduction,
-  type ProductionController,
-} from "./Production";
+import { useProduction, type ProductionController } from "./Production";
 
 const navigation = [
   { id: "chat", label: "新建任务", icon: NotePencil },
@@ -58,7 +55,6 @@ const navigation = [
   { id: "knowledge", label: "公司知识", icon: BookOpen },
   { id: "skills", label: "技能中心", icon: Sparkle },
   { id: "works", label: "我的作品", icon: Images },
-  { id: "production", label: "制作中心", icon: Sparkle },
 ];
 export type WorkspaceProps = {
   production: ProductionController;
@@ -84,7 +80,11 @@ export default function App() {
     [user, setUser] = useState<User | null>(null),
     [bootstrap, setBootstrap] = useState(false),
     [startupError, setStartupError] = useState("");
-  const [page, setPage] = useState(location.hash.slice(1) || "chat"),
+  const [page, setPage] = useState(
+      location.hash.slice(1) === "production"
+        ? "works"
+        : location.hash.slice(1) || "chat",
+    ),
     [conversationId, setConversationId] = useState<string | null>(null),
     [sidebar, setSidebar] = useState(true),
     [accountOpen, setAccountOpen] = useState(false),
@@ -148,6 +148,7 @@ export default function App() {
     notify(`已使用 ${getSkin(selection.skin).name}，偏好将保存在本机。`);
   };
   const navigate = (value: string) => {
+    if (value === "production") value = "works";
     location.hash = value;
     setPage(value);
     setAccountOpen(false);
@@ -184,7 +185,12 @@ export default function App() {
   }
   useEffect(() => {
     void initialize();
-    const hash = () => setPage(location.hash.slice(1) || "chat");
+    const hash = () =>
+      setPage(
+        location.hash.slice(1) === "production"
+          ? "works"
+          : location.hash.slice(1) || "chat",
+      );
     window.addEventListener("hashchange", hash);
     return () => window.removeEventListener("hashchange", hash);
   }, []);
@@ -758,12 +764,6 @@ export default function App() {
                   setSkinPreview({ ...value, owner: user.id })
                 }
                 back={() => navigate("settings")}
-              />
-            ) : page === "production" ? (
-              <Production
-                user={user}
-                connections={connections}
-                controller={production}
               />
             ) : isAdmin ? (
               <Admin {...workspaceProps} />

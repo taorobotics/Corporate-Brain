@@ -158,6 +158,46 @@ class ProductionLocal {
     if (!response.ok) throw Error(value.error || "成果服务暂时不可用");
     return value;
   }
+  async preview(id, path) {
+    await this.verify();
+    if (!uuid.test(id)) throw Error("任务标识无效");
+    safePath(path);
+    const config = await this.config();
+    const receipt = config.receipts.find((item) => item.id === id);
+    const file = receipt?.files.find((item) => item.path === path);
+    if (
+      !file ||
+      !(
+        path === "output/video.mp4" ||
+        path.startsWith("code/") ||
+        path === "plan.md"
+      )
+    )
+      throw Error("只能预览当前账号已保存的成片和源代码");
+    const video = path === "output/video.mp4";
+    if (file.size > (video ? 64 * 1024 ** 2 : 512 * 1024))
+      throw Error("文件较大，请打开成果文件夹查看");
+    const target = join(receipt.directory, path);
+    if (resolve(await fs.realpath(target)) !== resolve(target))
+      throw Error("预览文件含链接或已移动");
+    const handle = await fs.open(
+      target,
+      constants.O_RDONLY | (constants.O_NOFOLLOW || 0),
+    );
+    try {
+      const stat = await handle.stat();
+      if (!stat.isFile() || stat.nlink !== 1 || stat.size !== file.size)
+        throw Error("预览文件已变化");
+      const bytes = await handle.readFile();
+      if (createHash("sha256").update(bytes).digest("hex") !== file.sha256)
+        throw Error("文件已被修改，请在成果文件夹中查看");
+      return video
+        ? { mime: "video/mp4", bytes: new Uint8Array(bytes) }
+        : { mime: "text/plain", content: bytes.toString("utf8") };
+    } finally {
+      await handle.close();
+    }
+  }
   async collect(id) {
     if (!uuid.test(id)) throw Error("任务标识无效");
     if (this.busy) throw Error("正在保存另一份成果");

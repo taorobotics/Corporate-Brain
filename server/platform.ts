@@ -19,6 +19,10 @@ import { mountNas, type NasOptions } from "./nas";
 import { mountDocuments } from "./documents";
 import { mountProfile } from "./profile";
 import { mountProduction, ProductionError } from "./production";
+import {
+  productionCompletionBody,
+  productionCompletionText,
+} from "./production-output";
 import { defaultAvatar } from "../shared/avatars";
 import {
   visualInputs,
@@ -880,12 +884,7 @@ export function createPlatform(
           "Content-Type": "application/json",
           Authorization: `Bearer ${store.decrypt(row.secret)}`,
         },
-        body: JSON.stringify({
-          model: row.model,
-          messages,
-          stream: false,
-          max_tokens: 12000,
-        }),
+        body: JSON.stringify(productionCompletionBody(row.model, messages)),
         signal: AbortSignal.any([signal, AbortSignal.timeout(240_000)]),
       });
       if (!response.ok)
@@ -894,9 +893,7 @@ export function createPlatform(
           `模型服务返回 ${response.status}，请检查模型配置或余额`,
         );
       const result = (await response.json()) as Row;
-      const content = result.choices?.[0]?.message?.content;
-      if (typeof content !== "string" || content.length > 5_000_000)
-        throw new ProductionError(502, "模型未返回有效的代码内容");
+      const content = productionCompletionText(result);
       store.audit(owner, "production.generated", connectionId);
       return content;
     },

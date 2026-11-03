@@ -155,3 +155,22 @@ test("unsafe manifest paths and junction escapes are rejected", async (t) => {
   await assert.rejects(checkedDirectory(f.output, "link/sub"), /链接/);
   await assert.rejects(stat(join(outside, "sub")), { code: "ENOENT" });
 });
+
+test("preview reads only verified saved output from this profile and never executes source", async (t) => {
+  const f = await fixture(t);
+  await f.local.collect(f.id);
+  const source = await f.local.preview(f.id, "code/main.js");
+  assert.equal(source.mime, "text/plain");
+  assert.equal(source.content, "source code");
+  const video = await f.local.preview(f.id, "output/video.mp4");
+  assert.equal(Buffer.from(video.bytes).toString(), "synthetic video data");
+  await assert.rejects(
+    f.local.preview(randomUUID(), "code/main.js"),
+    /只能预览/,
+  );
+  await assert.rejects(f.local.preview(f.id, "../outside"), /不安全/);
+  await assert.rejects(f.local.preview(f.id, "materials/素材.txt"), /只能预览/);
+  const receipt = (await f.local.state()).receipts[0];
+  await writeFile(join(receipt.directory, "code/main.js"), "employee edit");
+  await assert.rejects(f.local.preview(f.id, "code/main.js"), /变化|修改/);
+});
