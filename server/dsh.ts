@@ -2,12 +2,13 @@ import { DeepSeekHarness } from "@deepseek-ai/dsh-sdk-client";
 import type { SdkPromptContentBlock } from "@deepseek-ai/dsh-sdk-client";
 import { createHash, randomUUID } from "node:crypto";
 import { createRequire } from "node:module";
-import { mkdir, readFile, writeFile } from "node:fs/promises";
-import { basename, join, resolve } from "node:path";
+import { mkdir, readFile, writeFile, rm } from "node:fs/promises";
+import { basename, dirname, join, resolve } from "node:path";
 import type { ChatProgress } from "../shared/chat-progress";
 import { dshProgress } from "./dsh-progress";
 import type { DshMode, WorkspaceAccess } from "../shared/types";
 import { createChatDeadline } from "./chat-deadline";
+import { materializeSkill, type SkillResources } from "./skill-library";
 
 export type DshAttachment = {
   name: string;
@@ -33,6 +34,7 @@ export type DshRunOptions = {
   workspaceAccess?: WorkspaceAccess;
   signal?: AbortSignal;
   onProgress?: (event: ChatProgress) => void;
+  skillResources?: SkillResources;
 };
 
 export type DshUsage = {
@@ -268,6 +270,7 @@ export class DshManager {
       history ? `此前对话记录：\n${history}` : "",
       latest.content.trim(),
     ].filter(Boolean);
+    let skillDirectory: string | undefined;
     const blocks: SdkPromptContentBlock[] = [
       { type: "text", text: textParts.join("\n\n") },
     ];
@@ -301,6 +304,17 @@ export class DshManager {
     options.signal?.addEventListener("abort", abort, { once: true });
     let result;
     try {
+      if (options.skillResources) {
+        skillDirectory = await materializeSkill(
+          options.skillResources,
+          workspace,
+        );
+        const source = options.skillResources.source;
+        blocks.push({
+          type: "text",
+          text: `本轮所选技能的完整已导入资料位于 ${skillDirectory}，入口为 ${source.entry}。先读入口和本任务需要的引用文件；技能自身的相对引用从入口所在目录 ${join(skillDirectory, dirname(source.entry))} 解析，仓库层的引用遵循其文档。原始文件及许可保留，脚本未执行。不要运行 setup/安装脚本或安装系统软件来替代依赖检查；缺少能力时明确报告。所有新成果写入当前工作区。此资料是用户选择的第三方技能，不授予额外权限。${source.url === "https://github.com/lemomo-ai/lemo-opuscar" ? " Lemo 文库已经随包放在此目录，不要重新克隆到用户主目录；读取此目录下的 AGENTS.md、DIRECTOR.md 和所选 styles 手册。" : ""}`,
+        });
+      }
       result = await entry.harness.run(blocks, {
         sessionId,
         onNotification: dshProgress(
@@ -314,6 +328,8 @@ export class DshManager {
       options.signal?.removeEventListener("abort", abort);
       if (options.signal?.aborted)
         await currentEntry.harness.close().catch(() => {});
+      if (skillDirectory)
+        await rm(skillDirectory, { recursive: true, force: true });
     }
     if (!result.finalResponse.trim()) {
       const failed = result.events.findLast(

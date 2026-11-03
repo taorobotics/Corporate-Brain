@@ -27,6 +27,7 @@
     "UI source selection, local draft and package preview submit workflow",
     "Company-scope review through the real UI",
     "Published package downloaded and installed locally",
+    "GitHub and actual ZIP upload previews preserve references/license, require acknowledgement, publish or submit for review, install locally and fit a dark narrow window",
     "Default/light/dark appearance selection saves native startup preference; default remains light",
     "Theme dropdown updates local preferences and renders readable dark menu states",
     "62 skins: search, live preview without persistence, cancel, artwork, dark mode, native save/reload, restore Claude default",

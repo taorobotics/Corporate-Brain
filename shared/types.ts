@@ -43,6 +43,7 @@ export type SkillPackage = {
   requiredTools: string[];
 };
 export type Skill = SkillPackage & {
+  imported?: import("./skill-import").ImportedSkillSource;
   id: string;
   authorId: string;
   authorName: string;

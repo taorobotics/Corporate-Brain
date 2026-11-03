@@ -2,7 +2,15 @@ import assert from "node:assert/strict";
 import { once } from "node:events";
 import { createServer } from "node:http";
 import { test } from "node:test";
-import { mkdtemp, rm } from "node:fs/promises";
+import {
+  mkdtemp,
+  rm,
+  mkdir,
+  readFile,
+  readdir,
+  writeFile,
+} from "node:fs/promises";
+import { createHash } from "node:crypto";
 import { join } from "node:path";
 import { tmpdir } from "node:os";
 import { updateTrace, type TraceItem } from "../shared/chat-progress";
@@ -19,6 +27,7 @@ test("DSH modes map to the shipped presets and workspace permissions map to sand
 });
 
 test("DSH routes an OpenAI-compatible turn and admits an image attachment", async (t) => {
+  let resourceObserved = false;
   const requests: string[] = [];
   let signalReasoning!: () => void;
   const sawReasoning = new Promise<void>((resolve) => {
@@ -29,6 +38,25 @@ test("DSH routes an OpenAI-compatible turn and admits an image attachment", asyn
     let body = "";
     for await (const chunk of req) body += chunk;
     requests.push(body);
+    const stage = (
+      await readdir(join(root, "workspaces", "user-test", "session-test"))
+    ).find((name) => name.startsWith("skill-"));
+    assert.ok(stage);
+    assert.equal(
+      await readFile(
+        join(
+          root,
+          "workspaces",
+          "user-test",
+          "session-test",
+          stage,
+          "guide.md",
+        ),
+        "utf8",
+      ),
+      "Selected skill reference fixture",
+    );
+    resourceObserved = body.includes(stage);
     res.writeHead(200, {
       "content-type": "text/event-stream",
       connection: "close",
@@ -70,6 +98,10 @@ test("DSH routes an OpenAI-compatible turn and admits an image attachment", asyn
   server.listen(0, "127.0.0.1");
   await once(server, "listening");
   const root = await mkdtemp(join(tmpdir(), "corporate-brain-dsh-test-"));
+  const libraryRoot = join(root, "library");
+  await mkdir(libraryRoot);
+  const guide = Buffer.from("Selected skill reference fixture");
+  await writeFile(join(libraryRoot, "guide.md"), guide);
   const manager = new DshManager(root);
   t.after(async () => {
     await manager.close();
@@ -82,6 +114,28 @@ test("DSH routes an OpenAI-compatible turn and admits an image attachment", asyn
     baseUrl: `http://127.0.0.1:${port}/v1`,
     model: "probe-model",
     apiKey: "probe-key",
+    skillResources: {
+      root: libraryRoot,
+      files: [
+        {
+          path: "guide.md",
+          size: guide.length,
+          sha256: createHash("sha256").update(guide).digest("hex"),
+        },
+      ],
+      source: {
+        kind: "zip",
+        label: "fixture",
+        digest: "0".repeat(64),
+        entry: "guide.md",
+        fileCount: 1,
+        bytes: guide.length,
+        license: "MIT",
+        licenseFiles: [],
+        hasScripts: false,
+        notes: [],
+      },
+    },
     onProgress: (event) => {
       progress.push(event);
       if (event.type === "reasoning" && event.text.includes("先检查"))
@@ -100,6 +154,12 @@ test("DSH routes an OpenAI-compatible turn and admits an image attachment", asyn
     ],
   });
   assert.equal(result, "DSH probe OK");
+  assert.equal(resourceObserved, true);
+  assert.ok(
+    !(
+      await readdir(join(root, "workspaces", "user-test", "session-test"))
+    ).some((name) => name.startsWith("skill-")),
+  );
   assert.ok(requests.some((body) => body.includes("probe.png")));
   assert.ok(requests.some((body) => body.includes("notes.txt")));
   assert.ok(requests.some((body) => body.includes("image")));

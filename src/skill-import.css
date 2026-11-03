@@ -1,0 +1,143 @@
+.skill-import {
+  display: grid;
+  gap: 16px;
+}
+.skill-import p {
+  margin: 0;
+  line-height: 1.65;
+}
+.skill-import .tabs {
+  margin: 0;
+}
+.skill-import .tabs button {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.skill-import-examples {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.skill-import-examples button {
+  border: 1px solid var(--line);
+  border-radius: 7px;
+  padding: 6px 10px;
+  background: var(--panel);
+  color: inherit;
+  cursor: pointer;
+}
+.skill-upload {
+  display: grid;
+  justify-items: center;
+  gap: 14px;
+  padding: 32px 20px;
+  border: 1px dashed var(--line);
+  border-radius: 12px;
+  text-align: center;
+}
+.skill-import-summary {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+}
+.skill-source-grid {
+  display: grid;
+  grid-template-columns: 74px minmax(0, 1fr);
+  gap: 8px;
+  margin: 0;
+  font-size: 13px;
+}
+.skill-source-grid dd {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+.skill-import-note {
+  color: var(--muted);
+  font-size: 13px;
+}
+.skill-resource-preview {
+  max-height: 260px;
+  overflow: auto;
+  overscroll-behavior: contain;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  padding: 14px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  font: 13px/1.7 var(--font-ui);
+}
+.skill-import details {
+  border-top: 1px solid var(--line);
+  padding-top: 12px;
+}
+.skill-import summary {
+  cursor: pointer;
+  margin-bottom: 10px;
+}
+.skill-import-consent,
+.skill-targets label {
+  display: flex;
+  align-items: flex-start;
+  gap: 9px;
+  line-height: 1.6;
+}
+.skill-import-consent input,
+.skill-targets input {
+  width: auto;
+  flex-shrink: 0;
+  margin-top: 5px;
+}
+.skill-targets {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px;
+}
+.skill-import-progress {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.skill-import-error {
+  color: var(--danger, #b04432);
+}
+.skill-source-details {
+  border-top: 1px solid var(--line);
+  padding-top: 8px;
+}
+.skill-card .card-main > p {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+  overflow: hidden;
+}
+.skill-import .spin {
+  flex-shrink: 0;
+}
+@media (prefers-reduced-motion: reduce) {
+  .skill-import .spin {
+    animation: none;
+  }
+}
+.skill-import select {
+  width: 100%;
+  min-width: 0;
+}
+.skill-import footer {
+  position: sticky;
+  bottom: -28px;
+  z-index: 1;
+  background: var(--panel);
+  padding: 14px 0;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 8px;
+}
+.skill-import .field {
+  margin-bottom: 0;
+}

@@ -1051,6 +1051,17 @@ async function waitFor(test, label, timeout = 12000) {
   await click("安装");
   await waitFor(() => has("技能已安装到当前设备"), "installed");
   checks.push("Published package downloaded and installed locally");
+  await require("./verify-skill-import.cjs")({
+    js,
+    click,
+    fill,
+    waitFor,
+    request,
+    capture,
+    checks,
+    win,
+    selectOption,
+  });
   await js(`document.querySelector('[aria-label="设置"]').click()`);
   await waitFor(() => has("本地记录与备份"), "settings");
   await capture("employee-settings.png");

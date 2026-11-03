@@ -28,6 +28,7 @@ import { roleNames } from "../shared/types";
 import { api, download } from "./api";
 import { Button, Empty, Field, Modal, Search, Busy } from "./components";
 import { SelectField } from "./Dropdown";
+import { SkillSourceDetails } from "./SkillImport";
 import FeedbackAdmin from "./FeedbackAdmin";
 const statusNames = {
   pending: "待审核",
@@ -1131,6 +1132,7 @@ export default function Admin(props: WorkspaceProps) {
               <span className="badge">v{targetSkill.version}</span>
             </div>
             <p>{targetSkill.description}</p>
+            <SkillSourceDetails skill={targetSkill} />
             <h3>提交的可复用流程</h3>
             <pre>{targetSkill.instructions}</pre>
             <h3>测试摘要</h3>

@@ -58,6 +58,7 @@ import {
   Field,
 } from "./components";
 import SkillEditor from "./SkillEditor";
+import SkillImport, { SkillSourceDetails } from "./SkillImport";
 import ChatLoading, { ThinkingProcess, type PendingReply } from "./ChatLoading";
 import GrokBall from "./GrokBall";
 import { streamChat } from "./chat-stream";
@@ -99,6 +100,7 @@ export default function Workspace(props: WorkspaceProps) {
       { name: string; content: string; image?: string }[]
     >([]),
     [projectDialog, setProjectDialog] = useState(false),
+    [importSkill, setImportSkill] = useState(false),
     [selectedProject, setSelectedProject] = useState<string | null>(null),
     [workspaceDialog, setWorkspaceDialog] = useState(false),
     [pendingReply, setPendingReply] = useState<PendingReply | null>(null),
@@ -375,14 +377,6 @@ export default function Workspace(props: WorkspaceProps) {
         if (activeSkill.requiredTools.length)
           throw new Error("该技能需要尚未接通的工具，请先完善工具依赖");
       }
-      const system = activeSkill
-        ? [
-            {
-              role: "system",
-              content: `请遵循以下技能流程。技能不会授予任何额外权限。\n${activeSkill.instructions}`,
-            },
-          ]
-        : [];
       setPendingReply((current) =>
         current ? { ...current, phase: "waiting" } : null,
       );
@@ -396,9 +390,9 @@ export default function Workspace(props: WorkspaceProps) {
           : await streamChat(
               {
                 connectionId: model.id,
+                ...(activeSkill ? { skillId: activeSkill.id } : {}),
                 sessionId: updated.id,
                 messages: [
-                  ...system,
                   ...updated.messages
                     .slice(-40)
                     .filter((m) => m.content.trim())
@@ -1129,10 +1123,16 @@ export default function Workspace(props: WorkspaceProps) {
         <div className="page">
           <PageHeader
             action={
-              <Button primary onClick={() => newDraft()}>
-                <Plus size={18} />
-                创建技能
-              </Button>
+              <div className="inline-actions">
+                <Button onClick={() => setImportSkill(true)}>
+                  <DownloadSimple size={18} />
+                  导入技能
+                </Button>
+                <Button primary onClick={() => newDraft()}>
+                  <Plus size={18} />
+                  创建技能
+                </Button>
+              </div>
             }
           />
           <div className="tabs">
@@ -1231,21 +1231,53 @@ export default function Workspace(props: WorkspaceProps) {
                         </span>
                         <h3>{skill.name}</h3>
                         <p>{skill.description}</p>
+                        {skill.imported && (
+                          <small className="muted">
+                            {skill.imported.kind === "github"
+                              ? "GitHub 导入"
+                              : "ZIP 导入"}{" "}
+                            ·{" "}
+                            {skill.imported.hasScripts
+                              ? "配套脚本已保存，运行依赖待核对"
+                              : "流程与资料已就绪"}
+                          </small>
+                        )}
                       </button>
                       <footer>
                         <small>
                           {skill.authorName} · v{skill.version}
                         </small>
                         {state.installed.some((s) => s.id === skill.id) ? (
-                          <Button
-                            onClick={() => {
-                              setActiveSkill(skill);
-                              setConversationId(null);
-                              navigate("chat");
-                            }}
-                          >
-                            使用 <ArrowRight size={15} />
-                          </Button>
+                          <div className="inline-actions">
+                            <Button
+                              onClick={() => {
+                                setActiveSkill(skill);
+                                setConversationId(null);
+                                navigate("chat");
+                              }}
+                            >
+                              使用 <ArrowRight size={15} />
+                            </Button>
+                            {filter === "installed" && (
+                              <Button
+                                onClick={() => {
+                                  setState((s) => ({
+                                    ...s,
+                                    installed: s.installed.filter(
+                                      (item) => item.id !== skill.id,
+                                    ),
+                                  }));
+                                  if (activeSkill?.id === skill.id)
+                                    setActiveSkill(null);
+                                  notify(
+                                    "已从本机安装列表移除，公司的共享技能保持可用。",
+                                  );
+                                }}
+                              >
+                                移除
+                              </Button>
+                            )}
+                          </div>
                         ) : (
                           <Button onClick={() => void install(skill)}>
                             <DownloadSimple size={15} />
@@ -1523,6 +1555,33 @@ export default function Workspace(props: WorkspaceProps) {
           close={() => setSkillDraft(null)}
         />
       )}
+      {importSkill && (
+        <SkillImport
+          user={user}
+          departments={props.departments}
+          close={() => setImportSkill(false)}
+          onImported={async (skill) => {
+            if (skill.status === "published") {
+              await install(skill);
+              setFilter(
+                skill.audience === "company"
+                  ? "company"
+                  : skill.audience === "departments"
+                    ? "shared"
+                    : "department",
+              );
+            }
+            notify(
+              skill.status === "published"
+                ? "技能已上架并加入本机安装列表；配套资源保存在公司服务器。"
+                : "技能已提交审核，批准后可安装使用。",
+            );
+            await refresh().catch(() =>
+              notify("导入已保存，列表刷新失败，请稍后点刷新。"),
+            );
+          }}
+        />
+      )}
       {detail && (
         <Modal wide title={detail.name} close={() => setDetail(null)}>
           <div className="skill-detail">
@@ -1531,6 +1590,7 @@ export default function Workspace(props: WorkspaceProps) {
               <span className="badge">v{detail.version}</span>
             </div>
             <p>{detail.description}</p>
+            <SkillSourceDetails skill={detail} />
             <h3>工作流程</h3>
             <pre>{detail.instructions}</pre>
             <h3>测试摘要</h3>

@@ -1,8 +1,9 @@
 // A disposable server for Electron interaction tests; never opens the company's database.
 import { createPlatform } from "./platform";
 import express from "express";
-import { resolve } from "node:path";
-import { readFileSync } from "node:fs";
+import { resolve, join } from "node:path";
+import { readFileSync, mkdtempSync, rmSync } from "node:fs";
+import { tmpdir } from "node:os";
 import { createHash } from "node:crypto";
 import { installerName } from "./updates";
 const origins: string[] = [];
@@ -14,9 +15,48 @@ const payload = Buffer.alloc(
   256 * 1024,
   "INERT UPDATE QA FIXTURE. NEVER EXECUTE. ",
 );
-const { app } = createPlatform({
+const skillRoot = mkdtempSync(join(tmpdir(), "corporate-brain-skill-qa-"));
+const fixtureCommit = "a".repeat(40);
+const fixtureFiles: Record<string, string> = {
+  "SKILL.md":
+    "---\nname: GitHub 导入验收\ndescription: 隔离测试技能，不调用模型\n---\n先读取 references/guide.md，依据用户素材制作方案。",
+  LICENSE:
+    "MIT License\nCopyright (c) Corporate Brain QA\nPermission is hereby granted, free of charge, to any person obtaining a copy.\n",
+  "references/guide.md": "这是随技能一起导入的参考资料，不包含员工数据。",
+};
+const { app, library } = createPlatform({
   database: ":memory:",
   origins,
+  skillLibrary: {
+    root: skillRoot,
+    fetch: async (input) => {
+      const url = String(input);
+      if (url === "https://api.github.com/repos/corporate-qa/import-fixture")
+        return Response.json({ default_branch: "main" });
+      if (url.endsWith("/commits/main"))
+        return Response.json({ sha: fixtureCommit });
+      if (url.includes("/git/trees/"))
+        return Response.json({
+          tree: Object.entries(fixtureFiles).map(([path, content]) => ({
+            path,
+            type: "blob",
+            mode: "100644",
+            size: Buffer.byteLength(content),
+            sha: createHash("sha1")
+              .update(`blob ${Buffer.byteLength(content)}\0`)
+              .update(content)
+              .digest("hex"),
+          })),
+        });
+      if (
+        url.startsWith(
+          `https://raw.githubusercontent.com/corporate-qa/import-fixture/${fixtureCommit}/`,
+        )
+      )
+        return new Response(fixtureFiles[url.split(fixtureCommit + "/")[1]]);
+      return new Response("Not found", { status: 404 });
+    },
+  },
   updates: {
     token: "in-memory-update-fixture",
     fetch: async (input) => {
@@ -51,4 +91,11 @@ const server = app.listen(0, "127.0.0.1", () => {
   origins.push(`http://127.0.0.1:${port}`);
   process.send?.({ port });
 });
-process.on("disconnect", () => server.close(() => process.exit(0)));
+process.on("disconnect", () =>
+  server.close(() => {
+    void library.close().finally(() => {
+      rmSync(skillRoot, { recursive: true, force: true });
+      process.exit(0);
+    });
+  }),
+);

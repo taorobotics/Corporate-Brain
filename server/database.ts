@@ -52,6 +52,15 @@ export function createStore(file: string) {
       "ALTER TABLE users ADD COLUMN initial_expires_at INTEGER NOT NULL DEFAULT 0",
     );
   // No automatic chat history storage; feedback contains only explicitly submitted excerpts.
+  if (
+    !(db.prepare("PRAGMA table_info(skills)").all() as { name: string }[]).some(
+      (column) => column.name === "import_source",
+    )
+  )
+    db.exec("ALTER TABLE skills ADD COLUMN import_source TEXT");
+  db.exec(
+    "CREATE UNIQUE INDEX IF NOT EXISTS skill_import_identity ON skills(owner_department_id,json_extract(import_source,'$.digest'),json_extract(import_source,'$.entry')) WHERE import_source IS NOT NULL",
+  );
   const keyFile =
     file === ":memory:" ? undefined : join(dirname(file), "secrets.key");
   const key =
