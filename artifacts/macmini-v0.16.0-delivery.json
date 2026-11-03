@@ -1,0 +1,130 @@
+{
+  "version": "0.16.0",
+  "sourceCommit": "c44e58fc3963d6a3e8906396b376f0c6868728f6",
+  "result": "passed",
+  "scope": "Mac mini server and private LAN Windows x64 / Apple Silicon delivery; GitHub Release remains incomplete",
+  "checkedAt": "2026-11-03T07:11:44.183Z",
+  "server": {
+    "version": "0.16.0",
+    "dataPreserved": true,
+    "modelSettingsPreserved": true,
+    "modelCredentialsPreserved": true,
+    "avatarsVerified": 100
+  },
+  "avatars": {
+    "count": 100,
+    "bytes": 726782,
+    "source": "https://ipaslogo.com/",
+    "selection": "Random distinct website assets; no new image generation",
+    "assetPath": "/Users/staff01/CorporateBrainServer/releases/v0.16.0/dist/avatars/ipas-v1",
+    "runtimeExternalImageRequests": false
+  },
+  "unitTests": {
+    "nodePassed": 58,
+    "pythonPassed": 5,
+    "failed": 0
+  },
+  "profileUi": {
+    "windows": {
+      "version": "0.16.0",
+      "result": "passed",
+      "checks": [
+        "New account receives a real local preset; 100 choices, Chinese search and name/avatar save update sidebar and account API",
+        "Cancel discards unsaved edits; English search, actual file picker, crop controls and normalized custom avatar persist on server",
+        "Reload retains server profile; custom avatar can return to preset; 640px dark layout has no horizontal overflow"
+      ],
+      "consoleErrors": [],
+      "syntheticAccountsOnly": true,
+      "externalImageRequests": false
+    },
+    "mac": {
+      "version": "0.16.0",
+      "result": "passed",
+      "checks": [
+        "New account receives a real local preset; 100 choices, Chinese search and name/avatar save update sidebar and account API",
+        "Cancel discards unsaved edits; English search, actual file picker, crop controls and normalized custom avatar persist on server",
+        "Reload retains server profile; custom avatar can return to preset; 640px dark layout has no horizontal overflow"
+      ],
+      "consoleErrors": [],
+      "syntheticAccountsOnly": true,
+      "externalImageRequests": false
+    }
+  },
+  "liveProfile": {
+    "version": "0.16.0",
+    "result": "passed",
+    "checks": [
+      "All 100 actual deployed avatar assets are reachable and match upstream SHA-256",
+      "Existing login and department are preserved; name/preset persist across login sessions",
+      "Uploaded synthetic image is re-encoded to 256px WebP; role injection and remote avatar URLs are rejected"
+    ],
+    "avatarsVerified": 100,
+    "syntheticAccountsOnly": true,
+    "employeeProfilesChanged": false,
+    "modelCalls": 0,
+    "checkedAt": "2026-11-03T07:06:01.977Z"
+  },
+  "downloadVerification": {
+    "version": "0.16.0",
+    "result": "passed",
+    "results": [
+      {
+        "platform": "win32-x64",
+        "bytes": 119375728,
+        "sha256": "42042b68b0f594dee9551f4af3373a4284dd921e285594d928fca7d8d8bbb5b6"
+      },
+      {
+        "platform": "darwin-arm64",
+        "bytes": 136906091,
+        "sha256": "e919b60615d5ba9d34de0ee2444b8420b1784c084ebce01985fb61382af192aa"
+      }
+    ],
+    "checks": [
+      "Authenticated LAN feed advertises 0.16.0; full Windows and Mac downloads match advertised sizes and SHA-256"
+    ],
+    "checkedAt": "2026-11-03T07:09:15.985Z"
+  },
+  "desktopChecks": {
+    "windows": 37,
+    "mac": 36
+  },
+  "installerChecks": {
+    "windowsUi": 4,
+    "mac": 5
+  },
+  "channels": {
+    "win32-x64": {
+      "name": "Corporate-Brain-Setup-0.16.0-x64.exe",
+      "bytes": 119375728,
+      "sha256": "42042b68b0f594dee9551f4af3373a4284dd921e285594d928fca7d8d8bbb5b6"
+    },
+    "darwin-arm64": {
+      "name": "Corporate-Brain-0.16.0-macOS-arm64.dmg",
+      "bytes": 136906091,
+      "sha256": "e919b60615d5ba9d34de0ee2444b8420b1784c084ebce01985fb61382af192aa"
+    }
+  },
+  "temporaryAccountsRemoved": true,
+  "employeeAccountsUnchanged": true,
+  "httpsFromWindowsVerifiedWithApprovedProjectCa": true,
+  "github": {
+    "codeAndTagPushed": true,
+    "releasePublished": false,
+    "workflow": "https://github.com/taorobotics/Corporate-Brain/actions/runs/41593428321",
+    "blocker": "GitHub Actions: recent account payments failed or spending limit needs to be increased"
+  },
+  "verificationHistory": {
+    "fixtureCorrections": [
+      "English search expected count corrected from five to four",
+      "Native captures wait for compositor after resize; narrow theme test now uses actual preference control",
+      "Update-feed test supplies platform header, matching real clients"
+    ],
+    "securityScan": "Full history and staged content scanned; one exact historical synthetic test-password fingerprint documented as false positive"
+  },
+  "limitations": [
+    "GitHub Release blocked by billing; Intel Mac package not built",
+    "Windows package not trusted-signed; Mac ad-hoc signed and not notarized",
+    "Windows install/upgrade/uninstall lifecycle not executed on this employee machine"
+  ],
+  "companyDataOrCredentialsDistributed": false
+}
