@@ -31,3 +31,7 @@ secrets/
 /build/generated/
 # Generated from the pinned pdfjs-dist dependency during build.
 public/pdf-assets/
+/public/brand/
+/public/favicon.ico
+/public/apple-touch-icon.png
+/desktop/brand/

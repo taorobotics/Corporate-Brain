@@ -10,6 +10,7 @@ import { tmpdir } from 'node:os';
 import { basename, join, resolve } from 'node:path';
 import { listPackage, extractFile } from '@electron/asar';
 import { legalFiles } from './legal-files.mjs';
+import { brandFiles } from './brand-files.mjs';
 
 assert.equal(process.platform, 'darwin', 'Run package checks on macOS');
 const arch = process.env.TARGET_ARCH || process.arch;
@@ -32,6 +33,9 @@ try {
   const plistValue = key => command('plutil', ['-extract', key, 'raw', '-o', '-', plist]).trim();
   assert.equal(plistValue('CFBundleShortVersionString'), version);
   assert.equal(plistValue('CFBundleIdentifier'), 'com.corporatebrain.desktop');
+  const bundleIcon = plistValue('CFBundleIconFile');
+  assert.equal(basename(bundleIcon), bundleIcon, 'Bundle icon must be a local resource');
+  assert.deepEqual(await readFile(join(app, 'Contents/Resources', bundleIcon.endsWith('.icns') ? bundleIcon : `${bundleIcon}.icns`)), await readFile('build/generated/brand/company-brain.icns'), 'macOS application icon matches approved brand artwork');
   const binary = join(app, 'Contents/MacOS', plistValue('CFBundleExecutable'));
   assert.equal(command('lipo', ['-archs', binary]).trim(), arch === 'x64' ? 'x86_64' : arch);
   command('codesign', ['--verify', '--deep', '--strict', app]);
@@ -40,7 +44,7 @@ try {
   const asar = join(app, 'Contents/Resources/app.asar');
   const files = listPackage(asar).map(path => path.replace(/^\//, '')).filter(path => !listPackage(asar).some(other => other.startsWith(`/${path}/`))).sort();
   const allowed = ['fonts.css', 'fonts/NotoSansSC-VF.woff2', 'fonts/OFL.txt', 'fonts/source.json', 'main.cjs', 'updates.cjs', 'production.cjs', 'package.json', 'preload.cjs', 'server-preload.cjs', 'server-setup.html', 'server-setup.js', 'startup.cjs', 'startup.html', 'startup.js', 'appearance.cjs', 'startup-preload.cjs', 'startup.css', 'entry-scene.js', 'entry-scene.css', ...legalFiles].sort();
-  assert.deepEqual(files, allowed);
+  assert.deepEqual(files, [...allowed, ...brandFiles].sort());
   assert.equal(JSON.parse(extractFile(asar, 'package.json').toString()).version, version);
   assert.equal(JSON.parse(await readFile(join(app, 'Contents/Resources/company-server.json'), 'utf8')).url, process.env.BRAIN_APP_URL || '', 'Packaged company connection must match the configured release destination');
   for (const file of files) assert.deepEqual(extractFile(asar, file), await readFile(resolve('desktop', file)), `Packaged source differs: ${file}`);

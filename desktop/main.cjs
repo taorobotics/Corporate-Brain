@@ -94,6 +94,7 @@ ipcMain.handle("company:legal", (event) => {
     return;
   }
   legalWindow = new BrowserWindow({
+    icon: join(__dirname, "brand/app-icon.png"),
     width: 850,
     height: 700,
     show: process.env.BRAIN_VERIFY !== "1",
@@ -569,6 +570,7 @@ ipcMain.handle("updates:install", async (event) => {
 });
 function createMainWindow() {
   win = new BrowserWindow({
+    icon: join(__dirname, "brand/app-icon.png"),
     width: 1440,
     height: 940,
     minWidth: 820,
@@ -721,6 +723,7 @@ function openServerSetup() {
     return;
   }
   setupWindow = new BrowserWindow({
+    icon: join(__dirname, "brand/app-icon.png"),
     width: 540,
     height: 560,
     show: process.env.BRAIN_VERIFY !== "1",

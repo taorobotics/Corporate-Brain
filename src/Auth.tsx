@@ -1,7 +1,7 @@
 import { useState, type FormEvent } from "react";
 import { ArrowRight, LockKey } from "@phosphor-icons/react";
 import { api } from "./api";
-import { Button, Field, Busy } from "./components";
+import { Brand, Button, Field, Busy } from "./components";
 import type { User } from "../shared/types";
 export default function Auth({
   bootstrap,
@@ -47,6 +47,7 @@ export default function Auth({
   return (
     <main className="auth">
       <div className="auth-card">
+        <Brand />
         <div className="eyebrow">
           <LockKey size={14} /> WORKSPACE ACCESS / 公司工作空间
         </div>

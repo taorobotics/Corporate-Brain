@@ -115,7 +115,6 @@ Function ${PREFIX}BrainGuiInit
   SendMessage $BrainBack ${WM_SETFONT} $BrainFont 1
   BrainWizard::Style /NOUNLOAD
   InitPluginsDir
-  File /oname=$PLUGINSDIR\brain-cube.bmp "${BUILD_RESOURCES_DIR}\windows\generated\cube.bmp"
   File /oname=$PLUGINSDIR\brain-license.txt "${BUILD_RESOURCES_DIR}\..\LICENSE"
   File /oname=$PLUGINSDIR\brain-privacy.txt "${BUILD_RESOURCES_DIR}\..\docs\PRIVACY.md"
   !include "${BUILD_RESOURCES_DIR}\windows\generated\spinner-files.nsh"

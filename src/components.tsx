@@ -1,9 +1,16 @@
 import { useEffect, useRef, type ReactNode } from "react";
-import { X, MagnifyingGlass, Cube, CircleNotch } from "@phosphor-icons/react";
+import { X, MagnifyingGlass, CircleNotch } from "@phosphor-icons/react";
+export function BrandMark({ className = "" }: { className?: string }) {
+  return (
+    <span className={`brand-mark ${className}`} aria-hidden="true">
+      <img src="/brand/logo.png" alt="" width="512" height="512" decoding="async" />
+    </span>
+  );
+}
 export function Brand() {
   return (
     <div className="brand">
-      <Cube size={32} weight="duotone" />
+      <BrandMark />
       <strong>公司大脑</strong>
     </div>
   );

@@ -3,7 +3,8 @@
    Shared by native startup, web authentication and the playable preview. */
 (() => {
   if (customElements.get("brain-entry-scene")) return;
-  const mark = `<svg viewBox="0 0 120 120" fill="none" aria-hidden="true"><path d="M60 8 105 34v52L60 112 15 86V34Z"/><path d="m15 34 45 26 45-26M60 60v52M37 21l46 26v27L60 87 37 74V47l46-26"/></svg>`;
+  const logo = location.protocol === "file:" ? "./brand/logo.png" : "/brand/logo.png";
+  const mark = `<span class="entry-logo-plate"><img class="entry-logo" src="${logo}" width="512" height="512" alt="" decoding="sync"></span>`;
   class EntryScene extends HTMLElement {
     static get observedAttributes() {
       return ["theme", "phase", "headline", "detail"];
@@ -25,7 +26,7 @@
           <div class="entry-orbit orbit-three"></div>
           <div class="entry-cross cross-x"></div><div class="entry-cross cross-y"></div>
           <span class="entry-coordinate coordinate-a">01 / CONTEXT</span><span class="entry-coordinate coordinate-b">02 / KNOWLEDGE</span>
-          <div class="entry-core"><div class="entry-core-shadow">${mark}</div><div class="entry-core-front">${mark}</div></div>
+          <div class="entry-core"><div class="entry-core-front">${mark}</div></div>
           <div class="entry-scan"></div>
         </div>
         <div class="entry-status" role="status" aria-live="polite" aria-atomic="true"><span class="entry-kicker">ESTABLISHING CONNECTION</span><h1><span class="entry-headline">正在连接公司工作空间</span><i></i></h1><div class="entry-rule"></div><p class="entry-detail">页面就绪后自动进入</p></div>

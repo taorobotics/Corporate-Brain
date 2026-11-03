@@ -5,6 +5,7 @@ import { readFile, writeFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
 import { listPackage, extractFile } from '@electron/asar';
 import { legalFiles } from './legal-files.mjs';
+import { brandFiles } from './brand-files.mjs';
 
 assert.equal(process.platform, 'win32');
 assert.equal(process.arch, 'x64');
@@ -16,7 +17,7 @@ const asar = resolve('release/win-unpacked/resources/app.asar');
 const entries = listPackage(asar).map(path => path.replaceAll('\\', '/'));
 const files = entries.map(path => path.replace(/^\//, '')).filter(path => !entries.some(other => other.startsWith(`/${path}/`))).sort();
 const allowed = ['fonts.css', 'fonts/NotoSansSC-VF.woff2', 'fonts/OFL.txt', 'fonts/source.json', 'main.cjs', 'updates.cjs', 'production.cjs', 'package.json', 'preload.cjs', 'server-preload.cjs', 'server-setup.html', 'server-setup.js', 'startup.cjs', 'startup.html', 'startup.js', 'appearance.cjs', 'startup-preload.cjs', 'startup.css', 'entry-scene.js', 'entry-scene.css', ...legalFiles].sort();
-assert.deepEqual(files, allowed);
+assert.deepEqual(files, [...allowed, ...brandFiles].sort());
 assert.equal(JSON.parse(extractFile(asar, 'package.json').toString()).version, version);
 assert.equal(JSON.parse(await readFile(resolve('release/win-unpacked/resources/company-server.json'), 'utf8')).url, process.env.BRAIN_APP_URL || '', 'Packaged company connection must match the configured release destination');
 for (const file of files) assert.deepEqual(extractFile(asar, file), await readFile(resolve('desktop', file)), `Packaged source differs: ${file}`);

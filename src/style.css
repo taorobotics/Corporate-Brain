@@ -337,8 +337,33 @@ code {
   font-weight: 650;
   letter-spacing: -0.6px;
 }
-.brand svg {
-  color: #4d504b;
+.brand-mark {
+  display: inline-grid;
+  place-items: center;
+  width: 38px;
+  height: 38px;
+  flex: 0 0 auto;
+  padding: 2px;
+  border-radius: 11px;
+  background: #fff;
+  border: 1px solid #24202d10;
+  overflow: hidden;
+}
+.brand-mark img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+.auth-card > .brand {
+  margin-bottom: 25px;
+}
+.chat-welcome .welcome-brand-mark {
+  width: 66px;
+  height: 66px;
+  padding: 3px;
+  border-radius: 18px;
+  margin-bottom: 8px;
 }
 .bar-spacer {
   flex: 1;
@@ -573,9 +598,9 @@ code {
 .sidebar-brand .brand strong {
   font-size: 21px;
 }
-.sidebar-brand .brand svg {
-  width: 29px;
-  height: 29px;
+.sidebar-brand .brand-mark {
+  width: 35px;
+  height: 35px;
 }
 .sidebar-brand > .icon-button {
   color: #888a82;
@@ -2769,8 +2794,8 @@ tbody > tr:hover {
 :root[data-theme="dark"] tbody > tr:hover {
   background: #30332b;
 }
-:root[data-theme="dark"] .brand svg {
-  color: #b7bcaf;
+:root[data-theme="dark"] .brand-mark {
+  border-color: #ffffff26;
 }
 @media (min-width: 1550px) {
   .sidebar {

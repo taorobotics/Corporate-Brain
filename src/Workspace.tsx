@@ -51,6 +51,7 @@ import {
 import { api, download } from "./api";
 import {
   Brand,
+  BrandMark,
   Button,
   IconButton,
   Modal,
@@ -669,7 +670,7 @@ export default function Workspace(props: WorkspaceProps) {
               <div className="messages-content" ref={contentRef}>
                 {!conversation?.messages.length && (
                   <div className="chat-welcome">
-                    <Sparkle size={38} weight="duotone" />
+                    <BrandMark className="welcome-brand-mark" />
                     <h1>今天，一起完成些什么？</h1>
                     <p>从一个想法开始，让公司的知识与技能帮你推进工作。</p>
                     <div className="suggestions">

@@ -80,6 +80,10 @@ async function waitFor(check, label) {
     "light",
   );
   assert.equal(await evalOverlay("typeof window.brainDesktop"), "undefined");
+  await waitFor(
+    () => evalOverlay("Array.from(document.querySelectorAll('.entry-logo')).length === 2 && Array.from(document.querySelectorAll('.entry-logo')).every(img => img.complete && img.naturalWidth === 512)"),
+    "bundled company logo loads offline under startup CSP",
+  );
   checks.push(
     "Warm startup remains responsive offline; default ignores dark OS; minimal isolated preload",
   );

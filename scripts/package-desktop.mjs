@@ -1,6 +1,7 @@
 import { spawn } from 'node:child_process';
 import { existsSync, mkdirSync, writeFileSync } from 'node:fs';
 import { resolve } from 'node:path';
+import './prepare-brand.mjs';
 const args = process.argv.slice(2);
 const generated = resolve('build/generated/company-server.json');
 mkdirSync(resolve('build/generated'), { recursive: true });

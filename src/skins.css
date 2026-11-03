@@ -44,7 +44,6 @@
 :root[data-skin] :is(input, textarea, select, button):focus-visible {
   outline-color: var(--accent-text);
 }
-:root[data-skin] .brand svg,
 :root[data-skin] a {
   color: var(--accent-text);
 }

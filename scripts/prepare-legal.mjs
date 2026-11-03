@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import { cp, mkdir, readFile, readdir, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import { createHash } from "node:crypto";
+import "./prepare-brand.mjs";
 const lock = JSON.parse(await readFile("package-lock.json", "utf8"));
 const packages = lock.packages;
 // This legacy package uses `licenses: [{ type: 'BSD' }]`, omitted by npm's
