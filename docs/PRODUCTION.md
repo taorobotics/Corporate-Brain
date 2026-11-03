@@ -28,7 +28,7 @@ Mac mini 每次制作一项任务，其余排队。每人最多保留 3 个未�
 - `BRAIN_RENDER_ELECTRON`：可选，已安装 Electron 可执行文件绝对路径。
 - `BRAIN_RENDER_FFMPEG`：可选，经管理员核对许可的 FFmpeg 可执行文件绝对路径。
 
-源代码在 `sandbox: true`、无 Node、无 preload、无员工 cookie 的专用渲染器执行。仅映射该任务枚举的媒体文件，禁外网、本机文件 URL、导航、弹窗和权限请求。子进程只得到必要系统变量，模型密钥、NAS 凭据不传入。任意生成的 Node、shell、安装命令不会由制作中心执行。渲染停止会结束编码进程，服务器退出也会终止当前渲染。
+源代码在 `sandbox: true`、无 Node、无 preload、无员工 cookie 的专用渲染器内的 OffscreenCanvas Worker 执行（无 DOM、窗口或 WebRTC 接口）。仅映射该任务枚举的媒体文件，禁外网、本机文件 URL、导航、弹窗和权限请求。子进程只得到必要系统变量，模型密钥、NAS 凭据不传入。任意生成的 Node、shell、安装命令不会由制作中心执行。渲染停止会结束编码进程，服务器退出也会终止当前渲染。
 
 请保留 [Canvas / FFmpeg 许可说明](../src/vendor/canvas-rendering.NOTICE)。上游 arm64 FFmpeg 带 `--enable-nonfree`，仅在内部服务器安装使用，不得打入对外分发包。Remotion 仅保留适配器接口；取得公司授权前不启用。
 
