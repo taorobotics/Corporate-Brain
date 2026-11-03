@@ -1,0 +1,222 @@
+{
+  "version": "0.13.0",
+  "sourceCommit": "59d3f86e7c0b7eb5530af651ff81b8751db73ce3",
+  "result": "passed",
+  "checkedAt": "2026-11-03T04:27:40.634Z",
+  "scope": "Private LAN Windows and Apple Silicon delivery; not a complete public GitHub Release",
+  "origin": "https://192.168.20.21:14443",
+  "serverUpgrade": {
+    "version": "0.13.0",
+    "result": "passed",
+    "verifiedAt": "2026-11-03T04:16:53.560Z",
+    "sourceCommit": "59d3f86e7c0b7eb5530af651ff81b8751db73ce3",
+    "serverArchiveSha256": "4fde7fb5a435e5c7b4eae127feb4f85591dd6546a79c5dc4ac87c19d00620151",
+    "health": {
+      "status": "ok",
+      "version": "0.13.0",
+      "chatStorage": "device-only"
+    },
+    "counts": {
+      "users": 3,
+      "departments": 2
+    },
+    "dataPreserved": true,
+    "modelSettingsPreserved": true,
+    "modelCredentialsPreserved": true,
+    "backup": "/Users/staff01/CorporateBrainServer/backups/before-v0.13.0-2026-11-03T04-16-52-910Z",
+    "writeBoundary": "/Users/staff01/CorporateBrainServer"
+  },
+  "unitTests": {
+    "passed": 47,
+    "failed": 0
+  },
+  "windowsDesktopChecks": 36,
+  "macDesktopChecks": 35,
+  "windowsStartupChecks": 9,
+  "macStartupChecks": 9,
+  "windowsInstallerUiChecks": 4,
+  "macPackageChecks": 5,
+  "native": {
+    "win32-old": {
+      "version": "0.12.1",
+      "checks": [
+        "Default LAN URL, actual OS TLS trust, login and chat rendered",
+        "Actual deployed UI restores saved trace in a bounded scrollable process panel with accessible collapse/expand controls",
+        "Old packaged client legacy selected-text copy works",
+        "Actual feedback submission with opt-in excerpt, admin table and persisted handling state",
+        "Actual three GitHub libraries appear company-wide, install with persistent native state, and expose GitHub/ZIP import UI",
+        "Unmodified 0.12.1 packaged client discovers 0.13.0, fully downloads and verifies SHA-256 through Mac mini"
+      ],
+      "update": {
+        "version": "0.13.0",
+        "bytes": 119373121,
+        "sha256": "5ed61c3da033cc509e19f4d17d83f687c23931016f1936a9802f03e6ca6aebbd",
+        "target": "win32-x64",
+        "status": "ready"
+      },
+      "certificateErrorsIgnored": false,
+      "checkedAt": "2026-11-03T04:25:21.416Z"
+    },
+    "win32-new": {
+      "version": "0.13.0",
+      "checks": [
+        "Default LAN URL, actual OS TLS trust, login and chat rendered",
+        "Actual deployed UI restores saved trace in a bounded scrollable process panel with accessible collapse/expand controls",
+        "Native bounded clipboard bridge works",
+        "Actual feedback submission with opt-in excerpt, admin table and persisted handling state",
+        "Actual three GitHub libraries appear company-wide, install with persistent native state, and expose GitHub/ZIP import UI"
+      ],
+      "certificateErrorsIgnored": false,
+      "checkedAt": "2026-11-03T04:24:14.728Z"
+    },
+    "darwin-old": {
+      "version": "0.12.1",
+      "checks": [
+        "Default LAN URL, actual OS TLS trust, login and chat rendered",
+        "Actual deployed UI restores saved trace in a bounded scrollable process panel with accessible collapse/expand controls",
+        "Old packaged client legacy selected-text copy works",
+        "Actual feedback submission with opt-in excerpt, admin table and persisted handling state",
+        "Actual three GitHub libraries appear company-wide, install with persistent native state, and expose GitHub/ZIP import UI",
+        "Unmodified 0.12.1 packaged client discovers 0.13.0, fully downloads and verifies SHA-256 through Mac mini"
+      ],
+      "update": {
+        "version": "0.13.0",
+        "bytes": 136879692,
+        "sha256": "d515fe5fdf810532a906b94a530f71a742fd549ee0cb743fb6b8b7b9b8a6faf7",
+        "target": "darwin-arm64",
+        "status": "ready"
+      },
+      "certificateErrorsIgnored": false,
+      "checkedAt": "2026-11-03T04:25:34.222Z"
+    },
+    "darwin-new": {
+      "version": "0.13.0",
+      "checks": [
+        "Default LAN URL, actual OS TLS trust, login and chat rendered",
+        "Actual deployed UI restores saved trace in a bounded scrollable process panel with accessible collapse/expand controls",
+        "Native bounded clipboard bridge works",
+        "Actual feedback submission with opt-in excerpt, admin table and persisted handling state",
+        "Actual three GitHub libraries appear company-wide, install with persistent native state, and expose GitHub/ZIP import UI"
+      ],
+      "certificateErrorsIgnored": false,
+      "checkedAt": "2026-11-03T04:24:30.904Z"
+    }
+  },
+  "channels": {
+    "win32-x64": {
+      "name": "Corporate-Brain-Setup-0.13.0-x64.exe",
+      "bytes": 119373121,
+      "sha256": "5ed61c3da033cc509e19f4d17d83f687c23931016f1936a9802f03e6ca6aebbd"
+    },
+    "darwin-arm64": {
+      "name": "Corporate-Brain-0.13.0-macOS-arm64.dmg",
+      "bytes": 136879692,
+      "sha256": "d515fe5fdf810532a906b94a530f71a742fd549ee0cb743fb6b8b7b9b8a6faf7"
+    }
+  },
+  "skills": [
+    {
+      "name": "lemo-opuscar",
+      "status": "published",
+      "audience": "company",
+      "kind": "github",
+      "label": "lemomo-ai/lemo-opuscar",
+      "url": "https://github.com/lemomo-ai/lemo-opuscar",
+      "commit": "bebbbe1aa92a3cb4bb6f83500e61b23a17d1aa00",
+      "notes": [
+        "文库版：保留核心工具、风格手册与许可；未下载演示片源码、海报和展示网站。",
+        "附带脚本仅保存，不自动执行；浏览器、Python、FFmpeg 等依赖尚未验证。"
+      ],
+      "digest": "b068c55a1459cb31cf84632d62dbdfaff437708bbbaf649f5c87475dbad9c196",
+      "fileCount": 334,
+      "bytes": 14922617,
+      "license": "MIT（附带素材以各自许可为准）",
+      "licenseFiles": [
+        "LICENSE"
+      ],
+      "hasScripts": true,
+      "entry": "plugin/skills/lemo-opuscar/SKILL.md"
+    },
+    {
+      "name": "MG Styles 15 · 动效设计",
+      "status": "published",
+      "audience": "company",
+      "kind": "github",
+      "label": "Vincentwei1021/mg-styles-15",
+      "url": "https://github.com/Vincentwei1021/mg-styles-15",
+      "commit": "49052d80bfaf9fa8412cc9710530e5e95a3b8d8c",
+      "notes": [
+        "保留提示词、示例源码、渲染器、素材和许可；不下载成片视频与展示网站。新增公司大脑技能入口，原项目未提供 SKILL.md。",
+        "MG 动效库已增加流程入口；原文件内容保持不变。",
+        "附带脚本仅保存，不自动执行；浏览器、Python、FFmpeg 等依赖尚未验证。"
+      ],
+      "digest": "5093a9d5b8dc4027a71c64144a6db6f8566858a0d230d50aa8e75415800d3c72",
+      "fileCount": 327,
+      "bytes": 142815762,
+      "license": "MIT（附带素材以各自许可为准）",
+      "licenseFiles": [
+        "LICENSE"
+      ],
+      "hasScripts": true,
+      "entry": "CORPORATE-SKILL.md"
+    },
+    {
+      "name": "huashu-design",
+      "status": "published",
+      "audience": "company",
+      "kind": "github",
+      "label": "alchaincyf/huashu-design",
+      "url": "https://github.com/alchaincyf/huashu-design",
+      "commit": "9b01ee8751679724dd43d855a532944aaa2c2b59",
+      "notes": [
+        "附带脚本仅保存，不自动执行；浏览器、Python、FFmpeg 等依赖尚未验证。"
+      ],
+      "digest": "6219d0334887abce5ad4c6a021d25570f9c14797c98e71aa3b8e416e99fb671e",
+      "fileCount": 438,
+      "bytes": 43419053,
+      "license": "MIT（附带素材以各自许可为准）",
+      "licenseFiles": [
+        "LICENSE",
+        "assets/style-specimens/xhs/_kit/stickers/LICENSE.md"
+      ],
+      "hasScripts": true,
+      "entry": "SKILL.md"
+    }
+  ],
+  "importVerification": [
+    "Real GitHub commit-pinned imports of all three repositories through the production API",
+    "Real ZIP upload through UI and isolated HTTP tests",
+    "ZIP traversal, symlink, duplicate, corruption and expansion limits",
+    "GitHub URL boundaries and blob hash integrity",
+    "Preview ownership, department authorization, approval, deduplication, resource tampering and revocation",
+    "DSH test copies resource files to a session workspace and removes them on completion"
+  ],
+  "scriptsExecuted": false,
+  "renderDependenciesVerified": false,
+  "installerUiVerification": {
+    "initialAttempts": [
+      "Next button missing after pressed-state capture",
+      "Inactive dialog did not navigate after BM_CLICK"
+    ],
+    "finalResult": "passed",
+    "automationChange": "Enabled buttons dispatch BN_CLICKED to their actual parent without taking desktop focus; product installer unchanged",
+    "verificationHelperSha256": "abd3f929a60df68e546faa93695ed76fe3cb15946be9491cab8070cced5c4940",
+    "fullLifecycleRun": false
+  },
+  "previewScreenshots": [
+    "skill-import-github-preview.png",
+    "skill-import-narrow-light.png",
+    "skill-import-narrow-dark.png",
+    "skill-center-macmini-live.png"
+  ],
+  "windowsTrustedSignature": false,
+  "macSigning": "ad-hoc",
+  "macNotarized": false,
+  "windowsInstallUpgradeUninstallPerformed": false,
+  "intelMacPublished": false,
+  "githubSyncPausedByUser": true,
+  "cloudServerRetained": true,
+  "temporaryVerificationAccountRemoved": true,
+  "temporaryImportSessionRemoved": true,
+  "companyDatabaseOrKeysDistributed": false
+}

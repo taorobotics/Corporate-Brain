@@ -20,6 +20,7 @@ public static class InstallerWindow {
   [DllImport("user32.dll")] static extern bool IsWindowVisible(IntPtr h);
   [DllImport("user32.dll")] public static extern bool ShowWindow(IntPtr h,int command);
   [DllImport("user32.dll")] public static extern bool IsIconic(IntPtr h);
+  [DllImport("user32.dll")] public static extern IntPtr GetParent(IntPtr h);
   [DllImport("user32.dll")] static extern bool IsWindowEnabled(IntPtr h);
   [DllImport("user32.dll")] public static extern IntPtr SendMessage(IntPtr h,uint m,IntPtr w,IntPtr l);
   [DllImport("user32.dll",CharSet=CharSet.Unicode)] public static extern IntPtr SendMessage(IntPtr h,uint m,IntPtr w,StringBuilder l);
@@ -80,7 +81,16 @@ function Wait-InstallerText([int]$ProcessId, [string]$Text, [int]$TimeoutSeconds
 function Invoke-InstallerButton([IntPtr]$Window, [string]$Text) {
   $control = Get-InstallerControls $Window | Where-Object { $_.ClassName -eq 'Button' -and $_.Text.Replace('&','') -eq $Text } | Select-Object -First 1
   if (-not $control) { throw "Installer button missing: $Text" }
-  [void][InstallerWindow]::PostMessage($control.Handle, 0xF5, [IntPtr]::Zero, [IntPtr]::Zero)
+  if (-not $control.Enabled) { throw "Installer button disabled: $Text" }
+  # BM_CLICK can be ignored when its dialog is inactive. Deliver the same
+  # BN_CLICKED notification to the actual parent, without taking desktop focus
+  # or injecting global mouse input. Keep the enabled check above so automation
+  # cannot activate a control that the user cannot use.
+  $parent = [InstallerWindow]::GetParent($control.Handle)
+  if ($parent -eq [IntPtr]::Zero) { throw "Installer button parent missing: $Text" }
+  if (-not [InstallerWindow]::PostMessage($parent, 0x111, [IntPtr]$control.Id, $control.Handle)) {
+    throw "Installer button notification failed: $Text"
+  }
 }
 function Save-InstallerWindow([IntPtr]$Handle, [string]$Path) {
   # Text controls exist before nsDialogs finishes its page transition and first paint.
