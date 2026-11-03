@@ -1,0 +1,230 @@
+{
+  "version": "0.15.0",
+  "sourceCommit": "62193c6db78ac33a45c2c5d0d68ad00faeed5232",
+  "result": "passed",
+  "scope": "Private LAN Windows and Apple Silicon delivery; not a complete public GitHub Release",
+  "checkedAt": "2026-11-03T06:10:36.047Z",
+  "serverUpgrade": {
+    "result": "passed",
+    "version": "0.15.0",
+    "dataPreserved": true,
+    "modelSettingsPreserved": true,
+    "modelCredentialsPreserved": true
+  },
+  "unitTests": {
+    "nodePassed": 54,
+    "pythonPassed": 5,
+    "failed": 0
+  },
+  "windowsDesktopChecks": 37,
+  "macDesktopChecks": 36,
+  "windowsStartupChecks": 9,
+  "macStartupChecks": 9,
+  "windowsInstallerChecks": 4,
+  "macPackageChecks": 5,
+  "attachmentUi": {
+    "windows": {
+      "version": "0.15.0",
+      "result": "passed",
+      "checks": [
+        "Actual DOC, DOCX, XLSX, PPTX and text PDF inputs parse to expected Unicode text and preview safely",
+        "Real PDF.js worker renders a scanned PDF page with source page label and explicit scope warning",
+        "Real MP4 is decoded and sampled at distinct timestamps: red first scene and blue second scene; no audio claim",
+        "Attachment-only submission and native local history retain all seven extracted files and visual previews after reload"
+      ],
+      "consoleErrors": [],
+      "productionModelsCalled": false,
+      "originalFilesStoredOnServer": false
+    },
+    "mac": {
+      "version": "0.15.0",
+      "result": "passed",
+      "checks": [
+        "Actual DOC, DOCX, XLSX, PPTX and text PDF inputs parse to expected Unicode text and preview safely",
+        "Real PDF.js worker renders a scanned PDF page with source page label and explicit scope warning",
+        "Real MP4 is decoded and sampled at distinct timestamps: red first scene and blue second scene; no audio claim",
+        "Attachment-only submission and native local history retain all seven extracted files and visual previews after reload"
+      ],
+      "consoleErrors": [],
+      "productionModelsCalled": false,
+      "originalFilesStoredOnServer": false
+    }
+  },
+  "liveModel": {
+    "version": "0.15.0",
+    "result": "passed",
+    "syntheticFixturesOnly": true,
+    "employeeDataSent": false,
+    "modelCalls": 1,
+    "model": "deepseek-flash",
+    "documentAmountRecognized": true,
+    "scanCodeRecognized": true,
+    "videoSequenceRecognized": true,
+    "audioLimitationRespected": true,
+    "usage": {
+      "inputTokens": 447,
+      "outputTokens": 79,
+      "totalTokens": 7950
+    },
+    "checkedAt": "2026-11-03T06:05:16.917Z"
+  },
+  "native": {
+    "win32-old": {
+      "version": "0.14.0",
+      "result": "passed",
+      "checks": [
+        "Default LAN URL, actual OS TLS trust, login and chat rendered",
+        "Actual deployed UI restores saved trace in a bounded scrollable process panel with accessible collapse/expand controls",
+        "Actual OS clipboard contains the exact copied fixture answer",
+        "Actual feedback submission with opt-in excerpt, admin table and persisted handling state",
+        "Actual three GitHub libraries appear company-wide, install with persistent native state, and expose GitHub/ZIP import UI",
+        "Actual NAS directory loads for the assigned department; even a company administrator cannot browse another department source; credentials never return to client",
+        "Packaged client uses deployed file picker and parses DOC, DOCX, XLSX, PPTX, text/scanned PDF and MP4 with timestamped previews",
+        "Unmodified 0.14.0 packaged client discovers 0.15.0, fully downloads and verifies SHA-256 through Mac mini"
+      ],
+      "attachments": {
+        "formats": 7,
+        "videoFrames": 2,
+        "realOfficeServerParser": true,
+        "realPdfWorker": true,
+        "actualMediaDecoding": true
+      },
+      "clipboard": {
+        "result": "passed"
+      },
+      "update": {
+        "version": "0.15.0",
+        "bytes": 119374281,
+        "sha256": "b31365f125c676f2d8a8a00575a23f75bd563944c1dc8df2b77361d3e3fb3456",
+        "target": "win32-x64",
+        "status": "ready"
+      },
+      "checkedAt": "2026-11-03T06:07:36.414Z"
+    },
+    "win32-new": {
+      "version": "0.15.0",
+      "result": "passed",
+      "checks": [
+        "Default LAN URL, actual OS TLS trust, login and chat rendered",
+        "Actual deployed UI restores saved trace in a bounded scrollable process panel with accessible collapse/expand controls",
+        "Actual OS clipboard contains the exact copied fixture answer",
+        "Actual feedback submission with opt-in excerpt, admin table and persisted handling state",
+        "Actual three GitHub libraries appear company-wide, install with persistent native state, and expose GitHub/ZIP import UI",
+        "Actual NAS directory loads for the assigned department; even a company administrator cannot browse another department source; credentials never return to client",
+        "Packaged client uses deployed file picker and parses DOC, DOCX, XLSX, PPTX, text/scanned PDF and MP4 with timestamped previews"
+      ],
+      "attachments": {
+        "formats": 7,
+        "videoFrames": 2,
+        "realOfficeServerParser": true,
+        "realPdfWorker": true,
+        "actualMediaDecoding": true
+      },
+      "clipboard": {
+        "result": "passed"
+      },
+      "checkedAt": "2026-11-03T06:02:19.736Z"
+    },
+    "darwin-old": {
+      "version": "0.14.0",
+      "result": "passed",
+      "checks": [
+        "Default LAN URL, actual OS TLS trust, login and chat rendered",
+        "Actual deployed UI restores saved trace in a bounded scrollable process panel with accessible collapse/expand controls",
+        "Actual OS clipboard contains the exact copied fixture answer",
+        "Actual feedback submission with opt-in excerpt, admin table and persisted handling state",
+        "Actual three GitHub libraries appear company-wide, install with persistent native state, and expose GitHub/ZIP import UI",
+        "Actual NAS directory loads for the assigned department; even a company administrator cannot browse another department source; credentials never return to client",
+        "Packaged client uses deployed file picker and parses DOC, DOCX, XLSX, PPTX, text/scanned PDF and MP4 with timestamped previews",
+        "Unmodified 0.14.0 packaged client discovers 0.15.0, fully downloads and verifies SHA-256 through Mac mini"
+      ],
+      "attachments": {
+        "formats": 7,
+        "videoFrames": 2,
+        "realOfficeServerParser": true,
+        "realPdfWorker": true,
+        "actualMediaDecoding": true
+      },
+      "clipboard": {
+        "result": "passed"
+      },
+      "update": {
+        "version": "0.15.0",
+        "bytes": 136904228,
+        "sha256": "2c12ca751264fb1dc82baf5e1465c2a89809fc4a6d8a240f2a9144d0bed2f5ad",
+        "target": "darwin-arm64",
+        "status": "ready"
+      },
+      "checkedAt": "2026-11-03T06:08:25.426Z"
+    },
+    "darwin-new": {
+      "version": "0.15.0",
+      "result": "passed",
+      "checks": [
+        "Default LAN URL, actual OS TLS trust, login and chat rendered",
+        "Actual deployed UI restores saved trace in a bounded scrollable process panel with accessible collapse/expand controls",
+        "Actual OS clipboard contains the exact copied fixture answer",
+        "Actual feedback submission with opt-in excerpt, admin table and persisted handling state",
+        "Actual three GitHub libraries appear company-wide, install with persistent native state, and expose GitHub/ZIP import UI",
+        "Actual NAS directory loads for the assigned department; even a company administrator cannot browse another department source; credentials never return to client",
+        "Packaged client uses deployed file picker and parses DOC, DOCX, XLSX, PPTX, text/scanned PDF and MP4 with timestamped previews"
+      ],
+      "attachments": {
+        "formats": 7,
+        "videoFrames": 2,
+        "realOfficeServerParser": true,
+        "realPdfWorker": true,
+        "actualMediaDecoding": true
+      },
+      "clipboard": {
+        "result": "passed"
+      },
+      "checkedAt": "2026-11-03T06:04:38.331Z"
+    }
+  },
+  "channels": {
+    "win32-x64": {
+      "name": "Corporate-Brain-Setup-0.15.0-x64.exe",
+      "bytes": 119374281,
+      "sha256": "b31365f125c676f2d8a8a00575a23f75bd563944c1dc8df2b77361d3e3fb3456"
+    },
+    "darwin-arm64": {
+      "name": "Corporate-Brain-0.15.0-macOS-arm64.dmg",
+      "bytes": 136904228,
+      "sha256": "2c12ca751264fb1dc82baf5e1465c2a89809fc4a6d8a240f2a9144d0bed2f5ad"
+    }
+  },
+  "nas": {
+    "result": "passed",
+    "departmentsConfigured": 11,
+    "sourcesEnabled": 14,
+    "authorizedReadsPassed": 14,
+    "crossDepartmentRequestsDenied": 140,
+    "employeeMembershipsUpdated": 1,
+    "temporaryAccountsRemoved": true,
+    "credentialsEncrypted": true,
+    "temporaryServerPlaintextRemoved": true,
+    "nasContentsRead": false,
+    "nasWritesPerformed": false
+  },
+  "verificationHistory": {
+    "attachmentUiInitialFailures": [
+      "Test used incorrect modal close label",
+      "Test reloaded before selecting the saved conversation"
+    ],
+    "productChangesForThoseFailures": false,
+    "windowsClipboard": "Retested after user confirmed manual copy; exact OS clipboard assertions pass on new and old packaged clients"
+  },
+  "limitations": [
+    "Video uses up to eight sampled frames, without audio or frame-by-frame coverage",
+    "PDF processing is bounded to 80 pages of text and eight page images; Office layout and embedded images are not extracted",
+    "Windows installer is not trusted-signed; Mac uses ad-hoc signing without notarization",
+    "Employee-device install/upgrade/uninstall was not performed; Intel Mac package not published"
+  ],
+  "windowsTrustedSignature": false,
+  "macSigning": "ad-hoc",
+  "macNotarized": false,
+  "githubSyncPausedByUser": true,
+  "cloudServerRetained": true,
+  "companyDataOrKeysDistributed": false
+}
