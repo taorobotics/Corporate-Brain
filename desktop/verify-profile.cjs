@@ -260,10 +260,11 @@ const wait = async (fn, label, timeout = 45000) => {
       () => js(`document.querySelectorAll('.avatar-option').length===100`),
       "narrow gallery",
     );
-    assert.ok(
-      await js(
+    await wait(
+      () => js(
         `(()=>{const m=document.querySelector('.modal');return m.scrollWidth<=m.clientWidth+2&&document.documentElement.scrollWidth<=innerWidth+2})()`,
       ),
+      "narrow layout settles after native window resize",
     );
     await fs.mkdir("artifacts/screenshots", { recursive: true });
     await fs.writeFile(
