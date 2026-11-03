@@ -1,4 +1,36 @@
 @import url("/fonts.css");
+.composer-automatic {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--muted);
+  font-size: 13px;
+  white-space: nowrap;
+  padding: 6px;
+}
+.chat-production {
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 16px;
+  margin-top: 12px;
+  background: var(--panel);
+  max-width: 560px;
+}
+.chat-production p {
+  margin: 8px 0;
+}
+.chat-production small {
+  display: block;
+  overflow-wrap: anywhere;
+  color: var(--muted);
+}
+.chat-production progress {
+  width: 100%;
+  accent-color: var(--accent);
+}
+.chat-production .production-actions {
+  margin-top: 12px;
+}
 .message-actions {
   display: flex;
   align-items: center;

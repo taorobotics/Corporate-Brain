@@ -105,6 +105,50 @@ export function useProduction(user: User | null) {
   };
 }
 export type ProductionController = ReturnType<typeof useProduction>;
+export function ChatProduction({
+  id,
+  controller,
+  details,
+}: {
+  id: string;
+  controller: ProductionController;
+  details: () => void;
+}) {
+  const task = controller.tasks.find((item) => item.id === id);
+  const receipt = controller.local?.receipts.find((item) => item.id === id);
+  const status = receipt ? "saved" : task?.status;
+  return (
+    <section
+      className="chat-production"
+      aria-label="对话制作任务"
+      data-status={status ?? "loading"}
+    >
+      <strong>{task?.kind === "video" ? "视频与源代码" : "制作成果"}</strong>
+      <p role="status">
+        {controller.saving === id
+          ? "正在保存到本机并校验文件…"
+          : status
+            ? PRODUCTION_STATUS[status]
+            : "正在读取制作状态…"}
+      </p>
+      {task && ["queued", "generating", "rendering"].includes(task.status) && (
+        <progress value={task.progress} max={100} />
+      )}
+      {receipt && <small>{receipt.directory}</small>}
+      {task?.error && <small role="alert">{task.error}</small>}
+      {controller.error && <small role="alert">{controller.error}</small>}
+      <div className="production-actions">
+        {receipt && (
+          <Button onClick={() => void controller.open(id)}>
+            <FolderOpen size={17} />
+            打开成果文件夹
+          </Button>
+        )}
+        <Button onClick={details}>查看任务详情</Button>
+      </div>
+    </section>
+  );
+}
 export function ProductionLocation({
   controller,
 }: {

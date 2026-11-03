@@ -1,6 +1,6 @@
 {
   "name": "corporate-brain",
-  "version": "0.17.3",
+  "version": "0.18.0",
   "private": true,
   "license": "MIT",
   "repository": {
@@ -21,7 +21,7 @@
     "build": "node scripts/prepare-document-assets.mjs && node scripts/prepare-legal.mjs && tsc --noEmit && vite build",
     "legal:prepare": "node scripts/prepare-legal.mjs",
     "start": "tsx server/index.ts",
-    "test": "tsx --test --test-concurrency=1 server/platform.test.ts server/profile.test.ts server/production.test.ts desktop/production.test.cjs server/skill-import.test.ts server/nas.test.ts server/documents.test.ts server/updates.test.ts server/dsh.test.ts server/chat-stream.test.ts server/chat-deadline.test.ts server/env.test.ts server/deepseek-sync.test.ts shared/workspaces.test.ts shared/skins.test.ts desktop/updates.test.cjs && node scripts/test-nas-worker.mjs",
+    "test": "tsx --test --test-concurrency=1 server/platform.test.ts server/automatic.test.ts server/profile.test.ts server/production.test.ts desktop/production.test.cjs server/skill-import.test.ts server/nas.test.ts server/documents.test.ts server/updates.test.ts server/dsh.test.ts server/chat-stream.test.ts server/chat-deadline.test.ts server/env.test.ts server/deepseek-sync.test.ts shared/workspaces.test.ts shared/skins.test.ts desktop/updates.test.cjs && node scripts/test-nas-worker.mjs",
     "test:desktop": "node scripts/prepare-legal.mjs && electron desktop/verify-startup.cjs && electron desktop/verify.cjs",
     "test:dsh": "node scripts/verify-dsh.mjs",
     "deepseek:check": "node scripts/check-deepseek-config.mjs",

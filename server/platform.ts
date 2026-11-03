@@ -39,6 +39,7 @@ import {
   type SkillResources,
 } from "./skill-library";
 import { SkillImportError } from "./skill-import";
+import { AUTOMATIC_ROUTER_INSTRUCTION, parseAutomaticPlan } from "./automatic";
 
 const id = z.string().uuid();
 const shortText = z.string().trim().min(1).max(100);
@@ -899,6 +900,118 @@ export function createPlatform(
       store.audit(owner, "production.generated", connectionId);
       return content;
     },
+  });
+  app.post("/api/generate/plan", async (req, res) => {
+    const actor = getActor(req);
+    const data = z
+      .object({
+        connectionId: id,
+        messages: z
+          .array(
+            z
+              .object({
+                role: z.enum(["user", "assistant"]),
+                content: z.string().max(80000),
+              })
+              .strict(),
+          )
+          .min(1)
+          .max(40),
+        attachments: z
+          .array(z.object({ name: z.string().max(200) }).strict())
+          .max(8)
+          .default([]),
+        workspaceAccess: z.enum(["view", "edit", "full"]).default("edit"),
+      })
+      .strict()
+      .parse(req.body);
+    const row = getConnection(data.connectionId, actor, "chat");
+    const controller = new AbortController();
+    const disconnected = () => {
+      if (!res.writableEnded) controller.abort();
+    };
+    res.on("close", disconnected);
+    try {
+      const response = await fetch(`${row.base_url}/chat/completions`, {
+        method: "POST",
+        redirect: "error",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${store.decrypt(row.secret)}`,
+        },
+        signal: AbortSignal.any([
+          controller.signal,
+          AbortSignal.timeout(45000),
+        ]),
+        body: JSON.stringify({
+          model: row.model,
+          stream: false,
+          max_tokens: 2048,
+          ...(String(row.model).toLowerCase().startsWith("deepseek")
+            ? { thinking: { type: "disabled" } }
+            : {}),
+          messages: [
+            { role: "system", content: AUTOMATIC_ROUTER_INSTRUCTION },
+            {
+              role: "user",
+              content: JSON.stringify({
+                messages: data.messages.slice(-8).map((message) => ({
+                  ...message,
+                  content: message.content.slice(-12000),
+                })),
+                attachments: data.attachments,
+              }),
+            },
+          ],
+        }),
+      });
+      if (!response.ok)
+        fail(
+          502,
+          `智能调度服务返回 ${response.status}，请检查模型配置或稍后重试`,
+        );
+      const result = (await response.json()) as Row;
+      let plan;
+      try {
+        plan = parseAutomaticPlan(result.choices?.[0]?.message?.content);
+      } catch {
+        fail(502, "智能调度未返回有效任务，请重新发送；尚未创建任何制作任务");
+      }
+      if (plan.kind !== "chat" && data.workspaceAccess === "view")
+        fail(
+          403,
+          "当前工作区为仅可查看，生成图片、代码或视频前请切换到工作区内修改",
+        );
+      let connectionId = row.id;
+      if (plan.kind === "image") {
+        const image = (
+          db
+            .prepare(
+              "SELECT * FROM connections WHERE enabled=1 AND kind='image' ORDER BY rowid",
+            )
+            .all() as Row[]
+        ).find(
+          (candidate) =>
+            actor.role === "company_admin" ||
+            !JSON.parse(candidate.departments).length ||
+            JSON.parse(candidate.departments).includes(actor.departmentId),
+        );
+        if (!image)
+          fail(
+            409,
+            "已识别为图片创作，但公司尚未为你配置可用的图片服务，请联系管理员",
+          );
+        connectionId = image.id;
+      }
+      store.audit(actor.id, "model.task_routed", row.id);
+      res.json({ ...plan, connectionId });
+    } catch (error) {
+      if (error instanceof ApiError) throw error;
+      if (!res.destroyed)
+        fail(502, "智能调度连接失败或超时，请重试；原需求已保存在本机");
+    } finally {
+      res.off("close", disconnected);
+    }
   });
   app.post("/api/generate/chat", async (req, res) => {
     const actor = getActor(req);

@@ -1,7 +1,6 @@
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import {
   Plus,
-  Code,
   ArrowUp,
   ArrowDown,
   Sparkle,
@@ -24,15 +23,19 @@ import {
   ArrowRight,
   Plug,
   MagnifyingGlass,
-  ChatCircle,
   VideoCamera,
-  Lightning,
   ShieldCheck,
   Sun,
   Moon,
 } from "@phosphor-icons/react";
 import { SelectField } from "./Dropdown";
-import { ProductionLocation, ProductionWorks } from "./Production";
+import {
+  ChatProduction,
+  ProductionLocation,
+  ProductionWorks,
+} from "./Production";
+import { submitAutomaticProduction } from "./automatic";
+import type { AutomaticPlan } from "../shared/automatic";
 import type { WorkspaceProps } from "./App";
 import type {
   Draft,
@@ -40,14 +43,9 @@ import type {
   Conversation,
   Message,
   Connection,
-  DshMode,
   WorkspaceAccess,
 } from "../shared/types";
-import {
-  DSH_MODE_OPTIONS,
-  WORKSPACE_ACCESS_OPTIONS,
-  estimateTokens,
-} from "../shared/workspaces";
+import { WORKSPACE_ACCESS_OPTIONS, estimateTokens } from "../shared/workspaces";
 import { api, download } from "./api";
 import {
   Brand,
@@ -122,8 +120,8 @@ export default function Workspace(props: WorkspaceProps) {
       outputTokens?: number;
       totalTokens?: number;
     } | null>(null);
-  const [taskKind, setTaskKind] = useState<"chat" | "image" | "video">("chat"),
-    [taskError, setTaskError] = useState("");
+  const [taskError, setTaskError] = useState("");
+  const originalFiles = useRef(new Map<string, File>());
   const filesRef = useRef<HTMLInputElement>(null);
   const fileRead = useRef<AbortController | null>(null);
   const [reading, setReading] = useState<{
@@ -150,9 +148,7 @@ export default function Workspace(props: WorkspaceProps) {
     };
   }, []);
   const conversation = state.conversations.find((c) => c.id === conversationId);
-  const taskModels = connections.filter(
-    (c) => c.enabled && c.kind === taskKind,
-  );
+  const taskModels = connections.filter((c) => c.enabled && c.kind === "chat");
   const model =
     taskModels.find((c) => c.id === state.settings.model) ?? taskModels[0];
   const workspace =
@@ -167,6 +163,7 @@ export default function Workspace(props: WorkspaceProps) {
     fileRead.current?.abort();
     setAttachments([]);
     setReading(null);
+    originalFiles.current.clear();
   }, [page, conversationId]);
   useEffect(() => {
     if (page !== "models") return;
@@ -278,6 +275,7 @@ export default function Workspace(props: WorkspaceProps) {
           controller.signal.throwIfAborted();
           validateAttachmentBudget([...accepted, result]);
           accepted = [...accepted, result];
+          originalFiles.current.set(result.name, file);
           if (mounted.current) setAttachments(accepted);
         } catch (error) {
           if (!controller.signal.aborted)
@@ -307,16 +305,9 @@ export default function Workspace(props: WorkspaceProps) {
       : (conversation?.messages.findLast(
           (m) => m.role === "user" && m.attachments?.length,
         )?.attachments ?? []);
-    if (
-      model &&
-      currentAttachments.some((a) => visualInputs(a).length) &&
-      unsupportedDeepSeekVision(model.baseUrl, model.model)
-    ) {
-      setTaskError(
-        "这些附件包含画面，请在模型选择中切换到 DeepSeek Flash 后发送。DeepSeek Pro 不支持图像输入。",
-      );
-      return;
-    }
+    const materialFiles = currentAttachments.map((attachment) =>
+      originalFiles.current.get(attachment.name),
+    );
     jumpToLatest();
     setTaskError("");
     let current = conversation;
@@ -352,14 +343,6 @@ export default function Workspace(props: WorkspaceProps) {
     }));
     setText("");
     setAttachments([]);
-    if (taskKind === "video") {
-      sessionStorage.setItem(
-        `production-draft:${user.id}`,
-        JSON.stringify({ kind: "video", prompt: requestText }),
-      );
-      navigate("production");
-      return;
-    }
     if (!model) {
       setTaskError(
         "尚未配置可用模型。这条需求已保存在本机，请在模型与服务中配置后继续。",
@@ -372,6 +355,8 @@ export default function Workspace(props: WorkspaceProps) {
     const startedAt = Date.now();
     let items: TraceItem[] = [],
       partial = "";
+    let responseModel = model,
+      productionTaskId: string | undefined;
     let progressTimer: ReturnType<typeof setTimeout> | undefined;
     const saveReply = (
       content: string,
@@ -385,26 +370,20 @@ export default function Workspace(props: WorkspaceProps) {
         role: "assistant",
         content,
         image,
-        connectionId: model.id,
-        modelName: model.name,
+        connectionId: responseModel.id,
+        modelName: responseModel.name,
+        productionTaskId,
         usage,
         at: new Date().toISOString(),
-        ...(taskKind === "chat"
-          ? {
-              trace: {
-                items: items.map((item) =>
-                  item.type === "tool" && item.status === "running"
-                    ? { ...item, status: "stopped" as const }
-                    : item,
-                ),
-                status,
-                elapsed: Math.max(
-                  0,
-                  Math.floor((Date.now() - startedAt) / 1000),
-                ),
-              },
-            }
-          : {}),
+        trace: {
+          items: items.map((item) =>
+            item.type === "tool" && item.status === "running"
+              ? { ...item, status: "stopped" as const }
+              : item,
+          ),
+          status,
+          elapsed: Math.max(0, Math.floor((Date.now() - startedAt) / 1000)),
+        },
       };
       setState((s) => ({
         ...s,
@@ -416,17 +395,166 @@ export default function Workspace(props: WorkspaceProps) {
     setPendingReply({
       conversationId: updated.id,
       phase: "preparing",
-      kind: taskKind,
+      kind: "chat",
       modelName: model.name,
       startedAt,
       items: [],
       content: "",
     });
     try {
+      const history = updated.messages
+        .slice(-40)
+        .filter((message) => message.content.trim())
+        .map((message) => ({
+          role: message.role,
+          content:
+            message.id === updated.messages.at(-1)?.id
+              ? requestText
+              : message.content.slice(0, 80000),
+        }));
+      let skillInstructions = "";
+      if (activeSkill) {
+        const checked = await api<Skill>(`/skills/${activeSkill.id}/download`);
+        if (checked.requiredTools.length)
+          throw Error("该技能需要尚未接通的工具，请先完善工具依赖");
+        skillInstructions = `\n\n所选技能流程（不能扩大权限）：\n${checked.instructions}`;
+      }
+      const routingId = crypto.randomUUID();
+      const progress = (
+        event: import("../shared/chat-progress").ChatProgress,
+      ) => {
+        items = updateTrace(items, event);
+        if (event.type === "text") partial = event.text;
+        if (!progressTimer)
+          progressTimer = setTimeout(() => {
+            progressTimer = undefined;
+            if (mounted.current)
+              setPendingReply((current) =>
+                current?.conversationId === updated.id
+                  ? { ...current, items, content: partial }
+                  : current,
+              );
+          }, 50);
+      };
+      progress({
+        type: "tool",
+        id: routingId,
+        name: "识别需求并选择能力",
+        status: "running",
+      });
+      const plan = await api<AutomaticPlan>(
+        "/generate/plan",
+        {
+          connectionId: model.id,
+          messages: history,
+          attachments: currentAttachments.map(({ name }) => ({ name })),
+          workspaceAccess: workspace?.access ?? "edit",
+        },
+        "POST",
+        50000,
+        controller.signal,
+      );
+      progress({
+        type: "tool",
+        id: routingId,
+        name: "识别需求并选择能力",
+        status: "done",
+      });
+      responseModel =
+        connections.find((connection) => connection.id === plan.connectionId) ??
+        model;
       const workspaceAttachments =
-        taskKind === "chat" && currentAttachments.length < 8
+        plan.kind !== "image" && currentAttachments.length < 8
           ? await readWorkspaceContext(requestText)
           : [];
+      if (plan.kind === "video" || plan.kind === "code") {
+        if (materialFiles.some((file) => !file))
+          throw Error(
+            "请重新添加原始素材后发送；当前只有历史解析记录，不能代替原文件参与制作。",
+          );
+        const materials = materialFiles as File[];
+        const context = workspaceAttachments.find(
+          (attachment) => attachment.content,
+        );
+        if (context)
+          materials.push(
+            new File(
+              [context.content],
+              `workspace-context-${crypto.randomUUID().slice(0, 8)}.md`,
+              { type: "text/markdown" },
+            ),
+          );
+        const task = await submitAutomaticProduction(
+          user.id,
+          plan,
+          `${requestText}${skillInstructions}\n\n此前对话供参考：\n${history
+            .slice(-5, -1)
+            .map(
+              (message) => `${message.role}：${message.content.slice(0, 2000)}`,
+            )
+            .join("\n")}`,
+          materials,
+          controller.signal,
+          (task) => {
+            productionTaskId = task.id;
+          },
+        );
+        productionTaskId = task.id;
+        progress({
+          type: "tool",
+          id: task.id,
+          name: plan.kind === "video" ? "Mac mini 视频制作" : "生成代码文件",
+          status: "done",
+        });
+        saveReply(
+          plan.kind === "video"
+            ? "视频制作任务已提交。Mac mini 完成后，视频、素材和源代码会自动保存到这台电脑。"
+            : "代码制作任务已提交，完成后会自动保存到这台电脑。",
+          "done",
+        );
+        await props.production.refresh();
+        return;
+      }
+      if (plan.kind === "image") {
+        const toolId = crypto.randomUUID();
+        progress({
+          type: "tool",
+          id: toolId,
+          name: "图片创作",
+          status: "running",
+        });
+        setPendingReply((current) =>
+          current
+            ? {
+                ...current,
+                kind: "image",
+                phase: "waiting",
+                modelName: responseModel.name,
+              }
+            : null,
+        );
+        const response = await api<{ image: string }>(
+          "/generate/image",
+          {
+            connectionId: plan.connectionId,
+            prompt: `${requestText}${skillInstructions}\n\n对话参考：\n${history
+              .slice(-4, -1)
+              .map((message) => message.content.slice(0, 1500))
+              .join("\n")}`.slice(0, 12000),
+          },
+          "POST",
+          130000,
+          controller.signal,
+        );
+        progress({
+          type: "tool",
+          id: toolId,
+          name: "图片创作",
+          status: "done",
+        });
+        saveReply("图片已生成。", "done", response.image);
+        return;
+      }
       const modelAttachments = toModelAttachments([
         ...currentAttachments,
         ...workspaceAttachments.slice(
@@ -435,77 +563,70 @@ export default function Workspace(props: WorkspaceProps) {
         ),
       ]);
       validateAttachmentBudget(modelAttachments);
-      if (activeSkill) {
-        await api(`/skills/${activeSkill.id}/download`);
-        if (activeSkill.requiredTools.length)
-          throw new Error("该技能需要尚未接通的工具，请先完善工具依赖");
+      if (
+        modelAttachments.some(
+          (attachment) => visualInputs(attachment).length,
+        ) &&
+        unsupportedDeepSeekVision(responseModel.baseUrl, responseModel.model)
+      ) {
+        const vision = taskModels.find(
+          (connection) =>
+            !unsupportedDeepSeekVision(connection.baseUrl, connection.model),
+        );
+        if (!vision)
+          throw Error(
+            "附件或工作区包含画面，但当前没有可识图的模型，请联系管理员配置。",
+          );
+        responseModel = vision;
       }
       setPendingReply((current) =>
-        current ? { ...current, phase: "waiting" } : null,
+        current
+          ? { ...current, phase: "waiting", modelName: responseModel.name }
+          : null,
       );
       controller.signal.throwIfAborted();
-      const response =
-        taskKind === "image"
-          ? await api("/generate/image", {
-              connectionId: model.id,
-              prompt: content,
-            })
-          : await streamChat(
-              {
-                connectionId: model.id,
-                ...(activeSkill ? { skillId: activeSkill.id } : {}),
-                sessionId: updated.id,
-                messages: [
-                  ...updated.messages
-                    .slice(-40)
-                    .filter((m) => m.content.trim())
-                    .map((m) => ({
-                      role: m.role,
-                      content:
-                        m.id === message.id
-                          ? requestText
-                          : (
-                              m.content +
-                              (m.role === "user" && m.attachments?.length
-                                ? "\n\n此前附件文字：\n" +
-                                  m.attachments
-                                    .map((a) => `${a.name}\n${a.content}`)
-                                    .join("\n")
-                                    .slice(0, 40000)
-                                : "")
-                            ).slice(0, 80000),
-                    })),
-                ],
-                attachments: modelAttachments,
-                mode: state.settings.mode,
-                workspaceAccess: workspace?.access ?? "edit",
-              },
-              controller.signal,
-              (event) => {
-                items = updateTrace(items, event);
-                if (event.type === "text") partial = event.text;
-                if (!progressTimer)
-                  progressTimer = setTimeout(() => {
-                    progressTimer = undefined;
-                    if (mounted.current)
-                      setPendingReply((current) =>
-                        current?.conversationId === updated.id
-                          ? { ...current, items, content: partial }
-                          : current,
-                      );
-                  }, 50);
-              },
-            );
+      const response = await streamChat(
+        {
+          connectionId: responseModel.id,
+          ...(activeSkill ? { skillId: activeSkill.id } : {}),
+          sessionId: updated.id,
+          messages: [
+            ...updated.messages
+              .slice(-40)
+              .filter((m) => m.content.trim())
+              .map((m) => ({
+                role: m.role,
+                content:
+                  m.id === message.id
+                    ? requestText
+                    : (
+                        m.content +
+                        (m.role === "user" && m.attachments?.length
+                          ? "\n\n此前附件文字：\n" +
+                            m.attachments
+                              .map((a) => `${a.name}\n${a.content}`)
+                              .join("\n")
+                              .slice(0, 40000)
+                          : "")
+                      ).slice(0, 80000),
+              })),
+          ],
+          attachments: modelAttachments,
+          mode: plan.mode,
+          workspaceAccess: workspace?.access ?? "edit",
+        },
+        controller.signal,
+        progress,
+      );
       setLastUsage(response.usage ?? null);
       saveReply(
         response.content ?? "图片已生成，可以继续保存。",
         "done",
-        response.image,
+        undefined,
         response.usage,
       );
     } catch (e) {
-      if (taskKind === "chat")
-        saveReply(partial, controller.signal.aborted ? "stopped" : "error");
+      saveReply(partial, controller.signal.aborted ? "stopped" : "error");
       if (!controller.signal.aborted && mounted.current)
         setTaskError((e as Error).message);
     } finally {
@@ -711,6 +832,13 @@ export default function Workspace(props: WorkspaceProps) {
                         />
                       )}
                       <MessageContent content={message.content} />
+                      {message.productionTaskId && (
+                        <ChatProduction
+                          id={message.productionTaskId}
+                          controller={props.production}
+                          details={() => navigate("production")}
+                        />
+                      )}
                       {!!message.attachments?.length && (
                         <div className="message-attachments">
                           {message.attachments.map((a, index) => (
@@ -891,7 +1019,7 @@ export default function Workspace(props: WorkspaceProps) {
                 )}
                 <textarea
                   aria-label="任务输入"
-                  placeholder="描述你想完成的工作，添加文件，或选择技能"
+                  placeholder="直接描述需求，AI 会自动选择所需能力"
                   value={text}
                   onChange={(e) => setText(e.target.value)}
                   onPaste={(e) => {
@@ -926,48 +1054,13 @@ export default function Workspace(props: WorkspaceProps) {
                     <Sparkle size={19} />
                     技能
                   </button>
-                  <SelectField
-                    label="任务类型"
-                    variant="quiet"
-                    side="top"
-                    value={taskKind}
-                    onValueChange={(value) => {
-                      if (value === "video" || value === "code") {
-                        sessionStorage.setItem(
-                          `production-draft:${user.id}`,
-                          JSON.stringify({ kind: value, prompt: text }),
-                        );
-                        navigate("production");
-                      } else setTaskKind(value as typeof taskKind);
-                    }}
-                    options={[
-                      {
-                        value: "chat",
-                        label: "对话",
-                        description: "讨论想法、撰写内容与日常问答",
-                        icon: <ChatCircle size={18} />,
-                      },
-                      {
-                        value: "image",
-                        label: "图片",
-                        description: "使用已配置的图片服务创作",
-                        icon: <Images size={18} />,
-                      },
-                      {
-                        value: "video",
-                        label: "视频",
-                        description: "Mac mini 代码渲染，成果自动保存本机",
-                        icon: <VideoCamera size={18} />,
-                        badge: "免费渲染",
-                      },
-                      {
-                        value: "code",
-                        label: "代码文件",
-                        description: "生成源码并自动保存到本机",
-                        icon: <Code size={18} />,
-                      },
-                    ]}
-                  />
+                  <span
+                    className="composer-automatic"
+                    title="按需求自动调用对话、图片、视频和代码能力"
+                  >
+                    <Sparkle size={18} />
+                    AI 自动
+                  </span>
                   <span className="bar-spacer" />
                   <SelectField
                     label="选择模型"
@@ -998,31 +1091,6 @@ export default function Workspace(props: WorkspaceProps) {
                     <span>{lastUsage ? "本轮" : "估算"}</span>
                     <span>额度待配置</span>
                   </span>
-                  <SelectField
-                    label="DSH 模式"
-                    variant="quiet"
-                    side="top"
-                    align="end"
-                    value={state.settings.mode}
-                    onValueChange={(value) =>
-                      patchSettings({ mode: value as DshMode })
-                    }
-                    options={DSH_MODE_OPTIONS.map((option) => ({
-                      value: option.value,
-                      label: option.label,
-                      description: option.description,
-                      icon:
-                        option.value === "ptc" ? (
-                          <Lightning size={18} />
-                        ) : option.value === "minimal" ? (
-                          <SlidersHorizontal size={18} />
-                        ) : option.value === "creative" ? (
-                          <Sparkle size={18} />
-                        ) : (
-                          <ChatCircle size={18} />
-                        ),
-                    }))}
-                  />
                   <SelectField
                     label="工作区权限"
                     variant="quiet"

@@ -213,7 +213,13 @@ async function waitFor(test, label, timeout = 12000) {
   checks.push(
     "Pre-login window controls minimize, maximize, restore and request native close on Windows; macOS keeps native controls",
   );
-  assert.equal(await js("getComputedStyle(document.querySelector('.auth-card .brand-mark')).backgroundColor.replaceAll(' ', '')"), "rgba(0,0,0,0)", "Login logo must show the page through its transparent spaces");
+  assert.equal(
+    await js(
+      "getComputedStyle(document.querySelector('.auth-card .brand-mark')).backgroundColor.replaceAll(' ', '')",
+    ),
+    "rgba(0,0,0,0)",
+    "Login logo must show the page through its transparent spaces",
+  );
   await capture("client-login-window-controls.png");
   await click("隐私与许可");
   await waitFor(() => has("公司大脑隐私说明"), "pre-login privacy policy");
@@ -349,12 +355,24 @@ async function waitFor(test, label, timeout = 12000) {
     await js(`document.querySelectorAll('.composer-tools select').length`),
     0,
   );
-  await openSelect("任务类型");
+  assert.equal(
+    await js(
+      `document.querySelectorAll('[aria-label="任务类型"], [aria-label="DSH 模式"]').length`,
+    ),
+    0,
+  );
+  assert.equal(
+    await js(
+      `document.querySelector('.composer-automatic')?.textContent.includes('AI 自动')`,
+    ),
+    true,
+  );
+  await openSelect("工作区权限");
   assert.equal(
     await js(`document.querySelector('.select-popup[data-open]').dataset.side`),
     "top",
   );
-  await capture("dropdown-task-type.png");
+  await capture("composer-automatic.png");
   const composerRegion = await js(
     `(() => { const a = document.querySelector('.composer').getBoundingClientRect(), b = document.querySelector('.select-popup[data-open]').getBoundingClientRect(); const x=Math.max(0,Math.floor(Math.min(a.left,b.left)-20)), y=Math.max(0,Math.floor(Math.min(a.top,b.top)-20)); return {x,y,width:Math.min(innerWidth-x,Math.ceil(Math.max(a.right,b.right)-x+20)),height:Math.min(innerHeight-y,Math.ceil(Math.max(a.bottom,b.bottom)-y+20))}; })()`,
   );
@@ -365,32 +383,13 @@ async function waitFor(test, label, timeout = 12000) {
   await key("Escape");
   await waitFor(
     () => js(`!document.querySelector('.select-popup[data-open]')`),
-    "escape closes task select",
+    "escape closes permission select",
   );
   await waitFor(
     () =>
-      js(`document.activeElement.getAttribute('aria-label') === '任务类型'`),
+      js(`document.activeElement.getAttribute('aria-label') === '工作区权限'`),
     "Escape restores select trigger focus",
   );
-  await selectOption("任务类型", "图片");
-  assert.equal(
-    await js(
-      `document.querySelector('[aria-label="任务类型"]').textContent.includes('图片')`,
-    ),
-    true,
-  );
-  await selectOption("任务类型", "对话");
-  await openSelect("DSH 模式");
-  await key("End");
-  await key("Return");
-  await waitFor(
-    () =>
-      js(
-        `document.querySelector('[aria-label="DSH 模式"]').textContent.includes('创造模式')`,
-      ),
-    "keyboard selects last mode",
-  );
-  await selectOption("DSH 模式", "标准模式");
   await openSelect("工作区");
   assert.equal(await has("默认工作区"), true);
   await key("Escape");
@@ -403,7 +402,7 @@ async function waitFor(test, label, timeout = 12000) {
   );
   await selectOption("工作区权限", "工作区内修改");
   checks.push(
-    "Custom composer selects workspaces, DSH modes and permission levels with keyboard and pointer",
+    "Unified AI automatic composer removes task/mode selectors while retaining accessible workspace and permission choices",
   );
   await openSelect("选择模型");
   assert.equal(await has("尚未配置可用模型"), true);
@@ -458,20 +457,11 @@ async function waitFor(test, label, timeout = 12000) {
       ),
     "selected model restored after reload",
   );
-  await selectOption("任务类型", "图片");
-  await openSelect("选择模型");
-  assert.equal(
-    await js(
-      `document.querySelectorAll('.select-popup[data-open] [role="option"]').length`,
-    ),
-    1,
-  );
-  await key("Escape");
-  await selectOption("任务类型", "对话");
   // This disposable client receives explicit fixtures, never invented production activity.
   await js(`(() => {
     window.__loadingOriginalFetch = window.fetch;
     window.fetch = (input, options) => {
+      if (String(input) === '/api/generate/plan') return Promise.resolve(Response.json({kind:'chat',mode:'standard',seconds:10,connectionId:JSON.parse(options.body).connectionId}));
       if (String(input) !== '/api/generate/chat') return window.__loadingOriginalFetch(input, options);
       return Promise.resolve(new Response(new ReadableStream({ start(controller) {
         window.__emitProgress = event => controller.enqueue(new TextEncoder().encode(JSON.stringify(event)+'\\n'));
@@ -777,7 +767,7 @@ async function waitFor(test, label, timeout = 12000) {
     "removed fixtures leave unconfigured state",
   );
   checks.push(
-    "Configured model picker filters by task kind and persists selection; QA fixtures never call a model",
+    "Conversation model picker persists selection; image connections are reserved for automatic dispatch; QA fixtures never call a real model",
   );
   await fill('textarea[aria-label="任务输入"]', "菜单编辑选区验收");
   const editPoint = await js(
@@ -1376,7 +1366,7 @@ async function waitFor(test, label, timeout = 12000) {
     false,
   );
   checks.push("900px desktop viewport has no document overflow");
-  await openSelect("DSH 模式");
+  await openSelect("工作区权限");
   const bounds = await js(
     `(() => { const menu = document.querySelector('.select-popup[data-open]'); const r = menu.getBoundingClientRect(); return { left: r.left, top: r.top, right: r.right, bottom: r.bottom, width: innerWidth, height: innerHeight }; })()`,
   );

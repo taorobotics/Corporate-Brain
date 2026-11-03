@@ -39,6 +39,51 @@ const wait = async (fn, label, ms = 45000) => {
     provider = createServer(async (req, res) => {
       let input = "";
       for await (const chunk of req) input += chunk;
+      const payload = JSON.parse(input);
+      const send = (content) => {
+        res.writeHead(200, { "Content-Type": "application/json" });
+        res.end(
+          JSON.stringify({
+            choices: [{ message: { content: JSON.stringify(content) } }],
+          }),
+        );
+      };
+      if (req.url === "/images/generations") {
+        res.writeHead(200, { "Content-Type": "application/json" });
+        return res.end(
+          JSON.stringify({
+            data: [
+              {
+                b64_json:
+                  "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+jTH8AAAAASUVORK5CYII=",
+              },
+            ],
+          }),
+        );
+      }
+      if (payload.messages[0].content.startsWith("You route tasks")) {
+        const request = JSON.parse(payload.messages[1].content).messages.at(
+          -1,
+        ).content;
+        return send({
+          kind: request.includes("合成图片验收")
+            ? "image"
+            : request.includes("合成视频验收")
+              ? "video"
+              : "code",
+          mode: "standard",
+          seconds: 2,
+        });
+      }
+      if (
+        payload.messages[0].content.includes(
+          "You create polished animated videos",
+        )
+      )
+        return send({
+          source:
+            'async function render(ctx,t,assets){ctx.fillStyle="#f5f3ef";ctx.fillRect(0,0,1280,720);ctx.fillStyle="#b77857";ctx.fillRect(100+t*120,220,160,160);}',
+        });
       assert.ok(
         JSON.parse(input).messages.some((m) =>
           m.content.includes("Synthetic project brief"),
@@ -146,6 +191,9 @@ const wait = async (fn, label, ms = 45000) => {
     await js(
       `fetch('/api/connections',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name:'合成代码模型',baseUrl:'http://127.0.0.1:${provider.address().port}',model:'fixture',kind:'chat',apiKey:'synthetic-local-provider'})}).then(r=>{if(!r.ok)throw Error('Connection failed');return true;})`,
     );
+    await js(
+      `fetch('/api/connections',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name:'合成图片模型',baseUrl:'http://127.0.0.1:${provider.address().port}',model:'fixture-image',kind:'image',apiKey:'synthetic-local-provider'})}).then(r=>{if(!r.ok)throw Error('Image connection failed');return true;})`,
+    );
     await js(`location.reload();true`);
     await wait(
       () =>
@@ -252,6 +300,154 @@ const wait = async (fn, label, ms = 45000) => {
     checks.push(
       "Settings and My Works show native account-specific location and saved receipt",
     );
+    await click("新建任务");
+    await wait(
+      () => js(`!!document.querySelector('[aria-label="任务输入"]')`),
+      "unified chat",
+    );
+    assert.equal(
+      await js(
+        `document.querySelectorAll('[aria-label="任务类型"], [aria-label="DSH 模式"]').length`,
+      ),
+      0,
+    );
+    const chatDoc = await web.debugger.sendCommand("DOM.getDocument");
+    const chatInput = await web.debugger.sendCommand("DOM.querySelector", {
+      nodeId: chatDoc.root.nodeId,
+      selector: '[aria-label="选择附件"]',
+    });
+    await web.debugger.sendCommand("DOM.setFileInputFiles", {
+      nodeId: chatInput.nodeId,
+      files: [material],
+    });
+    await wait(
+      () =>
+        js(
+          `document.querySelector('.composer .chips')?.textContent.includes('brief.txt') || document.querySelector('.composer')?.textContent.includes('brief.txt')`,
+        ),
+      "chat reads original material",
+    );
+    await fill(
+      '[aria-label="任务输入"]',
+      "根据 Synthetic project brief 生成网页源代码文件",
+      "HTMLTextAreaElement",
+    );
+    await click("发送任务");
+    await wait(
+      () =>
+        js(
+          `document.querySelector('.chat-production')?.dataset.status === 'saved'`,
+        ),
+      "automatic code saved in the same conversation",
+      60000,
+    );
+    const automaticState = await js(
+      `window.brainDesktop.production.state(${JSON.stringify(user.id)})`,
+    );
+    assert.equal(automaticState.receipts.length, 2);
+    const automaticReceipt = automaticState.receipts.find(
+      (item) => item.id !== receipt.id,
+    );
+    assert.ok(
+      automaticReceipt.files.some(
+        (file) => file.path === "materials/brief.txt",
+      ),
+    );
+    for (const file of automaticReceipt.files) {
+      const bytes = await fs.readFile(
+        join(automaticReceipt.directory, file.path),
+      );
+      assert.equal(
+        createHash("sha256").update(bytes).digest("hex"),
+        file.sha256,
+      );
+    }
+    await assert.rejects(
+      fs.stat(join(dir, "server-tasks", user.id, automaticReceipt.id)),
+      { code: "ENOENT" },
+    );
+    await fs.writeFile(
+      "artifacts/automatic-chat-code.png",
+      (
+        await web.capturePage(undefined, { stayHidden: true, stayAwake: true })
+      ).toPNG(),
+    );
+    checks.push(
+      "Unified chat performs actual model routing, uploads original material, creates code, shows progress, saves verified files locally and removes server files without task or mode selectors",
+    );
+    await fill(
+      '[aria-label="任务输入"]',
+      "合成图片验收：生成一张图片",
+      "HTMLTextAreaElement",
+    );
+    await click("发送任务");
+    await wait(
+      () => js(`!!document.querySelector('.generated-image img')`),
+      "automatically selected image provider",
+      15000,
+    );
+    assert.equal(
+      await js(
+        `document.querySelector('.generated-image img').src.startsWith('data:image/png;base64,')`,
+      ),
+      true,
+    );
+    await fs.writeFile(
+      "artifacts/automatic-chat-image.png",
+      (
+        await web.capturePage(undefined, { stayHidden: true, stayAwake: true })
+      ).toPNG(),
+    );
+    checks.push(
+      "Chat automatically dispatches image creation to the authorized image connection and displays the returned image in place",
+    );
+    if (process.platform === "darwin") {
+      await click("新建任务");
+      await fill(
+        '[aria-label="任务输入"]',
+        "合成视频验收：制作一个两秒动画视频，附源码",
+        "HTMLTextAreaElement",
+      );
+      await click("发送任务");
+      await wait(
+        () =>
+          js(
+            `document.querySelector('.chat-production')?.dataset.status === 'saved'`,
+          ),
+        "automatic video rendered and saved in chat",
+        60000,
+      );
+      const videoState = await js(
+        `window.brainDesktop.production.state(${JSON.stringify(user.id)})`,
+      );
+      const videoReceipt = videoState.receipts.find((item) =>
+        item.files.some((file) => file.path === "output/video.mp4"),
+      );
+      assert.ok(videoReceipt);
+      for (const file of videoReceipt.files)
+        assert.equal(
+          createHash("sha256")
+            .update(await fs.readFile(join(videoReceipt.directory, file.path)))
+            .digest("hex"),
+          file.sha256,
+        );
+      await assert.rejects(
+        fs.stat(join(dir, "server-tasks", user.id, videoReceipt.id)),
+        { code: "ENOENT" },
+      );
+      await fs.writeFile(
+        "artifacts/automatic-chat-video.png",
+        (
+          await web.capturePage(undefined, {
+            stayHidden: true,
+            stayAwake: true,
+          })
+        ).toPNG(),
+      );
+      checks.push(
+        "Mac unified chat routes video intent, performs real Canvas/FFmpeg rendering, saves video and source locally and removes the server task",
+      );
+    }
     const report = {
       version: require("../package.json").version,
       result: "passed",

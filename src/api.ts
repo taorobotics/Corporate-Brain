@@ -3,6 +3,7 @@ export async function api<T = any>(
   body?: unknown,
   method?: string,
   timeoutMs = body === undefined ? 20000 : 0,
+  signal?: AbortSignal,
 ): Promise<T> {
   let response: Response;
   try {
@@ -12,9 +13,14 @@ export async function api<T = any>(
       headers:
         body === undefined ? undefined : { "Content-Type": "application/json" },
       body: body === undefined ? undefined : JSON.stringify(body),
-      signal: timeoutMs ? AbortSignal.timeout(timeoutMs) : undefined,
+      signal:
+        signal && timeoutMs
+          ? AbortSignal.any([signal, AbortSignal.timeout(timeoutMs)])
+          : (signal ??
+            (timeoutMs ? AbortSignal.timeout(timeoutMs) : undefined)),
     });
   } catch (error) {
+    signal?.throwIfAborted();
     if ((error as Error).name === "TimeoutError")
       throw new Error("公司服务响应超时，请检查网络后重新连接。");
     throw new Error(

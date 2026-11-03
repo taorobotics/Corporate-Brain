@@ -71,6 +71,7 @@ export type Message = {
   role: "user" | "assistant";
   content: string;
   image?: string;
+  productionTaskId?: string;
   promptText?: string;
   connectionId?: string;
   modelName?: string;
