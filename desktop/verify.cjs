@@ -624,10 +624,24 @@ async function waitFor(test, label, timeout = 12000) {
       ),
     "final response remains at the end",
   );
-  await require("./verify-feedback.cjs")({ js, click, fill, waitFor, request, selectOption, capture, checks });
+  await require("./verify-feedback.cjs")({
+    js,
+    click,
+    fill,
+    waitFor,
+    request,
+    selectOption,
+    capture,
+    checks,
+  });
   await js(`document.querySelector('.thinking-toggle').click()`);
   assert.equal(await has("找到 2 个来源"), true);
   await fill('textarea[aria-label="任务输入"]', "加载项验收：失败清理");
+  // The process now stays compact; create an explicit inert long history block
+  // to retain the separate send-after-reading-history regression check.
+  await js(
+    `(() => { const p=document.createElement('p');p.id='send-history-fixture';p.textContent='隔离验收历史内容。'.repeat(1000);document.querySelector('.messages-content').prepend(p); })()`,
+  );
   await waitFor(
     () =>
       js(
@@ -646,7 +660,7 @@ async function waitFor(test, label, timeout = 12000) {
     "expanded history has settled before user navigation",
   );
   const historyPoint = await js(
-    `(() => {const r=document.querySelector('.messages').getBoundingClientRect();return {x:Math.round(r.left+r.width/2),y:Math.round(r.top+r.height/2)};})()`,
+    `(() => {const r=document.querySelector('.messages').getBoundingClientRect();return {x:Math.round(r.left+8),y:Math.round(r.top+r.height/2)};})()`,
   );
   await web.debugger.sendCommand("Input.dispatchMouseEvent", {
     type: "mouseWheel",
@@ -673,6 +687,7 @@ async function waitFor(test, label, timeout = 12000) {
       ),
     "sending a message restores following",
   );
+  await js(`document.querySelector('#send-history-fixture').remove()`);
   await js(
     `window.__emitProgress({type:'reasoning',id:'error-r',text:'错误前收到的思考。'});window.__emitProgress({type:'text',text:'错误前收到的部分回答。'});window.__finishLoadingFixture(true)`,
   );

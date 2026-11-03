@@ -590,6 +590,7 @@ export default function Workspace(props: WorkspaceProps) {
             <div
               className="messages"
               ref={messagesRef}
+              data-chat-scroll="conversation"
               tabIndex={0}
               role="region"
               aria-label="对话内容"

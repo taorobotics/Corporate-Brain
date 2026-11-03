@@ -9,6 +9,7 @@ import {
 import type { ChatTrace, TraceItem } from "../shared/chat-progress";
 import GrokBall from "./GrokBall";
 import MessageContent from "./MessageContent";
+import { useChatScroll } from "./useChatScroll";
 import "./chat-loading.css";
 
 export type PendingReply = {
@@ -26,14 +27,24 @@ export function ThinkingProcess({
   status,
   elapsed,
   label,
+  answerStarted = false,
 }: {
   items: TraceItem[];
   status: ChatTrace["status"] | "running";
   elapsed: number;
   label?: string;
+  answerStarted?: boolean;
 }) {
-  const [open, setOpen] = useState(status === "running");
+  const [open, setOpen] = useState(status === "running" && !answerStarted);
   const id = useId();
+  const { containerRef, contentRef, showLatest, jumpToLatest } = useChatScroll(
+    open ? id : null,
+    24,
+  );
+  // Collapse only at the answer handoff, so reopening during later chunks is respected.
+  useEffect(() => {
+    if (answerStarted) setOpen(false);
+  }, [answerStarted]);
   const hasReasoning = items.some(
     (item) => item.type === "reasoning" && item.text,
   );
@@ -53,17 +64,11 @@ export function ThinkingProcess({
         : status === "error"
           ? "响应中断"
           : hasReasoning
-            ? "思考过程"
-            : "响应过程");
+            ? "思考完成"
+            : "响应完成");
   return (
     <section className="thinking-process" data-status={status}>
-      <button
-        className="thinking-toggle"
-        type="button"
-        aria-expanded={open}
-        aria-controls={id}
-        onClick={() => setOpen(!open)}
-      >
+      <div className="thinking-heading">
         <span
           className={
             status === "running" ? "thinking-title is-active" : "thinking-title"
@@ -71,75 +76,111 @@ export function ThinkingProcess({
         >
           {title}
         </span>
+        <span className="thinking-elapsed" aria-live="off">
+          {elapsed} 秒
+        </span>
+      </div>
+      <button
+        className="thinking-toggle"
+        type="button"
+        aria-expanded={open}
+        aria-controls={id}
+        aria-label={open ? "收起处理过程" : "展开处理过程"}
+        onClick={() => setOpen(!open)}
+      >
         <CaretDown size={15} className={open ? "is-open" : ""} />
-        <span className="thinking-elapsed">{elapsed} 秒</span>
+        <span>处理过程</span>
       </button>
       <div id={id} className="thinking-details" hidden={!open}>
-        {items.map((item) =>
-          item.type === "reasoning" ? (
-            item.text && (
-              <div className="thinking-entry reasoning-entry" key={item.id}>
-                <span className="thinking-dot" />
-                <div className="reasoning-text">{item.text}</div>
-              </div>
-            )
-          ) : (
-            <div
-              className="thinking-entry tool-entry"
-              key={item.id}
-              data-tool-status={item.status}
-            >
-              <span className="thinking-tool-icon">
-                {/search|web/i.test(item.name) ? (
-                  <MagnifyingGlass size={17} />
-                ) : (
-                  <Wrench size={17} />
-                )}
-              </span>
-              <div>
-                <div className="thinking-tool-title">
-                  <span>
-                    {item.sources?.length
-                      ? `找到 ${item.sources.length} 个来源`
-                      : toolLabel(item.name)}
-                  </span>
-                  <span className="thinking-tool-state">
-                    {item.status === "running" ? (
-                      "进行中"
-                    ) : item.status === "done" ? (
-                      <Check size={14} aria-label="完成" />
-                    ) : item.status === "error" ? (
-                      <WarningCircle size={14} aria-label="失败" />
+        <div
+          className="thinking-scroll"
+          data-chat-scroll="process"
+          ref={containerRef}
+          role="region"
+          aria-label="处理过程内容"
+          aria-live="off"
+          tabIndex={0}
+        >
+          <div
+            className="thinking-entries"
+            ref={contentRef}
+            data-streaming={status === "running" && !answerStarted}
+          >
+            {items.map((item) =>
+              item.type === "reasoning" ? (
+                item.text && (
+                  <div className="thinking-entry reasoning-entry" key={item.id}>
+                    <div className="reasoning-text">{item.text}</div>
+                  </div>
+                )
+              ) : (
+                <div
+                  className="thinking-entry tool-entry"
+                  key={item.id}
+                  data-tool-status={item.status}
+                >
+                  <span className="thinking-tool-icon">
+                    {/search|web/i.test(item.name) ? (
+                      <MagnifyingGlass size={17} />
                     ) : (
-                      "已停止"
+                      <Wrench size={17} />
                     )}
                   </span>
-                </div>
-                {!!item.sources?.length && (
-                  <div className="thinking-sources">
-                    {item.sources.map((source) => (
-                      <a
-                        key={source.url}
-                        href={source.url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        title={source.url}
-                      >
-                        {source.title || new URL(source.url).hostname}
-                      </a>
-                    ))}
+                  <div>
+                    <div className="thinking-tool-title">
+                      <span>
+                        {item.sources?.length
+                          ? `找到 ${item.sources.length} 个来源`
+                          : toolLabel(item.name)}
+                      </span>
+                      <span className="thinking-tool-state">
+                        {item.status === "running" ? (
+                          "进行中"
+                        ) : item.status === "done" ? (
+                          <Check size={14} aria-label="完成" />
+                        ) : item.status === "error" ? (
+                          <WarningCircle size={14} aria-label="失败" />
+                        ) : (
+                          "已停止"
+                        )}
+                      </span>
+                    </div>
+                    {!!item.sources?.length && (
+                      <div className="thinking-sources">
+                        {item.sources.map((source) => (
+                          <a
+                            key={source.url}
+                            href={source.url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            title={source.url}
+                          >
+                            {source.title || new URL(source.url).hostname}
+                          </a>
+                        ))}
+                      </div>
+                    )}
                   </div>
-                )}
-              </div>
-            </div>
-          ),
-        )}
-        {!hasReasoning && (
-          <p className="thinking-note">
-            {status === "running"
-              ? "等待模型返回内容；思考文字会在模型提供时显示。"
-              : "此轮模型未提供可显示的思考内容。"}
-          </p>
+                </div>
+              ),
+            )}
+            {!hasReasoning && (
+              <p className="thinking-note">
+                {status === "running"
+                  ? "等待模型返回内容；思考文字会在模型提供时显示。"
+                  : "此轮模型未提供可显示的思考内容。"}
+              </p>
+            )}
+          </div>
+        </div>
+        {showLatest && (
+          <button
+            className="thinking-follow"
+            type="button"
+            onClick={jumpToLatest}
+          >
+            ↓ 跟随最新内容
+          </button>
         )}
       </div>
     </section>
@@ -181,6 +222,7 @@ export default function ChatLoading({
           items={request.items}
           status="running"
           elapsed={seconds}
+          answerStarted={!!request.content.trim()}
           label={
             request.phase === "preparing"
               ? "正在准备上下文"

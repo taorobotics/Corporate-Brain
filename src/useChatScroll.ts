@@ -2,7 +2,7 @@ import { useCallback, useLayoutEffect, useRef, useState } from "react";
 
 // Follow rendered size, including streaming text, images and expanded details.
 // User navigation pauses following until they return to the end or send again.
-export function useChatScroll(conversationKey: string | null) {
+export function useChatScroll(conversationKey: string | null, nearEnd = 48) {
   const containerRef = useRef<HTMLDivElement>(null);
   const contentRef = useRef<HTMLDivElement>(null);
   const following = useRef(true);
@@ -26,7 +26,13 @@ export function useChatScroll(conversationKey: string | null) {
     let touchY = 0;
     const distance = () =>
       container.scrollHeight - container.clientHeight - container.scrollTop;
-    const updateHint = () => setShowLatest(distance() > 48);
+    const updateHint = () => setShowLatest(distance() > nearEnd);
+    // Nested process panels own their wheel/touch/keyboard navigation. Reading
+    // the process must not pause the surrounding conversation's follow state.
+    const ownsEvent = (event: Event) =>
+      !(event.target instanceof Element) ||
+      !event.target.closest("[data-chat-scroll]") ||
+      event.target.closest("[data-chat-scroll]") === container;
     const pause = () => {
       following.current = false;
     };
@@ -44,23 +50,27 @@ export function useChatScroll(conversationKey: string | null) {
     };
     const scroll = () => {
       const change = container.scrollTop - previousTop.current;
-      if (change < -1 && distance() > 48) pause();
-      else if (change > 1 && distance() <= 48) following.current = true;
+      if (change < -1 && distance() > nearEnd) pause();
+      else if (change > 1 && distance() <= nearEnd) following.current = true;
       previousTop.current = container.scrollTop;
       updateHint();
     };
     const wheel = (event: WheelEvent) => {
+      if (!ownsEvent(event)) return;
       if (event.deltaY < 0) pause();
     };
     const touchStart = (event: TouchEvent) => {
+      if (!ownsEvent(event)) return;
       touchY = event.touches[0]?.clientY ?? 0;
     };
     const touchMove = (event: TouchEvent) => {
+      if (!ownsEvent(event)) return;
       const y = event.touches[0]?.clientY ?? touchY;
       if (y > touchY) pause();
       touchY = y;
     };
     const keyDown = (event: KeyboardEvent) => {
+      if (!ownsEvent(event)) return;
       if (
         event.target instanceof HTMLElement &&
         event.target.closest("input, textarea, [contenteditable=true]")
@@ -90,7 +100,7 @@ export function useChatScroll(conversationKey: string | null) {
       container.removeEventListener("touchmove", touchMove);
       container.removeEventListener("keydown", keyDown);
     };
-  }, [conversationKey, jumpToLatest]);
+  }, [conversationKey, jumpToLatest, nearEnd]);
 
   return { containerRef, contentRef, showLatest, jumpToLatest };
 }

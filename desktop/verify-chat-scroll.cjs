@@ -14,6 +14,10 @@ module.exports = async function verifyChatScroll({
     const el = document.querySelector('.messages');
     return {top:el.scrollTop,height:el.scrollHeight,gap:el.scrollHeight-el.clientHeight-el.scrollTop};
   })()`);
+  const processMetrics = () =>
+    js(
+      `(() => { const el=document.querySelector('.chat-loading .thinking-scroll');return {top:el.scrollTop,height:el.scrollHeight,visible:el.clientHeight,gap:el.scrollHeight-el.clientHeight-el.scrollTop}; })()`,
+    );
   const atEnd = async () => {
     await settle();
     await waitFor(
@@ -40,16 +44,83 @@ module.exports = async function verifyChatScroll({
     text: paragraph.repeat(35),
   });
   await waitFor(
-    async () => (await metrics()).height > 1800,
-    "long reasoning rendered",
+    async () => (await processMetrics()).height > 1800,
+    "long reasoning contained in process panel",
   );
   await atEnd();
+  await waitFor(
+    async () => (await processMetrics()).gap <= 2,
+    "process follows incoming reasoning",
+  );
+  assert.ok((await processMetrics()).visible <= 220);
   assert.equal(
     await js(
       `Array.from(document.querySelectorAll('.reasoning-text')).every(el => el.scrollHeight <= el.clientHeight + 1)`,
     ),
     true,
   );
+  const outerBefore = await metrics();
+  const processPoint = await js(
+    `(() => {const r=document.querySelector('.chat-loading .thinking-scroll').getBoundingClientRect();return {x:Math.round(r.left+r.width/2),y:Math.round(r.top+r.height/2)};})()`,
+  );
+  await web.debugger.sendCommand("Input.dispatchMouseEvent", {
+    type: "mouseWheel",
+    ...processPoint,
+    deltaX: 0,
+    deltaY: -140,
+  });
+  await waitFor(
+    async () => (await processMetrics()).gap > 80,
+    "wheel reads earlier reasoning inside panel",
+  );
+  await settle();
+  const processPaused = await processMetrics();
+  await emit({
+    type: "reasoning",
+    id: "scroll-reasoning",
+    text: paragraph.repeat(8),
+    append: true,
+  });
+  await waitFor(
+    async () => (await processMetrics()).height > processPaused.height + 100,
+    "reasoning grows inside fixed panel",
+  );
+  await settle();
+  assert.ok(Math.abs((await processMetrics()).top - processPaused.top) <= 2);
+  assert.ok(Math.abs((await metrics()).top - outerBefore.top) <= 2);
+  assert.equal(await js(`!!document.querySelector('.thinking-follow')`), true);
+  await js(`document.querySelector('.thinking-follow').click()`);
+  await waitFor(
+    async () => (await processMetrics()).gap <= 2,
+    "resume process following",
+  );
+  await js(`document.querySelector('.chat-loading .thinking-scroll').focus()`);
+  web.sendInputEvent({ type: "keyDown", keyCode: "PageUp" });
+  web.sendInputEvent({ type: "keyUp", keyCode: "PageUp" });
+  await waitFor(
+    async () => (await processMetrics()).gap > 50,
+    "keyboard scrolls within process",
+  );
+  await waitFor(async () => {
+    const before = await processMetrics();
+    await new Promise((resolve) => setTimeout(resolve, 150));
+    return Math.abs((await processMetrics()).top - before.top) <= 2;
+  }, "keyboard scrolling has settled");
+  await js(`document.querySelector('.thinking-follow').click()`);
+  await waitFor(
+    async () => (await processMetrics()).gap <= 2,
+    "resume after keyboard navigation",
+  );
+  await js(`document.querySelector('.chat-loading .thinking-scroll').blur()`);
+  await capture("client-thinking-panel-light.png");
+  await js(`document.documentElement.dataset.theme='dark'`);
+  await capture("client-thinking-panel-dark.png");
+  await js(`document.documentElement.dataset.theme='light'`);
+  win.setContentSize(900, 760);
+  await settle();
+  assert.ok((await processMetrics()).visible <= 160);
+  await capture("client-thinking-panel-narrow.png");
+  win.setContentSize(1586, 992);
   await emit({ type: "text", text: paragraph.repeat(25) });
   await waitFor(
     () =>
@@ -58,6 +129,23 @@ module.exports = async function verifyChatScroll({
       ),
     "long answer rendered",
   );
+  await waitFor(
+    () =>
+      js(`document.querySelector('.chat-loading .thinking-details').hidden`),
+    "first answer text automatically collapses the process",
+  );
+  await atEnd();
+  await js(`document.querySelector('.chat-loading .thinking-toggle').click()`);
+  await emit({ type: "text", text: paragraph });
+  await settle();
+  assert.equal(
+    await js(
+      `document.querySelector('.chat-loading .thinking-details').hidden`,
+    ),
+    false,
+    "manual reopening survives later answer chunks",
+  );
+  await js(`document.querySelector('.chat-loading .thinking-toggle').click()`);
   await atEnd();
 
   const point = await js(
@@ -150,6 +238,6 @@ module.exports = async function verifyChatScroll({
   win.setContentSize(1586, 992);
   await atEnd();
   checks.push(
-    "Chat follows streamed reasoning and answer text, delayed image sizing and window resizing; wheel and keyboard history navigation pause following, with a return-to-latest button and manual near-bottom resume; no nested reasoning scrollbars",
+    "Process is bounded to 220px/160px, follows reasoning internally, pauses on wheel/keyboard and resumes without moving the outer chat; first answer collapses once and manual reopening persists; outer answer, images and resize follow while manual chat reading remains stable",
   );
 };
