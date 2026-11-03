@@ -1,0 +1,48 @@
+{
+  "version": "0.17.2",
+  "sourceCommit": "56f715abec530acc015fde8475dc2a8422b0bfd9",
+  "result": "passed",
+  "scope": "Draft upload integrity; complete GitHub Release remains blocked",
+  "checkedAt": "2026-11-03T09:57:35.864Z",
+  "release": {
+    "assets": [
+      {
+        "digest": "sha256:726ce07c6354fb3f9d2d8b690466a49d9df33d42c1ada083ce9d03c3a7a26b1b",
+        "name": "Corporate-Brain-0.17.2-macOS-arm64.dmg",
+        "size": 138643820,
+        "state": "uploaded"
+      },
+      {
+        "digest": "sha256:2454544dbe166c9cbe87fffbc7ab3405774c1b92e994f1a1aac61d6b250ee8ba",
+        "name": "Corporate-Brain-Server-0.17.2.zip",
+        "size": 22538867,
+        "state": "uploaded"
+      },
+      {
+        "digest": "sha256:1cc48349cbf543e3a154d8eb4e67733843fc1816a0a70839dea86eaf724f974e",
+        "name": "Corporate-Brain-Setup-0.17.2-x64.exe",
+        "size": 119999785,
+        "state": "uploaded"
+      },
+      {
+        "digest": "sha256:140157c3d25c226e593b00c756a0f0b8e3f08f1be69d0e638289bc84646a3003",
+        "name": "release-verification-0.17.2.json",
+        "size": 22657,
+        "state": "uploaded"
+      },
+      {
+        "digest": "sha256:873e0de091ff72d45aeee9c91120be401eda669d112f29179c7f4aa0b5c1a1a0",
+        "name": "SHA256SUMS.txt",
+        "size": 308,
+        "state": "uploaded"
+      }
+    ],
+    "draft": true,
+    "html_url": "https://github.com/taorobotics/Corporate-Brain/releases/tag/untagged-137869d1e30d0579608c",
+    "id": 432518038,
+    "tag_name": "v0.17.2",
+    "target_commitish": "56f715abec530acc015fde8475dc2a8422b0bfd9"
+  },
+  "published": false,
+  "latestChanged": false
+}
