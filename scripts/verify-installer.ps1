@@ -16,6 +16,10 @@ if ($FullLifecycle) {
   if ($env:GITHUB_ACTIONS -ne 'true') { throw 'Full installation tests run only on a disposable GitHub Windows runner; local mode only inspects UI.' }
   if ((Test-Path -LiteralPath $registryPath) -or (Test-Path -LiteralPath $dataPath) -or (Test-Path -LiteralPath (Join-Path $env:APPDATA '公司大脑'))) { throw 'An existing installation/profile was found; refusing lifecycle tests.' }
   if (-not $PreviousInstaller -or (Get-FileHash -LiteralPath $PreviousInstaller -Algorithm SHA256).Hash -ne '0a316ba6e947e2422a3aee23deec03fd51a27e5391764e21e4fe0d0b78fbfd46') { throw 'The pinned v0.9.0 upgrade fixture is missing or differs from its published hash.' }
+  # Native lifecycle verification must not depend on a live company login page.
+  # This matches the separate installer workflow; package defaults are verified
+  # by the calling shell, whose BRAIN_APP_URL remains unchanged.
+  $env:BRAIN_APP_URL = 'http://127.0.0.1:4173'
 }
 function Assert-TestTarget {
   $resolvedTarget = [IO.Path]::GetFullPath($qaTarget)
@@ -336,7 +340,7 @@ try {
     if ((Get-FileHash -LiteralPath $sentinel -Algorithm SHA256).Hash -ne $sentinelHash) { throw 'Final uninstall changed records' }
     $checks.Add('Silent uninstallation also preserves synthetic personal records')
   }
-  @{ version=$version; result='passed'; mode=$(if($FullLifecycle){'Disposable Windows CI lifecycle'}else{'UI-only'}); defaultPath=$defaultPath; checks=$checks; realInstallUpgradeUninstall=[bool]$FullLifecycle; physicalEmployeeDeviceTested=$false; sourceCommit=(git rev-parse HEAD); verificationSourceCommit=$env:BRAIN_VERIFICATION_COMMIT; sha256=(Get-FileHash -LiteralPath $installerPath -Algorithm SHA256).Hash.ToLowerInvariant() } |
+  @{ version=$version; result='passed'; mode=$(if($FullLifecycle){'Disposable Windows CI lifecycle'}else{'UI-only'}); defaultPath=$defaultPath; checks=$checks; realInstallUpgradeUninstall=[bool]$FullLifecycle; physicalEmployeeDeviceTested=$false; nativeTestCompanyUrl=$(if($FullLifecycle){$env:BRAIN_APP_URL}else{$null}); sourceCommit=(git rev-parse HEAD); verificationSourceCommit=$env:BRAIN_VERIFICATION_COMMIT; sha256=(Get-FileHash -LiteralPath $installerPath -Algorithm SHA256).Hash.ToLowerInvariant() } |
     ConvertTo-Json -Depth 5 | Set-Content -LiteralPath (Join-Path $workspacePath 'artifacts/installer-verification.json') -Encoding utf8
   Write-Output "Installer UI passed: $($checks.Count) checks"
 } catch {
