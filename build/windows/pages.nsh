@@ -292,7 +292,9 @@ FunctionEnd
 
 Function BrainInit
   !insertmacro BrainRejectDataDeletion
-  StrCpy $BrainShortcutValue ${BST_CHECKED}
+  StrCpy $BrainShortcutValue ${BST_UNCHECKED}
+  StrCpy $BrainAutoUpdate 0
+  StrCpy $BrainUpdateToken ""
   StrCpy $BrainCritical 0
   StrCpy $BrainDone 0
   !ifdef APP_64_UNPACKED_SIZE
@@ -305,7 +307,25 @@ Function BrainInit
   ReadRegStr $BrainOldVersion SHELL_CONTEXT "${UNINSTALL_REGISTRY_KEY}" DisplayVersion
   ${If} $BrainOldPath != ""
     StrCpy $INSTDIR $BrainOldPath
+    Call BrainDetectUpdate
+    ${If} $BrainAutoUpdate == 0
+      ${GetParameters} $0
+      ClearErrors
+      ${GetOptions} $0 "--brain-update=" $1
+      ${IfNot} ${Errors}
+        SetErrorLevel 2
+        Quit
+      ${EndIf}
+    ${EndIf}
     Return
+  ${EndIf}
+  ${GetParameters} $0
+  ClearErrors
+  ${GetOptions} $0 "--brain-update=" $1
+  ${IfNot} ${Errors}
+    ; An automatic update must never turn into a fresh, unrelated installation.
+    SetErrorLevel 2
+    Quit
   ${EndIf}
   !insertmacro GetDParameter $0
   ${If} $0 != ""
@@ -321,6 +341,109 @@ Function BrainInit
       StrCpy $INSTDIR "D:\Applications\Corporate Brain"
     ${EndIf}
   ${EndIf}
+FunctionEnd
+
+; Only an existing registered installation can use the background update path.
+; Older clients launch the verified cache file without arguments. Recognize
+; that exact cache location and versioned name, leaving manual installers alone.
+Function BrainDetectUpdate
+  ${VersionCompare} "${VERSION}" "$BrainOldVersion" $0
+  ${If} $0 != 1
+    Return
+  ${EndIf}
+  ${IfNot} ${FileExists} "$INSTDIR\${APP_EXECUTABLE_FILENAME}"
+  ${OrIfNot} ${FileExists} "$INSTDIR\resources\app.asar"
+    Return
+  ${EndIf}
+  ${GetParameters} $0
+  ClearErrors
+  ${GetOptions} $0 "--brain-update=" $BrainUpdateToken
+  ${IfNot} ${Errors}
+    StrLen $0 $BrainUpdateToken
+    System::Call 'shlwapi::StrSpnW(w "$BrainUpdateToken", w "0123456789abcdef")i.r1'
+    ${If} $0 != 32
+    ${OrIf} $1 != 32
+      SetErrorLevel 2
+      Quit
+    ${EndIf}
+    StrCpy $BrainAutoUpdate 1
+  ${Else}
+    GetFullPathName $0 "$EXEDIR"
+    GetFullPathName $1 "$APPDATA\corporate-brain-desktop\updates"
+    ${If} $0 != $1
+      Return
+    ${EndIf}
+    StrCpy $0 $EXEFILE "" 16
+    ${If} $0 != "-Corporate-Brain-Setup-${VERSION}-x64.exe"
+      Return
+    ${EndIf}
+    StrCpy $0 $EXEFILE 16
+    System::Call 'shlwapi::StrSpnW(w r0, w "0123456789abcdef")i.r1'
+    ${If} $1 != 16
+      Return
+    ${EndIf}
+    StrCpy $BrainUpdateToken ""
+    StrCpy $BrainAutoUpdate 1
+  ${EndIf}
+  SetSilent silent
+FunctionEnd
+
+Function BrainSignalUpdateReady
+  ${If} $BrainUpdateToken == ""
+    Return
+  ${EndIf}
+  ClearErrors
+  FileOpen $0 "$APPDATA\corporate-brain-desktop\updates\$BrainUpdateToken.ready" w
+  ${If} ${Errors}
+    SetErrorLevel 2
+    Quit
+  ${EndIf}
+  FileWrite $0 "ready"
+  FileClose $0
+  StrCpy $1 0
+  ${Do}
+    ${If} ${FileExists} "$APPDATA\corporate-brain-desktop\updates\$BrainUpdateToken.proceed"
+      Delete "$APPDATA\corporate-brain-desktop\updates\$BrainUpdateToken.ready"
+      Delete "$APPDATA\corporate-brain-desktop\updates\$BrainUpdateToken.proceed"
+      Return
+    ${EndIf}
+    Sleep 100
+    IntOp $1 $1 + 1
+  ${LoopUntil} $1 >= 100
+  Delete "$APPDATA\corporate-brain-desktop\updates\$BrainUpdateToken.ready"
+  SetErrorLevel 2
+  Quit
+FunctionEnd
+
+Function BrainRestartAfterUpdate
+  SetOutPath "$INSTDIR"
+  ClearErrors
+  ${If} ${UAC_IsAdmin}
+    ${StdUtils.ExecShellAsUser} $0 "$appExe" "open" ""
+    ${If} $0 == "error"
+      Goto brain_restart_failed
+    ${EndIf}
+  ${Else}
+    Exec '"$appExe"'
+    ${If} ${Errors}
+      Goto brain_restart_failed
+    ${EndIf}
+  ${EndIf}
+  ; Detect the real window rather than assuming that process creation succeeded.
+  StrCpy $1 0
+  ${Do}
+    BrainWizard::AppWindow /NOUNLOAD "$appExe"
+    Pop $0
+    ${If} $0 == 1
+      SetErrorLevel 0
+      Return
+    ${EndIf}
+    Sleep 150
+    IntOp $1 $1 + 1
+  ${LoopUntil} $1 >= 134
+  brain_restart_failed:
+  MessageBox MB_OK|MB_ICONEXCLAMATION "公司大脑已更新，但暂未检测到客户端窗口。请从开始菜单打开“公司大脑”。个人记录保留在本机。"
+  SetErrorLevel 2
 FunctionEnd
 
 Function BrainWelcome

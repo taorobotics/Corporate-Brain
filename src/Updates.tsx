@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   ArrowClockwise,
   ArrowCircleUp,
@@ -33,8 +33,11 @@ export function useDesktopUpdates(enabled: boolean) {
   const [open, setOpen] = useState(false);
   const [legacy, setLegacy] = useState<UpdateFeed | null>(null);
   const [actionError, setActionError] = useState("");
+  const [installing, setInstalling] = useState(false);
+  const installPending = useRef(false);
   const desktop = !!window.brainDesktop;
   const check = async () => {
+    if (installPending.current) return;
     setActionError("");
     try {
       if (bridge) {
@@ -121,17 +124,23 @@ export function useDesktopUpdates(enabled: boolean) {
     open,
     legacy,
     actionError,
+    installing,
     check,
     show: () => {
       setOpen(true);
       if (!["checking", "downloading", "ready"].includes(state.status))
         void check();
     },
-    close: () => setOpen(false),
+    close: () => { if (!installPending.current) setOpen(false); },
     act: async (
       action: "download" | "cancel" | "install",
       beforeInstall?: () => Promise<void>,
     ) => {
+      if (installPending.current) return;
+      if (action === "install") {
+        installPending.current = true;
+        setInstalling(true);
+      }
       setActionError("");
       try {
         if (action === "install") await beforeInstall?.();
@@ -143,6 +152,11 @@ export function useDesktopUpdates(enabled: boolean) {
             "",
           ),
         );
+      } finally {
+        if (action === "install") {
+          installPending.current = false;
+          setInstalling(false);
+        }
       }
     },
   };
@@ -222,14 +236,16 @@ export function UpdateDialog({
   if (!model.open || !model.desktop) return null;
   const { state, bridge, legacy } = model;
   const release = state.release;
-  const busy = state.status === "checking";
+  const busy = state.status === "checking" || model.installing;
   const downloading = state.status === "downloading";
   const ready = state.status === "ready";
   const percent = release
     ? Math.min(100, Math.floor((state.received / release.asset.bytes) * 100))
     : 0;
   const latest = release ?? legacy?.release;
-  const subtitle = downloading
+  const subtitle = model.installing
+    ? "正在保存本地记录并准备安装…"
+    : downloading
     ? percent === 100
       ? "正在校验安装包…"
       : "正在下载，可以继续工作"
@@ -334,6 +350,8 @@ export function UpdateDialog({
             {ready &&
               state.target.startsWith("darwin") &&
               "打开 DMG 后，请退出应用并拖入 Applications 替换。"}
+            {ready && state.target.startsWith("win32") &&
+              "更新将沿用原安装位置，后台完成后自动打开公司大脑。"}
           </p>
         )}
         <footer>
@@ -351,10 +369,11 @@ export function UpdateDialog({
           ) : ready ? (
             <Button
               primary
+              disabled={busy}
               onClick={() => void model.act("install", beforeInstall)}
             >
-              <ArrowUpRight size={16} />
-              {state.target.startsWith("darwin") ? "打开安装包" : "退出并安装"}
+              {model.installing ? <CircleNotch size={16} className="spin" /> : <ArrowUpRight size={16} />}
+              {model.installing ? "正在准备安装…" : state.target.startsWith("darwin") ? "打开安装包" : "安装"}
             </Button>
           ) : release ? (
             <Button

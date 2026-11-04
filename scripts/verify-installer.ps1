@@ -104,6 +104,7 @@ try {
   if (-not $pathControl -or -not $pathControl.Text) { throw 'Install directory missing' }
   $checks.Add('Native path page shows actual space, directory and shortcut selection')
   $defaultPath = $pathControl.Text
+  if ($defaultPath.StartsWith([Environment]::GetFolderPath('Desktop'),[StringComparison]::OrdinalIgnoreCase)) { throw 'The application must not default to the desktop' }
   Invoke-InstallerButton $window.Handle '取消'
   $confirm = Wait-InstallerText $process.Id '要取消本次安装吗'
   Save-InstallerWindow $confirm.Handle (Join-Path $outputPath 'installer-cancel.png')
@@ -138,6 +139,72 @@ try {
     if (-not $process.WaitForExit(120000)) { throw 'Staged cancellation did not finish' }
     if ((Get-FileHash -LiteralPath (Join-Path $qaTarget '公司大脑.exe') -Algorithm SHA256).Hash -ne $oldHash) { throw 'Cancellation changed the old application' }
     $checks.Add('Cancel during package preparation preserves the prior installed application')
+
+    # This branch runs only on a disposable runner after the existing-profile refusal.
+    $cachePath = Join-Path $dataPath 'updates'
+    New-Item -ItemType Directory -Path $cachePath -Force | Out-Null
+    $token = [Guid]::NewGuid().ToString('N')
+    $readySignal = Join-Path $cachePath "$token.ready"
+    $process = Start-Process -FilePath $installerPath -ArgumentList @('/S',"--brain-update=$token") -PassThru -WindowStyle Hidden
+    $until = [DateTime]::UtcNow.AddSeconds(30)
+    while (-not (Test-Path -LiteralPath $readySignal) -and -not $process.HasExited -and [DateTime]::UtcNow -lt $until) { Start-Sleep -Milliseconds 100 }
+    if (-not (Test-Path -LiteralPath $readySignal)) { throw 'Silent installer readiness signal missing' }
+    if (-not $process.WaitForExit(20000) -or $process.ExitCode -ne 2) { throw 'Installer without a proceed signal did not cancel safely' }
+    if ((Get-FileHash -LiteralPath (Join-Path $qaTarget '公司大脑.exe')).Hash -ne $oldHash) { throw 'Timed out handoff changed the old installation' }
+    $checks.Add('A timed out handoff cancels without changing the prior application')
+
+    function Test-AutoUpgrade([switch]$Legacy) {
+      Assert-TestTarget
+      $appPath = Join-Path $qaTarget '公司大脑.exe'
+      $oldClient = Start-Process -FilePath $appPath -PassThru -WindowStyle Hidden
+      $until = [DateTime]::UtcNow.AddSeconds(30)
+      do {
+        $oldClient.Refresh()
+        if ($oldClient.MainWindowHandle -ne 0) { break }
+        Start-Sleep -Milliseconds 100
+      } while (-not $oldClient.HasExited -and [DateTime]::UtcNow -lt $until)
+      if ($oldClient.HasExited -or $oldClient.MainWindowHandle -eq 0) { throw 'Old client did not start for update handoff' }
+      $desktopLink = Join-Path ([Environment]::GetFolderPath('Desktop')) '公司大脑.lnk'
+      $shortcutExisted = Test-Path -LiteralPath $desktopLink
+      if ($Legacy) {
+        $sha = (Get-FileHash -LiteralPath $installerPath -Algorithm SHA256).Hash.ToLowerInvariant()
+        $cachedInstaller = Join-Path $cachePath ($sha.Substring(0,16) + '-' + [IO.Path]::GetFileName($installerPath))
+        Copy-Item -LiteralPath $installerPath -Destination $cachedInstaller
+        $script:process = Start-Process -FilePath $cachedInstaller -PassThru -WindowStyle Hidden
+        Start-Sleep -Milliseconds 800
+      } else {
+        $token = [Guid]::NewGuid().ToString('N')
+        $readySignal = Join-Path $cachePath "$token.ready"
+        $script:process = Start-Process -FilePath $installerPath -ArgumentList @('/S',"--brain-update=$token") -PassThru -WindowStyle Hidden
+        $until = [DateTime]::UtcNow.AddSeconds(30)
+        while (-not (Test-Path -LiteralPath $readySignal) -and -not $process.HasExited -and [DateTime]::UtcNow -lt $until) { Start-Sleep -Milliseconds 100 }
+        if (-not (Test-Path -LiteralPath $readySignal)) { throw 'Ready signal missing while old client is running' }
+        [IO.File]::WriteAllText((Join-Path $cachePath "$token.proceed"),'proceed')
+      }
+      if ($process.HasExited) { throw 'Automatic installer exited before the old client closed' }
+      if (@([InstallerWindow]::Windows($process.Id) | Where-Object Visible).Count -ne 0) { throw 'Automatic update displayed an installer wizard' }
+      if ((Get-FileHash -LiteralPath $appPath).Hash -ne $oldHash) { throw 'Installer changed the application before the old client exited' }
+      [void]$oldClient.CloseMainWindow()
+      if (-not $oldClient.WaitForExit(15000)) { throw 'Old client did not close after saving' }
+      if (-not $process.WaitForExit(120000) -or $process.ExitCode -ne 0) { throw 'Background update failed or did not restart' }
+      if ((Get-ItemProperty -LiteralPath $registryPath).InstallLocation -ne $qaTarget) { throw 'Automatic update changed the original directory' }
+      if ((Get-Item -LiteralPath $appPath).VersionInfo.ProductVersion -notin @($version,"$version.0")) { throw 'Automatic update installed the wrong version' }
+      if ((Test-Path -LiteralPath $desktopLink) -ne $shortcutExisted) { throw 'Automatic update changed the desktop shortcut choice' }
+      if ((Get-FileHash -LiteralPath $sentinel).Hash -ne $sentinelHash) { throw 'Automatic update changed personal records' }
+      $restarted = Get-Process -Name '公司大脑' -ErrorAction SilentlyContinue | Where-Object { $_.Path -eq $appPath -and $_.MainWindowHandle -ne 0 } | Select-Object -First 1
+      if (-not $restarted) { throw 'Updated client did not show its window' }
+      [void]$restarted.CloseMainWindow()
+      if (-not $restarted.WaitForExit(15000)) { throw 'Updated test client did not close' }
+    }
+    # Simulate a user who has removed the desktop link. The updater must not recreate it.
+    $desktopLink = Join-Path ([Environment]::GetFolderPath('Desktop')) '公司大脑.lnk'
+    if (Test-Path -LiteralPath $desktopLink) { Remove-Item -LiteralPath $desktopLink }
+    Test-AutoUpgrade
+    $checks.Add('Silent handoff waits for the old process, preserves path/data/shortcut choice and restarts the real new client')
+    $old = Start-Process -FilePath $PreviousInstaller -ArgumentList @('/S',"/D=$qaTarget") -PassThru -WindowStyle Hidden
+    if (-not $old.WaitForExit(120000) -or $old.ExitCode -ne 0) { throw 'Could not restore the pinned fixture for legacy updater verification' }
+    Test-AutoUpgrade -Legacy
+    $checks.Add('Legacy client cache launch without arguments automatically updates and restarts without a wizard')
 
     $page = New-InstallFlow -Upgrade
     Save-InstallerWindow $page.Handle (Join-Path $outputPath 'installer-progress.png')

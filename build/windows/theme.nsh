@@ -4,6 +4,7 @@
 !include FileFunc.nsh
 !include WinMessages.nsh
 !include Sections.nsh
+!include WordFunc.nsh
 
 !define MUI_BGCOLOR "FBFAF8"
 !define MUI_TEXTCOLOR "272925"
@@ -67,6 +68,8 @@ Var BrainNativeControls
 Var BrainLaunching
 Var BrainLaunchStarted
 Var BrainLaunchMessage
+Var BrainAutoUpdate
+Var BrainUpdateToken
 
 !macro BrainInvalid TEXT
   MessageBox MB_OK|MB_ICONEXCLAMATION "${TEXT}" /SD IDOK
@@ -105,6 +108,10 @@ Var BrainLaunchMessage
   StrCpy $BrainShortcutValue ${BST_CHECKED}
 !macroend
 !macro customCheckAppRunning
+  ${If} $BrainAutoUpdate == 1
+    ; Never terminate another user's work. Wait for the caller to save and quit.
+    StrCpy $BrainLaunchStarted 0
+  ${EndIf}
   ${Do}
     nsProcess::_FindProcess /NOUNLOAD "${APP_EXECUTABLE_FILENAME}"
     Pop $0
@@ -112,6 +119,14 @@ Var BrainLaunchMessage
       ${ExitDo}
     ${EndIf}
     ${If} ${Silent}
+      ${If} $BrainAutoUpdate == 1
+        ${If} $BrainLaunchStarted < 450
+          Sleep 100
+          IntOp $BrainLaunchStarted $BrainLaunchStarted + 1
+          ${Continue}
+        ${EndIf}
+        MessageBox MB_OK|MB_ICONEXCLAMATION "公司大脑尚未关闭，更新已取消。请保存工作并关闭客户端后重试。个人记录未被清除。"
+      ${EndIf}
       SetErrorLevel 2
       Quit
     ${EndIf}

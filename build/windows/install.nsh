@@ -4,6 +4,14 @@ InitPluginsDir
 Call BrainValidateTarget
 StrCpy $appExe "$INSTDIR\${APP_EXECUTABLE_FILENAME}"
 !insertmacro setLinkVars
+${If} $BrainAutoUpdate == 1
+  ; Keep the user's existing shortcut choice, including a deliberately deleted link.
+  StrCpy $BrainShortcutValue ${BST_UNCHECKED}
+  ${If} ${FileExists} "$oldDesktopLink"
+    StrCpy $BrainShortcutValue ${BST_CHECKED}
+  ${EndIf}
+${EndIf}
+Call BrainSignalUpdateReady
 !insertmacro customCheckAppRunning
 
 ; Prepare the complete package BEFORE uninstalling an old version. Cancellation here is safe.
@@ -18,6 +26,9 @@ SetOutPath "$PLUGINSDIR\prepared-app"
 ${IfNot} ${FileExists} "$PLUGINSDIR\prepared-app\${APP_EXECUTABLE_FILENAME}"
 ${OrIfNot} ${FileExists} "$PLUGINSDIR\prepared-app\resources\app.asar"
   MessageBox MB_OK|MB_ICONSTOP "安装文件准备失败。原安装尚未更改，请检查临时磁盘空间后重试。" /SD IDOK
+  ${If} $BrainAutoUpdate == 1
+    MessageBox MB_OK|MB_ICONSTOP "公司大脑更新未完成：安装文件准备失败，原安装尚未更改。请释放临时磁盘空间后重试。"
+  ${EndIf}
   SetErrorLevel 2
   Quit
 ${EndIf}
@@ -53,13 +64,17 @@ ${If} $installMode == "all"
   !insertmacro handleUninstallResult HKEY_CURRENT_USER
 ${EndIf}
 SetOutPath "$INSTDIR"
+brain_copy_retry:
 ${Do}
   ClearErrors
   CopyFiles /SILENT "$PLUGINSDIR\prepared-app\*" "$INSTDIR"
   ${IfNot} ${Errors}
     ${ExitDo}
   ${EndIf}
-  MessageBox MB_RETRYCANCEL|MB_ICONEXCLAMATION "安装未完成$\r$\n部分应用文件未能写入。请检查磁盘空间与文件占用后重试。个人对话与草稿不会被清除。" /SD IDCANCEL IDRETRY +3
+  MessageBox MB_RETRYCANCEL|MB_ICONEXCLAMATION "安装未完成$\r$\n部分应用文件未能写入。请检查磁盘空间与文件占用后重试。个人对话与草稿不会被清除。" /SD IDCANCEL IDRETRY brain_copy_retry
+  ${If} $BrainAutoUpdate == 1
+    MessageBox MB_OK|MB_ICONSTOP "公司大脑更新未完成：部分应用文件未能写入。请检查磁盘空间与文件占用，然后重新运行安装包。个人记录不会被清除。"
+  ${EndIf}
   SetErrorLevel 2
   Quit
 ${Loop}
@@ -83,6 +98,9 @@ BrainWizard::Refresh /NOUNLOAD
 ${IfNot} ${FileExists} "$appExe"
 ${OrIfNot} ${FileExists} "$INSTDIR\resources\app.asar"
   MessageBox MB_OK|MB_ICONSTOP "安装检查失败，请重新运行安装程序。个人对话和草稿保留在本机。" /SD IDOK
+  ${If} $BrainAutoUpdate == 1
+    MessageBox MB_OK|MB_ICONSTOP "公司大脑更新检查失败，请重新运行安装包。个人对话和草稿保留在本机。"
+  ${EndIf}
   SetErrorLevel 2
   Quit
 ${EndIf}
@@ -93,3 +111,6 @@ StrCpy $BrainDone 1
 StrCpy $BrainCritical 0
 BrainWizard::Complete /NOUNLOAD
 EnableWindow $BrainCancel 1
+${If} $BrainAutoUpdate == 1
+  Call BrainRestartAfterUpdate
+${EndIf}

@@ -300,11 +300,15 @@ async function waitFor(test, label, timeout = 12000) {
     update.release.asset.sha256,
   );
   await capture("client-update-ready.png");
+  assert.equal(await js("Array.from(document.querySelectorAll('.update-dialog button')).some(button => button.textContent.trim() === '" + (process.platform === "win32" ? "安装" : "打开安装包") + "' && !button.disabled)"), true);
   assert.equal(
     await js("window.brainDesktop.updates.install().then(()=>false,()=>true)"),
     true,
     "Development QA never executes the inert installer",
   );
+  await js("Array.from(document.querySelectorAll('.update-dialog button')).find(button => button.textContent.trim() === '" + (process.platform === "win32" ? "安装" : "打开安装包") + "').click()");
+  await waitFor(() => has("开发预览中不运行安装程序"), "installation failure keeps the client open and displays a retryable error");
+  assert.equal(await js("Array.from(document.querySelectorAll('.update-dialog button')).some(button => button.textContent.trim() === '" + (process.platform === "win32" ? "安装" : "打开安装包") + "' && !button.disabled)"), true);
   await key("Escape");
   await waitFor(
     () => js("!document.querySelector('[role=dialog]')"),

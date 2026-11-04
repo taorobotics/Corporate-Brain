@@ -8,6 +8,7 @@ const {
   clipboard,
 } = require("electron");
 const { DesktopUpdates } = require("./updates.cjs");
+const { installWindowsUpdate } = require("./install.cjs");
 const { ProductionLocal } = require("./production.cjs");
 const {
   loadCompanyWindow,
@@ -526,23 +527,19 @@ ipcMain.handle("updates:install", async (event) => {
     updates = updater,
     company = origin;
   try {
-    const { response } = await dialog.showMessageBox(owner, {
-      type: "question",
-      title: "更新公司大脑",
-      message: `安装 v${updates.state.release.version}？`,
-      detail:
-        process.platform === "darwin"
-          ? "将打开已校验的 DMG。请退出公司大脑后，将新版拖入 Applications 替换。本地对话与个人草稿保留在原设备。"
-          : "本地记录保存完成后将退出客户端并打开安装向导。请按向导完成更新，再重新打开公司大脑。",
-      buttons: [
-        process.platform === "darwin" ? "打开安装包" : "退出并安装",
-        "稍后",
-      ],
-      defaultId: 1,
-      cancelId: 1,
-      noLink: true,
-    });
-    if (response !== 0) return false;
+    if (process.platform !== "win32") {
+      const { response } = await dialog.showMessageBox(owner, {
+        type: "question",
+        title: "更新公司大脑",
+        message: `安装 v${updates.state.release.version}？`,
+        detail: "将打开已校验的 DMG。请退出公司大脑后，将新版拖入 Applications 替换。本地对话与个人草稿保留在原设备。",
+        buttons: ["打开安装包", "稍后"],
+        defaultId: 1,
+        cancelId: 1,
+        noLink: true,
+      });
+      if (response !== 0) return false;
+    }
     if (win !== owner || origin !== company)
       throw new Error("公司连接已变化，请重新下载更新");
     const actor = await owner.webContents.session.fetch(
@@ -554,18 +551,29 @@ ipcMain.handle("updates:install", async (event) => {
       },
     );
     if (!actor.ok) throw new Error("请重新登录后安装更新");
-    // Persist the active origin before replacing bundled company configuration.
-    // This also keeps a company-specific install connected after a generic update.
-    await fs.writeFile(
-      join(app.getPath("userData"), "company-server.json"),
-      JSON.stringify({ url: company }),
-      { mode: 0o600 },
-    );
-    await Promise.all([...writes.values()]);
+    const save = async () => {
+      // Persist the active origin before replacing bundled company configuration.
+      // This also keeps a company-specific install connected after a generic update.
+      await fs.writeFile(
+        join(app.getPath("userData"), "company-server.json"),
+        JSON.stringify({ url: company }),
+        { mode: 0o600 },
+      );
+      await Promise.all([...writes.values()]);
+    };
+    if (process.platform === "win32") {
+      await installWindowsUpdate({
+        directory: join(app.getPath("userData"), "updates"),
+        save,
+        verify: () => updates.verify(),
+        quit: () => app.quit(),
+      });
+      return true;
+    }
+    await save();
     const path = await updates.verify();
     const error = await shell.openPath(path);
     if (error) throw new Error("系统未能打开安装包，请稍后重试");
-    if (process.platform === "win32") app.quit();
     return true;
   } finally {
     installing = false;

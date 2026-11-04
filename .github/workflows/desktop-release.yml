@@ -99,6 +99,9 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: gh release download v0.9.0 --repo "$env:GITHUB_REPOSITORY" --pattern Corporate-Brain-Setup-0.9.0-x64.exe --dir "$env:RUNNER_TEMP/brain-previous"
+      - name: Verify isolated native updater handoff
+        if: matrix.platform == 'Windows'
+        run: pwsh -NoProfile -File scripts/verify-update-handoff.ps1
       - name: Verify native installer lifecycle and preserved local records
         if: matrix.platform == 'Windows'
         run: pwsh -NoProfile -File scripts/verify-installer.ps1 -FullLifecycle -PreviousInstaller "$env:RUNNER_TEMP/brain-previous/Corporate-Brain-Setup-0.9.0-x64.exe"
