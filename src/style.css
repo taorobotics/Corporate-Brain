@@ -1367,20 +1367,6 @@ code {
   height: 28px;
   color: var(--muted);
 }
-.usage-indicator {
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-  color: var(--muted);
-  font-size: 11px;
-  white-space: nowrap;
-}
-.usage-indicator span {
-  border-radius: 999px;
-  background: var(--side);
-  padding: 2px 5px;
-  font-size: 10px;
-}
 .chat-header .button {
   font-size: 12px;
   padding: 8px 11px;
@@ -3003,8 +2989,7 @@ tbody > tr:hover {
   .header-divider {
     display: none;
   }
-  .workspace-controls,
-  .usage-indicator {
+  .workspace-controls {
     display: none;
   }
   .chat-header .button {

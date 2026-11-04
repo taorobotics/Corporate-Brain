@@ -46,7 +46,7 @@ import type {
   Connection,
   WorkspaceAccess,
 } from "../shared/types";
-import { WORKSPACE_ACCESS_OPTIONS, estimateTokens } from "../shared/workspaces";
+import { WORKSPACE_ACCESS_OPTIONS } from "../shared/workspaces";
 import { api, download } from "./api";
 import {
   Brand,
@@ -115,12 +115,7 @@ export default function Workspace(props: WorkspaceProps) {
     [selectedProject, setSelectedProject] = useState<string | null>(null),
     [workspaceDialog, setWorkspaceDialog] = useState(false),
     [pendingReply, setPendingReply] = useState<PendingReply | null>(null),
-    [taskConversationId, setTaskConversationId] = useState<string | null>(null),
-    [lastUsage, setLastUsage] = useState<{
-      inputTokens?: number;
-      outputTokens?: number;
-      totalTokens?: number;
-    } | null>(null);
+    [taskConversationId, setTaskConversationId] = useState<string | null>(null);
   const [taskError, setTaskError] = useState("");
   const originalFiles = useRef(new Map<string, File>());
   const filesRef = useRef<HTMLInputElement>(null);
@@ -171,9 +166,6 @@ export default function Workspace(props: WorkspaceProps) {
   const workspace =
     state.workspaces.find((item) => item.id === state.activeWorkspaceId) ??
     state.workspaces[0];
-  const draftTokenEstimate = estimateTokens(
-    `${text}\n${attachments.map((attachment) => attachment.content).join("\n")}`,
-  );
   useEffect(() => {
     setPreview(null);
     setSearch("");
@@ -626,7 +618,6 @@ export default function Workspace(props: WorkspaceProps) {
         controller.signal,
         progress,
       );
-      setLastUsage(response.usage ?? null);
       saveReply(
         response.content ?? "图片已生成，可以继续保存。",
         "done",
@@ -1115,14 +1106,6 @@ export default function Workspace(props: WorkspaceProps) {
                       onClick: () => navigate("models"),
                     }}
                   />
-                  <span
-                    className="usage-indicator"
-                    title="本轮模型 Token 使用量；额度上限由服务端模型配置提供"
-                  >
-                    {lastUsage?.totalTokens ?? draftTokenEstimate} tokens
-                    <span>{lastUsage ? "本轮" : "估算"}</span>
-                    <span>额度待配置</span>
-                  </span>
                   <SelectField
                     label="工作区权限"
                     variant="quiet"
