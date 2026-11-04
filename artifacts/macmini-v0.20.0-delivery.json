@@ -1,0 +1,205 @@
+{
+  "version": "0.20.0",
+  "sourceCommit": "c0e10345f5ececc91cbb16d9fb6a33f21ab1db7c",
+  "checkedAt": "2026-11-04T03:31:14.838Z",
+  "result": "partial",
+  "localDeliveryResult": "passed",
+  "scope": "Mac mini server and private LAN Windows x64 / Mac arm64; complete GitHub Release remains blocked",
+  "changes": [
+    "Upward searchable installed-skill picker, manual multi-select and removable chips",
+    "Default automatic selection among installed authorized candidates; manual order retained",
+    "Multiple skills supplied to chat, image and code/video production; DSH stages independent verified resource directories",
+    "Per-account installation/selection isolation; authorization and availability rechecked on execution"
+  ],
+  "checks": {
+    "windows": {
+      "nodeTests": 87,
+      "pythonNasTests": 5,
+      "typecheck": "passed",
+      "productionBuild": "passed",
+      "desktop": 40,
+      "startup": 9,
+      "profile": 3,
+      "productionUi": 4,
+      "installerUi": 4,
+      "signature": "NotSigned",
+      "fullInstallUpgradeUninstall": false,
+      "notes": [
+        "First installer UI check exited before the welcome page; a diagnostic launch stayed open and a subsequent run passed all four UI checks. No full Windows installation was attempted."
+      ]
+    },
+    "macArm64": {
+      "nodeTests": 87,
+      "pythonNasTests": 5,
+      "typecheck": "passed",
+      "productionBuild": "passed",
+      "desktop": 39,
+      "startup": 9,
+      "profile": 3,
+      "productionUi": 4,
+      "packageMountAndLaunch": "passed",
+      "signing": "ad-hoc",
+      "notarized": false,
+      "actualVideoRender": {
+        "seconds": 3,
+        "frames": 72,
+        "width": 1280,
+        "height": 720,
+        "audio": true,
+        "sha256": "d170d88adc3915053998d42a47497fd7eea12f58510cfedaa7d4b0cbad8d7609",
+        "networkBlocked": true,
+        "nodeUnavailable": true
+      }
+    },
+    "newSkillUseModuleCoverage": {
+      "lines": 100,
+      "branches": 100,
+      "functions": 100,
+      "scope": "server/skill-use.ts only"
+    },
+    "modelProviders": "Synthetic fixtures; no production model charges",
+    "security": {
+      "stagedSecretsScan": "passed",
+      "fullReachableHistorySecretsScan": "passed",
+      "historyCommitsScanned": 114,
+      "companyDataIncluded": false
+    }
+  },
+  "deployment": {
+    "url": "https://192.168.20.21:14443",
+    "health": {
+      "status": "ok",
+      "version": "0.20.0",
+      "chatStorage": "device-only"
+    },
+    "consistentBackup": "/Users/staff01/CorporateBrainServer/backups/before-v0.20.0-2026-11-04T03-21-07-090Z",
+    "existingDataPreserved": true,
+    "counts": {
+      "users": 3,
+      "departments": 13,
+      "nas_sources": 14,
+      "skills": 3
+    },
+    "modelSettingsPreserved": true,
+    "modelCredentialsPreserved": true,
+    "tlsVerified": true,
+    "entryAssets": [
+      {
+        "path": "/assets/index-Cpyl500N.js",
+        "bytes": 959138,
+        "sha256": "9c02fe07da7552ad18508210ad263c298cc1dc740c72fb3039783bb90e0a9212"
+      },
+      {
+        "path": "/assets/index-CCDE74A6.css",
+        "bytes": 98035,
+        "sha256": "69c5d946f529bbcf3bcf8b253a6651034bef6a228f1776a121dac735264bab07"
+      }
+    ],
+    "notes": [
+      "Post-upgrade HTTPS check detected the HTTPS launch agent was not loaded; the project start command restored it and strict TLS/asset checks subsequently passed."
+    ]
+  },
+  "privateDistribution": {
+    "channels": {
+      "win32-x64": {
+        "name": "Corporate-Brain-Setup-0.20.0-x64.exe",
+        "bytes": 120002143,
+        "sha256": "a2a34f8c7d57c7b08f56c3dc25e6e2119029ca1392fa1d2993190872339b49b7"
+      },
+      "darwin-arm64": {
+        "name": "Corporate-Brain-0.20.0-macOS-arm64.dmg",
+        "bytes": 138646996,
+        "sha256": "89342e3373e3f8bfb6851c22b32f8cef83c4c3655c6c55549a8376fcb4bf65b4"
+      }
+    },
+    "authenticatedCompleteDownloads": [
+      {
+        "platform": "win32-x64",
+        "version": "0.20.0",
+        "bytes": 120002143,
+        "sha256": "a2a34f8c7d57c7b08f56c3dc25e6e2119029ca1392fa1d2993190872339b49b7"
+      },
+      {
+        "platform": "darwin-arm64",
+        "version": "0.20.0",
+        "bytes": 138646996,
+        "sha256": "89342e3373e3f8bfb6851c22b32f8cef83c4c3655c6c55549a8376fcb4bf65b4"
+      }
+    ],
+    "temporaryTestAccountRemoved": true,
+    "existingAccountsUnchanged": true
+  },
+  "artifacts": [
+    {
+      "name": "Corporate-Brain-Setup-0.20.0-x64.exe",
+      "bytes": 120002143,
+      "sha256": "a2a34f8c7d57c7b08f56c3dc25e6e2119029ca1392fa1d2993190872339b49b7"
+    },
+    {
+      "name": "Corporate-Brain-0.20.0-macOS-arm64.dmg",
+      "bytes": 138646996,
+      "sha256": "89342e3373e3f8bfb6851c22b32f8cef83c4c3655c6c55549a8376fcb4bf65b4"
+    },
+    {
+      "name": "Corporate-Brain-Server-0.20.0.zip",
+      "bytes": 22552224,
+      "sha256": "0e077f9ca352269f9e763e7120c12d704829c97bfa5398deaf8f20004fce5177"
+    }
+  ],
+  "github": {
+    "runId": 41766169499,
+    "runUrl": "https://github.com/taorobotics/Corporate-Brain/actions/runs/41766169499",
+    "result": "blocked",
+    "reason": "The job was not started because recent account payments have failed or your spending limit needs to be increased.",
+    "draftReleaseId": 433477154,
+    "tag": "v0.20.0",
+    "draft": true,
+    "sourceAndTagPushed": true,
+    "verifiedAssets": [
+      {
+        "name": "Corporate-Brain-0.20.0-macOS-arm64.dmg",
+        "bytes": 138646996,
+        "digest": "sha256:89342e3373e3f8bfb6851c22b32f8cef83c4c3655c6c55549a8376fcb4bf65b4"
+      },
+      {
+        "name": "Corporate-Brain-Server-0.20.0.zip",
+        "bytes": 22552224,
+        "digest": "sha256:0e077f9ca352269f9e763e7120c12d704829c97bfa5398deaf8f20004fce5177"
+      },
+      {
+        "name": "Corporate-Brain-Setup-0.20.0-x64.exe",
+        "bytes": 120002143,
+        "digest": "sha256:a2a34f8c7d57c7b08f56c3dc25e6e2119029ca1392fa1d2993190872339b49b7"
+      },
+      {
+        "name": "macos-verification-arm64.json",
+        "bytes": 8009,
+        "digest": "sha256:c7be7c265a58c96252039bfba6cd0557507356d4eb91a510e26b2f33fbed7bcb"
+      },
+      {
+        "name": "server-verification.json",
+        "bytes": 16294,
+        "digest": "sha256:5109695d77d49f3abe42f3924f93961720d3d361a08259b84e12761aad380b9d"
+      },
+      {
+        "name": "SHA256SUMS.txt",
+        "bytes": 308,
+        "digest": "sha256:507a06ab5d4842494c13a3d7cca5de2e86d59b49843e656a7cfbea1f263511ca"
+      },
+      {
+        "name": "windows-local-verification.json",
+        "bytes": 9459,
+        "digest": "sha256:87271f2f70e3405eeb3ada0c5ddbce16cb1c59dd9a29e638889f971bfb4ad4b4"
+      }
+    ],
+    "publicLatest": "v0.11.5"
+  },
+  "outstanding": [
+    "Native Intel Mac build and verification",
+    "Disposable Windows full installation, upgrade, restart and uninstallation verification",
+    "Successful complete Desktop release workflow before publishing the draft"
+  ],
+  "evidenceDirectory": "release/macmini-v0200/evidence",
+  "writeBoundary": "Project directory and previously authorized project LaunchAgents only",
+  "userDesignDirectoryUnchanged": true
+}
