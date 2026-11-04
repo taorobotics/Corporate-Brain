@@ -52,3 +52,19 @@ test("token estimate is stable for empty and short text", () => {
   assert.equal(estimateTokens("1234"), 1);
   assert.equal(estimateTokens("12345"), 2);
 });
+
+test("installed skill preferences default to automatic and restore an explicit multi-selection per profile", () => {
+  assert.equal(normalizeLocalState({}).settings.skillMode, "auto");
+  const state = normalizeLocalState({
+    settings: {
+      theme: "light",
+      model: "",
+      mode: "standard",
+      skillMode: "manual",
+      skillIds: ["a", "b", "a", 42] as any,
+    },
+  });
+  assert.equal(state.settings.skillMode, "manual");
+  assert.deepEqual(state.settings.skillIds, ["a", "b"]);
+  assert.deepEqual(normalizeLocalState({}).settings.skillIds, []);
+});

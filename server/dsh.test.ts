@@ -26,7 +26,7 @@ test("DSH modes map to the shipped presets and workspace permissions map to sand
   assert.equal(dshPermissionMode("full"), "danger-full-access");
 });
 
-test("DSH routes an OpenAI-compatible turn and admits an image attachment", async (t) => {
+test("DSH combines independent skill resources, cleans failures and admits visual attachments", async (t) => {
   let resourceObserved = false;
   const requests: string[] = [];
   let signalReasoning!: () => void;
@@ -38,25 +38,30 @@ test("DSH routes an OpenAI-compatible turn and admits an image attachment", asyn
     let body = "";
     for await (const chunk of req) body += chunk;
     requests.push(body);
-    const stage = (
+    const stages = (
       await readdir(join(root, "workspaces", "user-test", "session-test"))
-    ).find((name) => name.startsWith("skill-"));
-    assert.ok(stage);
-    assert.equal(
-      await readFile(
-        join(
-          root,
-          "workspaces",
-          "user-test",
-          "session-test",
-          stage,
-          "guide.md",
+    ).filter((name) => name.startsWith("skill-"));
+    assert.equal(stages.length, 2);
+    const guides = await Promise.all(
+      stages.map((stage) =>
+        readFile(
+          join(
+            root,
+            "workspaces",
+            "user-test",
+            "session-test",
+            stage,
+            "guide.md",
+          ),
+          "utf8",
         ),
-        "utf8",
       ),
-      "Selected skill reference fixture",
     );
-    resourceObserved = body.includes(stage);
+    assert.deepEqual(guides.sort(), [
+      "Second skill reference fixture",
+      "Selected skill reference fixture",
+    ]);
+    resourceObserved = stages.every((stage) => body.includes(stage));
     res.writeHead(200, {
       "content-type": "text/event-stream",
       connection: "close",
@@ -102,6 +107,10 @@ test("DSH routes an OpenAI-compatible turn and admits an image attachment", asyn
   await mkdir(libraryRoot);
   const guide = Buffer.from("Selected skill reference fixture");
   await writeFile(join(libraryRoot, "guide.md"), guide);
+  const secondRoot = join(root, "second-library");
+  await mkdir(secondRoot);
+  const secondGuide = Buffer.from("Second skill reference fixture");
+  await writeFile(join(secondRoot, "guide.md"), secondGuide);
   const manager = new DshManager(root);
   t.after(async () => {
     await manager.close();
@@ -109,33 +118,45 @@ test("DSH routes an OpenAI-compatible turn and admits an image attachment", asyn
     await rm(root, { recursive: true, force: true });
   });
   const port = (server.address() as any).port;
+  const firstResource = {
+    root: libraryRoot,
+    files: [
+      {
+        path: "guide.md",
+        size: guide.length,
+        sha256: createHash("sha256").update(guide).digest("hex"),
+      },
+    ],
+    source: {
+      kind: "zip" as const,
+      label: "fixture",
+      digest: "0".repeat(64),
+      entry: "guide.md",
+      fileCount: 1,
+      bytes: guide.length,
+      license: "MIT",
+      licenseFiles: [],
+      hasScripts: false,
+      notes: [],
+    },
+  };
+  const secondResource = {
+    ...firstResource,
+    root: secondRoot,
+    files: [
+      {
+        path: "guide.md",
+        size: secondGuide.length,
+        sha256: createHash("sha256").update(secondGuide).digest("hex"),
+      },
+    ],
+  };
   const result = await manager.run({
     connectionId: "connection-test",
     baseUrl: `http://127.0.0.1:${port}/v1`,
     model: "probe-model",
     apiKey: "probe-key",
-    skillResources: {
-      root: libraryRoot,
-      files: [
-        {
-          path: "guide.md",
-          size: guide.length,
-          sha256: createHash("sha256").update(guide).digest("hex"),
-        },
-      ],
-      source: {
-        kind: "zip",
-        label: "fixture",
-        digest: "0".repeat(64),
-        entry: "guide.md",
-        fileCount: 1,
-        bytes: guide.length,
-        license: "MIT",
-        licenseFiles: [],
-        hasScripts: false,
-        notes: [],
-      },
-    },
+    skillResources: [firstResource, secondResource],
     onProgress: (event) => {
       progress.push(event);
       if (event.type === "reasoning" && event.text.includes("先检查"))
@@ -182,6 +203,35 @@ test("DSH routes an OpenAI-compatible turn and admits an image attachment", asyn
     ),
   );
   assert.equal(progress.reduce<TraceItem[]>(updateTrace, []).length, 1);
+  await writeFile(join(secondRoot, "guide.md"), "tampered");
+  const requestCount = requests.length;
+  await assert.rejects(
+    manager.run({
+      connectionId: "connection-test",
+      baseUrl: `http://127.0.0.1:${port}/v1`,
+      model: "probe-model",
+      apiKey: "probe-key",
+      userId: "user-test",
+      sessionId: "session-test",
+      messages: [
+        {
+          role: "user",
+          content: "Do not invoke provider for damaged resources",
+        },
+      ],
+      attachments: [],
+      skillResources: [firstResource, secondResource],
+    }),
+    /被修改/,
+  );
+  assert.equal(requests.length, requestCount);
+  assert.equal(
+    (
+      await readdir(join(root, "workspaces", "user-test", "session-test"))
+    ).filter((name) => name.startsWith("skill-")).length,
+    0,
+    "a failure preparing the second skill cleans the first skill too",
+  );
 });
 
 test("DSH cancellation closes only its request and a stopped session can run again", async (t) => {

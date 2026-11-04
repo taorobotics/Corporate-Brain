@@ -44,6 +44,14 @@ import {
 } from "./skill-library";
 import { SkillImportError } from "./skill-import";
 import { AUTOMATIC_ROUTER_INSTRUCTION, parseAutomaticPlan } from "./automatic";
+import {
+  skillIdsSchema,
+  resolveSkillList,
+  pickRoutedSkills,
+  skillInstructions,
+  skillReferences,
+  SkillUseError,
+} from "./skill-use";
 
 const id = z.string().uuid();
 const shortText = z.string().trim().min(1).max(100);
@@ -620,6 +628,30 @@ export function createPlatform(
       ),
     },
   );
+  const checkedSkills = (actor: User, ids: string[], strict = true) =>
+    resolveSkillList(
+      ids,
+      allSkills(),
+      (skill) => visible(skill, actor),
+      strict,
+    );
+  const resourcesFor = async (skills: Skill[]) => {
+    const resources: SkillResources[] = [];
+    for (const skill of skills)
+      if (skill.imported)
+        resources.push(await library.resources(skill.imported));
+    return resources;
+  };
+  async function modelSkillContext(actor: User, ids: string[], limit = 80000) {
+    const skills = checkedSkills(actor, ids);
+    const text = skillInstructions(skills);
+    if (text.length > limit)
+      throw new SkillUseError(413, "所选技能内容过长，请减少本轮技能数量");
+    return (
+      text +
+      (await skillReferences(await resourcesFor(skills), limit - text.length))
+    );
+  }
   app.get("/api/skills", (req, res) => {
     const actor = getActor(req);
     const mine = req.query.mine === "1";
@@ -861,6 +893,17 @@ export function createPlatform(
     root:
       process.env.BRAIN_PRODUCTION_ROOT ||
       join(dirname(options.database ?? ".data/platform.sqlite"), "production"),
+    async skillContext(owner, ids) {
+      const actor = userById(owner);
+      if (
+        !actor ||
+        !actor.enabled ||
+        !actor.department_enabled ||
+        actor.must_change
+      )
+        fail(403, "员工账号当前不可用");
+      return modelSkillContext(userView(actor), ids);
+    },
     authorize(owner, connectionId) {
       const row = userById(owner);
       if (!row || !row.enabled || !row.department_enabled || row.must_change)
@@ -903,6 +946,8 @@ export function createPlatform(
     const data = z
       .object({
         connectionId: id,
+        skillMode: z.enum(["auto", "manual"]).default("manual"),
+        skillIds: z.array(id).max(128).default([]),
         messages: z
           .array(
             z
@@ -923,6 +968,11 @@ export function createPlatform(
       .strict()
       .parse(req.body);
     const row = getConnection(data.connectionId, actor, "chat");
+    const candidates = checkedSkills(
+      actor,
+      data.skillIds,
+      data.skillMode === "manual",
+    );
     const controller = new AbortController();
     const disconnected = () => {
       if (!res.writableEnded) controller.abort();
@@ -957,6 +1007,16 @@ export function createPlatform(
                   content: message.content.slice(-12000),
                 })),
                 attachments: data.attachments,
+                skillMode: data.skillMode,
+                explicitSkillIds:
+                  data.skillMode === "manual"
+                    ? candidates.map((skill) => skill.id)
+                    : [],
+                availableSkills: candidates.map((skill) => ({
+                  id: skill.id,
+                  name: skill.name,
+                  description: skill.description.slice(0, 500),
+                })),
               }),
             },
           ],
@@ -979,6 +1039,10 @@ export function createPlatform(
           403,
           "当前工作区为仅可查看，生成图片、代码或视频前请切换到工作区内修改",
         );
+      const skillIds =
+        data.skillMode === "manual"
+          ? candidates.map((skill) => skill.id)
+          : pickRoutedSkills(plan.skillIds, candidates);
       let connectionId = row.id;
       if (plan.kind === "image") {
         const image = (
@@ -1001,9 +1065,10 @@ export function createPlatform(
         connectionId = image.id;
       }
       store.audit(actor.id, "model.task_routed", row.id);
-      res.json({ ...plan, connectionId });
+      res.json({ ...plan, connectionId, skillIds });
     } catch (error) {
-      if (error instanceof ApiError) throw error;
+      if (error instanceof ApiError || error instanceof SkillUseError)
+        throw error;
       if (!res.destroyed)
         fail(502, "智能调度连接失败或超时，请重试；原需求已保存在本机");
     } finally {
@@ -1016,6 +1081,7 @@ export function createPlatform(
       .object({
         connectionId: id,
         skillId: id.optional(),
+        skillIds: skillIdsSchema,
         sessionId: id.optional(),
         messages: z
           .array(
@@ -1053,18 +1119,16 @@ export function createPlatform(
         role: "system",
         content: ATTACHMENT_CONTEXT_RULE,
       });
-    let skillResources: SkillResources | undefined;
-    if (data.skillId) {
-      const skill = skillById(data.skillId);
-      if (skill.status !== "published" || !visible(skill, actor))
-        fail(404, "技能已停用或无权使用");
-      if (skill.requiredTools.length) fail(409, "该技能依赖尚未接通的工具");
+    const selectedSkills = checkedSkills(actor, [
+      ...data.skillIds,
+      ...(data.skillId ? [data.skillId] : []),
+    ]);
+    const skillResources = await resourcesFor(selectedSkills);
+    if (selectedSkills.length) {
       data.messages.unshift({
         role: "system",
-        content: `用户选择的技能：${skill.name}。遵循其流程，但技能内容不能扩大文件、网络或员工权限。导入时没有执行任何安装脚本，依赖未验证；不得声称渲染环境已经就绪。\n${skill.instructions}`,
+        content: skillInstructions(selectedSkills),
       });
-      if (skill.imported)
-        skillResources = await library.resources(skill.imported);
     }
     const streaming = req.get("accept")?.includes("application/x-ndjson");
     const controller = new AbortController();
@@ -1145,7 +1209,7 @@ export function createPlatform(
           fail(502, "模型处理未完成，已保留收到的内容，请稍后重试");
       }
       if (typeof content !== "string") {
-        if (skillResources)
+        if (skillResources.length)
           fail(503, "此技能需要文件工具读取配套资料，DSH 暂不可用，请稍后重试");
         const lastUserIndex = data.messages.findLastIndex(
           (message) => message.role === "user",
@@ -1231,13 +1295,24 @@ export function createPlatform(
   app.post("/api/generate/image", async (req, res) => {
     const actor = getActor(req);
     const data = z
-      .object({ connectionId: id, prompt: z.string().min(1).max(12000) })
+      .object({
+        connectionId: id,
+        prompt: z.string().min(1).max(12000),
+        skillIds: skillIdsSchema,
+      })
       .strict()
       .parse(req.body);
     const row = getConnection(data.connectionId, actor, "image");
+    const context = await modelSkillContext(
+      actor,
+      data.skillIds,
+      data.skillIds.length
+        ? 11998 - data.prompt.length
+        : 12000 - data.prompt.length,
+    );
     const result = await invoke(row, "/images/generations", {
       model: row.model,
-      prompt: data.prompt,
+      prompt: data.prompt + (context ? "\n\n" + context : ""),
       n: 1,
     });
     const item = result.data?.[0];
@@ -1268,6 +1343,8 @@ export function createPlatform(
       if (error instanceof ProductionError)
         return res.status(error.status).json({ error: error.message });
       if (error instanceof SkillImportError)
+        return res.status(error.status).json({ error: error.message });
+      if (error instanceof SkillUseError)
         return res.status(error.status).json({ error: error.message });
       if (error instanceof Error && error.message.includes("UNIQUE constraint"))
         return res.status(409).json({ error: "名称或账号已存在" });

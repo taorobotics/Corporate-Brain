@@ -300,15 +300,36 @@ async function waitFor(test, label, timeout = 12000) {
     update.release.asset.sha256,
   );
   await capture("client-update-ready.png");
-  assert.equal(await js("Array.from(document.querySelectorAll('.update-dialog button')).some(button => button.textContent.trim() === '" + (process.platform === "win32" ? "安装" : "打开安装包") + "' && !button.disabled)"), true);
+  assert.equal(
+    await js(
+      "Array.from(document.querySelectorAll('.update-dialog button')).some(button => button.textContent.trim() === '" +
+        (process.platform === "win32" ? "安装" : "打开安装包") +
+        "' && !button.disabled)",
+    ),
+    true,
+  );
   assert.equal(
     await js("window.brainDesktop.updates.install().then(()=>false,()=>true)"),
     true,
     "Development QA never executes the inert installer",
   );
-  await js("Array.from(document.querySelectorAll('.update-dialog button')).find(button => button.textContent.trim() === '" + (process.platform === "win32" ? "安装" : "打开安装包") + "').click()");
-  await waitFor(() => has("开发预览中不运行安装程序"), "installation failure keeps the client open and displays a retryable error");
-  assert.equal(await js("Array.from(document.querySelectorAll('.update-dialog button')).some(button => button.textContent.trim() === '" + (process.platform === "win32" ? "安装" : "打开安装包") + "' && !button.disabled)"), true);
+  await js(
+    "Array.from(document.querySelectorAll('.update-dialog button')).find(button => button.textContent.trim() === '" +
+      (process.platform === "win32" ? "安装" : "打开安装包") +
+      "').click()",
+  );
+  await waitFor(
+    () => has("开发预览中不运行安装程序"),
+    "installation failure keeps the client open and displays a retryable error",
+  );
+  assert.equal(
+    await js(
+      "Array.from(document.querySelectorAll('.update-dialog button')).some(button => button.textContent.trim() === '" +
+        (process.platform === "win32" ? "安装" : "打开安装包") +
+        "' && !button.disabled)",
+    ),
+    true,
+  );
   await key("Escape");
   await waitFor(
     () => js("!document.querySelector('[role=dialog]')"),
@@ -1046,6 +1067,19 @@ async function waitFor(test, label, timeout = 12000) {
   await click("安装");
   await waitFor(() => has("技能已安装到当前设备"), "installed");
   checks.push("Published package downloaded and installed locally");
+  await require("./verify-skills.cjs")({
+    js,
+    click,
+    fill,
+    waitFor,
+    request,
+    key,
+    win,
+    capture,
+    checks,
+    revealed,
+    selectOption,
+  });
   // Real UI and API, with synthetic SMB results from the disposable QA server.
   await js(`location.hash='admin-knowledge'`);
   await waitFor(() => has("添加资料源"), "NAS administration");
@@ -1325,6 +1359,27 @@ async function waitFor(test, label, timeout = 12000) {
   assert.equal(await js(`document.documentElement.dataset.skin`), "claude");
   checks.push(
     "Skin preferences are isolated per employee; new employee receives Claude default",
+  );
+  await click("选择技能");
+  await waitFor(
+    () => js(`!!document.querySelector('.skill-picker[data-open]')`),
+    "new employee skills",
+  );
+  assert.equal(
+    await js(`document.querySelectorAll('.skill-picker-item').length`),
+    0,
+    "another account's installed skills are not carried over",
+  );
+  assert.equal(
+    await js(
+      `document.querySelector('.skill-picker-auto').getAttribute('aria-checked')`,
+    ),
+    "true",
+    "new employee uses automatic default",
+  );
+  await key("Escape");
+  checks.push(
+    "Skill installations and manual selection are isolated per employee; new account starts with empty installations and automatic mode",
   );
   assert.equal(await has("只在本机保存的集成验收记录"), false);
   assert.equal(

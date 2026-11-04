@@ -27,6 +27,7 @@ export async function submitAutomaticProduction(
       connectionId: plan.connectionId,
       prompt,
       seconds: plan.seconds,
+      skillIds: plan.skillIds ?? [],
       inputs: files.map((file) => ({
         name: file.name.normalize("NFC"),
         size: file.size,

@@ -131,6 +131,16 @@ export function normalizeLocalState(
       skin: normalizeSkin(settings.skin),
       model: typeof settings.model === "string" ? settings.model : "",
       mode: normalizeMode(settings.mode),
+      skillMode: settings.skillMode === "manual" ? "manual" : "auto",
+      skillIds: Array.isArray(settings.skillIds)
+        ? [
+            ...new Set(
+              settings.skillIds.filter(
+                (id): id is string => typeof id === "string",
+              ),
+            ),
+          ].slice(0, 16)
+        : [],
     },
   };
 }

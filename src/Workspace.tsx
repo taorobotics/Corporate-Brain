@@ -29,6 +29,7 @@ import {
   Moon,
 } from "@phosphor-icons/react";
 import { SelectField } from "./Dropdown";
+import SkillPicker from "./SkillPicker";
 import {
   ChatProduction,
   ProductionLocation,
@@ -107,8 +108,7 @@ export default function Workspace(props: WorkspaceProps) {
     [zoom, setZoom] = useState(100),
     [skillDraft, setSkillDraft] = useState<Draft | null>(null),
     [detail, setDetail] = useState<Skill | null>(null);
-  const [activeSkill, setActiveSkill] = useState<Skill | null>(null),
-    [attachments, setAttachments] = useState<Attachment[]>([]),
+  const [attachments, setAttachments] = useState<Attachment[]>([]),
     [projectDialog, setProjectDialog] = useState(false),
     [importSkill, setImportSkill] = useState(false),
     [selectedProject, setSelectedProject] = useState<string | null>(null),
@@ -151,6 +151,22 @@ export default function Workspace(props: WorkspaceProps) {
   const taskModels = connections.filter((c) => c.enabled && c.kind === "chat");
   const model =
     taskModels.find((c) => c.id === state.settings.model) ?? taskModels[0];
+  const installedSkills = state.installed.flatMap((saved) => {
+    const current = skills.find(
+      (skill) => skill.id === saved.id && skill.status === "published",
+    );
+    return current ? [current] : [];
+  });
+  const skillMode = state.settings.skillMode ?? "auto";
+  const selectedSkillIds = (state.settings.skillIds ?? []).filter((id) =>
+    installedSkills.some((skill) => skill.id === id),
+  );
+  const selectedSkills =
+    skillMode === "manual"
+      ? selectedSkillIds.map((id) =>
+          installedSkills.find((skill) => skill.id === id)!,
+        )
+      : [];
   const workspace =
     state.workspaces.find((item) => item.id === state.activeWorkspaceId) ??
     state.workspaces[0];
@@ -412,13 +428,6 @@ export default function Workspace(props: WorkspaceProps) {
               ? requestText
               : message.content.slice(0, 80000),
         }));
-      let skillInstructions = "";
-      if (activeSkill) {
-        const checked = await api<Skill>(`/skills/${activeSkill.id}/download`);
-        if (checked.requiredTools.length)
-          throw Error("该技能需要尚未接通的工具，请先完善工具依赖");
-        skillInstructions = `\n\n所选技能流程（不能扩大权限）：\n${checked.instructions}`;
-      }
       const routingId = crypto.randomUUID();
       const progress = (
         event: import("../shared/chat-progress").ChatProgress,
@@ -449,6 +458,11 @@ export default function Workspace(props: WorkspaceProps) {
           messages: history,
           attachments: currentAttachments.map(({ name }) => ({ name })),
           workspaceAccess: workspace?.access ?? "edit",
+          skillMode,
+          skillIds:
+            skillMode === "auto"
+              ? installedSkills.map((skill) => skill.id)
+              : selectedSkillIds,
         },
         "POST",
         50000,
@@ -460,6 +474,21 @@ export default function Workspace(props: WorkspaceProps) {
         name: "识别需求并选择能力",
         status: "done",
       });
+      if (plan.skillIds?.length)
+        progress({
+          type: "tool",
+          id: crypto.randomUUID(),
+          name:
+            "已选用技能：" +
+            plan.skillIds
+              .map(
+                (id) =>
+                  installedSkills.find((skill) => skill.id === id)?.name ??
+                  "技能",
+              )
+              .join("、"),
+          status: "done",
+        });
       responseModel =
         connections.find((connection) => connection.id === plan.connectionId) ??
         model;
@@ -487,7 +516,7 @@ export default function Workspace(props: WorkspaceProps) {
         const task = await submitAutomaticProduction(
           user.id,
           plan,
-          `${requestText}${skillInstructions}\n\n此前对话供参考：\n${history
+          `${requestText}\n\n此前对话供参考：\n${history
             .slice(-5, -1)
             .map(
               (message) => `${message.role}：${message.content.slice(0, 2000)}`,
@@ -538,7 +567,8 @@ export default function Workspace(props: WorkspaceProps) {
           "/generate/image",
           {
             connectionId: plan.connectionId,
-            prompt: `${requestText}${skillInstructions}\n\n对话参考：\n${history
+            skillIds: plan.skillIds ?? [],
+            prompt: `${requestText}\n\n对话参考：\n${history
               .slice(-4, -1)
               .map((message) => message.content.slice(0, 1500))
               .join("\n")}`.slice(0, 12000),
@@ -589,7 +619,7 @@ export default function Workspace(props: WorkspaceProps) {
       const response = await streamChat(
         {
           connectionId: responseModel.id,
-          ...(activeSkill ? { skillId: activeSkill.id } : {}),
+          skillIds: plan.skillIds ?? [],
           sessionId: updated.id,
           messages: [
             ...updated.messages
@@ -969,7 +999,7 @@ export default function Workspace(props: WorkspaceProps) {
                   }
                 }}
               >
-                {(attachments.length > 0 || activeSkill) && (
+                {(attachments.length > 0 || selectedSkills.length > 0) && (
                   <div className="attachment-row">
                     {attachments.map((a, index) => (
                       <span className="chip attachment-chip" key={index}>
@@ -1003,18 +1033,25 @@ export default function Workspace(props: WorkspaceProps) {
                         </IconButton>
                       </span>
                     ))}
-                    {activeSkill && (
-                      <span className="chip accent">
+                    {selectedSkills.map((skill) => (
+                      <span className="chip accent" key={skill.id}>
                         <Sparkle size={15} />
-                        {activeSkill.name}
+                        {skill.name}
                         <IconButton
-                          label="移除所选技能"
-                          onClick={() => setActiveSkill(null)}
+                          label={`移除技能 ${skill.name}`}
+                          onClick={() =>
+                            patchSettings({
+                              skillMode: "manual",
+                              skillIds: selectedSkillIds.filter(
+                                (id) => id !== skill.id,
+                              ),
+                            })
+                          }
                         >
                           <X size={12} />
                         </IconButton>
                       </span>
-                    )}
+                    ))}
                   </div>
                 )}
                 {reading && (
@@ -1062,13 +1099,16 @@ export default function Workspace(props: WorkspaceProps) {
                   >
                     <Plus size={23} />
                   </IconButton>
-                  <button
-                    className="text-button"
-                    onClick={() => navigate("skills")}
-                  >
-                    <Sparkle size={19} />
-                    技能
-                  </button>
+                  <SkillPicker
+                    skills={installedSkills}
+                    mode={skillMode}
+                    selected={selectedSkillIds}
+                    disabled={busy}
+                    change={(skillMode, skillIds) =>
+                      patchSettings({ skillMode, skillIds })
+                    }
+                    manage={() => navigate("skills")}
+                  />
                   <span
                     className="composer-automatic"
                     title="按需求自动调用对话、图片、视频和代码能力"
@@ -1470,7 +1510,10 @@ export default function Workspace(props: WorkspaceProps) {
                           <div className="inline-actions">
                             <Button
                               onClick={() => {
-                                setActiveSkill(skill);
+                                patchSettings({
+                                  skillMode: "manual",
+                                  skillIds: [skill.id],
+                                });
                                 setConversationId(null);
                                 navigate("chat");
                               }}
@@ -1485,9 +1528,13 @@ export default function Workspace(props: WorkspaceProps) {
                                     installed: s.installed.filter(
                                       (item) => item.id !== skill.id,
                                     ),
+                                    settings: {
+                                      ...s.settings,
+                                      skillIds: (
+                                        s.settings.skillIds ?? []
+                                      ).filter((id) => id !== skill.id),
+                                    },
                                   }));
-                                  if (activeSkill?.id === skill.id)
-                                    setActiveSkill(null);
                                   notify(
                                     "已从本机安装列表移除，公司的共享技能保持可用。",
                                   );

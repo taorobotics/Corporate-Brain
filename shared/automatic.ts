@@ -5,4 +5,5 @@ export type AutomaticPlan = {
   mode: DshMode;
   seconds: number;
   connectionId: string;
+  skillIds?: string[];
 };

@@ -100,5 +100,12 @@ export type LocalState = {
   projects: { id: string; name: string; description: string }[];
   workspaces: LocalWorkspace[];
   activeWorkspaceId: string;
-  settings: { theme: string; skin?: string; model: string; mode: DshMode };
+  settings: {
+    theme: string;
+    skin?: string;
+    model: string;
+    mode: DshMode;
+    skillMode?: "auto" | "manual";
+    skillIds?: string[];
+  };
 };
