@@ -1,0 +1,558 @@
+{
+  "version": "0.21.1",
+  "sourceCommit": "fcc95cb2909db2873bdb355819789ae1fce749a8",
+  "result": "passed",
+  "checkedAt": "2026-11-04T10:15:45.982Z",
+  "changes": [
+    "Admin-only account assignment notes support editing, clearing, search and CSV export without passwords",
+    "Notes are scoped to account administration, excluded from employee profiles/model context and retained across employee self-service changes; note updates preserve active sessions",
+    "Existing company administrator and 220 employee accounts remain; no reprovisioning or password resets",
+    "Public installer distribution permits slower transfers while retaining full size/hash verification and atomic activation"
+  ],
+  "checks": {
+    "windows": {
+      "nodeTests": 103,
+      "pythonNasTests": 5,
+      "typecheck": "passed",
+      "productionBuild": "passed",
+      "desktop": 41,
+      "startup": 9,
+      "profileAndAccounts": 7,
+      "productionUi": 4,
+      "localInstallerUi": 4,
+      "localInstallerScope": "UI only; full native lifecycle verified separately in official CI",
+      "signature": "NotSigned"
+    },
+    "macArm64": {
+      "nodeTests": 103,
+      "pythonNasTests": 5,
+      "typecheck": "passed",
+      "productionBuild": "passed",
+      "desktop": 40,
+      "startup": 9,
+      "profileAndAccounts": 7,
+      "productionUi": 5,
+      "packageMountAndLaunch": "passed",
+      "signing": "ad-hoc",
+      "notarized": false,
+      "actualRender": {
+        "seconds": 3,
+        "frames": 72,
+        "width": 1280,
+        "height": 720,
+        "audio": true
+      }
+    },
+    "actualNoteApi": {
+      "version": "0.21.1",
+      "result": "passed",
+      "existingUsers": 224,
+      "checks": [
+        "Actual company admin can save and clear assignment notes",
+        "Employee session survives admin note edits and cannot read or modify the note",
+        "Note stays attached to stable employee ID after employee renames login",
+        "Temporary fixture removed; all 224 existing users and all managed credentials unchanged"
+      ],
+      "employeeRecordsChanged": false,
+      "productionModelCalls": 0,
+      "checkedAt": "2026-11-04T09:32:52.433Z"
+    },
+    "visualInspection": {
+      "assignmentTableLight": "passed"
+    },
+    "verificationNotes": [
+      "Initial new textarea UI check required the fixture to use HTMLTextAreaElement instead of HTMLInputElement; after the fixture correction all seven actual UI checks passed, including native CSV saving without passwords.",
+      "Prior v0.21.0 public mirror transfer hit the 30-minute workflow limit without changing latest. This version extends the wait and records the real completed mirror workflow; the previous incomplete transfer is not claimed as passed.",
+      "Initial v0.21.1 publication hit GitHub HTTP 500 while replacing draft assets. Controlled publication-only commit 2dee7bc keeps assets with matching size/hash; full builds reran from unchanged product tag fcc95cb. A subsequent GitHub metadata HTTP 500 was resolved by rerunning only failed jobs; all 13 assets were retained and reverified before publication."
+    ],
+    "security": {
+      "stagedSecretsScan": "passed",
+      "fullReachableHistorySecretsScan": "passed",
+      "companyDataIncluded": false,
+      "passwordOrNoteContentsIncluded": false
+    },
+    "productionModelCalls": 0
+  },
+  "deployment": {
+    "url": "https://192.168.20.21:14443",
+    "health": {
+      "status": "ok",
+      "version": "0.21.1",
+      "chatStorage": "device-only"
+    },
+    "consistentBackup": "/Users/staff01/CorporateBrainServer/backups/before-v0.21.1-2026-11-04T09-31-34-639Z",
+    "existingDataPreserved": true,
+    "counts": {
+      "users": 224,
+      "departments": 13,
+      "nas_sources": 14,
+      "skills": 3
+    },
+    "modelSettingsPreserved": true,
+    "modelCredentialsPreserved": true,
+    "loginServicesVerified": true,
+    "tlsVerified": true,
+    "entryAssets": [
+      {
+        "path": "/assets/index-DDdpVDQo.js",
+        "bytes": 970430,
+        "sha256": "71ecf18e1fd98a683d224dc922f607b226c7104fff6c391574dc413316b226a8"
+      },
+      {
+        "path": "/assets/index-D7O7cd1b.css",
+        "bytes": 96734,
+        "sha256": "03a80bd7e62e99df2e4ae29c3f4b5cd3e4823c6597396d95bea5c26af2093fa7"
+      }
+    ],
+    "cloudBusinessServiceChanged": false
+  },
+  "accounts": {
+    "createdInVersion": "0.21.0",
+    "businessDepartments": 11,
+    "employees": 220,
+    "employeesPerDepartment": 20,
+    "companyAdministratorsCreated": 1,
+    "totalUsers": 224,
+    "previousAccountsPreserved": true,
+    "encryptedCredentialsVerified": 220,
+    "actualWindowsLanLogin": true,
+    "passwordLookupVerified": true,
+    "privateCredentialsExcluded": true,
+    "additionalAccountsCreatedInThisPatch": 0
+  },
+  "lanDistribution": {
+    "channels": {
+      "win32-x64": {
+        "name": "Corporate-Brain-Setup-0.21.1-x64.exe",
+        "bytes": 120003915,
+        "sha256": "d6a92423f5fd4e17d8f484c60575928770dce58b5f8aa6d62c5e44220990f616"
+      },
+      "darwin-arm64": {
+        "name": "Corporate-Brain-0.21.1-macOS-arm64.dmg",
+        "bytes": 138648123,
+        "sha256": "1256133c81be01bfeacd180036d586b906b6a4b12024c3f8f7607b45469a8d75"
+      }
+    },
+    "authenticatedCompleteDownloads": [
+      {
+        "platform": "win32-x64",
+        "version": "0.21.1",
+        "bytes": 120003915,
+        "sha256": "d6a92423f5fd4e17d8f484c60575928770dce58b5f8aa6d62c5e44220990f616"
+      },
+      {
+        "platform": "darwin-arm64",
+        "version": "0.21.1",
+        "bytes": 138648123,
+        "sha256": "1256133c81be01bfeacd180036d586b906b6a4b12024c3f8f7607b45469a8d75"
+      }
+    ],
+    "temporaryTestAccountRemoved": true,
+    "existingAccountsUnchanged": true,
+    "installerDefaultCompanyServer": "https://192.168.20.21:14443",
+    "independentlyBuiltFromProductTag": true,
+    "intelMacActivated": false
+  },
+  "artifacts": [
+    {
+      "name": "Corporate-Brain-Setup-0.21.1-x64.exe",
+      "bytes": 120003915,
+      "sha256": "d6a92423f5fd4e17d8f484c60575928770dce58b5f8aa6d62c5e44220990f616"
+    },
+    {
+      "name": "Corporate-Brain-0.21.1-macOS-arm64.dmg",
+      "bytes": 138648123,
+      "sha256": "1256133c81be01bfeacd180036d586b906b6a4b12024c3f8f7607b45469a8d75"
+    },
+    {
+      "name": "Corporate-Brain-Server-0.21.1.zip",
+      "bytes": 22565037,
+      "sha256": "c25e469e73f12bc518bfdaa65f7d4e48fa1f2b19952fae0e563ba35e02d33483"
+    }
+  ],
+  "github": {
+    "status": "passed",
+    "runId": 41810051288,
+    "runUrl": "https://github.com/taorobotics/Corporate-Brain/actions/runs/41810051288",
+    "releaseId": 433735914,
+    "tag": "v0.21.1",
+    "url": "https://github.com/taorobotics/Corporate-Brain/releases/tag/v0.21.1",
+    "draft": false,
+    "publicLatest": "v0.21.1",
+    "productCommit": "fcc95cb2909db2873bdb355819789ae1fce749a8",
+    "verificationToolsCommit": "2dee7bccd1f7ccf2b13b0e588fc8dec096e1ce58",
+    "sourceAndTagPushed": true,
+    "assetsVerified": [
+      {
+        "name": "Corporate-Brain-0.21.1-macOS-arm64.dmg",
+        "bytes": 139854794,
+        "digest": "sha256:d5457125b21e2b9402fb0b8502588edb2b14b85f75f219d33d3c21299c66a383"
+      },
+      {
+        "name": "Corporate-Brain-0.21.1-macOS-x64.dmg",
+        "bytes": 145381147,
+        "digest": "sha256:47330af82e7fc03ba49f0b101b339d9f446c14021e9e94d0c076a73d70121ce9"
+      },
+      {
+        "name": "Corporate-Brain-Server-0.21.1.zip",
+        "bytes": 22590745,
+        "digest": "sha256:7ba33cbf4b88567f61ff45885c8ae19d972417c813d66011d15b9626f86c9465"
+      },
+      {
+        "name": "Corporate-Brain-Setup-0.21.1-x64.exe",
+        "bytes": 120003932,
+        "digest": "sha256:3fb55918f2881fdf3fdc454cadfaa9b5cf1250663501ad07721e3f8db5059409"
+      },
+      {
+        "name": "macos-verification-arm64.json",
+        "bytes": 8201,
+        "digest": "sha256:9580a9d8842df4f66eed771795dc053c4b543b516d92e8c1134161e8eb17e013"
+      },
+      {
+        "name": "macos-verification-x64.json",
+        "bytes": 8197,
+        "digest": "sha256:32c016862dba77cef77eab528612324acee86b605e1e43b0b58124a50726777c"
+      },
+      {
+        "name": "server-verification.json",
+        "bytes": 17026,
+        "digest": "sha256:c0df6a274468d26e2baf7524301bfb726f4728f09247fc0732497d029febe5de"
+      },
+      {
+        "name": "SHA256SUMS-macOS-arm64.txt",
+        "bytes": 105,
+        "digest": "sha256:6f14dc6c74bef8629c29982f9238a636a64bbdb8151e448e23c841d3521a1f7d"
+      },
+      {
+        "name": "SHA256SUMS-macOS-x64.txt",
+        "bytes": 103,
+        "digest": "sha256:0902a6157f17a02ad832260a3747d0d4366073d1ad2a7a5970287adf8bb03e73"
+      },
+      {
+        "name": "SHA256SUMS-Server.txt",
+        "bytes": 100,
+        "digest": "sha256:8343b2d3561b389bc3f89f80ad98e2e8eb842ca2c77f6f5a679f41f02f9e927b"
+      },
+      {
+        "name": "SHA256SUMS-Windows-x64.txt",
+        "bytes": 103,
+        "digest": "sha256:6003b4ffe15ab4385622fa9ebfcff2f7aa53fb8a8fb64d42af4bea74feb14061"
+      },
+      {
+        "name": "SHA256SUMS.txt",
+        "bytes": 411,
+        "digest": "sha256:d176759eee91437995de8b265c899fd1315616dd11ec37f19402e0fdf99874ff"
+      },
+      {
+        "name": "windows-verification-x64.json",
+        "bytes": 10814,
+        "digest": "sha256:7200fa08d1e07d1a296d69f5edc052443c22bb69f53dafca9e36ad51a62dfb12"
+      }
+    ],
+    "installersAndServer": [
+      {
+        "name": "Corporate-Brain-Setup-0.21.1-x64.exe",
+        "bytes": 120003932,
+        "sha256": "3fb55918f2881fdf3fdc454cadfaa9b5cf1250663501ad07721e3f8db5059409"
+      },
+      {
+        "name": "Corporate-Brain-0.21.1-macOS-arm64.dmg",
+        "bytes": 139854794,
+        "sha256": "d5457125b21e2b9402fb0b8502588edb2b14b85f75f219d33d3c21299c66a383"
+      },
+      {
+        "name": "Corporate-Brain-0.21.1-macOS-x64.dmg",
+        "bytes": 145381147,
+        "sha256": "47330af82e7fc03ba49f0b101b339d9f446c14021e9e94d0c076a73d70121ce9"
+      },
+      {
+        "name": "Corporate-Brain-Server-0.21.1.zip",
+        "bytes": 22590745,
+        "sha256": "7ba33cbf4b88567f61ff45885c8ae19d972417c813d66011d15b9626f86c9465"
+      }
+    ],
+    "windows": {
+      "realInstallUpgradeUninstall": true,
+      "lifecycleChecks": 17,
+      "handoffChecks": 5,
+      "signature": "NotSigned",
+      "physicalEmployeeDeviceTested": false
+    },
+    "macPlatforms": [
+      {
+        "architecture": "arm64",
+        "packageMountAndLaunch": "passed",
+        "desktopChecks": 40,
+        "signing": "ad-hoc",
+        "notarized": false
+      },
+      {
+        "architecture": "x64",
+        "packageMountAndLaunch": "passed",
+        "desktopChecks": 40,
+        "signing": "ad-hoc",
+        "notarized": false
+      }
+    ],
+    "distribution": {
+      "status": "completed",
+      "conclusion": "success",
+      "url": "https://github.com/taorobotics/Corporate-Brain/actions/runs/41810051288/job/126510974325"
+    },
+    "checkedAt": "2026-11-04T10:15:03.649Z"
+  },
+  "cloudMirror": {
+    "version": "0.21.1",
+    "result": "passed",
+    "assets": [
+      {
+        "target": "win32-x64",
+        "name": "Corporate-Brain-Setup-0.21.1-x64.exe",
+        "bytes": 120003932,
+        "sha256": "3fb55918f2881fdf3fdc454cadfaa9b5cf1250663501ad07721e3f8db5059409"
+      },
+      {
+        "target": "darwin-arm64",
+        "name": "Corporate-Brain-0.21.1-macOS-arm64.dmg",
+        "bytes": 139854794,
+        "sha256": "d5457125b21e2b9402fb0b8502588edb2b14b85f75f219d33d3c21299c66a383"
+      },
+      {
+        "target": "darwin-x64",
+        "name": "Corporate-Brain-0.21.1-macOS-x64.dmg",
+        "bytes": 145381147,
+        "sha256": "47330af82e7fc03ba49f0b101b339d9f446c14021e9e94d0c076a73d70121ce9"
+      }
+    ],
+    "checkedAt": "2026-11-04T10:15:05.760Z"
+  },
+  "additionalWorkflows": [
+    {
+      "conclusion": "success",
+      "databaseId": 41807408152,
+      "headSha": "fcc95cb2909db2873bdb355819789ae1fce749a8",
+      "jobs": [
+        {
+          "completedAt": "2026-11-04T09:25:55Z",
+          "conclusion": "success",
+          "databaseId": 126497761371,
+          "name": "secrets",
+          "startedAt": "2026-11-04T09:25:45Z",
+          "status": "completed",
+          "steps": [
+            {
+              "completedAt": "2026-11-04T09:25:46Z",
+              "conclusion": "success",
+              "name": "Set up job",
+              "number": 1,
+              "startedAt": "2026-11-04T09:25:46Z",
+              "status": "completed"
+            },
+            {
+              "completedAt": "2026-11-04T09:25:51Z",
+              "conclusion": "success",
+              "name": "Run actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09",
+              "number": 2,
+              "startedAt": "2026-11-04T09:25:46Z",
+              "status": "completed"
+            },
+            {
+              "completedAt": "2026-11-04T09:25:51Z",
+              "conclusion": "success",
+              "name": "Install checksum-pinned Gitleaks CLI",
+              "number": 3,
+              "startedAt": "2026-11-04T09:25:51Z",
+              "status": "completed"
+            },
+            {
+              "completedAt": "2026-11-04T09:25:52Z",
+              "conclusion": "success",
+              "name": "Scan complete reachable Git history with redacted output",
+              "number": 4,
+              "startedAt": "2026-11-04T09:25:51Z",
+              "status": "completed"
+            },
+            {
+              "completedAt": "2026-11-04T09:25:52Z",
+              "conclusion": "success",
+              "name": "Reject tracked company data and signing credentials",
+              "number": 5,
+              "startedAt": "2026-11-04T09:25:52Z",
+              "status": "completed"
+            },
+            {
+              "completedAt": "2026-11-04T09:25:52Z",
+              "conclusion": "success",
+              "name": "Post Run actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09",
+              "number": 10,
+              "startedAt": "2026-11-04T09:25:52Z",
+              "status": "completed"
+            },
+            {
+              "completedAt": "2026-11-04T09:25:52Z",
+              "conclusion": "success",
+              "name": "Complete job",
+              "number": 11,
+              "startedAt": "2026-11-04T09:25:52Z",
+              "status": "completed"
+            }
+          ],
+          "url": "https://github.com/taorobotics/Corporate-Brain/actions/runs/41807408152/job/126497761371"
+        }
+      ],
+      "status": "completed",
+      "url": "https://github.com/taorobotics/Corporate-Brain/actions/runs/41807408152"
+    },
+    {
+      "conclusion": "success",
+      "databaseId": 41807408046,
+      "headSha": "fcc95cb2909db2873bdb355819789ae1fce749a8",
+      "jobs": [
+        {
+          "completedAt": "2026-11-04T09:32:06Z",
+          "conclusion": "success",
+          "databaseId": 126497761585,
+          "name": "installer",
+          "startedAt": "2026-11-04T09:25:45Z",
+          "status": "completed",
+          "steps": [
+            {
+              "completedAt": "2026-11-04T09:25:46Z",
+              "conclusion": "success",
+              "name": "Set up job",
+              "number": 1,
+              "startedAt": "2026-11-04T09:25:46Z",
+              "status": "completed"
+            },
+            {
+              "completedAt": "2026-11-04T09:25:55Z",
+              "conclusion": "success",
+              "name": "Run actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09",
+              "number": 2,
+              "startedAt": "2026-11-04T09:25:46Z",
+              "status": "completed"
+            },
+            {
+              "completedAt": "2026-11-04T09:26:01Z",
+              "conclusion": "success",
+              "name": "Run actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444",
+              "number": 3,
+              "startedAt": "2026-11-04T09:25:55Z",
+              "status": "completed"
+            },
+            {
+              "completedAt": "2026-11-04T09:26:51Z",
+              "conclusion": "success",
+              "name": "Run npm ci",
+              "number": 4,
+              "startedAt": "2026-11-04T09:26:01Z",
+              "status": "completed"
+            },
+            {
+              "completedAt": "2026-11-04T09:27:31Z",
+              "conclusion": "success",
+              "name": "Run npm test",
+              "number": 5,
+              "startedAt": "2026-11-04T09:26:51Z",
+              "status": "completed"
+            },
+            {
+              "completedAt": "2026-11-04T09:27:36Z",
+              "conclusion": "success",
+              "name": "Run npm run build",
+              "number": 6,
+              "startedAt": "2026-11-04T09:27:31Z",
+              "status": "completed"
+            },
+            {
+              "completedAt": "2026-11-04T09:28:43Z",
+              "conclusion": "success",
+              "name": "Run npm run test:desktop",
+              "number": 7,
+              "startedAt": "2026-11-04T09:27:36Z",
+              "status": "completed"
+            },
+            {
+              "completedAt": "2026-11-04T09:29:50Z",
+              "conclusion": "success",
+              "name": "Run node scripts/package-desktop.mjs --win nsis --x64 --publish never",
+              "number": 8,
+              "startedAt": "2026-11-04T09:28:43Z",
+              "status": "completed"
+            },
+            {
+              "completedAt": "2026-11-04T09:29:55Z",
+              "conclusion": "success",
+              "name": "Fetch pinned prior release for a real upgrade test",
+              "number": 9,
+              "startedAt": "2026-11-04T09:29:50Z",
+              "status": "completed"
+            },
+            {
+              "completedAt": "2026-11-04T09:30:18Z",
+              "conclusion": "success",
+              "name": "Verify isolated native updater handoff",
+              "number": 10,
+              "startedAt": "2026-11-04T09:29:55Z",
+              "status": "completed"
+            },
+            {
+              "completedAt": "2026-11-04T09:31:50Z",
+              "conclusion": "success",
+              "name": "Install, cancel, upgrade, launch and uninstall on the disposable runner",
+              "number": 11,
+              "startedAt": "2026-11-04T09:30:18Z",
+              "status": "completed"
+            },
+            {
+              "completedAt": "2026-11-04T09:31:55Z",
+              "conclusion": "success",
+              "name": "Run node scripts/verify-windows-package.mjs",
+              "number": 12,
+              "startedAt": "2026-11-04T09:31:50Z",
+              "status": "completed"
+            },
+            {
+              "completedAt": "2026-11-04T09:31:56Z",
+              "conclusion": "success",
+              "name": "Save real native diagnostics",
+              "number": 13,
+              "startedAt": "2026-11-04T09:31:55Z",
+              "status": "completed"
+            },
+            {
+              "completedAt": "2026-11-04T09:32:02Z",
+              "conclusion": "success",
+              "name": "Post Run actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444",
+              "number": 25,
+              "startedAt": "2026-11-04T09:31:56Z",
+              "status": "completed"
+            },
+            {
+              "completedAt": "2026-11-04T09:32:05Z",
+              "conclusion": "success",
+              "name": "Post Run actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09",
+              "number": 26,
+              "startedAt": "2026-11-04T09:32:02Z",
+              "status": "completed"
+            },
+            {
+              "completedAt": "2026-11-04T09:32:05Z",
+              "conclusion": "success",
+              "name": "Complete job",
+              "number": 27,
+              "startedAt": "2026-11-04T09:32:05Z",
+              "status": "completed"
+            }
+          ],
+          "url": "https://github.com/taorobotics/Corporate-Brain/actions/runs/41807408046/job/126497761585"
+        }
+      ],
+      "status": "completed",
+      "url": "https://github.com/taorobotics/Corporate-Brain/actions/runs/41807408046"
+    }
+  ],
+  "evidenceDirectory": "release/macmini-v0211/evidence",
+  "writeBoundary": "Project directory and previously authorized project LaunchAgents only",
+  "userDesignDirectoryUnchanged": true
+}
