@@ -109,30 +109,23 @@ const wait = async (fn, label, ms = 45000) => {
           m.content.includes("Synthetic project brief"),
         ),
       );
+      res.writeHead(200, { "Content-Type": "text/event-stream" });
+      res.write(
+        `data: ${JSON.stringify({ choices: [{ delta: { reasoning_content: "合成模型正在核对实际文件结构。" } }] })}\n\n`,
+      );
       await generationGate;
       await new Promise((r) => setTimeout(r, 300));
-      res.writeHead(200, { "Content-Type": "application/json" });
+      const content = JSON.stringify({
+        files: [
+          { path: "README.md", content: "Synthetic output instructions." },
+          {
+            path: "src/index.html",
+            content: "<!doctype html><h1>Company Brain</h1>",
+          },
+        ],
+      });
       res.end(
-        JSON.stringify({
-          choices: [
-            {
-              message: {
-                content: JSON.stringify({
-                  files: [
-                    {
-                      path: "README.md",
-                      content: "Synthetic output instructions.",
-                    },
-                    {
-                      path: "src/index.html",
-                      content: "<!doctype html><h1>Company Brain</h1>",
-                    },
-                  ],
-                }),
-              },
-            },
-          ],
-        }),
+        `data: ${JSON.stringify({ choices: [{ delta: { content }, finish_reason: "stop" }] })}\n\ndata: [DONE]\n\n`,
       );
     });
     provider.listen(0, "127.0.0.1");
@@ -260,21 +253,39 @@ const wait = async (fn, label, ms = 45000) => {
     await wait(
       () =>
         js(
-          `document.querySelector('.chat-production [data-step="generate"]')?.dataset.state==='running'`,
+          `document.querySelector('.chat-production .reasoning-text')?.textContent.includes('合成模型正在核对实际文件结构')`,
         ),
       "actual generation step",
     );
     assert.equal(
       await js(
-        `document.querySelector('.chat-production [data-step="save"]').dataset.state`,
+        `!!document.querySelector('.chat-production .workflow-plan, .chat-production progress, .chat-production .workflow-heading')`,
       ),
-      "pending",
+      false,
     );
     assert.equal(
       await js(
-        `document.querySelector('.message.assistant')?.textContent.includes('响应完成')`,
+        `document.querySelector('.chat-production .message-markdown')?.textContent.includes('合成任务执行计划')`,
+      ),
+      true,
+    );
+    assert.equal(
+      await js(
+        `document.querySelector('.chat-production .thinking-process')?.dataset.status`,
+      ),
+      "running",
+    );
+    assert.equal(
+      await js(
+        `[...document.querySelectorAll('.chat-production .thinking-tool-title')].some(x=>x.textContent.includes('保存到本机'))`,
       ),
       false,
+    );
+    await fs.writeFile(
+      "artifacts/workflow-chat-running.png",
+      (
+        await web.capturePage(undefined, { stayHidden: true, stayAwake: true })
+      ).toPNG(),
     );
     releaseGeneration();
     await wait(
@@ -287,9 +298,15 @@ const wait = async (fn, label, ms = 45000) => {
     );
     assert.equal(
       await js(
-        `document.querySelectorAll('.chat-production [data-state="done"]').length`,
+        `document.querySelector('.chat-production .thinking-process')?.dataset.status`,
       ),
-      5,
+      "done",
+    );
+    assert.equal(
+      await js(
+        `document.querySelector('.message.assistant .message-markdown')?.textContent.includes('合成任务执行计划')`,
+      ),
+      true,
     );
     const local = await js(
       `window.brainDesktop.production.state(${JSON.stringify(user.id)})`,
@@ -325,7 +342,7 @@ const wait = async (fn, label, ms = 45000) => {
       ).toPNG(),
     );
     checks.push(
-      "Chat-only entry shows five persisted execution stages; save stays pending until complete native receipt, then all files including plan and materials match SHA-256 and server files are gone",
+      "Same chat renderer shows real streamed model reasoning and its reply without a stage panel or progress card; completion waits for the native receipt and all files match SHA-256 before server cleanup",
     );
     checks.push(
       "Source preview reads the saved local receipt through the restricted native bridge without executing code",
@@ -353,8 +370,28 @@ const wait = async (fn, label, ms = 45000) => {
         ),
       "original conversation persists result",
     );
+    await wait(
+      () =>
+        js(
+          `window.brainDesktop.readState(${JSON.stringify(user.id)}).then(state => state.conversations.some(c => c.messages.some(m => m.content.includes('合成任务执行计划') && m.trace?.items.some(item => item.type==='reasoning' && item.text.includes('合成模型正在核对实际文件结构')))))`,
+        ),
+      "actual model reply and reasoning persist on employee device",
+    );
+    web.reload();
+    await wait(
+      () => js(`!!document.querySelector('[data-history-title]')`),
+      "local conversation history after reload",
+    );
+    await js(`document.querySelector('[data-history-title]').click();true`);
+    await wait(
+      () =>
+        js(
+          `document.querySelector('.chat-production .message-markdown')?.textContent.includes('合成任务执行计划') && document.querySelector('.chat-production .reasoning-text')?.textContent.includes('合成模型正在核对实际文件结构')`,
+        ),
+      "ordinary reply and actual reasoning survive reload",
+    );
     checks.push(
-      "Settings keep output directory; My Works and returning to original conversation show the same result without a separate production form",
+      "Settings keep output directory; My Works and original conversation share the same result, actual model reply and reasoning persist on the employee device and survive reload",
     );
     await click("新建任务");
     await fill(
@@ -373,15 +410,21 @@ const wait = async (fn, label, ms = 45000) => {
     );
     assert.equal(
       await js(
-        `document.querySelector('.chat-production [data-step="generate"]').dataset.state`,
+        `document.querySelector('.chat-production .thinking-process')?.dataset.status`,
       ),
-      "failed",
+      "error",
     );
     assert.equal(
       await js(
-        `document.querySelector('.chat-production [data-step="render"]').dataset.state`,
+        `[...document.querySelectorAll('.chat-production .tool-entry')].some(x=>x.dataset.toolStatus==='error')`,
       ),
-      "pending",
+      true,
+    );
+    assert.equal(
+      await js(
+        `[...document.querySelectorAll('.chat-production .thinking-tool-title')].some(x=>x.textContent.includes('检查源文件'))`,
+      ),
+      false,
     );
     await fs.writeFile(
       "artifacts/workflow-chat-failure.png",

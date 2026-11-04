@@ -228,3 +228,15 @@
     transition: none;
   }
 }
+.thinking-tool-detail {
+  margin-top: 6px;
+  font-size: 12px;
+  color: var(--muted);
+}
+.thinking-tool-detail summary {
+  cursor: pointer;
+}
+.thinking-tool-detail p {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}

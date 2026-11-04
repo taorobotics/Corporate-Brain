@@ -2,99 +2,6 @@
   max-width: 1320px;
   margin: auto;
 }
-.workflow-heading {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 16px;
-}
-.workflow-state {
-  font-size: 12px;
-  color: var(--muted);
-}
-.workflow-state.is-active {
-  color: var(--accent);
-}
-.workflow-plan {
-  margin-top: 18px;
-}
-.workflow-plan > summary {
-  padding: 10px 12px;
-  background: var(--surface, var(--bg));
-  border-radius: 9px;
-  cursor: pointer;
-  font-size: 14px;
-}
-.workflow-plan > summary span {
-  float: right;
-  color: var(--muted);
-  font-size: 12px;
-}
-.workflow-plan ol {
-  list-style: none;
-  padding: 4px 0;
-  margin: 0;
-}
-.workflow-plan li {
-  display: flex;
-  gap: 12px;
-  position: relative;
-  padding: 12px 0;
-  align-items: flex-start;
-}
-.workflow-plan li > div {
-  flex: 1;
-  min-width: 0;
-}
-.workflow-plan li strong {
-  font-size: 14px;
-  font-weight: 500;
-}
-.workflow-plan li > small {
-  white-space: nowrap;
-  font-size: 11px;
-  padding-top: 3px;
-}
-.workflow-dot {
-  width: 21px;
-  height: 21px;
-  flex: 0 0 21px;
-  display: grid;
-  place-items: center;
-  border: 1.5px solid var(--line);
-  border-radius: 50%;
-  font-size: 12px;
-  color: var(--muted);
-}
-.workflow-plan li[data-state="done"] .workflow-dot {
-  color: #278351;
-  background: #27835115;
-  border-color: #27835155;
-}
-.workflow-plan li[data-state="running"] .workflow-dot {
-  border-color: var(--accent);
-  border-top-color: transparent;
-}
-.workflow-plan li[data-state="running"] strong {
-  color: var(--accent);
-}
-.workflow-plan li[data-state="failed"] .workflow-dot {
-  color: #d24b40;
-  border-color: #d24b40;
-}
-.workflow-detail summary {
-  cursor: pointer;
-  color: var(--muted);
-  font-size: 12px;
-  margin-top: 6px;
-}
-.workflow-detail p {
-  white-space: pre-wrap;
-  overflow-wrap: anywhere;
-  line-height: 1.7;
-  font-size: 13px;
-  color: var(--muted);
-}
 .workflow-files {
   margin-top: 16px;
   font-size: 13px;
@@ -148,16 +55,6 @@
   overflow: auto;
   tab-size: 2;
   background: var(--bg);
-}
-@media (prefers-reduced-motion: no-preference) {
-  .workflow-plan li[data-state="running"] .workflow-dot {
-    animation: workflow-spin 1s linear infinite;
-  }
-}
-@keyframes workflow-spin {
-  to {
-    transform: rotate(360deg);
-  }
 }
 .production-heading,
 .production-section-heading {

@@ -18,11 +18,14 @@ export function chatUsage(value: any): ChatUsage | undefined {
 export async function readChatResponse(
   response: Response,
   emit: (event: ChatProgress) => void,
+  options: { contentLimit?: number; allowEmpty?: boolean } = {},
 ) {
   let content = "",
-    usage: ChatUsage | undefined;
+    usage: ChatUsage | undefined,
+    finishReason: string | undefined;
   const consume = (value: any, full = false) => {
     if (value.error) throw new Error("模型响应中断，请稍后重试");
+    finishReason = value.choices?.[0]?.finish_reason ?? finishReason;
     const delta = full
       ? value.choices?.[0]?.message
       : value.choices?.[0]?.delta;
@@ -37,7 +40,7 @@ export async function readChatResponse(
     if (typeof delta?.content === "string") {
       content = (full ? delta.content : content + delta.content).slice(
         0,
-        160_000,
+        options.contentLimit ?? 160_000,
       );
       emit({ type: "text", text: content });
     }
@@ -88,6 +91,7 @@ export async function readChatResponse(
       reader.releaseLock();
     }
   }
-  if (!content.trim()) throw new Error("模型未返回可显示的文本");
-  return { content, usage };
+  if (!content.trim() && !options.allowEmpty)
+    throw new Error("模型未返回可显示的文本");
+  return { content, usage, finishReason };
 }

@@ -6,6 +6,7 @@ export type TraceItem =
       id: string;
       name: string;
       status: "running" | "done" | "error" | "stopped";
+      detail?: string;
       sources?: ChatSource[];
     };
 export type ChatTrace = {
@@ -98,6 +99,9 @@ export function updateTrace(
       id: event.id,
       name: event.name.slice(0, 100),
       status: event.status,
+      ...(typeof event.detail === "string"
+        ? { detail: event.detail.slice(0, 3000) }
+        : {}),
       sources: safeSources(event.sources),
     };
   }

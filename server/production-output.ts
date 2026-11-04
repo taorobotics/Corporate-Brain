@@ -35,11 +35,8 @@ export function productionCompletionBody(
   return {
     model,
     messages,
-    stream: false,
+    stream: true,
     max_tokens: 12000,
-    ...(model.toLowerCase().startsWith("deepseek")
-      ? { thinking: { type: "disabled" } }
-      : {}),
   };
 }
 export function productionCompletionText(result: any) {

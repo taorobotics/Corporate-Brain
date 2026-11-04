@@ -145,6 +145,12 @@ export function ThinkingProcess({
                         )}
                       </span>
                     </div>
+                    {item.detail && (
+                      <details className="thinking-tool-detail">
+                        <summary>查看内容</summary>
+                        <p>{item.detail}</p>
+                      </details>
+                    )}
                     {!!item.sources?.length && (
                       <div className="thinking-sources">
                         {item.sources.map((source) => (

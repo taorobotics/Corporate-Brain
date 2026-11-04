@@ -84,6 +84,7 @@ export type ProductionOptions = {
     connectionId: string,
     messages: { role: string; content: string }[],
     signal: AbortSignal,
+    reasoning?: (text: string, append?: boolean) => void,
   ) => Promise<string>;
   authorize: (owner: string, connectionId: string) => void;
   skillContext?: (owner: string, ids: string[]) => Promise<string>;
@@ -452,6 +453,46 @@ export class ProductionQueue {
               job.owner,
               data.skillIds ?? [],
             )) ?? "";
+          const generate = async (
+            messages: { role: string; content: string }[],
+            stepId: ProductionStep["id"],
+          ) => {
+            let reasoning = "",
+              writtenAt = 0;
+            const write = () => {
+              if (!reasoning || signal.aborted) return;
+              const steps: ProductionStep[] = JSON.parse(
+                this.job(job.id, job.owner).workflow,
+              );
+              const step = steps.find((item) => item.id === stepId)!;
+              step.reasoning = reasoning;
+              this.db
+                .prepare(
+                  "UPDATE production_tasks SET workflow=?,updatedAt=? WHERE id=?",
+                )
+                .run(JSON.stringify(steps), new Date().toISOString(), job.id);
+            };
+            try {
+              return await this.options.generate(
+                job.owner,
+                data.connectionId,
+                messages,
+                signal,
+                (text, append) => {
+                  reasoning = ((append ? reasoning : "") + text).slice(
+                    0,
+                    80_000,
+                  );
+                  if (Date.now() - writtenAt >= 250) {
+                    write();
+                    writtenAt = Date.now();
+                  }
+                },
+              );
+            } finally {
+              write();
+            }
+          };
           this.set(job.id, "planning", 2);
           this.step(job.id, "plan");
           const materials = [];
@@ -468,9 +509,7 @@ export class ProductionQueue {
               ).slice(0, 12000);
             materials.push({ name: input.name, size: input.size, content });
           }
-          const planAnswer = await this.options.generate(
-            job.owner,
-            data.connectionId,
+          const planAnswer = await generate(
             [
               {
                 role: "system",
@@ -488,7 +527,7 @@ export class ProductionQueue {
                 }),
               },
             ],
-            signal,
+            "plan",
           );
           signal.throwIfAborted();
           const planResult = z
@@ -530,12 +569,7 @@ export class ProductionQueue {
                 : "按执行计划生成完整源代码",
             );
             try {
-              const answer = await this.options.generate(
-                job.owner,
-                data.connectionId,
-                messages,
-                signal,
-              );
+              const answer = await generate(messages, "generate");
               signal.throwIfAborted();
               const parsed = parseProductionOutput(answer);
               await rm(join(dir, "code"), { recursive: true, force: true });

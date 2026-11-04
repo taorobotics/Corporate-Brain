@@ -268,6 +268,7 @@ test("provider stream handles split UTF-8, CRLF, reasoning, text and usage", asy
   );
   assert.equal(result.content, "结果正确。");
   assert.equal(result.usage?.totalTokens, 20);
+  assert.equal(result.finishReason, "stop");
   const items = events.reduce<TraceItem[]>(updateTrace, []);
   assert.deepEqual(items, [
     { type: "reasoning", id: "direct-reasoning", text: "先比较。再检查。" },

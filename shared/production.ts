@@ -19,6 +19,7 @@ export type ProductionStep = {
   detail?: string;
   startedAt?: string;
   completedAt?: string;
+  reasoning?: string;
 };
 export function productionSteps(kind: ProductionKind): ProductionStep[] {
   return [

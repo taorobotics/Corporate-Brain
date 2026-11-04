@@ -1,5 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
+import { readChatResponse } from "./chat-stream";
 import {
   parseProductionOutput,
   validateAnimation,
@@ -7,17 +8,16 @@ import {
   productionCompletionText,
 } from "./production-output";
 
-test("DeepSeek production requests disable thinking and reject a truncated response even when JSON parses", () => {
-  assert.deepEqual(productionCompletionBody("deepseek-flash", []).thinking, {
-    type: "disabled",
-  });
-  assert.deepEqual(productionCompletionBody("deepseek-v4-pro", []).thinking, {
-    type: "disabled",
-  });
-  assert.equal(
-    productionCompletionBody("another-provider", []).thinking,
-    undefined,
-  );
+test("production requests stream using provider thinking defaults and reject truncated output even when JSON parses", () => {
+  for (const model of [
+    "deepseek-flash",
+    "deepseek-v4-pro",
+    "another-provider",
+  ]) {
+    const body = productionCompletionBody(model, []);
+    assert.equal(body.stream, true);
+    assert.equal("thinking" in body, false);
+  }
   assert.throws(
     () =>
       productionCompletionText({
@@ -53,4 +53,38 @@ test("animation validation catches broken JSON and syntax without executing gene
     source,
   );
   assert.equal((globalThis as any).__productionMustNotRun, undefined);
+});
+
+test("streamed reasoning-only truncation reaches production validation and remains retryable", async () => {
+  const events: unknown[] = [];
+  const result = await readChatResponse(
+    Response.json({
+      choices: [
+        {
+          finish_reason: "length",
+          message: { reasoning_content: "实际模型思考", content: "" },
+        },
+      ],
+    }),
+    (event) => events.push(event),
+    { allowEmpty: true },
+  );
+  assert.deepEqual(events[0], {
+    type: "reasoning",
+    id: "direct-reasoning",
+    text: "实际模型思考",
+    append: false,
+  });
+  assert.throws(
+    () =>
+      productionCompletionText({
+        choices: [
+          {
+            finish_reason: result.finishReason,
+            message: { content: result.content },
+          },
+        ],
+      }),
+    /截断/,
+  );
 });

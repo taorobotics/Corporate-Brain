@@ -16,6 +16,8 @@ import { ProductionQueue, safeProductionPath } from "./production";
 import { createPlatform } from "./platform";
 import { createServer } from "node:http";
 import { once } from "node:events";
+import { productionReply, productionOutcome } from "../shared/production-reply";
+import type { Message } from "../shared/types";
 
 async function fixture(
   t: { after: (fn: () => Promise<void>) => void },
@@ -81,6 +83,67 @@ async function fixture(
     done,
   };
 }
+test("production exposes supplied reasoning before completion and stores ordinary replies without future steps or fabricated thoughts", async (t) => {
+  let release!: () => void;
+  const gate = new Promise<void>((resolve) => {
+    release = resolve;
+  });
+  t.after(() => release());
+  const { queue, owner, create, done } = await fixture(t, async (...args) => {
+    args[4]("实际模型思考", true);
+    await gate;
+    return JSON.stringify({
+      files: [{ path: "README.md", content: "source" }],
+    });
+  });
+  const task = await create();
+  await queue.start(owner, task.id);
+  let running;
+  for (let i = 0; i < 100; i++) {
+    running = queue.list(owner).find((item) => item.id === task.id)!;
+    if (running.steps?.some((step) => step.reasoning)) break;
+    await new Promise((resolve) => setTimeout(resolve, 10));
+  }
+  const message: Message = {
+    id: "reply",
+    role: "assistant",
+    content: "",
+    productionTaskId: task.id,
+    at: task.createdAt,
+  };
+  const reply = productionReply(message, running);
+  assert.ok(
+    reply.trace!.items.some(
+      (item) => item.type === "reasoning" && item.text === "实际模型思考",
+    ),
+  );
+  assert.ok(reply.content.includes("合成执行计划"));
+  assert.equal(
+    reply.trace!.items.some(
+      (item) => item.type === "tool" && item.name.includes("保存"),
+    ),
+    false,
+  );
+  assert.equal(
+    reply.trace!.items.filter((item) => item.type === "reasoning").length,
+    1,
+  );
+  assert.deepEqual(productionReply(reply), reply);
+  assert.deepEqual(productionReply(reply, running), reply);
+  release();
+  const ready = await done(task.id);
+  assert.equal(ready.status, "ready");
+  const plain = productionReply(message, {
+    ...ready,
+    steps: ready.steps?.map(({ reasoning, ...step }) => step),
+  });
+  assert.equal(
+    plain.trace!.items.some((item) => item.type === "reasoning"),
+    false,
+  );
+  assert.equal(productionOutcome(ready), "等待保存到本机");
+});
+
 test("source and materials stay until complete matching receipt; owner/device isolation and idempotent deletion", async (t) => {
   const { queue, owner, other, deviceId, create, done, root, db } =
     await fixture(t);

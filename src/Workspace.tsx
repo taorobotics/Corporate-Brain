@@ -36,6 +36,7 @@ import {
   ProductionWorks,
 } from "./Production";
 import { submitAutomaticProduction } from "./automatic";
+import { productionReply } from "../shared/production-reply";
 import type { AutomaticPlan } from "../shared/automatic";
 import type { WorkspaceProps } from "./App";
 import type {
@@ -143,6 +144,29 @@ export default function Workspace(props: WorkspaceProps) {
       fileRead.current?.abort();
     };
   }, []);
+  useEffect(() => {
+    setState((current) => {
+      let changed = false;
+      const conversations = current.conversations.map((conversation) => ({
+        ...conversation,
+        messages: conversation.messages.map((message) => {
+          if (!message.productionTaskId) return message;
+          const task = props.production.tasks.find(
+            (task) => task.id === message.productionTaskId,
+          );
+          const reply = productionReply(message, task);
+          if (
+            reply.content === message.content &&
+            JSON.stringify(reply.trace) === JSON.stringify(message.trace)
+          )
+            return message;
+          changed = true;
+          return reply;
+        }),
+      }));
+      return changed ? { ...current, conversations } : current;
+    });
+  }, [props.production.tasks, setState]);
   const conversation = state.conversations.find((c) => c.id === conversationId);
   const taskModels = connections.filter((c) => c.enabled && c.kind === "chat");
   const model =
@@ -499,18 +523,7 @@ export default function Workspace(props: WorkspaceProps) {
           },
         );
         productionTaskId = task.id;
-        progress({
-          type: "tool",
-          id: task.id,
-          name: plan.kind === "video" ? "Mac mini 视频制作" : "生成代码文件",
-          status: "running",
-        });
-        saveReply(
-          plan.kind === "video"
-            ? "视频制作任务已提交。Mac mini 完成后，视频、素材和源代码会自动保存到这台电脑。"
-            : "代码制作任务已提交，完成后会自动保存到这台电脑。",
-          "done",
-        );
+        saveReply("", "done");
         await props.production.refresh();
         return;
       }
@@ -850,6 +863,7 @@ export default function Workspace(props: WorkspaceProps) {
                         <ChatProduction
                           id={message.productionTaskId}
                           controller={props.production}
+                          message={message}
                         />
                       )}
                       {!!message.attachments?.length && (

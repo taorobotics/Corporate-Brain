@@ -915,7 +915,7 @@ export function createPlatform(
         fail(403, "员工账号当前不可用");
       getConnection(connectionId, userView(row), "chat");
     },
-    async generate(owner, connectionId, messages, signal) {
+    async generate(owner, connectionId, messages, signal, reasoning) {
       const actor = userById(owner);
       if (
         !actor ||
@@ -940,8 +940,21 @@ export function createPlatform(
           502,
           `模型服务返回 ${response.status}，请检查模型配置或余额`,
         );
-      const result = (await response.json()) as Row;
-      const content = productionCompletionText(result);
+      const result = await readChatResponse(
+        response,
+        (event) => {
+          if (event.type === "reasoning") reasoning?.(event.text, event.append);
+        },
+        { contentLimit: 5_000_001, allowEmpty: true },
+      );
+      const content = productionCompletionText({
+        choices: [
+          {
+            finish_reason: result.finishReason,
+            message: { content: result.content },
+          },
+        ],
+      });
       store.audit(owner, "production.generated", connectionId);
       return content;
     },

@@ -1,8 +1,10 @@
 import { useEffect, useRef, useState } from "react";
 import { FolderOpen, ArrowClockwise } from "@phosphor-icons/react";
-import type { User } from "../shared/types";
+import type { User, Message } from "../shared/types";
 import type { ProductionTask, ProductionLocal } from "../shared/production";
-import { PRODUCTION_STATUS, productionSteps } from "../shared/production";
+import { productionReply, productionOutcome } from "../shared/production-reply";
+import { ThinkingProcess } from "./ChatLoading";
+import MessageContent from "./MessageContent";
 import { Button, Modal } from "./components";
 import { api } from "./api";
 import "./production.css";
@@ -115,9 +117,11 @@ export type ProductionController = ReturnType<typeof useProduction>;
 export function ChatProduction({
   id,
   controller,
+  message,
 }: {
   id: string;
   controller: ProductionController;
+  message?: Message;
 }) {
   const [cancel, setCancel] = useState(false);
   const [preview, setPreview] = useState<{
@@ -138,20 +142,21 @@ export function ChatProduction({
   const status = task?.status ?? (receipt ? "saved" : undefined);
   const saving = controller.saving === id;
   const terminal = status && ["saved", "failed", "cancelled"].includes(status);
-  const steps = (
-    task?.steps?.length
-      ? task.steps
-      : productionSteps(task?.kind ?? "code").map((step) =>
-          status === "saved" ? { ...step, status: "done" as const } : step,
-        )
-  ).map((step) =>
-    step.id === "save" && saving
-      ? {
-          ...step,
-          status: "running" as const,
-          detail: "下载所有成果并逐个校验 SHA-256",
-        }
-      : step,
+  const [now, setNow] = useState(Date.now());
+  useEffect(() => {
+    if (terminal) return;
+    const timer = window.setInterval(() => setNow(Date.now()), 1000);
+    return () => clearInterval(timer);
+  }, [terminal]);
+  const reply = productionReply(
+    message ?? {
+      id,
+      role: "assistant",
+      content: "",
+      productionTaskId: id,
+      at: task?.createdAt ?? "",
+    },
+    task,
   );
   const previewFile = async (path: string) => {
     setPreviewBusy(true);
@@ -182,96 +187,28 @@ export function ChatProduction({
   return (
     <section
       className="chat-production"
-      aria-label="对话制作任务"
+      aria-label="对话回复"
       data-status={status ?? "loading"}
     >
-      <div className="workflow-heading">
-        <strong>
-          {task?.kind === "video" ? "视频与源代码" : "项目源文件"}
-        </strong>
-        <span className={`workflow-state ${!terminal ? "is-active" : ""}`}>
-          {status === "saved"
-            ? "已交付"
-            : status === "failed"
-              ? "需要重试"
-              : status === "cancelled"
-                ? "已停止"
-                : "自动执行中"}
-        </span>
-      </div>
-      <p role="status">
-        {saving
-          ? "正在保存到本机并校验文件…"
-          : status
-            ? PRODUCTION_STATUS[status]
-            : "正在读取制作状态…"}
+      <ThinkingProcess
+        items={reply.trace?.items ?? []}
+        status={terminal ? (reply.trace?.status ?? "done") : "running"}
+        elapsed={
+          terminal
+            ? (reply.trace?.elapsed ?? 0)
+            : task
+              ? Math.max(
+                  0,
+                  Math.floor((now - Date.parse(task.createdAt)) / 1000),
+                )
+              : 0
+        }
+        answerStarted={!!reply.content}
+      />
+      <MessageContent content={reply.content} />
+      <p className="production-outcome" role="status">
+        {productionOutcome(task, receipt, saving)}
       </p>
-      {task && !terminal && (
-        <progress
-          aria-label="制作进度"
-          value={saving ? 96 : task.status === "ready" ? 94 : task.progress}
-          max={100}
-        />
-      )}
-      <details className="workflow-plan" open={!terminal}>
-        <summary>
-          执行计划 · {steps.length} 步{" "}
-          <span>
-            {steps.filter((step) => step.status === "done").length}/
-            {steps.length}
-          </span>
-        </summary>
-        <ol aria-label="任务执行步骤">
-          {steps.map((step) => (
-            <li key={step.id} data-step={step.id} data-state={step.status}>
-              <span className="workflow-dot" aria-hidden="true">
-                {step.status === "done"
-                  ? "✓"
-                  : step.status === "failed"
-                    ? "!"
-                    : step.status === "cancelled"
-                      ? "−"
-                      : ""}
-              </span>
-              <div>
-                <strong>{step.title}</strong>
-                {step.detail && (
-                  <details className="workflow-detail">
-                    <summary>
-                      {step.status === "failed"
-                        ? "查看失败原因"
-                        : "查看执行内容"}
-                    </summary>
-                    <p>{step.detail}</p>
-                  </details>
-                )}
-              </div>
-              <small>
-                {step.status === "running"
-                  ? "进行中"
-                  : step.status === "done"
-                    ? "已完成"
-                    : step.status === "failed"
-                      ? "失败"
-                      : step.status === "cancelled"
-                        ? "已取消"
-                        : "待执行"}
-              </small>
-            </li>
-          ))}
-        </ol>
-      </details>
-      {task?.status === "rendering" && (
-        <small>
-          渲染进度{" "}
-          {Math.max(
-            0,
-            Math.min(100, Math.round(((task.progress - 15) / 75) * 100)),
-          )}
-          %
-        </small>
-      )}
-      {receipt && <small>{receipt.directory}</small>}
       {task?.error && <small role="alert">{task.error}</small>}
       {controller.error && <small role="alert">{controller.error}</small>}
       {!!receipt?.files.length && (
