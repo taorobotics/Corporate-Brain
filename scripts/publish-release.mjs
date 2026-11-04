@@ -43,7 +43,14 @@ const uploads = [...files, 'SHA256SUMS.txt'];
 if (!release.draft) {
   for (const file of uploads) assert.equal(release.assets.find(asset => asset.name === file)?.digest, 'sha256:' + createHash('sha256').update(await readFile(resolve(directory, file))).digest('hex'), 'Published assets cannot be changed; increment the version');
 } else {
-  gh('release', 'upload', tag, '--repo', repo, '--clobber', ...uploads.map(file => resolve(directory, file)));
+  // Native jobs already uploaded verified files. Keep matching assets so an
+  // API outage during replacement cannot remove valid installers from a draft.
+  for (const file of uploads) {
+    const bytes = await readFile(resolve(directory, file));
+    const digest = 'sha256:' + createHash('sha256').update(bytes).digest('hex');
+    if (release.assets.some(asset => asset.name === file && asset.state === 'uploaded' && asset.size === bytes.length && asset.digest === digest)) continue;
+    gh('release', 'upload', tag, '--repo', repo, '--clobber', resolve(directory, file));
+  }
   const uploaded = JSON.parse(gh('api', `repos/${repo}/releases/${release.id}`));
   for (const file of uploads) assert.equal(uploaded.assets.find(asset => asset.name === file)?.digest, 'sha256:' + createHash('sha256').update(await readFile(resolve(directory, file))).digest('hex'), `Uploaded digest differs for ${file}`);
   gh('release', 'edit', tag, '--repo', repo, '--draft=false', '--latest', '--notes-file', notes);
