@@ -1,7 +1,110 @@
 import { useEffect, useRef, useState } from "react";
+import { PencilSimple } from "@phosphor-icons/react";
 import type { Department, User } from "../shared/types";
 import { api } from "./api";
 import { Button, Field, Modal } from "./components";
+
+export function AccountNote({
+  user,
+  canEdit,
+  refresh,
+  notify,
+}: {
+  user: User;
+  canEdit: boolean;
+  refresh: () => Promise<void>;
+  notify: (text: string) => void;
+}) {
+  const [open, setOpen] = useState(false),
+    [busy, setBusy] = useState(false),
+    [note, setNote] = useState(""),
+    [error, setError] = useState("");
+  return (
+    <>
+      <div className="account-note">
+        <span
+          className={user.accountNote ? "" : "muted"}
+          title={user.accountNote}
+        >
+          {user.accountNote || "未备注"}
+        </span>
+        {canEdit && (
+          <button
+            aria-label={`编辑${user.username}的账号备注`}
+            title="编辑账号备注"
+            onClick={() => {
+              setNote(user.accountNote ?? "");
+              setError("");
+              setOpen(true);
+            }}
+          >
+            <PencilSimple size={16} />
+          </button>
+        )}
+      </div>
+      {open && (
+        <Modal
+          title="账号备注"
+          close={() => {
+            if (!busy) setOpen(false);
+          }}
+        >
+          <p className="muted">
+            {user.username} · {user.departmentName}
+          </p>
+          <form
+            onSubmit={async (event) => {
+              event.preventDefault();
+              if (busy) return;
+              setBusy(true);
+              setError("");
+              try {
+                await api(`/users/${user.id}/note`, { note }, "PATCH");
+                await refresh();
+                setOpen(false);
+                notify("账号备注已保存。");
+              } catch (error) {
+                setError((error as Error).message);
+              } finally {
+                setBusy(false);
+              }
+            }}
+          >
+            <Field label="分配给谁／其他备注">
+              <textarea
+                name="accountNote"
+                value={note}
+                onChange={(event) => setNote(event.target.value)}
+                maxLength={500}
+                rows={4}
+                autoFocus
+                disabled={busy}
+                placeholder="例如：分配给张同事，11 月 4 日发放"
+              />
+            </Field>
+            <p className="muted small">
+              {note.length}/500 ·
+              仅账号管理员可见。员工修改昵称、登录名或密码后仍保留。
+            </p>
+            {error && (
+              <p className="error" role="alert">
+                {error}
+              </p>
+            )}
+            <footer>
+              <Button disabled={busy} onClick={() => setOpen(false)}>
+                取消
+              </Button>
+              <Button primary type="submit" disabled={busy}>
+                {busy ? "保存中…" : "保存备注"}
+              </Button>
+            </footer>
+          </form>
+        </Modal>
+      )}
+    </>
+  );
+}
 
 export function GenerateAccounts({
   departments,

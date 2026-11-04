@@ -70,6 +70,14 @@ export function createStore(file: string) {
   )
     db.exec("ALTER TABLE users ADD COLUMN avatar TEXT NOT NULL DEFAULT ''");
   if (
+    !(db.prepare("PRAGMA table_info(users)").all() as { name: string }[]).some(
+      (column) => column.name === "account_note",
+    )
+  )
+    db.exec(
+      "ALTER TABLE users ADD COLUMN account_note TEXT NOT NULL DEFAULT ''",
+    );
+  if (
     !(db.prepare("PRAGMA table_info(skills)").all() as { name: string }[]).some(
       (column) => column.name === "import_source",
     )

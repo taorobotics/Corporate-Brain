@@ -4,7 +4,10 @@ import { once } from "node:events";
 import { createServer } from "node:http";
 import { randomUUID } from "node:crypto";
 import { createPlatform } from "./platform";
-import { passwordMatches } from "./database";
+import { createStore, passwordMatches } from "./database";
+import { mkdtempSync, rmSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
 
 test("managed department accounts, credentials and employee login changes", async (t) => {
   const platform = createPlatform({ database: ":memory:" });
@@ -250,6 +253,116 @@ test("managed department accounts, credentials and employee login changes", asyn
     },
   );
   await t.test(
+    "admin notes are bounded, scoped and private; editing does not revoke employee sessions",
+    async () => {
+      const path = `/users/${employee.id}/note`,
+        note = "分配给：验收员工\n工号 QA-01";
+      assert.equal((await req(path, { note }, "", "PATCH")).status, 401);
+      assert.equal(
+        (await req(path, { note }, login.cookie, "PATCH")).status,
+        403,
+      );
+      assert.equal(
+        (
+          await req(
+            path,
+            { note },
+            admin.cookie,
+            "PATCH",
+            "https://evil.invalid",
+          )
+        ).status,
+        403,
+      );
+      assert.equal(
+        (await req(path, { note: "x".repeat(501) }, admin.cookie, "PATCH"))
+          .status,
+        400,
+      );
+      assert.equal(
+        (
+          await req(
+            path,
+            { note, role: "company_admin" },
+            admin.cookie,
+            "PATCH",
+          )
+        ).status,
+        400,
+      );
+      assert.equal(
+        (
+          await req(
+            `/users/${randomUUID()}/note`,
+            { note },
+            admin.cookie,
+            "PATCH",
+          )
+        ).status,
+        404,
+      );
+      const before = db
+        .prepare("SELECT * FROM users WHERE id=?")
+        .get(employee.id)!;
+      assert.equal(
+        (await req(path, { note: `  ${note}  ` }, admin.cookie, "PATCH"))
+          .status,
+        200,
+      );
+      const me = await req("/auth/me", undefined, login.cookie);
+      assert.equal(me.status, 200);
+      assert.equal(me.data.accountNote, undefined);
+      const after = db
+        .prepare("SELECT * FROM users WHERE id=?")
+        .get(employee.id)!;
+      assert.equal(after.account_note, note);
+      for (const key of [
+        "username",
+        "name",
+        "department_id",
+        "role",
+        "auth_version",
+        "password_hash",
+      ])
+        assert.equal(after[key], before[key]);
+      assert.equal(
+        (await req("/users", undefined, admin.cookie)).data.find(
+          (u: any) => u.id === employee.id,
+        ).accountNote,
+        note,
+      );
+      assert.equal(
+        (
+          await req(
+            "/auth/profile",
+            { name: "New display name", accountNote: "employee overwrite" },
+            login.cookie,
+            "PATCH",
+          )
+        ).status,
+        400,
+      );
+      const audit = db
+        .prepare("SELECT * FROM audit WHERE action='account.note_updated'")
+        .all();
+      assert.equal(audit.length, 1);
+      assert.equal(audit[0].actor_id, admin.data.id);
+      assert.equal(audit[0].resource_id, employee.id);
+      assert.ok(!JSON.stringify(audit).includes(note));
+      assert.equal(
+        (await req(path, { note: "   " }, admin.cookie, "PATCH")).status,
+        200,
+      );
+      assert.equal(
+        db
+          .prepare("SELECT account_note FROM users WHERE id=?")
+          .get(employee.id)!.account_note,
+        "",
+      );
+      await req(path, { note }, admin.cookie, "PATCH");
+    },
+  );
+  await t.test(
     "renaming verifies password, keeps identity and department, revokes other sessions and prevents conflicts",
     async () => {
       const second = await req("/auth/login", {
@@ -300,6 +413,13 @@ test("managed department accounts, credentials and employee login changes", asyn
       assert.equal(renamed.data.id, employee.id);
       assert.equal(renamed.data.role, "employee");
       assert.equal(renamed.data.departmentId, employee.department_id);
+      assert.equal(renamed.data.accountNote, undefined);
+      assert.equal(
+        db
+          .prepare("SELECT account_note FROM users WHERE id=?")
+          .get(employee.id)!.account_note,
+        "分配给：验收员工\n工号 QA-01",
+      );
       assert.equal(
         (await req("/auth/me", undefined, login.cookie)).status,
         200,
@@ -432,6 +552,61 @@ test("managed department accounts, credentials and employee login changes", asyn
         (await req(`/users/${employee.id}/reset`, {}, manager.cookie)).status,
         403,
       );
+      const ownEmployee = users.data.find((u: any) => u.role === "employee");
+      assert.equal(
+        (
+          await req(
+            `/users/${ownEmployee.id}/note`,
+            { note: "分配给本部门员工" },
+            manager.cookie,
+            "PATCH",
+          )
+        ).status,
+        200,
+      );
+      assert.equal(
+        (
+          await req(
+            `/users/${employee.id}/note`,
+            { note: "越权修改" },
+            manager.cookie,
+            "PATCH",
+          )
+        ).status,
+        403,
+      );
+      assert.equal(
+        (
+          await req(
+            `/users/${created.data.user.id}/note`,
+            { note: "越权修改管理角色" },
+            manager.cookie,
+            "PATCH",
+          )
+        ).status,
+        403,
+      );
+      const foreignEmployee = db
+        .prepare(
+          "SELECT id FROM users WHERE department_id<>? AND role='employee' LIMIT 1",
+        )
+        .get(other.data.id)!;
+      assert.equal(
+        (
+          await req(
+            `/users/${foreignEmployee.id}/note`,
+            { note: "跨部门修改" },
+            manager.cookie,
+            "PATCH",
+          )
+        ).status,
+        403,
+      );
+      assert.ok(
+        !(await req("/users", undefined, manager.cookie)).data.some(
+          (u: any) => u.id === foreignEmployee.id,
+        ),
+      );
     },
   );
   await t.test(
@@ -465,4 +640,64 @@ test("managed department accounts, credentials and employee login changes", asyn
       );
     },
   );
+});
+
+test("account notes migrate existing databases and survive restart without changing identities", (t) => {
+  const directory = mkdtempSync(join(tmpdir(), "brain-account-note-")),
+    file = join(directory, "accounts.sqlite"),
+    departmentId = randomUUID(),
+    userId = randomUUID();
+  t.after(() => {
+    assert.ok(directory.startsWith(join(tmpdir(), "brain-account-note-")));
+    rmSync(directory, { recursive: true, force: true });
+  });
+  let store = createStore(file);
+  try {
+    store.db
+      .prepare("INSERT INTO departments(id,name) VALUES(?,?)")
+      .run(departmentId, "Legacy fixture");
+    store.db
+      .prepare(
+        "INSERT INTO users(id,username,name,department_id,role,password_hash) VALUES(?,?,?,?,?,?)",
+      )
+      .run(
+        userId,
+        "legacy-fixture",
+        "Fixture",
+        departmentId,
+        "employee",
+        "unchanged-synthetic-hash",
+      );
+    store.db.exec("ALTER TABLE users DROP COLUMN account_note");
+  } finally {
+    store.close();
+  }
+  store = createStore(file);
+  try {
+    const user = store.db
+      .prepare("SELECT * FROM users WHERE id=?")
+      .get(userId)!;
+    assert.equal(user.account_note, "");
+    assert.equal(user.password_hash, "unchanged-synthetic-hash");
+    assert.equal(user.department_id, departmentId);
+    store.db
+      .prepare("UPDATE users SET account_note=? WHERE id=?")
+      .run("分配给验收同事", userId);
+  } finally {
+    store.close();
+  }
+  store = createStore(file);
+  try {
+    assert.equal(
+      store.db.prepare("SELECT account_note FROM users WHERE id=?").get(userId)!
+        .account_note,
+      "分配给验收同事",
+    );
+    assert.equal(
+      store.db.prepare("SELECT count(*) AS n FROM users").get()!.n,
+      1,
+    );
+  } finally {
+    store.close();
+  }
 });

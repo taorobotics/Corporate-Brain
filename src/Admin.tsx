@@ -31,7 +31,7 @@ import { SelectField } from "./Dropdown";
 import { SkillSourceDetails } from "./SkillImport";
 import FeedbackAdmin from "./FeedbackAdmin";
 import { KnowledgeAdmin } from "./Knowledge";
-import { GenerateAccounts, AccountPassword } from "./AccountTools";
+import { GenerateAccounts, AccountPassword, AccountNote } from "./AccountTools";
 const statusNames = {
   pending: "待审核",
   published: "已发布",
@@ -85,7 +85,9 @@ export default function Admin(props: WorkspaceProps) {
   }, [dialog]);
   const filteredUsers = users.filter(
     (u) =>
-      `${u.name} ${u.username}`.toLowerCase().includes(search.toLowerCase()) &&
+      `${u.name} ${u.username} ${u.accountNote ?? ""}`
+        .toLowerCase()
+        .includes(search.toLowerCase()) &&
       (!departmentFilter || u.departmentId === departmentFilter) &&
       (!statusFilter || String(u.enabled) === statusFilter),
   );
@@ -125,7 +127,7 @@ export default function Admin(props: WorkspaceProps) {
   function exportUsers() {
     download(
       "员工账号清单.csv",
-      "\uFEFF姓名,登录账号,部门,角色,状态,分发状态\r\n" +
+      "\uFEFF姓名,登录账号,部门,角色,状态,分发状态,备注\r\n" +
         filteredUsers
           .map((u) =>
             [
@@ -135,12 +137,13 @@ export default function Admin(props: WorkspaceProps) {
               roleNames[u.role],
               u.enabled ? "启用" : "停用",
               u.distributed ? "已分发" : "待分发",
+              u.accountNote ?? "",
             ]
               .map(
                 (x) =>
                   `"${String(x)
                     .replace(/"/g, '""')
-                    .replace(/^[=+\-@]/, "'")}"`,
+                    .replace(/^\s*[=+\-@]/, "'$&")}"`,
               )
               .join(","),
           )
@@ -235,7 +238,7 @@ export default function Admin(props: WorkspaceProps) {
                   <Search
                     value={search}
                     onChange={setSearch}
-                    placeholder="姓名或登录账号"
+                    placeholder="姓名、登录账号或备注"
                   />
                   <SelectField
                     label="筛选部门"
@@ -281,6 +284,7 @@ export default function Admin(props: WorkspaceProps) {
                         <th>姓名</th>
                         <th>登录账号</th>
                         <th>部门</th>
+                        <th>备注</th>
                         <th>角色</th>
                         <th>状态</th>
                         <th>分发</th>
@@ -296,6 +300,14 @@ export default function Admin(props: WorkspaceProps) {
                           </td>
                           <td className="muted">{u.username}</td>
                           <td>{u.departmentName}</td>
+                          <td>
+                            <AccountNote
+                              user={u}
+                              canEdit={companyAdmin || u.role === "employee"}
+                              refresh={load}
+                              notify={notify}
+                            />
+                          </td>
                           <td>
                             <span className="badge">{roleNames[u.role]}</span>
                           </td>

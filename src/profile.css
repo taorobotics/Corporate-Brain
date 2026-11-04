@@ -18,6 +18,29 @@
   gap: 8px;
   margin: 0;
 }
+.account-note {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  min-width: 150px;
+  max-width: 260px;
+}
+.account-note > span {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+  overflow: hidden;
+  flex: 1;
+  min-width: 0;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+.account-note > button {
+  display: inline-flex;
+  flex-shrink: 0;
+  padding: 3px;
+  color: var(--accent);
+}
 .profile-avatar img {
   display: block;
   object-fit: cover;

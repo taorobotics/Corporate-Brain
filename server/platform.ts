@@ -497,7 +497,12 @@ export function createPlatform(
         : db
             .prepare(`${queryUser} WHERE u.department_id=? ORDER BY u.name`)
             .all(actor.departmentId);
-    res.json((rows as Row[]).map(userView));
+    res.json(
+      (rows as Row[]).map((row) => ({
+        ...userView(row),
+        accountNote: row.account_note,
+      })),
+    );
   });
   function createAccount(data: z.infer<typeof account>, actor: User) {
     manage(actor, data.departmentId, data.role);
@@ -607,6 +612,22 @@ export function createPlatform(
       );
     store.audit(actor.id, "account.updated", target.id);
     res.json(userView(userById(target.id)!));
+  });
+  app.patch("/api/users/:id/note", (req, res) => {
+    const actor = getActor(req);
+    const target = userById(id.parse(req.params.id));
+    if (!target) fail(404, "员工不存在");
+    manage(actor, target.department_id, target.role);
+    const data = z
+      .object({ note: z.string().trim().max(500, "备注最多 500 字") })
+      .strict()
+      .parse(req.body);
+    db.prepare("UPDATE users SET account_note=? WHERE id=?").run(
+      data.note,
+      target.id,
+    );
+    store.audit(actor.id, "account.note_updated", target.id);
+    res.json({ ok: true });
   });
   app.post("/api/users/:id/reset", (req, res) => {
     const actor = getActor(req);

@@ -1,5 +1,5 @@
 // Isolated native UI test using synthetic accounts; no employee records or model calls.
-const { app, BrowserWindow } = require("electron"),
+const { app, BrowserWindow, dialog } = require("electron"),
   { spawn } = require("node:child_process"),
   fs = require("node:fs/promises"),
   { join, resolve } = require("node:path"),
@@ -84,7 +84,7 @@ const wait = async (fn, label, timeout = 45000) => {
       );
     const fill = (selector, value) =>
       js(
-        `(()=>{const e=document.querySelector(${JSON.stringify(selector)});Object.getOwnPropertyDescriptor(HTMLInputElement.prototype,'value').set.call(e,${JSON.stringify(value)});e.dispatchEvent(new Event('input',{bubbles:true}));return true})()`,
+        `(()=>{const e=document.querySelector(${JSON.stringify(selector)});const prototype=e instanceof HTMLTextAreaElement?HTMLTextAreaElement.prototype:HTMLInputElement.prototype;Object.getOwnPropertyDescriptor(prototype,'value').set.call(e,${JSON.stringify(value)});e.dispatchEvent(new Event('input',{bubbles:true}));return true})()`,
       );
     await wait(
       () => js(`!!document.querySelector('input[name=username]')`),
@@ -323,7 +323,7 @@ const wait = async (fn, label, timeout = 45000) => {
       "two random employees per department",
     );
     const employeeUsername = await js(
-      `(()=>{const row=[...document.querySelectorAll('tbody tr')].find(r=>r.textContent.includes('staff.'));row.querySelectorAll('button')[0].click();return row.cells[1].textContent})()`,
+      `(()=>{const row=[...document.querySelectorAll('tbody tr')].find(r=>r.textContent.includes('staff.'));[...row.querySelectorAll('button')].find(b=>b.textContent==='查看密码').click();return row.cells[1].textContent})()`,
     );
     await wait(
       () => js(`!!document.querySelector('[name=adminPassword]')`),
@@ -358,6 +358,89 @@ const wait = async (fn, label, timeout = 45000) => {
     );
     checks.push(
       "Account admin randomly creates two employees per department; wrong-password disclosure denied, verified current password revealed and hidden",
+    );
+    await js(
+      `document.querySelector(${JSON.stringify(`[aria-label="编辑${employeeUsername}的账号备注"]`)}).click();true`,
+    );
+    await wait(
+      () => js(`!!document.querySelector('[name=accountNote]')`),
+      "account note editor",
+    );
+    await fill(
+      "[name=accountNote]",
+      "分配给：验收同事 <img src=x onerror=alert(1)>",
+    );
+    await click("保存备注");
+    await wait(
+      () =>
+        js(
+          `!document.querySelector('[role=dialog]')&&document.querySelector('.account-note')&&document.body.textContent.includes('分配给：验收同事')`,
+        ),
+      "account assignment saved",
+    );
+    assert.equal(
+      await js(`document.querySelectorAll('.account-note img').length`),
+      0,
+    );
+    await js(
+      `document.querySelector(${JSON.stringify(`[aria-label="编辑${employeeUsername}的账号备注"]`)}).click();true`,
+    );
+    await wait(
+      () => js(`!!document.querySelector('[name=accountNote]')`),
+      "existing account note",
+    );
+    assert.equal(
+      await js(`document.querySelector('[name=accountNote]').value`),
+      "分配给：验收同事 <img src=x onerror=alert(1)>",
+    );
+    await fill("[name=accountNote]", "取消的修改");
+    await click("取消");
+    await fill('[placeholder="姓名、登录账号或备注"]', "验收同事");
+    await wait(
+      () =>
+        js(
+          `document.querySelectorAll('tbody tr').length===1&&document.querySelector('tbody').textContent.includes('staff.')`,
+        ),
+      "search by assigned employee",
+    );
+    await fs.writeFile(
+      "artifacts/screenshots/account-note-search.png",
+      (await capture()).toPNG(),
+    );
+    const exportedAccounts = join(dir, "employee-accounts.csv"),
+      previousSaveDialog = dialog.showSaveDialog;
+    try {
+      dialog.showSaveDialog = async () => ({
+        canceled: false,
+        filePath: exportedAccounts,
+      });
+      await click("导出清单");
+      await wait(async () => {
+        try {
+          return (await fs.stat(exportedAccounts)).size > 0;
+        } catch {
+          return false;
+        }
+      }, "actual account CSV saved through native bridge");
+      const csv = await fs.readFile(exportedAccounts, "utf8");
+      assert.ok(csv.includes("分发状态,备注"));
+      assert.ok(csv.includes("分配给：验收同事 <img src=x onerror=alert(1)>"));
+      assert.ok(csv.includes(employeeUsername));
+      assert.ok(!csv.includes(initialPassword));
+      assert.ok(!csv.includes("Synthetic-Profile-QA-2026"));
+    } finally {
+      dialog.showSaveDialog = previousSaveDialog;
+    }
+    await js(`location.reload();true`);
+    await wait(
+      () =>
+        js(
+          `document.querySelectorAll('tbody tr').length===5&&document.body.textContent.includes('分配给：验收同事')&&!document.querySelector('.entry-experience')`,
+        ),
+      "note survives reload and cancel",
+    );
+    checks.push(
+      "Admin assignment notes save, cancel and reload correctly, render markup as text, filter accounts by assigned employee and export through the native save bridge without passwords",
     );
     async function logout() {
       await js(
@@ -473,7 +556,7 @@ const wait = async (fn, label, timeout = 45000) => {
       "admin sees new username",
     );
     await js(
-      `(()=>{const row=[...document.querySelectorAll('tbody tr')].find(r=>r.textContent.includes('employee-renamed'));row.querySelectorAll('button')[0].click();return true})()`,
+      `(()=>{const row=[...document.querySelectorAll('tbody tr')].find(r=>r.textContent.includes('employee-renamed'));if(!row.textContent.includes('分配给：验收同事'))throw Error('Assignment note lost after rename');[...row.querySelectorAll('button')].find(b=>b.textContent==='查看密码').click();return true})()`,
     );
     await fill("[name=adminPassword]", "Synthetic-Profile-QA-2026");
     await click("验证并查看");
@@ -511,7 +594,16 @@ const wait = async (fn, label, timeout = 45000) => {
     console.error(e.stack);
     if (win && !win.isDestroyed()) {
       await fs.mkdir("artifacts/runtime", { recursive: true });
-      await fs.writeFile("artifacts/runtime/profile-failure-ui.json", JSON.stringify(await win.webContents.executeJavaScript(`({dialog:document.querySelector('[role=dialog]')?.textContent,rows:document.querySelectorAll('tbody tr').length,fields:[...document.querySelectorAll('[role=dialog] input')].map(x=>({name:x.name,type:x.type,valid:x.checkValidity(),checked:x.checked}))})`), null, 2));
+      await fs.writeFile(
+        "artifacts/runtime/profile-failure-ui.json",
+        JSON.stringify(
+          await win.webContents.executeJavaScript(
+            `({dialog:document.querySelector('[role=dialog]')?.textContent,rows:document.querySelectorAll('tbody tr').length,fields:[...document.querySelectorAll('[role=dialog] input')].map(x=>({name:x.name,type:x.type,valid:x.checkValidity(),checked:x.checked}))})`,
+          ),
+          null,
+          2,
+        ),
+      );
     }
     await fs.mkdir("artifacts", { recursive: true });
     await fs.writeFile(

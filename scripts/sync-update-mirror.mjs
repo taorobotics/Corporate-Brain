@@ -120,7 +120,7 @@ try {
           : reject(new Error("Company mirror transfer failed")),
       );
     });
-    const timer = setTimeout(() => child.kill(), 20 * 60_000);
+    const timer = setTimeout(() => child.kill(), 60 * 60_000);
     async function* bundle() {
       yield Buffer.from(JSON.stringify(manifest) + "\n");
       for (const target of mirror.targets)

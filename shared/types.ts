@@ -23,6 +23,7 @@ export type User = {
   enabled: number;
   mustChange: number;
   distributed: number;
+  accountNote?: string;
 };
 export type Audience = "department" | "departments" | "company";
 export type DshMode = "standard" | "ptc" | "minimal" | "creative";
