@@ -1,0 +1,247 @@
+{
+  "version": "0.19.1",
+  "sourceCommit": "6375d27e4ad7b32c1080467d5133bad601883b15",
+  "result": "partial",
+  "scope": "Mac mini private LAN deployment and Windows/Mac arm64 update distribution are active; full official Release and Windows lifecycle verification are incomplete",
+  "checkedAt": "2026-11-04T02:32:46.989Z",
+  "changes": [
+    "Windows: save, verify, silent installation at original directory, and automatic restart",
+    "One installation button with busy state and duplicate-click protection",
+    "Legacy verified updater-cache launch compatibility; ordinary downloads keep the installation wizard",
+    "Existing desktop-shortcut choice preserved; first installation defaults to no desktop shortcut"
+  ],
+  "server": {
+    "version": "0.19.1",
+    "result": "passed",
+    "verifiedAt": "2026-11-04T02:25:26.374Z",
+    "sourceCommit": "6375d27e4ad7b32c1080467d5133bad601883b15",
+    "serverArchiveSha256": "33c10b83ecf4415e5234d401af7cb5af901377b48aa3505f60593e4b04baaff1",
+    "health": {
+      "status": "ok",
+      "version": "0.19.1",
+      "chatStorage": "device-only"
+    },
+    "counts": {
+      "users": 3,
+      "departments": 13,
+      "nas_sources": 14,
+      "skills": 3
+    },
+    "avatarAssetsVerified": 100,
+    "dataPreserved": true,
+    "modelSettingsPreserved": true,
+    "modelCredentialsPreserved": true,
+    "backup": "/Users/staff01/CorporateBrainServer/backups/before-v0.19.1-2026-11-04T02-25-24-294Z",
+    "writeBoundary": "/Users/staff01/CorporateBrainServer"
+  },
+  "channels": {
+    "version": "0.19.1",
+    "sourceCommit": "6375d27e4ad7b32c1080467d5133bad601883b15",
+    "result": "passed",
+    "scope": "Private LAN Windows and Apple Silicon delivery; complete GitHub Release remains blocked",
+    "publishedAt": "2026-11-04T02:28:14.462Z",
+    "channels": {
+      "win32-x64": {
+        "name": "Corporate-Brain-Setup-0.19.1-x64.exe",
+        "bytes": 120002131,
+        "sha256": "6e55202b26f3f3b2079e1e2054862fe55084449e2891576879ebb0441dd38957"
+      },
+      "darwin-arm64": {
+        "name": "Corporate-Brain-0.19.1-macOS-arm64.dmg",
+        "bytes": 138646908,
+        "sha256": "ce133090d9cbe7d613fba6bea00badb6ec4af47343421f20edd37fb8800d7253"
+      }
+    },
+    "brandAssets": [
+      {
+        "name": "brand/logo.png",
+        "bytes": 179208,
+        "sha256": "1272ed57463544f3224d592c5e56704996e6c584b6d31826aa515dd16db9d752"
+      },
+      {
+        "name": "favicon.ico",
+        "bytes": 105655,
+        "sha256": "7265c1e3b40d5e2b279cf3decbbe832144dd002db22a5d8abc85bb84929c54ff"
+      },
+      {
+        "name": "apple-touch-icon.png",
+        "bytes": 36452,
+        "sha256": "55fdce4baf142fb3d251e892bb8cfa1ed46f60e35218346385988b125cbba6ad"
+      }
+    ],
+    "windowsLifecycleTested": false,
+    "intelMacActivated": false,
+    "githubReleaseBlocked": "GitHub Actions billing",
+    "writeBoundary": "/Users/staff01/CorporateBrainServer"
+  },
+  "liveDownloads": {
+    "version": "0.19.1",
+    "result": "passed",
+    "results": [
+      {
+        "platform": "win32-x64",
+        "version": "0.19.1",
+        "bytes": 120002131,
+        "sha256": "6e55202b26f3f3b2079e1e2054862fe55084449e2891576879ebb0441dd38957"
+      },
+      {
+        "platform": "darwin-arm64",
+        "version": "0.19.1",
+        "bytes": 138646908,
+        "sha256": "ce133090d9cbe7d613fba6bea00badb6ec4af47343421f20edd37fb8800d7253"
+      }
+    ],
+    "checks": [
+      "Authenticated LAN Mac feed advertises 0.19.1; Windows advertises 0.19.1; both complete downloads match advertised sizes and SHA-256"
+    ],
+    "checkedAt": "2026-11-04T02:30:18.501Z"
+  },
+  "liveHttpsUI": {
+    "version": "0.19.1",
+    "result": "passed",
+    "checkedAt": "2026-11-04T02:30:15.666Z",
+    "tlsVerified": true,
+    "health": {
+      "status": "ok",
+      "version": "0.19.1",
+      "chatStorage": "device-only"
+    },
+    "indexSha256": "be4afdb6c2f20374cabc13b0c884aa94c1cbeaf416176083d57ae013e1309f0c",
+    "assets": [
+      {
+        "path": "/assets/index-CRnnbZnw.js",
+        "bytes": 946500,
+        "sha256": "5acd3ad42262043198fc0de0bdbc6ce23bb321e8a1891c793f8647b20b75db7d"
+      },
+      {
+        "path": "/assets/index-DO8-pqKz.css",
+        "bytes": 94921,
+        "sha256": "bbf82e776952c62bacc6bdff7b531243a50b00839948d4827d6a1eace7289d19"
+      }
+    ],
+    "checks": [
+      "Deployed HTTPS index and entry JavaScript/CSS match the verified automatic conversation build; strict TLS verification enabled"
+    ]
+  },
+  "checks": {
+    "nodeTests": 81,
+    "pythonTests": 5,
+    "nativeInstallUnitTests": 7,
+    "nativeInstallCoverage": {
+      "lines": 100,
+      "branches": 88,
+      "functions": 100
+    },
+    "windowsDesktopChecks": 37,
+    "windowsStartupChecks": 9,
+    "macDesktopChecks": 36,
+    "macStartupChecks": 9,
+    "installerUi": {
+      "mode": "UI-only",
+      "realInstallUpgradeUninstall": false,
+      "sourceCommit": "6375d27e4ad7b32c1080467d5133bad601883b15",
+      "defaultPath": "D:\\software\\Corporate Brain",
+      "physicalEmployeeDeviceTested": false,
+      "checks": [
+        "Primary and secondary buttons visibly depress and recover without activating",
+        "Native welcome page, privacy and license links are visible",
+        "Native path page shows actual space, directory and shortcut selection",
+        "Cancellation requires confirmation and exits before installing"
+      ],
+      "result": "passed",
+      "sha256": "6e55202b26f3f3b2079e1e2054862fe55084449e2891576879ebb0441dd38957",
+      "version": "0.19.1"
+    },
+    "handoffProbe": {
+      "scope": "Isolated real NSIS handoff functions with inert executable; no installation or production data",
+      "version": "0.19.1",
+      "result": "passed",
+      "fullInstallUpgradeUninstall": false,
+      "sourceCommit": "6375d27e4ad7b32c1080467d5133bad601883b15",
+      "checks": [
+        "A manually launched installer retains the normal install path",
+        "Non-hexadecimal/path-bearing update tokens are rejected",
+        "Real silent installer readiness times out without committing",
+        "Native silent handoff waits for the old process and restarts a real window",
+        "Legacy cache launch has no wizard, waits for the old process and restarts a real window"
+      ]
+    },
+    "probeCaveat": "One combined local verification run failed the inert fixture process-wait assertion; a diagnostic rerun using the same extracted NSIS functions passed all five checks. The intermittent fixture failure is not diagnosed; full real install/upgrade/uninstall is outstanding."
+  },
+  "artifacts": [
+    {
+      "name": "Corporate-Brain-Setup-0.19.1-x64.exe",
+      "bytes": 120002131,
+      "sha256": "6e55202b26f3f3b2079e1e2054862fe55084449e2891576879ebb0441dd38957"
+    },
+    {
+      "name": "Corporate-Brain-0.19.1-macOS-arm64.dmg",
+      "bytes": 138646908,
+      "sha256": "ce133090d9cbe7d613fba6bea00badb6ec4af47343421f20edd37fb8800d7253"
+    },
+    {
+      "name": "Corporate-Brain-Server-0.19.1.zip",
+      "bytes": 22544796,
+      "sha256": "33c10b83ecf4415e5234d401af7cb5af901377b48aa3505f60593e4b04baaff1"
+    }
+  ],
+  "github": {
+    "draftId": 433442241,
+    "tag": "v0.19.1",
+    "runId": 41759967809,
+    "workflowConclusion": "failure",
+    "reason": "Account payment failure or Actions spending limit prevents jobs from starting",
+    "publicLatest": "v0.11.5",
+    "published": false,
+    "assetsVerified": [
+      {
+        "digest": "sha256:ce133090d9cbe7d613fba6bea00badb6ec4af47343421f20edd37fb8800d7253",
+        "id": 707948727,
+        "name": "Corporate-Brain-0.19.1-macOS-arm64.dmg",
+        "size": 138646908
+      },
+      {
+        "digest": "sha256:33c10b83ecf4415e5234d401af7cb5af901377b48aa3505f60593e4b04baaff1",
+        "id": 707948746,
+        "name": "Corporate-Brain-Server-0.19.1.zip",
+        "size": 22544796
+      },
+      {
+        "digest": "sha256:6e55202b26f3f3b2079e1e2054862fe55084449e2891576879ebb0441dd38957",
+        "id": 707948745,
+        "name": "Corporate-Brain-Setup-0.19.1-x64.exe",
+        "size": 120002131
+      },
+      {
+        "digest": "sha256:dfd924de1b796c4786ae4a5e014b875a2c05820e6e4e7a7b1243140fc3a731a3",
+        "id": 707948816,
+        "name": "macos-verification-arm64.json",
+        "size": 7450
+      },
+      {
+        "digest": "sha256:94164a034de74f76ae7710dbcea99bccf64e5df53b950fda5d91cc33944d84fa",
+        "id": 707948819,
+        "name": "server-verification.json",
+        "size": 16267
+      },
+      {
+        "digest": "sha256:f064ce0864717a9d4203573f5f025f96c8fe44e04e1ee6f012c4acf7b6dba607",
+        "id": 707948747,
+        "name": "SHA256SUMS.txt",
+        "size": 308
+      },
+      {
+        "digest": "sha256:456c0f359a608751281565837af21047c9b2b6e23383c6ba66f4eb30609664d1",
+        "id": 707948728,
+        "name": "windows-local-verification.json",
+        "size": 9220
+      }
+    ],
+    "assetDigestsVerified": true
+  },
+  "outstanding": [
+    "Disposable Windows full installation, upgrade, restart and uninstall lifecycle",
+    "Mac x64 native package and verification",
+    "Successful complete GitHub workflow and public Release"
+  ]
+}
