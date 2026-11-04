@@ -10,6 +10,10 @@ jobs:
   installer:
     runs-on: windows-2025
     timeout-minutes: 25
+    env:
+      # Exercise a configured client, including offline startup, without relying
+      # on a production service. The disposable package is never distributed.
+      BRAIN_APP_URL: http://127.0.0.1:4173
     steps:
       - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09
         with:
