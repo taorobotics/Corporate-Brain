@@ -22,6 +22,25 @@ function Assert-TestTarget {
   $allowedRoot = [IO.Path]::GetFullPath((Join-Path $workspacePath '.cache/installer-qa')) + [IO.Path]::DirectorySeparatorChar
   if (-not $resolvedTarget.StartsWith($allowedRoot,[StringComparison]::OrdinalIgnoreCase) -or [IO.Path]::GetFileName($resolvedTarget) -ne 'Corporate Brain') { throw 'Unsafe lifecycle target' }
 }
+function Wait-ClientWindow([Diagnostics.Process]$Client, [string]$ExpectedPath) {
+  $until = [DateTime]::UtcNow.AddSeconds(30)
+  do {
+    $Client.Refresh()
+    if ($Client.HasExited) { throw 'Isolated client exited before showing its window' }
+    if ($Client.Path -ne $ExpectedPath) { throw 'Unexpected client executable during lifecycle verification' }
+    # SW_HIDE also hides Electron's first native window. Reveal only this owned
+    # test process, as Wait-InstallerText does for the isolated NSIS windows.
+    foreach ($candidate in [InstallerWindow]::Windows($Client.Id)) {
+      if ($candidate.ClassName -like 'Chrome_WidgetWin_*' -and $candidate.Width -ge 500 -and $candidate.Height -ge 300 -and -not $candidate.Visible) {
+        [void][InstallerWindow]::ShowWindow($candidate.Handle,4)
+      }
+    }
+    $Client.Refresh()
+    if ($Client.MainWindowHandle -ne 0) { return }
+    Start-Sleep -Milliseconds 100
+  } while ([DateTime]::UtcNow -lt $until)
+  throw 'Isolated client did not show its native window'
+}
 function Assert-ButtonFeedback([IntPtr]$Window, [string]$Text, [string]$Name) {
   $button = Get-InstallerControls $Window | Where-Object { $_.ClassName -eq 'Button' -and $_.Text.Replace('&','') -eq $Text } | Select-Object -First 1
   if (-not $button -or -not $button.Enabled) { throw "Enabled button missing: $Text" }
@@ -157,13 +176,7 @@ try {
       Assert-TestTarget
       $appPath = Join-Path $qaTarget '公司大脑.exe'
       $oldClient = Start-Process -FilePath $appPath -PassThru -WindowStyle Hidden
-      $until = [DateTime]::UtcNow.AddSeconds(30)
-      do {
-        $oldClient.Refresh()
-        if ($oldClient.MainWindowHandle -ne 0) { break }
-        Start-Sleep -Milliseconds 100
-      } while (-not $oldClient.HasExited -and [DateTime]::UtcNow -lt $until)
-      if ($oldClient.HasExited -or $oldClient.MainWindowHandle -eq 0) { throw 'Old client did not start for update handoff' }
+      Wait-ClientWindow $oldClient $appPath
       $desktopLink = Join-Path ([Environment]::GetFolderPath('Desktop')) '公司大脑.lnk'
       $shortcutExisted = Test-Path -LiteralPath $desktopLink
       if ($Legacy) {
@@ -315,7 +328,7 @@ try {
     if ((Get-FileHash -LiteralPath $sentinel -Algorithm SHA256).Hash -ne $sentinelHash) { throw 'Final uninstall changed records' }
     $checks.Add('Silent uninstallation also preserves synthetic personal records')
   }
-  @{ version=$version; result='passed'; mode=$(if($FullLifecycle){'Disposable Windows CI lifecycle'}else{'UI-only'}); defaultPath=$defaultPath; checks=$checks; realInstallUpgradeUninstall=[bool]$FullLifecycle; physicalEmployeeDeviceTested=$false; sourceCommit=(git rev-parse HEAD); sha256=(Get-FileHash -LiteralPath $installerPath -Algorithm SHA256).Hash.ToLowerInvariant() } |
+  @{ version=$version; result='passed'; mode=$(if($FullLifecycle){'Disposable Windows CI lifecycle'}else{'UI-only'}); defaultPath=$defaultPath; checks=$checks; realInstallUpgradeUninstall=[bool]$FullLifecycle; physicalEmployeeDeviceTested=$false; sourceCommit=(git rev-parse HEAD); verificationSourceCommit=$env:BRAIN_VERIFICATION_COMMIT; sha256=(Get-FileHash -LiteralPath $installerPath -Algorithm SHA256).Hash.ToLowerInvariant() } |
     ConvertTo-Json -Depth 5 | Set-Content -LiteralPath (Join-Path $workspacePath 'artifacts/installer-verification.json') -Encoding utf8
   Write-Output "Installer UI passed: $($checks.Count) checks"
 } catch {
