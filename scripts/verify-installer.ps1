@@ -27,7 +27,11 @@ function Wait-ClientWindow([Diagnostics.Process]$Client, [string]$ExpectedPath) 
   do {
     $Client.Refresh()
     if ($Client.HasExited) { throw 'Isolated client exited before showing its window' }
-    if ($Client.Path -ne $ExpectedPath) { throw 'Unexpected client executable during lifecycle verification' }
+    # Process.Path can be empty while Windows is still loading the executable.
+    # Do not reveal a window until the executable identity is actually known.
+    $actualPath = $Client.Path
+    if (-not $actualPath) { Start-Sleep -Milliseconds 100; continue }
+    if ($actualPath -ne $ExpectedPath) { throw "Unexpected client executable during lifecycle verification: $actualPath" }
     # SW_HIDE also hides Electron's first native window. Reveal only this owned
     # test process, as Wait-InstallerText does for the isolated NSIS windows.
     foreach ($candidate in [InstallerWindow]::Windows($Client.Id)) {
