@@ -848,6 +848,11 @@ export default function App() {
                   ? "完成改密后即可使用公司工作空间。"
                   : "修改后会退出所有设备的公司登录。"}
               </p>
+              {user.role !== "company_admin" && (
+                <p className="muted">
+                  这是公司管理的内部账号。密码加密保存在公司服务器，公司管理员验证身份后可查看当前密码，查看会留有记录。请使用专属工作密码。
+                </p>
+              )}
               <Field label="当前密码">
                 <input
                   name="current"

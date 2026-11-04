@@ -1,10 +1,13 @@
 {
-  "version": "0.16.0",
+  "version": "0.21.0",
   "result": "passed",
   "checks": [
     "New account receives a real local preset; 100 choices, Chinese search and name/avatar save update sidebar and account API",
     "Cancel discards unsaved edits; English search, actual file picker, crop controls and normalized custom avatar persist on server",
-    "Reload retains server profile; custom avatar can return to preset; 640px dark layout has no horizontal overflow"
+    "Reload retains server profile; custom avatar can return to preset; 640px dark layout has no horizontal overflow",
+    "Account admin randomly creates two employees per department; wrong-password disclosure denied, verified current password revealed and hidden",
+    "Employee changes initial password with company-managed credential notice, renames login with collision handling and keeps identity/department; new login succeeds",
+    "Admin table reflects employee chosen username and current changed password after reauthentication; actual passwords excluded from verification report"
   ],
   "consoleErrors": [],
   "syntheticAccountsOnly": true,

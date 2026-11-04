@@ -31,6 +31,7 @@ import { SelectField } from "./Dropdown";
 import { SkillSourceDetails } from "./SkillImport";
 import FeedbackAdmin from "./FeedbackAdmin";
 import { KnowledgeAdmin } from "./Knowledge";
+import { GenerateAccounts, AccountPassword } from "./AccountTools";
 const statusNames = {
   pending: "待审核",
   published: "已发布",
@@ -170,6 +171,13 @@ export default function Admin(props: WorkspaceProps) {
         </div>
         {page === "admin-users" && accountAdmin && (
           <div className="inline-actions">
+            {companyAdmin && (
+              <GenerateAccounts
+                departments={departments}
+                refresh={load}
+                notify={notify}
+              />
+            )}
             <Button onClick={() => setDialog("batch")}>批量开通</Button>
             <Button
               primary
@@ -276,6 +284,7 @@ export default function Admin(props: WorkspaceProps) {
                         <th>角色</th>
                         <th>状态</th>
                         <th>分发</th>
+                        {companyAdmin && <th>当前密码</th>}
                         <th>操作</th>
                       </tr>
                     </thead>
@@ -300,6 +309,11 @@ export default function Admin(props: WorkspaceProps) {
                           <td className="muted">
                             {u.distributed ? "已分发" : "待分发"}
                           </td>
+                          {companyAdmin && (
+                            <td>
+                              <AccountPassword user={u} />
+                            </td>
+                          )}
                           <td>
                             <div className="table-actions">
                               <button
@@ -336,7 +350,10 @@ export default function Admin(props: WorkspaceProps) {
                 </div>
                 <div className="table-footer">
                   共 {filteredUsers.length} 位成员{" "}
-                  <span>每人独立账号 · 密码不包含在导出中</span>
+                  <span>
+                    每人独立账号 · 清单导出不含密码 ·
+                    公司管理员可验证身份后查看员工密码
+                  </span>
                 </div>
               </>
             ) : (
@@ -929,10 +946,10 @@ export default function Admin(props: WorkspaceProps) {
           <div className="notice">
             <Key size={24} />
             <div>
-              <strong>请逐人分发，密码只在这次结果中显示</strong>
+              <strong>请逐人分发初始密码</strong>
               <p>
                 初始密码 24
-                小时内有效，首次登录必须改密；关闭后无法再次查看，需要时请重置。
+                小时内有效，首次登录必须改密。公司管理员可在账号表格验证身份后查看员工当前密码；管理员账号的密码只显示这一次。
               </p>
             </div>
           </div>

@@ -18,6 +18,7 @@ import { mountFeedback } from "./feedback";
 import { mountNas, type NasOptions } from "./nas";
 import { mountDocuments } from "./documents";
 import { mountProfile } from "./profile";
+import { mountAccounts, saveManagedPassword, usernameSchema } from "./accounts";
 import { mountProduction, ProductionError } from "./production";
 import {
   productionCompletionBody,
@@ -95,10 +96,7 @@ const roles = z.enum([
 ]);
 const account = z
   .object({
-    username: z
-      .string()
-      .trim()
-      .regex(/^[a-zA-Z0-9_.@-]{2,64}$/, "账号使用 2–64 位字母、数字或 . _ @ -"),
+    username: usernameSchema,
     name: shortText,
     departmentId: id,
     role: roles.default("employee"),
@@ -399,6 +397,9 @@ export function createPlatform(
   mountProfile(app, store, getActor, fail, (userId) =>
     userView(userById(userId)!),
   );
+  mountAccounts(app, store, getActor, fail, (userId) =>
+    userView(userById(userId)!),
+  );
   mountUpdates(app, options.updates);
   mountFeedback(app, store, getActor, fail);
   mountNas(app, store, getActor, fail, options.nas);
@@ -419,11 +420,19 @@ export function createPlatform(
     const row = userById(actor.id)!;
     if (!passwordMatches(data.current, row.password_hash))
       fail(400, "当前密码不正确");
-    db.prepare(
-      "UPDATE users SET password_hash=?,must_change=0,initial_expires_at=0,auth_version=auth_version+1 WHERE id=?",
-    ).run(passwordHash(data.password), actor.id);
-    db.prepare("DELETE FROM sessions WHERE user_id=?").run(actor.id);
-    store.audit(actor.id, "account.password_changed", actor.id);
+    db.exec("BEGIN IMMEDIATE");
+    try {
+      db.prepare(
+        "UPDATE users SET password_hash=?,must_change=0,initial_expires_at=0,auth_version=auth_version+1 WHERE id=?",
+      ).run(passwordHash(data.password), actor.id);
+      saveManagedPassword(store, actor.id, actor.role, data.password);
+      db.prepare("DELETE FROM sessions WHERE user_id=?").run(actor.id);
+      store.audit(actor.id, "account.password_changed", actor.id);
+      db.exec("COMMIT");
+    } catch (error) {
+      db.exec("ROLLBACK");
+      throw error;
+    }
     res.clearCookie("brain_session", { path: "/" });
     res.json({ ok: true });
   });
@@ -501,18 +510,26 @@ export function createPlatform(
       fail(409, "登录账号已存在");
     const userId = randomUUID();
     const initialPassword = `Cb-${randomBytes(15).toString("base64url")}`;
-    db.prepare(
-      "INSERT INTO users(id,username,name,department_id,role,password_hash,initial_expires_at) VALUES(?,?,?,?,?,?,?)",
-    ).run(
-      userId,
-      data.username,
-      data.name,
-      data.departmentId,
-      data.role,
-      passwordHash(initialPassword),
-      Date.now() + 24 * 3600_000,
-    );
-    store.audit(actor.id, "account.created", userId);
+    db.exec("BEGIN IMMEDIATE");
+    try {
+      db.prepare(
+        "INSERT INTO users(id,username,name,department_id,role,password_hash,initial_expires_at) VALUES(?,?,?,?,?,?,?)",
+      ).run(
+        userId,
+        data.username,
+        data.name,
+        data.departmentId,
+        data.role,
+        passwordHash(initialPassword),
+        Date.now() + 24 * 3600_000,
+      );
+      saveManagedPassword(store, userId, data.role, initialPassword);
+      store.audit(actor.id, "account.created", userId);
+      db.exec("COMMIT");
+    } catch (error) {
+      db.exec("ROLLBACK");
+      throw error;
+    }
     return { user: userView(userById(userId)!), initialPassword };
   }
   app.post("/api/users", (req, res) =>
@@ -584,6 +601,10 @@ export function createPlatform(
       target.id,
     );
     db.prepare("DELETE FROM sessions WHERE user_id=?").run(target.id);
+    if (data.role === "company_admin")
+      db.prepare("DELETE FROM managed_credentials WHERE user_id=?").run(
+        target.id,
+      );
     store.audit(actor.id, "account.updated", target.id);
     res.json(userView(userById(target.id)!));
   });
@@ -593,11 +614,23 @@ export function createPlatform(
     if (!target) fail(404, "员工不存在");
     manage(actor, target.department_id, target.role);
     const initialPassword = `Cb-${randomBytes(15).toString("base64url")}`;
-    db.prepare(
-      "UPDATE users SET password_hash=?,must_change=1,initial_expires_at=?,distributed=0,auth_version=auth_version+1 WHERE id=?",
-    ).run(passwordHash(initialPassword), Date.now() + 24 * 3600_000, target.id);
-    db.prepare("DELETE FROM sessions WHERE user_id=?").run(target.id);
-    store.audit(actor.id, "account.password_reset", target.id);
+    db.exec("BEGIN IMMEDIATE");
+    try {
+      db.prepare(
+        "UPDATE users SET password_hash=?,must_change=1,initial_expires_at=?,distributed=0,auth_version=auth_version+1 WHERE id=?",
+      ).run(
+        passwordHash(initialPassword),
+        Date.now() + 24 * 3600_000,
+        target.id,
+      );
+      saveManagedPassword(store, target.id, target.role, initialPassword);
+      db.prepare("DELETE FROM sessions WHERE user_id=?").run(target.id);
+      store.audit(actor.id, "account.password_reset", target.id);
+      db.exec("COMMIT");
+    } catch (error) {
+      db.exec("ROLLBACK");
+      throw error;
+    }
     res.json({ username: target.username, initialPassword });
   });
   app.post("/api/users/:id/distributed", (req, res) => {

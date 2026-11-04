@@ -261,9 +261,10 @@ const wait = async (fn, label, timeout = 45000) => {
       "narrow gallery",
     );
     await wait(
-      () => js(
-        `(()=>{const m=document.querySelector('.modal');return m.scrollWidth<=m.clientWidth+2&&document.documentElement.scrollWidth<=innerWidth+2})()`,
-      ),
+      () =>
+        js(
+          `(()=>{const m=document.querySelector('.modal');return m.scrollWidth<=m.clientWidth+2&&document.documentElement.scrollWidth<=innerWidth+2})()`,
+        ),
       "narrow layout settles after native window resize",
     );
     await fs.mkdir("artifacts/screenshots", { recursive: true });
@@ -296,6 +297,198 @@ const wait = async (fn, label, timeout = 45000) => {
     checks.push(
       "Reload retains server profile; custom avatar can return to preset; 640px dark layout has no horizontal overflow",
     );
+    await click("取消");
+    await js(
+      `fetch('/api/departments',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name:'账号验收二部'})}).then(r=>{if(!r.ok)throw Error('Department creation failed')});true`,
+    );
+    await js(`location.hash='admin-users';true`);
+    await wait(
+      () =>
+        js(
+          `document.querySelector('.admin-page h1')?.textContent==='部门与员工账号'&&document.querySelectorAll('tbody tr').length===1`,
+        ),
+      "account admin",
+    );
+    await click("随机开通账号");
+    await fill("input[type=number]", "2");
+    await fill("[name=adminPassword]", "Synthetic-Profile-QA-2026");
+    await js(
+      `document.querySelector('[role=dialog] form').requestSubmit();true`,
+    );
+    await wait(
+      () =>
+        js(
+          `!document.querySelector('[role=dialog]')&&document.querySelectorAll('tbody tr').length===5`,
+        ),
+      "two random employees per department",
+    );
+    const employeeUsername = await js(
+      `(()=>{const row=[...document.querySelectorAll('tbody tr')].find(r=>r.textContent.includes('staff.'));row.querySelectorAll('button')[0].click();return row.cells[1].textContent})()`,
+    );
+    await wait(
+      () => js(`!!document.querySelector('[name=adminPassword]')`),
+      "credential reauthentication",
+    );
+    await fill("[name=adminPassword]", "incorrect-synthetic");
+    await click("验证并查看");
+    await wait(
+      () =>
+        js(
+          `document.querySelector('[role=dialog] [role=alert]')?.textContent.includes('当前密码不正确')`,
+        ),
+      "wrong admin password denied",
+    );
+    assert.equal(
+      await js(`!!document.querySelector('[aria-label="员工当前密码"]')`),
+      false,
+    );
+    await fill("[name=adminPassword]", "Synthetic-Profile-QA-2026");
+    await click("验证并查看");
+    await wait(
+      () => js(`!!document.querySelector('[aria-label="员工当前密码"]')`),
+      "credential decrypted after verification",
+    );
+    const initialPassword = await js(
+      `document.querySelector('[aria-label="员工当前密码"]').value`,
+    );
+    await click("隐藏并关闭");
+    await fs.writeFile(
+      "artifacts/screenshots/accounts-admin-light.png",
+      (await capture()).toPNG(),
+    );
+    checks.push(
+      "Account admin randomly creates two employees per department; wrong-password disclosure denied, verified current password revealed and hidden",
+    );
+    async function logout() {
+      await js(
+        `fetch('/api/auth/logout',{method:'POST',headers:{'Content-Type':'application/json'},body:'{}'}).then(()=>{location.hash='chat';location.reload()});true`,
+      );
+      await wait(
+        () =>
+          js(
+            `!!document.querySelector('input[name=username]')&&!document.querySelector('.entry-form-stage[inert]')`,
+          ),
+        "signed out",
+      );
+    }
+    async function loginAccount(username, password) {
+      await fill("[name=username]", username);
+      await fill("[name=password]", password);
+      await js('document.querySelector("form").requestSubmit();true');
+    }
+    await logout();
+    await loginAccount(employeeUsername, initialPassword);
+    await wait(
+      () => js(`!!document.querySelector('[name=current]')`),
+      "employee required change",
+    );
+    assert.ok(
+      await js(
+        `document.querySelector('[role=dialog]').textContent.includes('公司管理员验证身份后可查看当前密码')`,
+      ),
+    );
+    const changedPassword = "Synthetic-Employee-Changed-2026";
+    await fill("[name=current]", initialPassword);
+    await fill("[name=password]", changedPassword);
+    await js(
+      `document.querySelector('[role=dialog] form').requestSubmit();true`,
+    );
+    await wait(
+      () =>
+        js(
+          `!!document.querySelector('input[name=username]')&&!document.querySelector('.entry-form-stage[inert]')`,
+        ),
+      "change requires new login",
+    );
+    await loginAccount(employeeUsername, changedPassword);
+    await wait(
+      () =>
+        js(
+          `!!document.querySelector('[aria-label="任务输入"]')&&!document.querySelector('.entry-experience')`,
+        ),
+      "employee workspace",
+    );
+    const beforeRename = await js(`fetch('/api/auth/me').then(r=>r.json())`);
+    await js(`location.hash='settings';true`);
+    await wait(
+      () => js(`!!document.querySelector('.profile-edit-avatar')`),
+      "employee settings",
+    );
+    await click("修改登录账号");
+    await fill("[name=loginUsername]", "profile-qa");
+    await fill("[name=currentPassword]", changedPassword);
+    await click("保存登录账号");
+    await wait(
+      () =>
+        js(
+          `document.querySelector('[role=dialog] [role=alert]')?.textContent.includes('已被使用')`,
+        ),
+      "login collision shown",
+    );
+    await fill("[name=loginUsername]", "employee-renamed");
+    await click("保存登录账号");
+    await wait(
+      () =>
+        js(
+          `!document.querySelector('[role=dialog]')&&document.querySelector('.profile-heading')?.textContent.includes('employee-renamed')`,
+        ),
+      "self rename persisted",
+    );
+    const renamed = await js(`fetch('/api/auth/me').then(r=>r.json())`);
+    assert.equal(renamed.id, beforeRename.id);
+    assert.equal(renamed.role, "employee");
+    assert.equal(renamed.departmentId, beforeRename.departmentId);
+    await js(`location.hash='admin-users';true`);
+    await wait(
+      () => js(`document.body.textContent.includes('此账号没有员工管理权限')`),
+      "employee has no admin access",
+    );
+    await logout();
+    await loginAccount("employee-renamed", changedPassword);
+    await wait(
+      () =>
+        js(
+          `!!document.querySelector('[aria-label="任务输入"]')&&!document.querySelector('.entry-experience')`,
+        ),
+      "renamed login works",
+    );
+    checks.push(
+      "Employee changes initial password with company-managed credential notice, renames login with collision handling and keeps identity/department; new login succeeds",
+    );
+    await logout();
+    await loginAccount("profile-qa", "Synthetic-Profile-QA-2026");
+    await wait(
+      () =>
+        js(
+          `!!document.querySelector('[aria-label="任务输入"]')&&!document.querySelector('.entry-experience')`,
+        ),
+      "admin returns",
+    );
+    await js(`location.hash='admin-users';true`);
+    await wait(
+      () =>
+        js(
+          `!!document.querySelector('tbody')&&document.body.textContent.includes('employee-renamed')`,
+        ),
+      "admin sees new username",
+    );
+    await js(
+      `(()=>{const row=[...document.querySelectorAll('tbody tr')].find(r=>r.textContent.includes('employee-renamed'));row.querySelectorAll('button')[0].click();return true})()`,
+    );
+    await fill("[name=adminPassword]", "Synthetic-Profile-QA-2026");
+    await click("验证并查看");
+    await wait(
+      () => js(`!!document.querySelector('[aria-label="员工当前密码"]')`),
+      "admin sees changed password",
+    );
+    assert.equal(
+      await js(`document.querySelector('[aria-label="员工当前密码"]').value`),
+      changedPassword,
+    );
+    await click("隐藏并关闭");
+    checks.push(
+      "Admin table reflects employee chosen username and current changed password after reauthentication; actual passwords excluded from verification report",
+    );
     assert.deepEqual(errors, []);
     await fs.writeFile(
       "artifacts/profile-verification.json",
@@ -316,6 +509,10 @@ const wait = async (fn, label, timeout = 45000) => {
   } catch (e) {
     failed = true;
     console.error(e.stack);
+    if (win && !win.isDestroyed()) {
+      await fs.mkdir("artifacts/runtime", { recursive: true });
+      await fs.writeFile("artifacts/runtime/profile-failure-ui.json", JSON.stringify(await win.webContents.executeJavaScript(`({dialog:document.querySelector('[role=dialog]')?.textContent,rows:document.querySelectorAll('tbody tr').length,fields:[...document.querySelectorAll('[role=dialog] input')].map(x=>({name:x.name,type:x.type,valid:x.checkValidity(),checked:x.checked}))})`), null, 2));
+    }
     await fs.mkdir("artifacts", { recursive: true });
     await fs.writeFile(
       "artifacts/profile-verification.json",

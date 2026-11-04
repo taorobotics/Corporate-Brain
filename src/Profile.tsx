@@ -51,6 +51,9 @@ export default function Profile({
   notify: (message: string) => void;
 }) {
   const [editing, setEditing] = useState(false);
+  const [loginOpen, setLoginOpen] = useState(false),
+    [loginBusy, setLoginBusy] = useState(false),
+    [loginError, setLoginError] = useState("");
   return (
     <>
       <div className="profile-heading">
@@ -69,12 +72,96 @@ export default function Profile({
           <small>
             {user.departmentName} · {roleNames[user.role]}
           </small>
+          <small>登录账号：{user.username}</small>
         </div>
         <div className="inline-actions">
           <Button onClick={() => setEditing(true)}>编辑个人资料</Button>
+          <Button
+            onClick={() => {
+              setLoginError("");
+              setLoginOpen(true);
+            }}
+          >
+            修改登录账号
+          </Button>
           <Button onClick={openPassword}>修改密码</Button>
         </div>
       </div>
+      {loginOpen && (
+        <Modal
+          title="修改登录账号"
+          close={() => {
+            if (!loginBusy) setLoginOpen(false);
+          }}
+        >
+          <form
+            onSubmit={async (event) => {
+              event.preventDefault();
+              if (loginBusy) return;
+              const form = event.currentTarget,
+                data = new FormData(form);
+              setLoginBusy(true);
+              setLoginError("");
+              try {
+                const next = await api<User>("/auth/username", {
+                  username: data.get("loginUsername"),
+                  currentPassword: data.get("currentPassword"),
+                });
+                form.reset();
+                onSaved(next);
+                setLoginOpen(false);
+                notify(
+                  "登录账号已修改，其他设备需使用新账号重新登录。对话记录和部门权限保留。",
+                );
+              } catch (error) {
+                setLoginError((error as Error).message);
+              } finally {
+                setLoginBusy(false);
+              }
+            }}
+          >
+            <p className="muted">
+              新的登录账号需全公司唯一。修改后当前设备保持登录，其他设备须重新登录。
+            </p>
+            <label>
+              新登录账号
+              <input
+                name="loginUsername"
+                defaultValue={user.username}
+                minLength={2}
+                maxLength={64}
+                pattern="[a-zA-Z0-9_.@\-]{2,64}"
+                autoComplete="username"
+                required
+              />
+            </label>
+            <p className="muted">使用 2–64 位字母、数字或 . _ @ -。</p>
+            <label>
+              当前密码
+              <input
+                name="currentPassword"
+                type="password"
+                maxLength={128}
+                autoComplete="current-password"
+                required
+              />
+            </label>
+            {loginError && (
+              <p className="error" role="alert">
+                {loginError}
+              </p>
+            )}
+            <footer>
+              <Button disabled={loginBusy} onClick={() => setLoginOpen(false)}>
+                取消
+              </Button>
+              <Button primary type="submit" disabled={loginBusy}>
+                保存登录账号
+              </Button>
+            </footer>
+          </form>
+        </Modal>
+      )}
       {editing && (
         <ProfileEditor
           user={user}

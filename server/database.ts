@@ -2,6 +2,7 @@ import { DatabaseSync } from "node:sqlite";
 import {
   randomBytes,
   scryptSync,
+  scrypt,
   timingSafeEqual,
   createHash,
   createCipheriv,
@@ -13,6 +14,14 @@ import { dirname, join } from "node:path";
 export function passwordHash(password: string) {
   const salt = randomBytes(16).toString("hex");
   return `${salt}:${scryptSync(password, salt, 64).toString("hex")}`;
+}
+export function passwordHashAsync(password: string): Promise<string> {
+  const salt = randomBytes(16).toString("hex");
+  return new Promise((resolve, reject) => {
+    scrypt(password, salt, 64, (error, value) =>
+      error ? reject(error) : resolve(`${salt}:${value.toString("hex")}`),
+    );
+  });
 }
 export function passwordMatches(password: string, stored: string) {
   const [salt, hash] = stored.split(":");
@@ -32,6 +41,8 @@ export function createStore(file: string) {
     CREATE TABLE IF NOT EXISTS skills(id TEXT PRIMARY KEY, name TEXT NOT NULL, description TEXT NOT NULL, version TEXT NOT NULL, instructions TEXT NOT NULL, examples TEXT NOT NULL, test_summary TEXT NOT NULL, required_tools TEXT NOT NULL, author_id TEXT NOT NULL REFERENCES users(id), owner_department_id TEXT NOT NULL REFERENCES departments(id), audience TEXT NOT NULL, targets TEXT NOT NULL, status TEXT NOT NULL, review_note TEXT NOT NULL DEFAULT '', created_at TEXT NOT NULL, previous_id TEXT REFERENCES skills(id));
     CREATE TABLE IF NOT EXISTS connections(id TEXT PRIMARY KEY, name TEXT NOT NULL, base_url TEXT NOT NULL, model TEXT NOT NULL, kind TEXT NOT NULL, departments TEXT NOT NULL, secret TEXT NOT NULL, enabled INTEGER NOT NULL DEFAULT 1);
     CREATE TABLE IF NOT EXISTS audit(id INTEGER PRIMARY KEY AUTOINCREMENT, actor_id TEXT, action TEXT NOT NULL, resource_id TEXT NOT NULL, at TEXT NOT NULL);
+    CREATE TABLE IF NOT EXISTS managed_credentials(user_id TEXT PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE, secret TEXT NOT NULL, updated_at TEXT NOT NULL);
+    CREATE TABLE IF NOT EXISTS account_batches(id TEXT PRIMARY KEY, actor_id TEXT NOT NULL REFERENCES users(id), configuration TEXT NOT NULL, user_ids TEXT NOT NULL, created_at TEXT NOT NULL);
     CREATE TABLE IF NOT EXISTS feedback(
       id TEXT PRIMARY KEY, user_id TEXT NOT NULL REFERENCES users(id), user_name TEXT NOT NULL, username TEXT NOT NULL,
       department_name TEXT NOT NULL, conversation_id TEXT NOT NULL, message_id TEXT NOT NULL, model_name TEXT NOT NULL,
