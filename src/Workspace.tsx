@@ -74,6 +74,7 @@ import { getSkin } from "../shared/skins";
 import { useChatScroll } from "./useChatScroll";
 import Knowledge from "./Knowledge";
 import { readAttachment } from "./attachments";
+import { workspaceAttachments as prepareWorkspaceAttachments } from "../shared/workspace-context";
 import {
   ATTACHMENT_ACCEPT,
   modelAttachments as toModelAttachments,
@@ -219,46 +220,15 @@ export default function Workspace(props: WorkspaceProps) {
     );
     return match?.[0].replace(/[\s，。,.!?！？]+$/g, "").trim() || null;
   }
-  async function readWorkspaceContext(requestText: string) {
+  async function readWorkspaceContext(
+    requestText: string,
+    existing: Attachment[],
+  ) {
     if (!window.brainDesktop) return [];
     const folder = localFolderMention(requestText) ?? workspace?.folder;
     if (!folder) return [];
     const snapshot = await window.brainDesktop.inspectWorkspace(folder);
-    const textFiles = snapshot.files.filter((file) => !file.image);
-    const imageFiles = snapshot.files.filter((file) => file.image).slice(0, 2);
-    const manifest = [
-      `# 本地工作区读取摘要`,
-      `工作区：${snapshot.root}`,
-      `这是桌面客户端只读扫描后附加的内容，模型不能直接访问员工电脑路径。`,
-      snapshot.truncated
-        ? `本次只读取前 ${snapshot.files.length} 个可识别文件，更多内容请缩小目录范围或分批提问。`
-        : `本次读取 ${snapshot.files.length} 个可识别文件。`,
-      snapshot.skipped
-        ? `已跳过 ${snapshot.skipped} 个不支持或受保护的文件/目录。`
-        : "",
-      "",
-      "## 文件清单",
-      ...snapshot.files.map((file) => `- ${file.name}（${file.size} bytes）`),
-      "",
-      "## 文件内容",
-      ...textFiles.flatMap((file) => [
-        `### ${file.name}`,
-        "```text",
-        file.content,
-        "```",
-        "",
-      ]),
-    ]
-      .filter(Boolean)
-      .join("\n");
-    return [
-      { name: `workspace-${snapshot.root}.md`, content: manifest },
-      ...imageFiles.map((file) => ({
-        name: `workspace/${file.name}`,
-        content: "",
-        image: file.image,
-      })),
-    ];
+    return prepareWorkspaceAttachments(snapshot, existing);
   }
   async function chooseFiles(files?: FileList | File[] | null) {
     if (fileRead.current || busy) {
@@ -494,8 +464,15 @@ export default function Workspace(props: WorkspaceProps) {
         model;
       const workspaceAttachments =
         plan.kind !== "image" && currentAttachments.length < 8
-          ? await readWorkspaceContext(requestText)
+          ? await readWorkspaceContext(requestText, currentAttachments)
           : [];
+      if (workspaceAttachments.length)
+        progress({
+          type: "tool",
+          id: crypto.randomUUID(),
+          name: `已读取本地目录：${workspaceAttachments[0].summary}${workspaceAttachments[0].warnings?.length ? " 有未读取范围" : ""}`,
+          status: "done",
+        });
       if (plan.kind === "video" || plan.kind === "code") {
         if (materialFiles.some((file) => !file))
           throw Error(
@@ -508,7 +485,7 @@ export default function Workspace(props: WorkspaceProps) {
         if (context)
           materials.push(
             new File(
-              [context.content],
+              [toModelAttachments([context])[0].content],
               `workspace-context-${crypto.randomUUID().slice(0, 8)}.md`,
               { type: "text/markdown" },
             ),

@@ -18,17 +18,9 @@ declare global {
         { name: string; content: string; image?: string }[]
       >;
       selectDirectory(): Promise<string | null>;
-      inspectWorkspace(folder: string): Promise<{
-        root: string;
-        files: {
-          name: string;
-          size: number;
-          content: string;
-          image?: string;
-        }[];
-        skipped: number;
-        truncated: boolean;
-      }>;
+      inspectWorkspace(
+        folder: string,
+      ): Promise<import("../shared/workspace-context").WorkspaceSnapshot>;
       changeServer(): Promise<void>;
       saveFile(
         name: string,

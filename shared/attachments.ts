@@ -11,6 +11,9 @@ export type Attachment = {
 export const ATTACHMENT_ACCEPT =
   ".doc,.docx,.pdf,.xlsx,.pptx,.txt,.md,.csv,.json,.log,.srt,.vtt,.png,.jpg,.jpeg,.webp,.gif,.mp4,.mov,.webm,.m4v";
 export const MAX_ATTACHMENT_TEXT = 120_000;
+export const MAX_ATTACHMENT_REQUEST_TEXT = 2_000_000;
+export const ATTACHMENT_TEXT_LIMIT_MESSAGE =
+  "附件文字过多，请缩小目录范围或分批发送。";
 export const MAX_ATTACHMENT_IMAGES = 16;
 
 export function visualInputs(
@@ -44,6 +47,8 @@ export function modelAttachments(items: Attachment[]) {
 
 export function validateAttachmentBudget(items: Attachment[]) {
   if (items.length > 8) throw new Error("一次最多添加 8 个文件，请分批发送。");
+  if (items.some((item) => item.content.length > MAX_ATTACHMENT_REQUEST_TEXT))
+    throw new Error(ATTACHMENT_TEXT_LIMIT_MESSAGE);
   const images = items.flatMap(visualInputs);
   if (images.length > MAX_ATTACHMENT_IMAGES)
     throw new Error("本次图片、PDF 页面和视频画面超过 16 张，请分批发送。");

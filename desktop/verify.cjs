@@ -26,7 +26,11 @@ async function waitFor(test, label, timeout = 12000) {
     cwd: resolve(__dirname, ".."),
     stdio: ["ignore", "pipe", "pipe", "ipc"],
     windowsHide: true,
-    env: { ...process.env, ELECTRON_RUN_AS_NODE: undefined },
+    env: {
+      ...process.env,
+      ELECTRON_RUN_AS_NODE: undefined,
+      BRAIN_DSH_ENABLED: "0",
+    },
   });
   const port = await new Promise((resolve, reject) => {
     const timeout = setTimeout(
@@ -482,6 +486,16 @@ async function waitFor(test, label, timeout = 12000) {
       ),
     "selected model restored after reload",
   );
+  await require("./verify-workspace.cjs")({
+    js,
+    click,
+    fill,
+    waitFor,
+    request,
+    capture,
+    checks,
+    dir,
+  });
   // This disposable client receives explicit fixtures, never invented production activity.
   await js(`(() => {
     window.__loadingOriginalFetch = window.fetch;

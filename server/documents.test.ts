@@ -11,7 +11,9 @@ import {
   modelAttachments,
   validateAttachmentBudget,
   visualInputs,
+  MAX_ATTACHMENT_REQUEST_TEXT,
 } from "../shared/attachments";
+import { workspaceAttachments } from "../shared/workspace-context";
 const { extractDocument } = createRequire(import.meta.url)(
   "./document-worker.cjs",
 );
@@ -166,6 +168,50 @@ test("Direct chat receives document text and ordered video frames; image URLs ca
     400,
   );
   assert.equal(captured.length, 1);
+  const oversized = {
+    name: "workspace-large.md",
+    content: "x".repeat(MAX_ATTACHMENT_REQUEST_TEXT + 1),
+  };
+  assert.throws(() => validateAttachmentBudget([oversized]), /附件文字过多/);
+  const rejected = await request("/generate/chat", {
+    ...body,
+    attachments: [oversized],
+  });
+  assert.equal(rejected.status, 400);
+  assert.match((await rejected.json()).error, /附件文字过多.*缩小目录/);
+  assert.equal(captured.length, 1, "oversized requests never reach a model");
+  const prepared = modelAttachments(
+    workspaceAttachments({
+      root: "large-project",
+      files: [
+        {
+          name: "package-lock.json",
+          content: "lock ".repeat(500000),
+          size: 2500000,
+        },
+        {
+          name: "README.md",
+          content: "LARGE-WORKSPACE-INTEGRATION-FIXTURE",
+          size: 35,
+        },
+      ],
+      skipped: 2,
+      truncated: true,
+    }),
+  );
+  assert.ok(prepared[0].content.length <= 120000);
+  const accepted = await request("/generate/chat", {
+    ...body,
+    attachments: prepared,
+  });
+  assert.equal(accepted.status, 200);
+  assert.equal((await accepted.json()).content, "fixture-analyzed");
+  assert.equal(captured.length, 2);
+  const workspaceText = captured[1].messages.find((m: any) => m.role === "user")
+    .content[0].text;
+  assert.match(workspaceText, /LARGE-WORKSPACE-INTEGRATION-FIXTURE/);
+  assert.match(workspaceText, /节选.*未读取/);
+  assert.ok(workspaceText.length < 121000);
 });
 
 test("Office worker rejects corrupt, encrypted-looking, traversing, oversized XML and external entity inputs", async () => {

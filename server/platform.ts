@@ -29,6 +29,8 @@ import {
   validateAttachmentBudget,
   unsupportedDeepSeekVision,
   ATTACHMENT_CONTEXT_RULE,
+  MAX_ATTACHMENT_REQUEST_TEXT,
+  ATTACHMENT_TEXT_LIMIT_MESSAGE,
 } from "../shared/attachments";
 import { DshManager, DshUnavailableError } from "./dsh";
 import { syncDeepSeekConnections } from "./deepseek-sync";
@@ -58,7 +60,10 @@ const shortText = z.string().trim().min(1).max(100);
 const attachment = z
   .object({
     name: z.string().trim().min(1).max(200),
-    content: z.string().max(2_000_000).default(""),
+    content: z
+      .string()
+      .max(MAX_ATTACHMENT_REQUEST_TEXT, ATTACHMENT_TEXT_LIMIT_MESSAGE)
+      .default(""),
     image: z
       .string()
       .max(12_000_000)
