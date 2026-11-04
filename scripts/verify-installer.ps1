@@ -201,7 +201,10 @@ try {
       if ($process.HasExited) { throw 'Automatic installer exited before the old client closed' }
       if (@([InstallerWindow]::Windows($process.Id) | Where-Object Visible).Count -ne 0) { throw 'Automatic update displayed an installer wizard' }
       if ((Get-FileHash -LiteralPath $appPath).Hash -ne $oldHash) { throw 'Installer changed the application before the old client exited' }
-      [void]$oldClient.CloseMainWindow()
+      # The pinned client can replace its startup window while readiness is checked.
+      # Refresh Process's cached window handle before sending the real close request.
+      $oldClient.Refresh()
+      if (-not $oldClient.CloseMainWindow()) { throw 'Old client has no current window accepting a close request' }
       if (-not $oldClient.WaitForExit(15000)) { throw 'Old client did not close after saving' }
       if (-not $process.WaitForExit(120000) -or $process.ExitCode -ne 0) { throw 'Background update failed or did not restart' }
       if ((Get-ItemProperty -LiteralPath $registryPath).InstallLocation -ne $qaTarget) { throw 'Automatic update changed the original directory' }
@@ -210,7 +213,8 @@ try {
       if ((Get-FileHash -LiteralPath $sentinel).Hash -ne $sentinelHash) { throw 'Automatic update changed personal records' }
       $restarted = Get-Process -Name '公司大脑' -ErrorAction SilentlyContinue | Where-Object { $_.Path -eq $appPath -and $_.MainWindowHandle -ne 0 } | Select-Object -First 1
       if (-not $restarted) { throw 'Updated client did not show its window' }
-      [void]$restarted.CloseMainWindow()
+      $restarted.Refresh()
+      if (-not $restarted.CloseMainWindow()) { throw 'Updated test client has no current window accepting a close request' }
       if (-not $restarted.WaitForExit(15000)) { throw 'Updated test client did not close' }
     }
     # Simulate a user who has removed the desktop link. The updater must not recreate it.
