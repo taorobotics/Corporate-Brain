@@ -100,6 +100,23 @@ export function createStore(file: string) {
   db.exec(
     "CREATE UNIQUE INDEX IF NOT EXISTS connection_service_model ON connections(service_id,model,kind) WHERE service_id IS NOT NULL",
   );
+  for (const [name, definition] of [
+    ["owner_user_id", "TEXT REFERENCES users(id)"],
+    ["source_service_id", "TEXT REFERENCES model_services(id)"],
+    ["deleted", "INTEGER NOT NULL DEFAULT 0"],
+  ]) {
+    if (
+      !(
+        db.prepare("PRAGMA table_info(model_services)").all() as {
+          name: string;
+        }[]
+      ).some((c) => c.name === name)
+    )
+      db.exec(`ALTER TABLE model_services ADD COLUMN ${name} ${definition}`);
+  }
+  db.exec(
+    "CREATE UNIQUE INDEX IF NOT EXISTS personal_catalog_selection ON model_services(owner_user_id,source_service_id) WHERE source_service_id IS NOT NULL",
+  );
   const keyFile =
     file === ":memory:" ? undefined : join(dirname(file), "secrets.key");
   const key =

@@ -16,11 +16,15 @@ export function ModelServiceDialog({
   departments,
   close,
   saved,
+  personal = false,
+  catalog,
 }: {
   service?: ModelService;
   departments: Department[];
   close: () => void;
   saved: () => Promise<void>;
+  personal?: boolean;
+  catalog?: ModelService;
 }) {
   const [provider, setProvider] = useState<ModelProviderId>(
     service?.provider ?? "linoroute",
@@ -31,10 +35,10 @@ export function ModelServiceDialog({
   const [key, setKey] = useState("");
   const [scope, setScope] = useState(service?.departments ?? []);
   const [selected, setSelected] = useState<ServiceModel[]>(
-    service?.models ?? [],
+    (catalog ?? service)?.models ?? [],
   );
   const [available, setAvailable] = useState<string[]>(
-    service?.models.map((m) => m.model) ?? [],
+    (catalog ?? service)?.models.map((m) => m.model) ?? [],
   );
   const [query, setQuery] = useState("");
   const [manual, setManual] = useState("");
@@ -43,9 +47,12 @@ export function ModelServiceDialog({
   const [error, setError] = useState("");
   const [status, setStatus] = useState("");
   const alive = useRef(true);
+  const endpoint = personal ? "/my-model-services" : "/model-services";
   useEffect(() => {
     alive.current = true;
+    const timer = catalog ? setTimeout(() => void discover(), 0) : undefined;
     return () => {
+      clearTimeout(timer);
       alive.current = false;
     };
   }, []);
@@ -72,8 +79,9 @@ export function ModelServiceDialog({
   }
   async function discover() {
     if (
-      !baseUrl.trim() ||
-      (!key.trim() && (!service || service.baseUrl !== baseUrl))
+      !catalog &&
+      (!baseUrl.trim() ||
+        (!key.trim() && (!service || service.baseUrl !== baseUrl)))
     ) {
       setError("请先填写服务地址和 API 密钥。");
       return;
@@ -83,8 +91,10 @@ export function ModelServiceDialog({
     setStatus("");
     try {
       const result = await api<{ models: string[] }>(
-        "/model-services/discover",
-        settings(),
+        catalog
+          ? `/company-model-catalogs/${catalog.id}/discover`
+          : endpoint + "/discover",
+        catalog ? {} : settings(),
         undefined,
         25000,
       );
@@ -116,7 +126,15 @@ export function ModelServiceDialog({
   return (
     <Modal
       wide
-      title={service ? `管理模型 · ${service.name}` : "自定义配置 · 模型连接"}
+      title={
+        catalog
+          ? `选择模型 · ${catalog.name}`
+          : service
+            ? `管理模型 · ${service.name}`
+            : personal
+              ? "自定义配置 · 仅自己可用"
+              : "自定义配置 · 模型连接"
+      }
       close={() => {
         if (busy !== "save") close();
       }}
@@ -127,11 +145,18 @@ export function ModelServiceDialog({
           e.preventDefault();
           setBusy("save");
           setError("");
-          void api("/model-services", {
-            ...settings(),
-            departments: scope,
-            models: selected,
-          })
+          void api(
+            catalog
+              ? `/company-model-catalogs/${catalog.id}/selection`
+              : endpoint,
+            catalog
+              ? { models: selected }
+              : {
+                  ...settings(),
+                  ...(personal ? {} : { departments: scope }),
+                  models: selected,
+                },
+          )
             .then(async () => {
               await saved();
               if (alive.current) close();
@@ -146,71 +171,90 @@ export function ModelServiceDialog({
       >
         <fieldset disabled={Boolean(busy)} className="model-service-fields">
           <legend className="sr-only">模型服务配置</legend>
-          <div className="provider-picker" role="group" aria-label="选择服务商">
-            {modelProviders.map((p) => (
-              <button
-                type="button"
-                key={p.id}
-                aria-pressed={provider === p.id}
-                className={`provider-option ${provider === p.id ? "selected" : ""}`}
-                onClick={() => choose(p.id)}
+          {!catalog && (
+            <>
+              <div
+                className="provider-picker"
+                role="group"
+                aria-label="选择服务商"
               >
-                <strong>
-                  {p.name}
-                  {p.id === "linoroute" && (
-                    <span className="provider-recommended">推荐</span>
-                  )}
-                </strong>
-                <small>{p.hint}</small>
-              </button>
-            ))}
-          </div>
-          <div className="form-grid">
-            <Field label="连接名称">
-              <input
-                name="name"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                required
-                maxLength={120}
-              />
-            </Field>
-            <Field label="API 密钥">
-              <input
-                name="apiKey"
-                type="password"
-                autoComplete="new-password"
-                value={key}
-                onChange={(e) => setKey(e.target.value)}
-                required={!service || baseUrl !== service.baseUrl}
-                maxLength={1000}
-                placeholder={
-                  service
-                    ? "已安全保存，留空保留原密钥"
-                    : "输入所选服务商的密钥"
-                }
-              />
-            </Field>
-          </div>
-          <Field label="服务地址（包括 API 前缀）">
-            <input
-              name="baseUrl"
-              type="url"
-              value={baseUrl}
-              onChange={(e) => {
-                setBaseUrl(e.target.value);
-                setStatus("");
-              }}
-              required
-              maxLength={300}
-              placeholder="https://api.example.com/v1"
-            />
-          </Field>
+                {modelProviders.map((p) => (
+                  <button
+                    type="button"
+                    key={p.id}
+                    aria-pressed={provider === p.id}
+                    className={`provider-option ${provider === p.id ? "selected" : ""}`}
+                    onClick={() => choose(p.id)}
+                  >
+                    <strong>
+                      {p.name}
+                      {p.id === "linoroute" && (
+                        <span className="provider-recommended">推荐</span>
+                      )}
+                    </strong>
+                    <small>{p.hint}</small>
+                  </button>
+                ))}
+              </div>
+              <div className="form-grid">
+                <Field label="连接名称">
+                  <input
+                    name="name"
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                    required
+                    maxLength={120}
+                  />
+                </Field>
+                <Field label="API 密钥">
+                  <input
+                    name="apiKey"
+                    type="password"
+                    autoComplete="new-password"
+                    value={key}
+                    onChange={(e) => setKey(e.target.value)}
+                    required={!service || baseUrl !== service.baseUrl}
+                    maxLength={1000}
+                    placeholder={
+                      service
+                        ? "已安全保存，留空保留原密钥"
+                        : "输入所选服务商的密钥"
+                    }
+                  />
+                </Field>
+              </div>
+              <Field label="服务地址（包括 API 前缀）">
+                <input
+                  name="baseUrl"
+                  type="url"
+                  value={baseUrl}
+                  onChange={(e) => {
+                    setBaseUrl(e.target.value);
+                    setStatus("");
+                  }}
+                  required
+                  maxLength={300}
+                  placeholder="https://api.example.com/v1"
+                />
+              </Field>
+            </>
+          )}
+          {catalog && (
+            <p className="notice">
+              {catalog.name} · {catalog.baseUrl}
+              <br />
+              使用公司已授权的 LinoRoute
+              服务，所选模型仅加入你的账号。公司密钥不会显示或复制到客户端；实际可调用范围以服务商套餐为准。
+            </p>
+          )}
           <div className="model-catalog-heading">
             <div>
-              <strong>开放模型</strong>
+              <strong>{personal ? "选用模型" : "开放模型"}</strong>
               <p className="muted">
-                一次选择多个，员工可在对话中切换。刷新列表会保留当前选择。
+                {personal
+                  ? "一次选择多个，在你的对话中切换。配置仅自己可用。"
+                  : "一次选择多个，员工可在对话中切换。"}
+                刷新列表会保留当前选择。
               </p>
             </div>
             <Button onClick={() => void discover()} disabled={Boolean(busy)}>
@@ -235,6 +279,7 @@ export function ModelServiceDialog({
                     ...items,
                     ...shown
                       .filter((id) => !items.some((m) => m.model === id))
+                      .slice(0, 200 - items.length)
                       .map((model) => ({ model, kind: "chat" as const })),
                   ])
                 }
@@ -295,73 +340,84 @@ export function ModelServiceDialog({
               </p>
             )}
           </div>
-          <div className="model-manual-row">
-            <input
-              aria-label="手动添加模型标识"
-              value={manual}
-              maxLength={120}
-              placeholder="手动添加服务实际支持的模型 ID"
-              onChange={(e) => setManual(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === "Enter") e.preventDefault();
-              }}
-            />
-            <SelectField
-              label="手动模型用途"
-              value={kind}
-              onValueChange={(value) => setKind(value as "chat" | "image")}
-              options={[
-                { value: "chat", label: "对话" },
-                { value: "image", label: "图片生成技能" },
-              ]}
-            />
-            <Button
-              disabled={!manual.trim() || Boolean(busy)}
-              onClick={() => {
-                const model = manual.trim();
-                setAvailable((items) => [...new Set([...items, model])]);
-                setSelected((items) => [
-                  ...items.filter((m) => m.model !== model),
-                  { model, kind },
-                ]);
-                setManual("");
-                setQuery("");
-              }}
-            >
-              <Plus size={16} />
-              添加
-            </Button>
-          </div>
+          {!catalog && (
+            <div className="model-manual-row">
+              <input
+                aria-label="手动添加模型标识"
+                value={manual}
+                maxLength={120}
+                placeholder="手动添加服务实际支持的模型 ID"
+                onChange={(e) => setManual(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") e.preventDefault();
+                }}
+              />
+              <SelectField
+                label="手动模型用途"
+                value={kind}
+                onValueChange={(value) => setKind(value as "chat" | "image")}
+                options={[
+                  { value: "chat", label: "对话" },
+                  { value: "image", label: "图片生成技能" },
+                ]}
+              />
+              <Button
+                disabled={!manual.trim() || Boolean(busy)}
+                onClick={() => {
+                  const model = manual.trim();
+                  setAvailable((items) => [...new Set([...items, model])]);
+                  setSelected((items) => [
+                    ...items.filter((m) => m.model !== model),
+                    { model, kind },
+                  ]);
+                  setManual("");
+                  setQuery("");
+                }}
+              >
+                <Plus size={16} />
+                添加
+              </Button>
+            </div>
+          )}
           <p className="muted model-service-help">
             官方选项使用各服务商的 OpenAI
             兼容接口。模型列表与可调用权限以所填密钥为准；图片生成技能需要支持
             images/generations 并返回 base64
-            图片。配置后自动加入公司技能，在对话中按需调用。获取列表不会发起内容生成。
+            图片。配置后自动加入{personal ? "个人" : "公司"}技能，在对话中按需调用。获取列表不会发起内容生成。
           </p>
-          <Field label="允许使用的部门（不选表示全公司）">
-            <div className="source-list">
-              {departments
-                .filter((d) => d.enabled)
-                .map((d) => (
-                  <label className="checkbox-row" key={d.id}>
-                    <input
-                      type="checkbox"
-                      name="departments"
-                      value={d.id}
-                      checked={scope.includes(d.id)}
-                      onChange={(e) =>
-                        setScope((ids) =>
-                          e.target.checked
-                            ? [...ids, d.id]
-                            : ids.filter((id) => id !== d.id),
-                        )
-                      }
-                    />
-                    <span>{d.name}</span>
-                  </label>
-                ))}
-            </div>
-          </Field>
+          {!personal && (
+            <Field label="允许使用的部门（不选表示全公司）">
+              <div className="source-list">
+                {departments
+                  .filter((d) => d.enabled)
+                  .map((d) => (
+                    <label className="checkbox-row" key={d.id}>
+                      <input
+                        type="checkbox"
+                        name="departments"
+                        value={d.id}
+                        checked={scope.includes(d.id)}
+                        onChange={(e) =>
+                          setScope((ids) =>
+                            e.target.checked
+                              ? [...ids, d.id]
+                              : ids.filter((id) => id !== d.id),
+                          )
+                        }
+                      />
+                      <span>{d.name}</span>
+                    </label>
+                  ))}
+              </div>
+            </Field>
+          )}
+          {personal && (
+            <p className="muted">
+              仅自己可用。无法分享连接或设置部门授权。
+              {!catalog &&
+                "个人密钥加密保存在公司服务器，仅用于你的请求；更换服务地址需重新填写密钥。个人服务需使用公网 HTTPS 地址。"}
+            </p>
+          )}
         </fieldset>
         {status && (
           <p role="status" className="muted">
@@ -406,18 +462,24 @@ export function ModelServiceCards({
   refresh,
   notify,
   revision,
+  personal = false,
 }: {
   departments: Department[];
   refresh: () => Promise<void>;
   notify: (message: string) => void;
   revision: unknown;
+  personal?: boolean;
 }) {
   const [services, setServices] = useState<ModelService[]>([]);
   const [editing, setEditing] = useState<ModelService>();
   const [error, setError] = useState("");
   async function load() {
     try {
-      setServices(await api<ModelService[]>("/model-services"));
+      setServices(
+        await api<ModelService[]>(
+          personal ? "/my-model-services" : "/model-services",
+        ),
+      );
       setError("");
     } catch (e) {
       setError((e as Error).message);
@@ -458,36 +520,159 @@ export function ModelServiceCards({
                 ))}
               </div>
               <small>
-                {s.departments.length
-                  ? s.departments
-                      .map(
-                        (id) =>
-                          departments.find((d) => d.id === id)?.name ?? id,
-                      )
-                      .join("、")
-                  : "全公司可用"}{" "}
-                · 密钥已保护保存
+                {personal
+                  ? "仅自己可用"
+                  : s.departments.length
+                    ? s.departments
+                        .map(
+                          (id) =>
+                            departments.find((d) => d.id === id)?.name ?? id,
+                        )
+                        .join("、")
+                    : "全公司可用"}{" "}
+                ·{" "}
+                {s.sourceServiceId
+                  ? "使用公司服务，无需填写密钥"
+                  : "密钥已保护保存"}
               </small>
             </div>
             <span className={`status ${s.models.length ? "good" : ""}`}>
               {s.models.length ? "已启用" : "未开放模型"}
             </span>
             <Button onClick={() => setEditing(s)}>管理模型</Button>
+            {personal && (
+              <Button
+                onClick={() => {
+                  void api(`/my-model-services/${s.id}`, {}, "DELETE")
+                    .then(async () => {
+                      await refresh();
+                      await load();
+                      notify("已移除个人连接，历史对话保留。");
+                    })
+                    .catch((e) => notify(e.message));
+                }}
+              >
+                移除连接
+              </Button>
+            )}
           </div>
         ))}
       </div>
       {editing && (
         <ModelServiceDialog
-          service={editing}
+          service={editing.sourceServiceId ? undefined : editing}
+          personal={personal}
+          catalog={
+            editing.sourceServiceId
+              ? { ...editing, id: editing.sourceServiceId }
+              : undefined
+          }
           departments={departments}
           close={() => setEditing(undefined)}
           saved={async () => {
             await refresh();
             await load();
-            notify("模型配置已保存，员工可在对话中选择已授权的模型。");
+            notify(personal ? "个人模型已保存，可在对话中选择。" : "模型配置已保存，员工可在对话中选择已授权的模型。");
           }}
         />
       )}
     </>
+  );
+}
+
+export function EmployeeModelServices({
+  refresh,
+  notify,
+  revision,
+}: {
+  refresh: () => Promise<void>;
+  notify: (message: string) => void;
+  revision: unknown;
+}) {
+  const [creating, setCreating] = useState(false),
+    [catalogs, setCatalogs] = useState<ModelService[]>([]),
+    [catalog, setCatalog] = useState<ModelService>(),
+    [error, setError] = useState("");
+  async function load() {
+    try {
+      setCatalogs(await api<ModelService[]>("/company-model-catalogs"));
+      setError("");
+    } catch (e) {
+      setError((e as Error).message);
+    }
+  }
+  useEffect(() => {
+    void load();
+  }, [revision]);
+  const saved = async () => {
+    await refresh();
+    await load();
+    notify(
+      "个人模型已保存，可在对话中选择；图片模型会自动成为仅自己可用的图片技能。",
+    );
+  };
+  return (
+    <section className="personal-model-services">
+      <div className="toolbar">
+        <strong>我的模型连接</strong>
+        <span className="bar-spacer" />
+        <Button primary onClick={() => setCreating(true)}>
+          <Plus size={18} />
+          自定义配置
+        </Button>
+      </div>
+      <p className="muted">
+        自行添加官方 API 或中转服务，仅自己可用。也可从公司授权的 LinoRoute
+        模型库选择更多模型。
+      </p>
+      {error && (
+        <p role="alert" className="error">
+          {error}
+          <Button onClick={() => void load()}>重试</Button>
+        </p>
+      )}
+      <ModelServiceCards
+        personal
+        departments={[]}
+        refresh={refresh}
+        notify={notify}
+        revision={revision}
+      />
+      {catalogs.map((source) => (
+        <div className="connection-card company-model-catalog" key={source.id}>
+          <span className="card-icon">
+            <Plug size={24} />
+          </span>
+          <div>
+            <h3>
+              {source.name}
+              <span className="provider-recommended">推荐</span>
+            </h3>
+            <p>
+              公司授权模型库 ·
+              浏览服务商返回的完整列表，搜索并多选，仅改变自己的模型选择。
+            </p>
+          </div>
+          <Button onClick={() => setCatalog(source)}>浏览 / 选择模型</Button>
+        </div>
+      ))}
+      {creating && (
+        <ModelServiceDialog
+          personal
+          departments={[]}
+          close={() => setCreating(false)}
+          saved={saved}
+        />
+      )}
+      {catalog && (
+        <ModelServiceDialog
+          personal
+          catalog={catalog}
+          departments={[]}
+          close={() => setCatalog(undefined)}
+          saved={saved}
+        />
+      )}
+    </section>
   );
 }

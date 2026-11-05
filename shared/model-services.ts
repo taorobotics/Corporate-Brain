@@ -65,6 +65,8 @@ export const modelProviders = [
 export type ModelProviderId = (typeof modelProviders)[number]["id"];
 export type ServiceModel = { model: string; kind: "chat" | "image" };
 export type ModelService = {
+  personal?: boolean;
+  sourceServiceId?: string;
   id: string;
   provider: ModelProviderId;
   name: string;

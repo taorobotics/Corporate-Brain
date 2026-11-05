@@ -1,6 +1,10 @@
 import type { Skill, User } from "../shared/types";
 import type { Store } from "./database";
-import { connectionSelect, resolveConnection } from "./model-services";
+import {
+  connectionSelect,
+  resolveConnection,
+  canUseConnection,
+} from "./model-services";
 
 /** A configured image API is a live company capability, never a downloaded secret. */
 export function imageSkills(store: Store, actor: User): Skill[] {
@@ -13,15 +17,10 @@ export function imageSkills(store: Store, actor: User): Skill[] {
       .all() as Record<string, any>[]
   )
     .map(resolveConnection)
-    .filter(
-      (row) =>
-        row.secret &&
-        (actor.role === "company_admin" ||
-          !JSON.parse(row.departments).length ||
-          JSON.parse(row.departments).includes(actor.departmentId)),
-    )
+    .filter((row) => row.secret && canUseConnection(row, actor))
     .map((row) => ({
       id: row.id,
+      ownerUserId: row.owner_user_id ?? undefined,
       name: "图片生成 · " + row.name,
       description: `使用 ${row.model} 按需生成图片，可与对话及其他技能组合。普通聊天和图片分析不会触发出图。`,
       version: "1.0.0",
@@ -33,7 +32,7 @@ export function imageSkills(store: Store, actor: User): Skill[] {
       authorId: "company-model-service",
       authorName: "公司模型服务",
       ownerDepartmentId: "",
-      ownerDepartmentName: "公司技能",
+      ownerDepartmentName: row.owner_user_id ? "仅自己可用" : "公司技能",
       audience: JSON.parse(row.departments).length ? "departments" : "company",
       targetDepartments: JSON.parse(row.departments),
       status: "published",

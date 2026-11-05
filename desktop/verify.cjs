@@ -1437,6 +1437,7 @@ async function waitFor(test, label, timeout = 12000) {
     JSON.stringify(actualFonts, null, 2),
   );
   web.debugger.detach();
+  await request("/model-services",{provider:"linoroute",name:"员工模型库验收",baseUrl:`http://127.0.0.1:${port}/image-skill-fixture`,apiKey:"synthetic-image-skill-ui-key",departments:[],models:[{model:"qa-text",kind:"chat"}]});
   await js(`document.querySelector('[aria-label="打开账号菜单"]').click()`);
   await click("退出登录");
   await waitFor(() => has("登录公司账号"), "logout");
@@ -1551,6 +1552,7 @@ async function waitFor(test, label, timeout = 12000) {
   checks.push(
     "Another employee installs the shared Skill without author history",
   );
+  await require("./verify-personal-models.cjs")({js,click,fill,waitFor,request,selectOption,key,capture,checks,win});
   for (const [page, label] of [
     ["projects", "项目"],
     ["knowledge", "公司知识"],

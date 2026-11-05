@@ -41,7 +41,13 @@ import {
   resolveConnection,
   migrateLinoRoute,
   mountModelServices,
+  canUseConnection,
 } from "./model-services";
+import {
+  modelFetch,
+  privateModelProxy,
+  type ModelTransport,
+} from "./model-transport";
 import type { ChatProgress } from "../shared/chat-progress";
 import { readChatResponse } from "./chat-stream";
 import { createChatDeadline, ChatTimeoutError } from "./chat-deadline";
@@ -174,6 +180,7 @@ function skillView(row: Row): Skill {
   };
 }
 export function visible(skill: Skill, actor: User) {
+  if (skill.ownerUserId) return skill.ownerUserId === actor.id;
   return (
     actor.role === "company_admin" ||
     (skill.status === "published" &&
@@ -202,11 +209,14 @@ function connectionView(row: Row): Connection {
     enabled: row.enabled,
     serviceId: row.service_id ?? undefined,
     serviceName: row.service_name ?? undefined,
+    personal: Boolean(row.owner_user_id),
+    sourceServiceId: row.source_service_id ?? undefined,
   };
 }
 export function createPlatform(
   options: {
     database?: string;
+    modelTransport?: ModelTransport;
     origins?: string[];
     secureCookies?: boolean;
     updates?: import("./updates").UpdateOptions;
@@ -220,6 +230,7 @@ export function createPlatform(
   migrateLinoRoute(store);
   const dsh = process.env.BRAIN_DSH_ENABLED === "0" ? null : new DshManager();
   const { db } = store;
+  const fetchModel = options.modelTransport ?? modelFetch;
   const app = express();
   app.disable("x-powered-by");
   app.use(express.json({ limit: "16mb" }));
@@ -862,17 +873,15 @@ export function createPlatform(
     const actor = getActor(req);
     const rows = (
       db.prepare(connectionSelect + " ORDER BY c.name").all() as Row[]
-    )
-      .map(resolveConnection)
-      .map(connectionView);
+    ).map(resolveConnection);
     res.json(
-      rows.filter(
-        (row) =>
-          actor.role === "company_admin" ||
-          (row.enabled &&
-            (!row.departments.length ||
-              row.departments.includes(actor.departmentId))),
-      ),
+      rows
+        .filter(
+          (row) =>
+            (!row.owner_user_id && actor.role === "company_admin") ||
+            canUseConnection(row, actor),
+        )
+        .map(connectionView),
     );
   });
   app.post("/api/connections", (req, res) => {
@@ -927,24 +936,23 @@ export function createPlatform(
   app.delete("/api/connections/:id", (req, res) => {
     const actor = getActor(req);
     admin(actor);
+    const target = db
+      .prepare(connectionSelect + " WHERE c.id=?")
+      .get(id.parse(req.params.id)) as Row | undefined;
+    if (target?.owner_user_id)
+      fail(403, "个人连接只能由本人通过个人模型配置管理");
     db.prepare("UPDATE connections SET enabled=0 WHERE id=?").run(
       id.parse(req.params.id),
     );
     store.audit(actor.id, "connection.disabled", String(req.params.id));
     res.json({ ok: true });
   });
-  mountModelServices(app, store, getActor, fail);
+  mountModelServices(app, store, getActor, fail, fetchModel);
   function getConnection(connectionId: string, actor: User, kind: string) {
     const row = db
       .prepare(connectionSelect + " WHERE c.id=? AND c.enabled=1")
       .get(connectionId) as Row | undefined;
-    if (
-      !row ||
-      row.kind !== kind ||
-      (actor.role !== "company_admin" &&
-        JSON.parse(row.departments).length &&
-        !JSON.parse(row.departments).includes(actor.departmentId))
-    )
+    if (!row || row.kind !== kind || !canUseConnection(row, actor))
       fail(403, "模型未配置、已停用或无权使用");
     return resolveConnection(row);
   }
@@ -956,7 +964,7 @@ export function createPlatform(
   ) {
     let response: globalThis.Response;
     try {
-      response = await fetch(`${row.base_url}${endpoint}`, {
+      response = await fetchModel(row, `${row.base_url}${endpoint}`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -1024,16 +1032,20 @@ export function createPlatform(
       )
         fail(403, "员工账号当前不可用");
       const row = getConnection(connectionId, userView(actor), "chat");
-      const response = await fetch(`${row.base_url}/chat/completions`, {
-        method: "POST",
-        redirect: "error",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${store.decrypt(row.secret)}`,
+      const response = await fetchModel(
+        row,
+        `${row.base_url}/chat/completions`,
+        {
+          method: "POST",
+          redirect: "error",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${store.decrypt(row.secret)}`,
+          },
+          body: JSON.stringify(productionCompletionBody(row.model, messages)),
+          signal: AbortSignal.any([signal, AbortSignal.timeout(240_000)]),
         },
-        body: JSON.stringify(productionCompletionBody(row.model, messages)),
-        signal: AbortSignal.any([signal, AbortSignal.timeout(240_000)]),
-      });
+      );
       if (!response.ok)
         throw new ProductionError(
           502,
@@ -1097,49 +1109,53 @@ export function createPlatform(
     };
     res.on("close", disconnected);
     try {
-      const response = await fetch(`${row.base_url}/chat/completions`, {
-        method: "POST",
-        redirect: "error",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${store.decrypt(row.secret)}`,
+      const response = await fetchModel(
+        row,
+        `${row.base_url}/chat/completions`,
+        {
+          method: "POST",
+          redirect: "error",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${store.decrypt(row.secret)}`,
+          },
+          signal: AbortSignal.any([
+            controller.signal,
+            AbortSignal.timeout(45000),
+          ]),
+          body: JSON.stringify({
+            model: row.model,
+            stream: false,
+            max_tokens: 2048,
+            ...(String(row.model).toLowerCase().startsWith("deepseek")
+              ? { thinking: { type: "disabled" } }
+              : {}),
+            messages: [
+              { role: "system", content: AUTOMATIC_ROUTER_INSTRUCTION },
+              {
+                role: "user",
+                content: JSON.stringify({
+                  messages: data.messages.slice(-8).map((message) => ({
+                    ...message,
+                    content: message.content.slice(-12000),
+                  })),
+                  attachments: data.attachments,
+                  skillMode: data.skillMode,
+                  explicitSkillIds:
+                    data.skillMode === "manual"
+                      ? candidates.map((skill) => skill.id)
+                      : [],
+                  availableSkills: candidates.map((skill) => ({
+                    id: skill.id,
+                    name: skill.name,
+                    description: skill.description.slice(0, 500),
+                  })),
+                }),
+              },
+            ],
+          }),
         },
-        signal: AbortSignal.any([
-          controller.signal,
-          AbortSignal.timeout(45000),
-        ]),
-        body: JSON.stringify({
-          model: row.model,
-          stream: false,
-          max_tokens: 2048,
-          ...(String(row.model).toLowerCase().startsWith("deepseek")
-            ? { thinking: { type: "disabled" } }
-            : {}),
-          messages: [
-            { role: "system", content: AUTOMATIC_ROUTER_INSTRUCTION },
-            {
-              role: "user",
-              content: JSON.stringify({
-                messages: data.messages.slice(-8).map((message) => ({
-                  ...message,
-                  content: message.content.slice(-12000),
-                })),
-                attachments: data.attachments,
-                skillMode: data.skillMode,
-                explicitSkillIds:
-                  data.skillMode === "manual"
-                    ? candidates.map((skill) => skill.id)
-                    : [],
-                availableSkills: candidates.map((skill) => ({
-                  id: skill.id,
-                  name: skill.name,
-                  description: skill.description.slice(0, 500),
-                })),
-              }),
-            },
-          ],
-        }),
-      });
+      );
       if (!response.ok)
         fail(
           502,
@@ -1190,15 +1206,11 @@ export function createPlatform(
         const image = (
           db
             .prepare(
-              "SELECT * FROM connections WHERE enabled=1 AND kind='image' ORDER BY rowid",
+              connectionSelect +
+                " WHERE c.enabled=1 AND c.kind='image' ORDER BY c.rowid",
             )
             .all() as Row[]
-        ).find(
-          (candidate) =>
-            actor.role === "company_admin" ||
-            !JSON.parse(candidate.departments).length ||
-            JSON.parse(candidate.departments).includes(actor.departmentId),
-        );
+        ).find((candidate) => canUseConnection(candidate, actor));
         if (!image)
           fail(
             409,
@@ -1340,23 +1352,35 @@ export function createPlatform(
       const hasImageAttachment = visuals.length > 0;
       try {
         if (!dsh) throw new DshUnavailableError("DSH 已由管理员停用");
-        const result = await dsh.runDetailed({
-          connectionId: row.id,
-          baseUrl: row.base_url,
-          model: row.model,
-          apiKey: store.decrypt(row.secret),
-          userId: actor.id,
-          sessionId: data.sessionId ?? randomUUID(),
-          messages: data.messages,
-          attachments: data.attachments,
-          mode: data.mode,
-          workspaceAccess: data.workspaceAccess,
-          skillResources,
-          signal,
-          onProgress: emit,
-        });
-        content = result.content;
-        usage = result.usage;
+        const proxy =
+          row.owner_user_id && !row.source_service_id
+            ? await privateModelProxy(
+                row,
+                store.decrypt(row.secret),
+                fetchModel,
+              )
+            : undefined;
+        try {
+          const result = await dsh.runDetailed({
+            connectionId: row.id,
+            baseUrl: proxy?.url ?? row.base_url,
+            model: row.model,
+            apiKey: proxy?.key ?? store.decrypt(row.secret),
+            userId: actor.id,
+            sessionId: data.sessionId ?? randomUUID(),
+            messages: data.messages,
+            attachments: data.attachments,
+            mode: data.mode,
+            workspaceAccess: data.workspaceAccess,
+            skillResources,
+            signal,
+            onProgress: emit,
+          });
+          content = result.content;
+          usage = result.usage;
+        } finally {
+          await proxy?.close();
+        }
       } catch (error) {
         signal.throwIfAborted();
         // Visual requests can be accepted by the OpenAI-compatible provider even
@@ -1395,7 +1419,8 @@ export function createPlatform(
             ],
           };
         });
-        const providerResponse = await fetch(
+        const providerResponse = await fetchModel(
+          row,
           `${row.base_url}/chat/completions`,
           {
             method: "POST",

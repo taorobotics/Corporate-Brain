@@ -30,6 +30,7 @@ import {
 } from "@phosphor-icons/react";
 import { SelectField } from "./Dropdown";
 import SkillPicker from "./SkillPicker";
+import { EmployeeModelServices } from "./ModelServices";
 import {
   ChatProduction,
   ProductionLocation,
@@ -693,7 +694,12 @@ export default function Workspace(props: WorkspaceProps) {
         notify("当前工作区为仅可查看，先切换到工作区内修改或完全权限。");
         return;
       }
-      const name = `公司大脑-${Date.now()}.png`;
+      const extension = image.startsWith("data:image/jpeg;")
+        ? "jpg"
+        : image.startsWith("data:image/webp;")
+          ? "webp"
+          : "png";
+      const name = `公司大脑-${Date.now()}.${extension}`;
       if (window.brainDesktop) {
         if (await window.brainDesktop.saveFile(name, image.split(",")[1], true))
           notify("已保存图片。");
@@ -1726,13 +1732,18 @@ export default function Workspace(props: WorkspaceProps) {
               ) : undefined
             }
           />
+          <EmployeeModelServices
+            refresh={props.refresh}
+            notify={notify}
+            revision={connections}
+          />
           <div className="tabs">
             <button className="active">公司提供</button>
             <span className="tab-note">
               对话模型与图片生成技能由公司统一提供
             </span>
           </div>
-          {!connections.length ? (
+          {!connections.filter((c) => !c.personal).length ? (
             <Empty
               icon={<Plug size={36} />}
               title="还没有可用的模型连接"
@@ -1747,40 +1758,43 @@ export default function Workspace(props: WorkspaceProps) {
             />
           ) : (
             <div className="connection-list">
-              {connections.map((c) => (
-                <div className="connection-card" key={c.id}>
-                  <span className="card-icon">
-                    <Plug size={24} />
-                  </span>
-                  <div>
-                    <h3>{c.name}</h3>
-                    <p>
-                      {c.model} · {c.kind === "chat" ? "对话" : "图片生成技能"}
-                    </p>
-                    <small>{c.baseUrl}</small>
+              {connections
+                .filter((c) => !c.personal)
+                .map((c) => (
+                  <div className="connection-card" key={c.id}>
+                    <span className="card-icon">
+                      <Plug size={24} />
+                    </span>
+                    <div>
+                      <h3>{c.name}</h3>
+                      <p>
+                        {c.model} ·{" "}
+                        {c.kind === "chat" ? "对话" : "图片生成技能"}
+                      </p>
+                      <small>{c.baseUrl}</small>
+                    </div>
+                    <span className="badge">公司连接</span>
+                    <Button
+                      onClick={() => {
+                        if (c.kind === "image") {
+                          patchSettings({
+                            skillMode: "manual",
+                            skillIds: [
+                              ...new Set([...selectedSkillIds, c.id]),
+                            ].slice(-16),
+                          });
+                          navigate("chat");
+                          notify("图片技能已就绪，直接在对话中提出配图需求。");
+                        } else {
+                          patchSettings({ model: c.id });
+                          notify("已设置为对话模型。");
+                        }
+                      }}
+                    >
+                      {c.kind === "image" ? "使用图片技能" : "选用"}
+                    </Button>
                   </div>
-                  <span className="badge">公司连接</span>
-                  <Button
-                    onClick={() => {
-                      if (c.kind === "image") {
-                        patchSettings({
-                          skillMode: "manual",
-                          skillIds: [
-                            ...new Set([...selectedSkillIds, c.id]),
-                          ].slice(-16),
-                        });
-                        navigate("chat");
-                        notify("图片技能已就绪，直接在对话中提出配图需求。");
-                      } else {
-                        patchSettings({ model: c.id });
-                        notify("已设置为对话模型。");
-                      }
-                    }}
-                  >
-                    {c.kind === "image" ? "使用图片技能" : "选用"}
-                  </Button>
-                </div>
-              ))}
+                ))}
             </div>
           )}
           <div className="notice">

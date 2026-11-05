@@ -1,5 +1,6 @@
 // A disposable server for Electron interaction tests; never opens the company's database.
 import { createPlatform } from "./platform";
+import { modelFetch } from "./model-transport";
 import express from "express";
 import { resolve, join } from "node:path";
 import { readFileSync, mkdtempSync, rmSync } from "node:fs";
@@ -27,6 +28,16 @@ const fixtureFiles: Record<string, string> = {
 const { app, library } = createPlatform({
   database: ":memory:",
   origins,
+  modelTransport: (row, url, init) =>
+    url.startsWith("https://personal-ui.invalid/")
+      ? fetch(
+          url.replace(
+            "https://personal-ui.invalid",
+            `http://127.0.0.1:${(server.address() as any).port}`,
+          ),
+          init,
+        )
+      : modelFetch(row, url, init),
   nas: {
     list: async (_source, path, search) => ({
       entries: (path
@@ -135,6 +146,13 @@ app.get("/model-service-fixture/models", (req, res) => {
   });
 });
 let imageSkillCalls = 0;
+app.get("/image-skill-fixture/models", (req, res) => {
+  if (req.headers.authorization !== "Bearer synthetic-image-skill-ui-key")
+    return res.sendStatus(401);
+  res.json({
+    data: [{ id: "qa-text" }, { id: "qa-text-alt" }, { id: "qa-image" }],
+  });
+});
 app.post("/image-skill-fixture/chat/completions", (req, res) => {
   if (req.headers.authorization !== "Bearer synthetic-image-skill-ui-key")
     return res.sendStatus(401);

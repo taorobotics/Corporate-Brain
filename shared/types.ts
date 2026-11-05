@@ -45,6 +45,7 @@ export type SkillPackage = {
   requiredTools: string[];
 };
 export type Skill = SkillPackage & {
+  ownerUserId?: string;
   capability?: { kind: "image"; connectionId: string; model: string };
   imported?: import("./skill-import").ImportedSkillSource;
   id: string;
@@ -59,6 +60,8 @@ export type Skill = SkillPackage & {
   createdAt: string;
 };
 export type Connection = {
+  personal?: boolean;
+  sourceServiceId?: string;
   id: string;
   name: string;
   baseUrl: string;
