@@ -219,7 +219,7 @@ jobs:
   distribute:
     name: Verify company update distribution
     needs: publish
-    if: ${{ vars.BRAIN_UPDATE_MIRROR == 'true' }}
+    if: ${{ always() && !cancelled() && needs.publish.result == 'success' && vars.BRAIN_UPDATE_MIRROR == 'true' }}
     runs-on: ubuntu-24.04
     timeout-minutes: 90
     permissions:
