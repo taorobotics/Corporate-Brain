@@ -1,0 +1,267 @@
+{
+  "version": "0.23.0",
+  "sourceCommit": "1e7c4eaa03e448e931442d394289269876d026b6",
+  "result": "passed",
+  "verifiedAt": "2026-11-05T04:20:58.023Z",
+  "feature": {
+    "configuredImageApiBecomesCompanySkill": true,
+    "chatModelPreserved": true,
+    "textAndImageInSameReply": true,
+    "ordinaryChatDoesNotGenerate": true,
+    "multipleSkillsComposable": true,
+    "departmentAuthorizationAndRevocationChecked": true,
+    "cancellationAndFailureVerified": true,
+    "largeImageStreamVerified": true,
+    "localPersistenceAndReloadVerified": true,
+    "windowsTransientSaveLockRetried": true,
+    "live": {
+      "version": "0.23.0",
+      "result": "passed",
+      "checkedAt": "2026-11-05T04:05:32.203Z",
+      "accounts": 224,
+      "primaryAdministratorPreserved": true,
+      "chatConnections": 3,
+      "configuredImageModels": 0,
+      "availableImageSkills": 0,
+      "requiresImageApiConfiguration": true,
+      "imageSkillCapabilityMappingVerified": true,
+      "forgedInvocationDeniedBeforeProviderCall": true,
+      "realModelGenerations": 0,
+      "credentialsExcluded": true
+    }
+  },
+  "deployment": {
+    "url": "https://192.168.20.21:14443",
+    "health": {
+      "status": "ok",
+      "version": "0.23.0",
+      "chatStorage": "device-only"
+    },
+    "backup": "/Users/staff01/CorporateBrainServer/backups/before-v0.23.0-2026-11-05T04-04-34-914Z",
+    "counts": {
+      "users": 224,
+      "departments": 13,
+      "nas_sources": 14,
+      "skills": 3
+    },
+    "dataPreserved": true,
+    "modelSettingsPreserved": true,
+    "modelCredentialsPreserved": true,
+    "primaryAdministratorPreserved": true,
+    "tlsVerified": true,
+    "cloudBusinessServiceChanged": false
+  },
+  "localChecks": {
+    "windowsNodeTests": 123,
+    "macNodeTests": 123,
+    "windowsNasWorkerTests": 5,
+    "macNasWorkerTests": 5,
+    "windowsDesktopChecks": 44,
+    "macDesktopChecks": 42,
+    "actualMacRender": {
+      "seconds": 3,
+      "frames": 72,
+      "width": 1280,
+      "height": 720,
+      "audio": true,
+      "bytes": 135833,
+      "sha256": "d170d88adc3915053998d42a47497fd7eea12f58510cfedaa7d4b0cbad8d7609"
+    },
+    "physicalEmployeeDeviceTested": false,
+    "realImageModelGenerations": 0
+  },
+  "lanDistribution": {
+    "channels": {
+      "win32-x64": {
+        "name": "Corporate-Brain-Setup-0.23.0-x64.exe",
+        "bytes": 120004062,
+        "sha256": "1a398a95bb1eae3ca94bce3ad164853fdb75517eff7f8ae6e5e1ddd4ee775204"
+      },
+      "darwin-arm64": {
+        "name": "Corporate-Brain-0.23.0-macOS-arm64.dmg",
+        "bytes": 138650954,
+        "sha256": "f738f98007a986f96dd762ec068c6f9dde989146fe0fe1376711332cc374cd1d"
+      }
+    },
+    "authenticatedFullDownloads": [
+      {
+        "platform": "win32-x64",
+        "version": "0.23.0",
+        "bytes": 120004062,
+        "sha256": "1a398a95bb1eae3ca94bce3ad164853fdb75517eff7f8ae6e5e1ddd4ee775204"
+      },
+      {
+        "platform": "darwin-arm64",
+        "version": "0.23.0",
+        "bytes": 138650954,
+        "sha256": "f738f98007a986f96dd762ec068c6f9dde989146fe0fe1376711332cc374cd1d"
+      }
+    ],
+    "temporaryTestAccountRemoved": true,
+    "defaultServer": "https://192.168.20.21:14443",
+    "independentlyBuiltFromProductTag": true,
+    "intelMacActivated": false
+  },
+  "githubRelease": {
+    "status": "passed",
+    "runId": 41964801084,
+    "runUrl": "https://github.com/taorobotics/Corporate-Brain/actions/runs/41964801084",
+    "releaseId": 434765878,
+    "tag": "v0.23.0",
+    "url": "https://github.com/taorobotics/Corporate-Brain/releases/tag/v0.23.0",
+    "draft": false,
+    "publicLatest": "v0.23.0",
+    "productCommit": "1e7c4eaa03e448e931442d394289269876d026b6",
+    "verificationToolsCommit": "1e7c4eaa03e448e931442d394289269876d026b6",
+    "sourceAndTagPushed": true,
+    "assetsVerified": [
+      {
+        "name": "Corporate-Brain-0.23.0-macOS-arm64.dmg",
+        "bytes": 139860187,
+        "digest": "sha256:f7d5582fb76a46333d5fb3ffcc36248889568f6bc5c461b7e5f7f700ecc4b69d"
+      },
+      {
+        "name": "Corporate-Brain-0.23.0-macOS-x64.dmg",
+        "bytes": 145378796,
+        "digest": "sha256:98df489a2263c9031c52b4adb74815d5329d4ac8337d52b320adfa3e849f2002"
+      },
+      {
+        "name": "Corporate-Brain-Server-0.23.0.zip",
+        "bytes": 22605353,
+        "digest": "sha256:2a1e3efbcbb43478236eeeef2ed0a534b3fb3c103ac63000cddb9678fdd5f434"
+      },
+      {
+        "name": "Corporate-Brain-Setup-0.23.0-x64.exe",
+        "bytes": 120003923,
+        "digest": "sha256:3e5172c4c8460eca910f97b1bc9a40fbf5b798c806fce72e6febf41054be9e88"
+      },
+      {
+        "name": "macos-verification-arm64.json",
+        "bytes": 8779,
+        "digest": "sha256:903cc479216a1f9b3370f443e4dfbeeb5e7d9fcb3026920d0faf449cd98b95f4"
+      },
+      {
+        "name": "macos-verification-x64.json",
+        "bytes": 8775,
+        "digest": "sha256:714d8106e3cc6071e82b20e593555dfeb4cddf130ce6ea2d496d349a95d19aff"
+      },
+      {
+        "name": "server-verification.json",
+        "bytes": 17150,
+        "digest": "sha256:80c86a2b51f0c4cc6fe46c9424485e54f3ca4962d0cfc5c29bea84cbe38d9dcd"
+      },
+      {
+        "name": "SHA256SUMS-macOS-arm64.txt",
+        "bytes": 105,
+        "digest": "sha256:103147d560de1b513dbd3aad7a0d1e06c823de445600765fd0be052ce39eee50"
+      },
+      {
+        "name": "SHA256SUMS-macOS-x64.txt",
+        "bytes": 103,
+        "digest": "sha256:6422510fdcca1afbefa4c6f0f9f135b0dfe98474f736dfb687301fc90caceadc"
+      },
+      {
+        "name": "SHA256SUMS-Server.txt",
+        "bytes": 100,
+        "digest": "sha256:0f01128e20d8adf7cf85af8b3b284d93f345f2cd3fc08d584925dabdf806e50b"
+      },
+      {
+        "name": "SHA256SUMS-Windows-x64.txt",
+        "bytes": 103,
+        "digest": "sha256:b094955f221bf15fc4b42773ab852fd37d5a5dea109848c4371149f445797d46"
+      },
+      {
+        "name": "SHA256SUMS.txt",
+        "bytes": 411,
+        "digest": "sha256:821ae37a5f2b201dd9554d52f2b62f80fac8cf88b4a7f03e7f353cff1b366633"
+      },
+      {
+        "name": "windows-verification-x64.json",
+        "bytes": 11565,
+        "digest": "sha256:41d27100e11e220d9ef17d60f80f5d49f38280777404938a9a9e62ae760c0ef0"
+      }
+    ],
+    "installersAndServer": [
+      {
+        "name": "Corporate-Brain-Setup-0.23.0-x64.exe",
+        "bytes": 120003923,
+        "sha256": "3e5172c4c8460eca910f97b1bc9a40fbf5b798c806fce72e6febf41054be9e88"
+      },
+      {
+        "name": "Corporate-Brain-0.23.0-macOS-arm64.dmg",
+        "bytes": 139860187,
+        "sha256": "f7d5582fb76a46333d5fb3ffcc36248889568f6bc5c461b7e5f7f700ecc4b69d"
+      },
+      {
+        "name": "Corporate-Brain-0.23.0-macOS-x64.dmg",
+        "bytes": 145378796,
+        "sha256": "98df489a2263c9031c52b4adb74815d5329d4ac8337d52b320adfa3e849f2002"
+      },
+      {
+        "name": "Corporate-Brain-Server-0.23.0.zip",
+        "bytes": 22605353,
+        "sha256": "2a1e3efbcbb43478236eeeef2ed0a534b3fb3c103ac63000cddb9678fdd5f434"
+      }
+    ],
+    "windows": {
+      "realInstallUpgradeUninstall": true,
+      "lifecycleChecks": 17,
+      "handoffChecks": 5,
+      "signature": "NotSigned",
+      "physicalEmployeeDeviceTested": false
+    },
+    "macPlatforms": [
+      {
+        "architecture": "arm64",
+        "packageMountAndLaunch": "passed",
+        "desktopChecks": 42,
+        "signing": "ad-hoc",
+        "notarized": false
+      },
+      {
+        "architecture": "x64",
+        "packageMountAndLaunch": "passed",
+        "desktopChecks": 42,
+        "signing": "ad-hoc",
+        "notarized": false
+      }
+    ],
+    "distribution": {
+      "status": "completed",
+      "conclusion": "success",
+      "url": "https://github.com/taorobotics/Corporate-Brain/actions/runs/41964801084/job/127042231918"
+    },
+    "checkedAt": "2026-11-05T04:20:22.467Z"
+  },
+  "cloudInstallerMirror": {
+    "version": "0.23.0",
+    "result": "passed",
+    "assets": [
+      {
+        "target": "win32-x64",
+        "name": "Corporate-Brain-Setup-0.23.0-x64.exe",
+        "bytes": 120003923,
+        "sha256": "3e5172c4c8460eca910f97b1bc9a40fbf5b798c806fce72e6febf41054be9e88"
+      },
+      {
+        "target": "darwin-arm64",
+        "name": "Corporate-Brain-0.23.0-macOS-arm64.dmg",
+        "bytes": 139860187,
+        "sha256": "f7d5582fb76a46333d5fb3ffcc36248889568f6bc5c461b7e5f7f700ecc4b69d"
+      },
+      {
+        "target": "darwin-x64",
+        "name": "Corporate-Brain-0.23.0-macOS-x64.dmg",
+        "bytes": 145378796,
+        "sha256": "98df489a2263c9031c52b4adb74815d5329d4ac8337d52b320adfa3e849f2002"
+      }
+    ],
+    "checkedAt": "2026-11-05T04:20:17.644Z"
+  },
+  "signing": {
+    "windows": "NotSigned",
+    "mac": "ad-hoc",
+    "appleNotarized": false
+  },
+  "privateDataIncludedInPublicArtifacts": false
+}
