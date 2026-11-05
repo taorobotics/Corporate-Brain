@@ -27,7 +27,7 @@ const config = z
   .strict();
 
 /** All model invocations resolve credentials from the same service record. */
-export const connectionSelect = `SELECT c.*,COALESCE(source.secret,s.secret,c.secret) AS effective_secret,s.name AS service_name,s.owner_user_id,s.source_service_id,s.deleted AS service_deleted,
+export const connectionSelect = `SELECT c.*,COALESCE(source.secret,s.secret,c.secret) AS effective_secret,s.name AS service_name,s.provider AS service_provider,s.owner_user_id,s.source_service_id,s.deleted AS service_deleted,
   COALESCE(source.base_url,s.base_url,c.base_url) AS effective_url,source.departments AS source_departments,
   CASE WHEN s.source_service_id IS NULL THEN 1 ELSE (source.id IS NOT NULL AND source.owner_user_id IS NULL AND source.deleted=0 AND EXISTS(SELECT 1 FROM connections original WHERE original.service_id=source.id AND original.enabled=1)) END AS source_active
   FROM connections c LEFT JOIN model_services s ON s.id=c.service_id LEFT JOIN model_services source ON source.id=s.source_service_id`;

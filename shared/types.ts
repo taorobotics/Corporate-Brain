@@ -72,6 +72,7 @@ export type Connection = {
   enabled: number;
   serviceId?: string;
   serviceName?: string;
+  serviceProvider?: import("./model-services").ModelProviderId;
 };
 export type Message = {
   id: string;

@@ -9,7 +9,70 @@ import {
   publicModelAddress,
   privateModelProxy,
   publicModelLookup,
+  scopedModelLookup,
+  modelUsesCustomDns,
 } from "./model-transport";
+
+test("model DNS configuration loaded after imports applies to transport and can be disabled", async () => {
+  const previous = process.env.BRAIN_MODEL_DOH_HOSTS;
+  const originalFetch = globalThis.fetch;
+  const requests: any[] = [];
+  globalThis.fetch = (async (_url, init) => {
+    requests.push(init);
+    return new Response("OK");
+  }) as typeof fetch;
+  try {
+    delete process.env.BRAIN_MODEL_DOH_HOSTS;
+    assert.equal(modelUsesCustomDns("https://model.example/v1"), false);
+    process.env.BRAIN_MODEL_DOH_HOSTS = " MODEL.EXAMPLE , other.example ";
+    assert.equal(modelUsesCustomDns("https://model.example/v1"), true);
+    assert.equal(modelUsesCustomDns("http://model.example/v1"), false);
+    assert.equal(modelUsesCustomDns("https://unconfigured.example/v1"), false);
+    await modelFetch({}, "https://model.example/v1", {});
+    assert.ok(requests.at(-1).dispatcher);
+    delete process.env.BRAIN_MODEL_DOH_HOSTS;
+    await modelFetch({}, "https://model.example/v1", {});
+    assert.equal(requests.at(-1).dispatcher, undefined);
+    assert.equal(modelUsesCustomDns("https://model.example/v1"), false);
+  } finally {
+    globalThis.fetch = originalFetch;
+    if (previous === undefined) delete process.env.BRAIN_MODEL_DOH_HOSTS;
+    else process.env.BRAIN_MODEL_DOH_HOSTS = previous;
+  }
+});
+
+test("Project model DNS uses verified HTTPS resolution only for configured hosts, caches TTL and rejects private answers", async () => {
+  let calls = 0;
+  const resolver = scopedModelLookup(
+    new Set(["model.example"]),
+    ((_h: any, _o: any, cb: any) =>
+      cb(null, [{ address: "127.0.0.1", family: 4 }])) as any,
+    async () => {
+      calls++;
+      return [{ address: "8.8.8.8", ttl: 30 }];
+    },
+  );
+  const run = (fn: any, host: string) =>
+    new Promise<any[]>((resolve, reject) =>
+      fn(host, { all: true }, (e: any, r: any[]) =>
+        e ? reject(e) : resolve(r),
+      ),
+    );
+  assert.deepEqual(await run(resolver, "model.example"), [
+    { address: "8.8.8.8", family: 4 },
+  ]);
+  await run(resolver, "model.example");
+  assert.equal(calls, 1);
+  assert.deepEqual(await run(resolver, "localhost"), [
+    { address: "127.0.0.1", family: 4 },
+  ]);
+  const blocked = scopedModelLookup(
+    new Set(["model.example"]),
+    undefined,
+    async () => [{ address: "192.168.1.1", ttl: 20 }],
+  );
+  await assert.rejects(run(blocked, "model.example"), /non-public/);
+});
 
 test("employees privately configure models and choose the authorized LinoRoute catalog without sharing credentials", async (t) => {
   const old = process.env.BRAIN_DSH_ENABLED;

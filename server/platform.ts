@@ -45,6 +45,7 @@ import {
 } from "./model-services";
 import {
   modelFetch,
+  modelUsesCustomDns,
   privateModelProxy,
   type ModelTransport,
 } from "./model-transport";
@@ -209,6 +210,7 @@ function connectionView(row: Row): Connection {
     enabled: row.enabled,
     serviceId: row.service_id ?? undefined,
     serviceName: row.service_name ?? undefined,
+    serviceProvider: row.service_provider ?? undefined,
     personal: Boolean(row.owner_user_id),
     sourceServiceId: row.source_service_id ?? undefined,
   };
@@ -1353,7 +1355,7 @@ export function createPlatform(
       try {
         if (!dsh) throw new DshUnavailableError("DSH 已由管理员停用");
         const proxy =
-          row.owner_user_id && !row.source_service_id
+          (row.owner_user_id && !row.source_service_id) || modelUsesCustomDns(row.base_url)
             ? await privateModelProxy(
                 row,
                 store.decrypt(row.secret),

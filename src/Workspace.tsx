@@ -30,6 +30,7 @@ import {
 } from "@phosphor-icons/react";
 import { SelectField } from "./Dropdown";
 import SkillPicker from "./SkillPicker";
+import ModelPicker from "./ModelPicker";
 import { EmployeeModelServices } from "./ModelServices";
 import {
   ChatProduction,
@@ -1112,26 +1113,11 @@ export default function Workspace(props: WorkspaceProps) {
                     AI 自动
                   </span>
                   <span className="bar-spacer" />
-                  <SelectField
-                    label="选择模型"
-                    variant="quiet"
-                    side="top"
-                    align="end"
+                  <ModelPicker
+                    connections={taskModels}
                     value={model?.id ?? null}
-                    placeholder="未配置模型"
-                    onValueChange={(value) => patchSettings({ model: value })}
-                    options={taskModels.map((c) => ({
-                      value: c.id,
-                      label: c.name,
-                      description: c.model,
-                      icon: <Plug size={18} />,
-                    }))}
-                    emptyText="尚未配置可用模型"
-                    emptyDescription="添加服务连接后，即可在这里切换获准使用的模型。"
-                    action={{
-                      label: "前往模型与服务",
-                      onClick: () => navigate("models"),
-                    }}
+                    change={(value) => patchSettings({ model: value })}
+                    manage={() => navigate("models")}
                   />
                   <SelectField
                     label="工作区权限"

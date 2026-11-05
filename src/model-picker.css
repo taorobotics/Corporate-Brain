@@ -1,0 +1,35 @@
+.model-picker-popup {
+  width: 248px;
+}
+.model-picker-submenu {
+  width: 320px;
+}
+.model-picker-popup,
+.model-picker-submenu {
+  min-width: 0;
+}
+.model-picker-submenu .select-list {
+  max-height: min(390px, calc(var(--available-height) - 60px));
+}
+.model-provider-option > svg {
+  flex-shrink: 0;
+  color: var(--muted);
+}
+.model-provider-option[data-popup-open] {
+  background: var(--menu-hover);
+}
+.model-picker-option[data-checked] {
+  background: var(--menu-selected);
+}
+.model-picker-manage {
+  justify-content: space-between;
+  font-size: 12px;
+}
+@media (max-width: 780px) {
+  .model-picker-popup {
+    width: 215px;
+  }
+  .model-picker-submenu {
+    width: min(280px, calc(100vw - 24px));
+  }
+}

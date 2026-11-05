@@ -75,9 +75,106 @@ export function publicModelLookup(
     else callback(null, candidates[0].address, candidates[0].family);
   });
 }
+// Project-scoped DNS repair for explicitly configured upstream hostnames. The
+// URL/SNI and certificate validation remain unchanged; NAS/system DNS is untouched.
+export function scopedModelLookup(
+  hosts: Set<string>,
+  fallback: typeof lookup = lookup,
+  resolve = async (hostname: string) => {
+    const response = await fetch(
+      "https://dns.google/resolve?type=A&name=" + encodeURIComponent(hostname),
+      { signal: AbortSignal.timeout(10000), redirect: "error" },
+    );
+    if (!response.ok) throw Error("Model DNS lookup failed");
+    const result = (await response.json()) as {
+      Status?: number;
+      Answer?: { type: number; data: string; TTL: number }[];
+    };
+    if (result.Status !== 0) throw Error("Model DNS lookup failed");
+    return (result.Answer ?? [])
+      .filter((a) => a.type === 1)
+      .map((a) => ({ address: a.data, ttl: a.TTL }));
+  },
+) {
+  const cache = new Map<
+    string,
+    { until: number; records: { address: string; ttl: number }[] }
+  >();
+  return ((hostname: string, options: any, callback: any) => {
+    if (!hosts.has(hostname.toLowerCase()))
+      return (fallback as any)(hostname, options, callback);
+    (async () => {
+      let saved = cache.get(hostname);
+      if (!saved || saved.until <= Date.now()) {
+        const records = await resolve(hostname);
+        if (
+          !records.length ||
+          records.length > 64 ||
+          records.some(
+            (r) => !publicModelAddress(r.address) || isIP(r.address) !== 4,
+          )
+        )
+          throw Error(
+            "Model DNS returned a non-public or missing IPv4 address",
+          );
+        saved = {
+          records,
+          until:
+            Date.now() +
+            Math.max(
+              1,
+              Math.min(
+                300,
+                ...records.map((r) => (Number.isFinite(r.ttl) ? r.ttl : 1)),
+              ),
+            ) *
+              1000,
+        };
+        cache.set(hostname, saved);
+      }
+      if (options.family === 6) throw Error("No permitted IPv6 model address");
+      const records = saved.records.map((r) => ({
+        address: r.address,
+        family: 4,
+      }));
+      return options.all ? [null, records] : [null, records[0].address, 4];
+    })().then(
+      (args) => callback(...args),
+      (error) => callback(error),
+    );
+  }) as typeof lookup;
+}
+// Server .env files load after static imports. Refresh the shared set lazily so
+// both dispatchers see deployment configuration without depending on import order.
+const dohHosts = new Set<string>();
+let configuredDohHosts: string | undefined;
+function refreshDohHosts() {
+  const value = process.env.BRAIN_MODEL_DOH_HOSTS ?? "";
+  if (value === configuredDohHosts) return;
+  dohHosts.clear();
+  for (const host of value
+    .split(",")
+    .map((h) => h.trim().toLowerCase())
+    .filter(Boolean)) dohHosts.add(host);
+  configuredDohHosts = value;
+}
+const companyLookup = scopedModelLookup(dohHosts);
+export function modelUsesCustomDns(value: string) {
+  refreshDohHosts();
+  try {
+    const url = new URL(value);
+    return (
+      url.protocol === "https:" && dohHosts.has(url.hostname.toLowerCase())
+    );
+  } catch {
+    return false;
+  }
+}
+const companyAgent = new Agent({ connect: { lookup: companyLookup } });
 const publicAgent = new Agent({
   connect: {
-    lookup: publicModelLookup as any,
+    lookup: ((host: any, options: any, callback: any) =>
+      publicModelLookup(host, options, callback, companyLookup)) as any,
   },
 });
 export type ModelTransport = (
@@ -86,7 +183,15 @@ export type ModelTransport = (
   init: RequestInit,
 ) => Promise<Response>;
 export const modelFetch: ModelTransport = async (row, url, init) => {
-  if (!row.owner_user_id || row.source_service_id) return fetch(url, init);
+  refreshDohHosts();
+  if (!row.owner_user_id || row.source_service_id)
+    return modelUsesCustomDns(url)
+      ? fetch(url, {
+          ...init,
+          dispatcher: companyAgent,
+          redirect: "error",
+        } as RequestInit)
+      : fetch(url, init);
   personalModelUrl(url);
   return fetch(url, {
     ...init,

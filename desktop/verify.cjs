@@ -155,6 +155,7 @@ async function waitFor(test, label, timeout = 12000) {
       Escape: ["Escape", 27],
       End: ["End", 35],
       Home: ["Home", 36],
+      ArrowRight: ["ArrowRight", 39],
       Return: ["Enter", 13],
     };
     const [key, windowsVirtualKeyCode] = keys[keyCode];
@@ -188,8 +189,12 @@ async function waitFor(test, label, timeout = 12000) {
   };
   const selectOption = async (label, text) => {
     await openSelect(label);
+    if (label === "选择模型") {
+      const nested = await js(`(() => {const group=[...document.querySelectorAll('[data-model-labels]')].find(el=>JSON.parse(el.dataset.modelLabels).includes(${JSON.stringify(text)}));if(!group)return false;group.click();return true})()`);
+      if (nested) await waitFor(() => js(`!!document.querySelector('.model-picker-submenu[data-open]')`), "provider submenu");
+    }
     await js(
-      `(() => { const option = Array.from(document.querySelectorAll('.select-popup[data-open] [role="option"]')).find(el => el.querySelector('.select-option-label')?.textContent === ${JSON.stringify(text)}); if (!option) throw new Error('Missing option: ' + ${JSON.stringify(text)}); option.click(); })()`,
+      `(() => { const option = Array.from(document.querySelectorAll('.select-popup[data-open] [role="option"],.select-popup[data-open] [role="menuitemradio"]')).find(el => el.dataset.modelName === ${JSON.stringify(text)} || el.querySelector('.select-option-label')?.textContent === ${JSON.stringify(text)}); if (!option) throw new Error('Missing option: ' + ${JSON.stringify(text)}); option.click(); })()`,
     );
     await waitFor(
       () =>
@@ -472,7 +477,7 @@ async function waitFor(test, label, timeout = 12000) {
   await openSelect("选择模型");
   assert.equal(
     await js(
-      `document.querySelectorAll('.select-popup[data-open] [role="option"]').length`,
+      `document.querySelectorAll('.select-popup[data-open] [role="menuitemradio"]').length`,
     ),
     2,
   );
@@ -1024,6 +1029,7 @@ async function waitFor(test, label, timeout = 12000) {
   );
   assert.equal(connectionsBefore.length, 2);
   assert.ok(connectionsBefore.every((c) => c.hasKey));
+  await require("./verify-model-picker.cjs")({js,click,request,waitFor,capture,key,checks,win,service:serviceBefore});
   await click("管理模型");
   await waitFor(
     () => js(`!!document.querySelector('.modal')`),

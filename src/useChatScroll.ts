@@ -24,6 +24,8 @@ export function useChatScroll(conversationKey: string | null, nearEnd = 48) {
     if (conversationKey === null || !container || !content) return;
     let frame = 0;
     let touchY = 0;
+    let previousHeight = container.scrollHeight;
+    let previousViewport = container.clientHeight;
     const distance = () =>
       container.scrollHeight - container.clientHeight - container.scrollTop;
     const updateHint = () => setShowLatest(distance() > nearEnd);
@@ -45,14 +47,24 @@ export function useChatScroll(conversationKey: string | null, nearEnd = 48) {
           container.scrollTop = container.scrollHeight;
           previousTop.current = container.scrollTop;
         }
+        previousHeight = container.scrollHeight;
+        previousViewport = container.clientHeight;
         updateHint();
       });
     };
     const scroll = () => {
       const change = container.scrollTop - previousTop.current;
-      if (change < -1 && distance() > nearEnd) pause();
+      const resized =
+        previousHeight !== container.scrollHeight ||
+        previousViewport !== container.clientHeight;
+      // Browsers clamp scrollTop as content collapses or the viewport resizes.
+      // A layout-driven upward movement is not the employee reading history.
+      if (resized && following.current) schedule();
+      else if (change < -1 && distance() > nearEnd) pause();
       else if (change > 1 && distance() <= nearEnd) following.current = true;
       previousTop.current = container.scrollTop;
+      previousHeight = container.scrollHeight;
+      previousViewport = container.clientHeight;
       updateHint();
     };
     const wheel = (event: WheelEvent) => {
