@@ -27,7 +27,9 @@ for (const file of expected) {
 await writeFile(resolve(directory, 'SHA256SUMS.txt'), expected.map(file => `${manifest.get(file)}  ${file}`).join('\n') + '\n');
 const notes = `docs/releases/${tag}.md`;
 // The tag endpoint only returns published releases; list releases to find drafts.
-const findRelease = () => JSON.parse(gh('api', `repos/${repo}/releases?per_page=100`, '--paginate', '--slurp')).flat().find(release => release.tag_name === tag);
+// Filter inside gh: accumulated release history can exceed Node's stdout
+// buffer even though the one candidate release is small.
+const findRelease = () => JSON.parse(gh('api', `repos/${repo}/releases?per_page=100`, '--paginate', '--slurp', '--jq', `map(.[] | select(.tag_name == "${tag}"))`))[0];
 let release = findRelease();
 if (!release) {
   // Verify the existing tag, then retain the POST response instead of relying
