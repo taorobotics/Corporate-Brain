@@ -39,12 +39,11 @@ function Wait-ClientWindow([Diagnostics.Process]$Client, [string]$ExpectedPath) 
     # SW_HIDE also hides Electron's first native window. Reveal only this owned
     # test process, as Wait-InstallerText does for the isolated NSIS windows.
     foreach ($candidate in [InstallerWindow]::Windows($Client.Id)) {
-      if ($candidate.ClassName -like 'Chrome_WidgetWin_*' -and $candidate.Width -ge 500 -and $candidate.Height -ge 300 -and -not $candidate.Visible) {
+      if ($candidate.ClassName -eq 'Chrome_WidgetWin_1' -and $candidate.Width -ge 500 -and $candidate.Height -ge 300 -and -not $candidate.Visible) {
         [void][InstallerWindow]::ShowWindow($candidate.Handle,4)
       }
     }
-    $Client.Refresh()
-    if ($Client.MainWindowHandle -ne 0) { return }
+    if (@([InstallerWindow]::Windows($Client.Id) | Where-Object { $_.Visible -and $_.ClassName -eq 'Chrome_WidgetWin_1' -and $_.Width -ge 500 -and $_.Height -ge 300 }).Count -eq 1) { return }
     Start-Sleep -Milliseconds 100
   } while ([DateTime]::UtcNow -lt $until)
   throw 'Isolated client did not show its native window'
@@ -54,10 +53,10 @@ function Close-ClientWindow([Diagnostics.Process]$Client, [string]$ExpectedPath)
   if ($Client.HasExited) { throw 'Test client exited before receiving the close request' }
   $actualPath = (Get-CimInstance Win32_Process -Filter "ProcessId = $($Client.Id)" -Property ExecutablePath).ExecutablePath
   if ($actualPath -ne $ExpectedPath) { throw 'Refusing close request for an unexpected client executable' }
-  # Process.CloseMainWindow uses the first unowned visible HWND, which may be a
-  # Chromium helper rather than the BrowserWindow. Address the actual owned,
+  # Diagnostics confirm Chrome_WidgetWin_0 may be a full-size Chromium helper
+  # while the real Chrome_WidgetWin_1 is hidden. Address the actual owned,
   # full-size Electron window and still require natural application shutdown.
-  $windows = @([InstallerWindow]::Windows($Client.Id) | Where-Object { $_.Visible -and $_.ClassName -like 'Chrome_WidgetWin_*' -and $_.Width -ge 500 -and $_.Height -ge 300 })
+  $windows = @([InstallerWindow]::Windows($Client.Id) | Where-Object { $_.Visible -and $_.ClassName -eq 'Chrome_WidgetWin_1' -and $_.Width -ge 500 -and $_.Height -ge 300 })
   if ($windows.Count -ne 1) { throw "Expected one full-size test client window; found $($windows.Count)" }
   if (-not [InstallerWindow]::PostMessage($windows[0].Handle,0x10,[IntPtr]::Zero,[IntPtr]::Zero)) { throw 'Test client window did not accept WM_CLOSE' }
   if (-not $Client.WaitForExit(15000)) {
