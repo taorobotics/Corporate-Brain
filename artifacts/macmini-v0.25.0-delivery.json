@@ -1,0 +1,534 @@
+{
+  "version": "0.25.0",
+  "sourceCommit": "dabfa3338806b08cf1494c383984df725b2fcf37",
+  "result": "passed",
+  "verifiedAt": "2026-11-05T10:42:31.141Z",
+  "features": {
+    "ivoryDefaultSurface": true,
+    "existingClientFontRetained": true,
+    "bodyPixels": {
+      "wide": 18,
+      "normal": 17,
+      "narrow": 16
+    },
+    "headingParagraphListSpacing": true,
+    "roundedComposerAndUserMessages": true,
+    "preservedSkinAndThemeChoice": true,
+    "providerMenu": {
+      "singleLinoRouteRow": true,
+      "hoverOrClickOpensSubmenu": true,
+      "rightSideOnWideScreens": true,
+      "keyboardNavigation": true,
+      "longListScroll": true,
+      "narrowCollisionAvoidance": true,
+      "selectedConnectionPreserved": true,
+      "personalAndCompanyScopesPreserved": true,
+      "liveEmployeeScreenshot": "artifacts/screenshots/model-picker-live-v0250.png"
+    },
+    "scrollFollowingPreservedAfterContentResize": true,
+    "projectScopedDns": {
+      "hosts": [
+        "linoroute.com"
+      ],
+      "systemDnsChanged": false,
+      "nasDnsChanged": false,
+      "tlsValidationDisabled": false,
+      "lateEnvLoadingTested": true
+    }
+  },
+  "deployment": {
+    "url": "https://192.168.20.21:14443",
+    "health": {
+      "status": "ok",
+      "version": "0.25.0",
+      "chatStorage": "device-only"
+    },
+    "backup": "/Users/staff01/CorporateBrainServer/backups/before-v0.25.0-2026-11-05T10-20-00-369Z",
+    "counts": {
+      "users": 224,
+      "departments": 13,
+      "nas_sources": 14,
+      "skills": 3
+    },
+    "dataPreserved": true,
+    "modelSettingsPreservedBeforeAdditions": true,
+    "modelCredentialsPreserved": true,
+    "primaryAdministratorPreserved": true,
+    "tlsVerified": true,
+    "cloudBusinessServiceChanged": false
+  },
+  "models": {
+    "version": "0.25.0",
+    "result": "passed",
+    "checkedAt": "2026-11-05T10:21:12.494Z",
+    "tlsVerified": true,
+    "projectScopedDns": true,
+    "sourceSettingsAndCredentialsPreserved": true,
+    "existingConnectionsPreserved": true,
+    "modelsAdded": [
+      "claude-opus-4-6",
+      "claude-opus-5-5",
+      "claude-opus-5",
+      "claude-opus-4-1-20250805",
+      "claude-opus-4-8",
+      "claude-opus-4-7",
+      "claude-opus-4-5-20251101"
+    ],
+    "excludedModels": [
+      "claude-opus-4-20250514"
+    ],
+    "employeeVisibleModels": [
+      "claude-opus-4-1-20250805",
+      "claude-opus-4-5-20251101",
+      "claude-opus-4-6",
+      "claude-opus-4-7",
+      "claude-opus-4-8",
+      "claude-opus-5",
+      "claude-opus-5-5"
+    ],
+    "employeeChat": {
+      "model": "claude-opus-4-6",
+      "streaming": true,
+      "contentMatched": true,
+      "eventTypes": [
+        "text",
+        "done"
+      ],
+      "usage": {
+        "inputTokens": 6192,
+        "outputTokens": 4,
+        "totalTokens": 6196
+      }
+    },
+    "minimumSyntheticRequestsOnly": true,
+    "upstreamProbe": {
+      "checkedAt": "2026-11-05T09:59:11.099Z",
+      "results": [
+        {
+          "model": "claude-opus-4-6",
+          "passed": true,
+          "status": 200,
+          "responseModel": "claude-opus-4-6",
+          "usage": {
+            "prompt_tokens": 12,
+            "completion_tokens": 4,
+            "total_tokens": 16,
+            "prompt_tokens_details": {
+              "cached_tokens": 0,
+              "text_tokens": 0,
+              "audio_tokens": 0,
+              "image_tokens": 0
+            },
+            "completion_tokens_details": {
+              "text_tokens": 0,
+              "audio_tokens": 0,
+              "reasoning_tokens": 0
+            }
+          },
+          "finishReason": "stop",
+          "elapsedMs": 10182
+        },
+        {
+          "model": "claude-opus-5-5",
+          "passed": true,
+          "status": 200,
+          "responseModel": "claude-opus-5-5",
+          "usage": {
+            "prompt_tokens": 18,
+            "completion_tokens": 4,
+            "total_tokens": 22,
+            "prompt_tokens_details": {
+              "cached_tokens": 0,
+              "text_tokens": 0,
+              "audio_tokens": 0,
+              "image_tokens": 0
+            },
+            "completion_tokens_details": {
+              "text_tokens": 0,
+              "audio_tokens": 0,
+              "reasoning_tokens": 0
+            }
+          },
+          "finishReason": "stop",
+          "elapsedMs": 4162
+        },
+        {
+          "model": "claude-opus-4-20250514",
+          "passed": false,
+          "status": 503,
+          "elapsedMs": 2645
+        },
+        {
+          "model": "claude-opus-5",
+          "passed": true,
+          "status": 200,
+          "responseModel": "claude-opus-5",
+          "usage": {
+            "prompt_tokens": 16,
+            "completion_tokens": 4,
+            "total_tokens": 20,
+            "prompt_tokens_details": {
+              "cached_tokens": 0,
+              "text_tokens": 0,
+              "audio_tokens": 0,
+              "image_tokens": 0
+            },
+            "completion_tokens_details": {
+              "text_tokens": 0,
+              "audio_tokens": 0,
+              "reasoning_tokens": 0
+            }
+          },
+          "finishReason": "stop",
+          "elapsedMs": 3613
+        },
+        {
+          "model": "claude-opus-4-1-20250805",
+          "passed": true,
+          "status": 200,
+          "responseModel": "claude-opus-4-1-20250805",
+          "usage": {
+            "prompt_tokens": 12,
+            "completion_tokens": 5,
+            "total_tokens": 17,
+            "prompt_tokens_details": {
+              "cached_tokens": 0,
+              "text_tokens": 0,
+              "audio_tokens": 0,
+              "image_tokens": 0
+            },
+            "completion_tokens_details": {
+              "text_tokens": 0,
+              "audio_tokens": 0,
+              "reasoning_tokens": 0
+            }
+          },
+          "finishReason": "stop",
+          "elapsedMs": 3830
+        },
+        {
+          "model": "claude-opus-4-8",
+          "passed": true,
+          "status": 200,
+          "responseModel": "claude-opus-4-8",
+          "usage": {
+            "prompt_tokens": 16,
+            "completion_tokens": 4,
+            "total_tokens": 20,
+            "prompt_tokens_details": {
+              "cached_tokens": 0,
+              "text_tokens": 0,
+              "audio_tokens": 0,
+              "image_tokens": 0
+            },
+            "completion_tokens_details": {
+              "text_tokens": 0,
+              "audio_tokens": 0,
+              "reasoning_tokens": 0
+            }
+          },
+          "finishReason": "stop",
+          "elapsedMs": 9613
+        },
+        {
+          "model": "claude-opus-4-7",
+          "passed": true,
+          "status": 200,
+          "responseModel": "claude-opus-4-7",
+          "usage": {
+            "prompt_tokens": 21,
+            "completion_tokens": 6,
+            "total_tokens": 27,
+            "prompt_tokens_details": {
+              "cached_tokens": 0,
+              "text_tokens": 0,
+              "audio_tokens": 0,
+              "image_tokens": 0
+            },
+            "completion_tokens_details": {
+              "text_tokens": 0,
+              "audio_tokens": 0,
+              "reasoning_tokens": 0
+            }
+          },
+          "finishReason": "stop",
+          "elapsedMs": 12970
+        },
+        {
+          "model": "claude-opus-4-5-20251101",
+          "passed": true,
+          "status": 200,
+          "responseModel": "claude-opus-4-5-20251101",
+          "usage": {
+            "prompt_tokens": 72,
+            "completion_tokens": 1,
+            "total_tokens": 73,
+            "prompt_tokens_details": {
+              "cached_tokens": 63,
+              "text_tokens": 0,
+              "audio_tokens": 0,
+              "image_tokens": 0
+            },
+            "completion_tokens_details": {
+              "text_tokens": 0,
+              "audio_tokens": 0,
+              "reasoning_tokens": 0
+            }
+          },
+          "finishReason": "stop",
+          "elapsedMs": 9513
+        }
+      ]
+    },
+    "identityVerifiedWithOriginalProvider": false,
+    "temporaryEmployeeAccountsRemoved": true
+  },
+  "localChecks": {
+    "windowsNodeTests": 136,
+    "macNodeTests": 136,
+    "windowsNasWorkerTests": 5,
+    "macNasWorkerTests": 5,
+    "windowsDesktopChecks": 47,
+    "macDesktopChecks": 45,
+    "actualMacRender": {
+      "seconds": 3,
+      "frames": 72,
+      "width": 1280,
+      "height": 720,
+      "audio": true,
+      "bytes": 135833,
+      "sha256": "d170d88adc3915053998d42a47497fd7eea12f58510cfedaa7d4b0cbad8d7609"
+    },
+    "physicalEmployeeDeviceTested": false,
+    "syntheticUpstreamProbeRequests": 8,
+    "syntheticEmployeeModelRequests": 1,
+    "liveEmployeeMenuVerified": true
+  },
+  "lanDistribution": {
+    "channels": {
+      "win32-x64": {
+        "name": "Corporate-Brain-Setup-0.25.0-x64.exe",
+        "bytes": 120004085,
+        "sha256": "f4baeacb2156279e6f2d3770d69470d5baee1259e8e9fd23f91da0c48392fb6b"
+      },
+      "darwin-arm64": {
+        "name": "Corporate-Brain-0.25.0-macOS-arm64.dmg",
+        "bytes": 138650968,
+        "sha256": "1d54b41763b23277104055a5cbd53d29df4e97ca6f1148c71da86d5ac1e0f668"
+      }
+    },
+    "authenticatedFullDownloads": [
+      {
+        "platform": "win32-x64",
+        "version": "0.25.0",
+        "bytes": 120004085,
+        "sha256": "f4baeacb2156279e6f2d3770d69470d5baee1259e8e9fd23f91da0c48392fb6b"
+      },
+      {
+        "platform": "darwin-arm64",
+        "version": "0.25.0",
+        "bytes": 138650968,
+        "sha256": "1d54b41763b23277104055a5cbd53d29df4e97ca6f1148c71da86d5ac1e0f668"
+      }
+    ],
+    "temporaryTestAccountRemoved": true,
+    "defaultServer": "https://192.168.20.21:14443",
+    "independentlyBuiltFromProductTag": true,
+    "intelMacActivated": false,
+    "priorClientUpdater": {
+      "version": "0.25.0",
+      "result": "passed",
+      "checkedAt": "2026-11-05T10:40:01.464Z",
+      "actualPriorVersionModule": true,
+      "results": [
+        {
+          "target": "win32-x64",
+          "version": "0.25.0",
+          "bytes": 120004085,
+          "sha256": "f4baeacb2156279e6f2d3770d69470d5baee1259e8e9fd23f91da0c48392fb6b",
+          "oldClientVersion": "0.24.1",
+          "state": "ready",
+          "installerExecuted": false
+        },
+        {
+          "target": "darwin-arm64",
+          "version": "0.25.0",
+          "bytes": 138650968,
+          "sha256": "1d54b41763b23277104055a5cbd53d29df4e97ca6f1148c71da86d5ac1e0f668",
+          "oldClientVersion": "0.24.1",
+          "state": "ready",
+          "installerExecuted": false
+        }
+      ]
+    }
+  },
+  "githubRelease": {
+    "status": "passed",
+    "runId": 42008838060,
+    "runUrl": "https://github.com/taorobotics/Corporate-Brain/actions/runs/42008838060",
+    "releaseId": 435040995,
+    "tag": "v0.25.0",
+    "url": "https://github.com/taorobotics/Corporate-Brain/releases/tag/v0.25.0",
+    "draft": false,
+    "publicLatest": "v0.25.0",
+    "productCommit": "dabfa3338806b08cf1494c383984df725b2fcf37",
+    "verificationToolsCommit": "dabfa3338806b08cf1494c383984df725b2fcf37",
+    "sourceAndTagPushed": true,
+    "assetsVerified": [
+      {
+        "name": "Corporate-Brain-0.25.0-macOS-arm64.dmg",
+        "bytes": 139860325,
+        "digest": "sha256:99d30bad5fbab2d951f1f17a49efd0d23264a07fa61043786dc94d5f0d610d41"
+      },
+      {
+        "name": "Corporate-Brain-0.25.0-macOS-x64.dmg",
+        "bytes": 145378737,
+        "digest": "sha256:613c3639e6e65ca5746fcc7ba0f0ebd8eea3ec220c4ae3a5c83908151ad0de1c"
+      },
+      {
+        "name": "Corporate-Brain-Server-0.25.0.zip",
+        "bytes": 22618141,
+        "digest": "sha256:f7bb72f7b38bc6c797cb8d5ac00fa28aa49f2c6cf27c42ba1db26dd49991b320"
+      },
+      {
+        "name": "Corporate-Brain-Setup-0.25.0-x64.exe",
+        "bytes": 120003993,
+        "digest": "sha256:cb7961e29432d55a7b887282c619c6f6e3fa9200d0b39b5d29cc6c84e5cc1d11"
+      },
+      {
+        "name": "macos-verification-arm64.json",
+        "bytes": 9545,
+        "digest": "sha256:826d576bf14a9355211205f8e31099f9236504d5f0992984541db82258186f17"
+      },
+      {
+        "name": "macos-verification-x64.json",
+        "bytes": 9541,
+        "digest": "sha256:2dfa3e84a876185b045831c5cdcc62f1ccf3150222dde1c0e242f18750661b2b"
+      },
+      {
+        "name": "server-verification.json",
+        "bytes": 17213,
+        "digest": "sha256:db1505a09ff044f693db032ead2a334fba7c05447c1d63c6c57c206db099f852"
+      },
+      {
+        "name": "SHA256SUMS-macOS-arm64.txt",
+        "bytes": 105,
+        "digest": "sha256:d14899757d5f8f1d097df3dca08972448f0aa55d2be20c5685d26536e5666031"
+      },
+      {
+        "name": "SHA256SUMS-macOS-x64.txt",
+        "bytes": 103,
+        "digest": "sha256:edb78df891336dd1437f7927452fe939f3d4340f5c8bf7dc65035736e6f75357"
+      },
+      {
+        "name": "SHA256SUMS-Server.txt",
+        "bytes": 100,
+        "digest": "sha256:aca44c6e8fcb663fe80c40519eac34e72341dbf71d4586a268680b627343a6a8"
+      },
+      {
+        "name": "SHA256SUMS-Windows-x64.txt",
+        "bytes": 103,
+        "digest": "sha256:b7ecb1f0e8818d08dd9d1a3a8c670abb3ee4b7b0d3cb57d8cb6da9c9dea48c87"
+      },
+      {
+        "name": "SHA256SUMS.txt",
+        "bytes": 411,
+        "digest": "sha256:da6504ac6ef93ebd7260ac9d6d04418525320fb89477a9ecea5e4d921a2ba00e"
+      },
+      {
+        "name": "windows-verification-x64.json",
+        "bytes": 12331,
+        "digest": "sha256:f504bc3d1d816ebeab0100c9282d283709dc8167605fbf0da354ba2b42c5ba0c"
+      }
+    ],
+    "installersAndServer": [
+      {
+        "name": "Corporate-Brain-Setup-0.25.0-x64.exe",
+        "bytes": 120003993,
+        "sha256": "cb7961e29432d55a7b887282c619c6f6e3fa9200d0b39b5d29cc6c84e5cc1d11"
+      },
+      {
+        "name": "Corporate-Brain-0.25.0-macOS-arm64.dmg",
+        "bytes": 139860325,
+        "sha256": "99d30bad5fbab2d951f1f17a49efd0d23264a07fa61043786dc94d5f0d610d41"
+      },
+      {
+        "name": "Corporate-Brain-0.25.0-macOS-x64.dmg",
+        "bytes": 145378737,
+        "sha256": "613c3639e6e65ca5746fcc7ba0f0ebd8eea3ec220c4ae3a5c83908151ad0de1c"
+      },
+      {
+        "name": "Corporate-Brain-Server-0.25.0.zip",
+        "bytes": 22618141,
+        "sha256": "f7bb72f7b38bc6c797cb8d5ac00fa28aa49f2c6cf27c42ba1db26dd49991b320"
+      }
+    ],
+    "windows": {
+      "realInstallUpgradeUninstall": true,
+      "lifecycleChecks": 17,
+      "handoffChecks": 5,
+      "signature": "NotSigned",
+      "physicalEmployeeDeviceTested": false
+    },
+    "macPlatforms": [
+      {
+        "architecture": "arm64",
+        "packageMountAndLaunch": "passed",
+        "desktopChecks": 45,
+        "signing": "ad-hoc",
+        "notarized": false
+      },
+      {
+        "architecture": "x64",
+        "packageMountAndLaunch": "passed",
+        "desktopChecks": 45,
+        "signing": "ad-hoc",
+        "notarized": false
+      }
+    ],
+    "distribution": {
+      "status": "completed",
+      "conclusion": "success",
+      "url": "https://github.com/taorobotics/Corporate-Brain/actions/runs/42010807543/job/127189241575"
+    },
+    "checkedAt": "2026-11-05T10:41:40.227Z",
+    "publicationRecovery": {
+      "runId": 42010807543,
+      "url": "https://github.com/taorobotics/Corporate-Brain/actions/runs/42010807543",
+      "toolsCommit": "8cae52b8522d16867672187d7f42e0b82d60e7ea",
+      "originalBuildRunId": 42008838060,
+      "exactTagBuildsReused": true
+    }
+  },
+  "cloudInstallerMirror": {
+    "version": "0.25.0",
+    "result": "passed",
+    "assets": [
+      {
+        "target": "win32-x64",
+        "name": "Corporate-Brain-Setup-0.25.0-x64.exe",
+        "bytes": 120003993,
+        "sha256": "cb7961e29432d55a7b887282c619c6f6e3fa9200d0b39b5d29cc6c84e5cc1d11"
+      },
+      {
+        "target": "darwin-arm64",
+        "name": "Corporate-Brain-0.25.0-macOS-arm64.dmg",
+        "bytes": 139860325,
+        "sha256": "99d30bad5fbab2d951f1f17a49efd0d23264a07fa61043786dc94d5f0d610d41"
+      },
+      {
+        "target": "darwin-x64",
+        "name": "Corporate-Brain-0.25.0-macOS-x64.dmg",
+        "bytes": 145378737,
+        "sha256": "613c3639e6e65ca5746fcc7ba0f0ebd8eea3ec220c4ae3a5c83908151ad0de1c"
+      }
+    ],
+    "checkedAt": "2026-11-05T10:41:16.871Z"
+  },
+  "signing": {
+    "windows": "NotSigned",
+    "mac": "ad-hoc",
+    "appleNotarized": false
+  },
+  "privateDataIncludedInPublicArtifacts": false
+}
