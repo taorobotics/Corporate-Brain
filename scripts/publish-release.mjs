@@ -29,7 +29,12 @@ const notes = `docs/releases/${tag}.md`;
 // The tag endpoint only returns published releases; list releases to find drafts.
 // Filter inside gh: accumulated release history can exceed Node's stdout
 // buffer even though the one candidate release is small.
-const findRelease = () => JSON.parse(gh('api', `repos/${repo}/releases?per_page=100`, '--paginate', '--slurp', '--jq', `map(.[] | select(.tag_name == "${tag}"))`))[0];
+const findRelease = () => {
+  const output = gh('api', `repos/${repo}/releases?per_page=100`, '--paginate', '--jq', `.[] | select(.tag_name == "${tag}") | @json`);
+  const matches = output.split('\n').filter(Boolean).map(line => JSON.parse(line));
+  assert.ok(matches.length <= 1, 'Version tag must identify a single release');
+  return matches[0];
+};
 let release = findRelease();
 if (!release) {
   // Verify the existing tag, then retain the POST response instead of relying
