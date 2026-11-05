@@ -274,7 +274,24 @@ ipcMain.handle("local:write", async (event, userId, data) => {
     .then(async () => {
       const temp = `${file}.tmp`;
       await fs.writeFile(temp, json, { mode: 0o600 });
-      await fs.rename(temp, file);
+      // Windows scanners can briefly hold the destination. Preserve the old
+      // snapshot and retry the atomic replacement instead of deleting it.
+      for (let attempt = 0; ; attempt++) {
+        try {
+          await fs.rename(temp, file);
+          break;
+        } catch (error) {
+          if (
+            process.platform !== "win32" ||
+            !["EPERM", "EACCES", "EBUSY"].includes(error.code) ||
+            attempt >= 5
+          )
+            throw error;
+          await new Promise((resolve) =>
+            setTimeout(resolve, 50 * (attempt + 1)),
+          );
+        }
+      }
     });
   writes.set(file, pending);
   await pending;
@@ -532,7 +549,8 @@ ipcMain.handle("updates:install", async (event) => {
         type: "question",
         title: "更新公司大脑",
         message: `安装 v${updates.state.release.version}？`,
-        detail: "将打开已校验的 DMG。请退出公司大脑后，将新版拖入 Applications 替换。本地对话与个人草稿保留在原设备。",
+        detail:
+          "将打开已校验的 DMG。请退出公司大脑后，将新版拖入 Applications 替换。本地对话与个人草稿保留在原设备。",
         buttons: ["打开安装包", "稍后"],
         defaultId: 1,
         cancelId: 1,

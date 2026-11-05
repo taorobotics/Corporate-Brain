@@ -35,6 +35,7 @@ import {
 } from "../shared/attachments";
 import { DshManager, DshUnavailableError } from "./dsh";
 import { syncDeepSeekConnections } from "./deepseek-sync";
+import { imageSkills, generatedImage } from "./image-skills";
 import {
   connectionSelect,
   resolveConnection,
@@ -699,7 +700,7 @@ export function createPlatform(
   const checkedSkills = (actor: User, ids: string[], strict = true) =>
     resolveSkillList(
       ids,
-      allSkills(),
+      [...allSkills(), ...imageSkills(store, actor)],
       (skill) => visible(skill, actor),
       strict,
     );
@@ -724,12 +725,13 @@ export function createPlatform(
     const actor = getActor(req);
     const mine = req.query.mine === "1";
     res.json(
-      allSkills().filter((skill) =>
-        mine
-          ? skill.authorId === actor.id &&
-            (skill.ownerDepartmentId === actor.departmentId ||
-              visible(skill, actor))
-          : skill.status === "published" && visible(skill, actor),
+      [...allSkills(), ...(mine ? [] : imageSkills(store, actor))].filter(
+        (skill) =>
+          mine
+            ? skill.authorId === actor.id &&
+              (skill.ownerDepartmentId === actor.departmentId ||
+                visible(skill, actor))
+            : skill.status === "published" && visible(skill, actor),
       ),
     );
   });
@@ -837,6 +839,10 @@ export function createPlatform(
   });
   app.get("/api/skills/:id/download", (req, res) => {
     const actor = getActor(req);
+    const builtin = imageSkills(store, actor).find(
+      (skill) => skill.id === req.params.id,
+    );
+    if (builtin) return res.json(builtin);
     const skill = skillById(id.parse(req.params.id));
     if (skill.status !== "published" || !visible(skill, actor))
       fail(404, "技能不存在或无权下载");
@@ -942,7 +948,12 @@ export function createPlatform(
       fail(403, "模型未配置、已停用或无权使用");
     return resolveConnection(row);
   }
-  async function invoke(row: Row, endpoint: string, payload: unknown) {
+  async function invoke(
+    row: Row,
+    endpoint: string,
+    payload: unknown,
+    signal?: AbortSignal,
+  ) {
     let response: globalThis.Response;
     try {
       response = await fetch(`${row.base_url}${endpoint}`, {
@@ -952,15 +963,35 @@ export function createPlatform(
           Authorization: `Bearer ${store.decrypt(row.secret)}`,
         },
         body: JSON.stringify(payload),
-        signal: AbortSignal.timeout(120_000),
+        signal: signal
+          ? AbortSignal.any([signal, AbortSignal.timeout(120_000)])
+          : AbortSignal.timeout(120_000),
         redirect: "error",
       });
     } catch {
+      signal?.throwIfAborted();
       fail(502, "模型服务连接失败或超时，请检查连接配置");
     }
     if (!response!.ok)
       fail(502, `模型服务返回 ${response!.status}，请检查模型标识、余额和权限`);
-    return response!.json() as Promise<Row>;
+    if (!response!.body) fail(502, "模型服务未返回内容");
+    const reader = response!.body!.getReader();
+    const chunks: Uint8Array[] = [];
+    let bytes = 0;
+    try {
+      while (true) {
+        const next = await reader.read();
+        if (next.done) break;
+        bytes += next.value.length;
+        if (bytes > 32_000_000)
+          fail(502, "模型服务返回的图片过大，请降低尺寸后重试");
+        chunks.push(next.value);
+      }
+      return JSON.parse(Buffer.concat(chunks).toString("utf8")) as Row;
+    } finally {
+      await reader.cancel().catch(() => {});
+      reader.releaseLock();
+    }
   }
   const production = mountProduction(app, db, getActor, {
     root:
@@ -1033,6 +1064,7 @@ export function createPlatform(
       .object({
         connectionId: id,
         skillMode: z.enum(["auto", "manual"]).default("manual"),
+        imageSkills: z.boolean().default(false),
         skillIds: z.array(id).max(128).default([]),
         messages: z
           .array(
@@ -1130,6 +1162,30 @@ export function createPlatform(
           ? candidates.map((skill) => skill.id)
           : pickRoutedSkills(plan.skillIds, candidates);
       let connectionId = row.id;
+      if (plan.kind === "image" && data.imageSkills) {
+        const available = candidates.filter(
+          (skill) => skill.capability?.kind === "image",
+        );
+        const image =
+          available.find((skill) => skillIds.includes(skill.id)) ??
+          available[0];
+        if (!image)
+          fail(
+            409,
+            "当前没有可调用的图片生成技能，请选择已授权的图片技能或切换为自动调用；管理员可在模型与服务中配置图片技能",
+          );
+        const selected = skillIds.includes(image.id)
+          ? skillIds
+          : [...skillIds.slice(0, 15), image.id];
+        store.audit(actor.id, "model.image_skill_routed", image.id);
+        return res.json({
+          ...plan,
+          kind: "chat",
+          connectionId: row.id,
+          imageSkillId: image.id,
+          skillIds: selected,
+        });
+      }
       if (plan.kind === "image") {
         const image = (
           db
@@ -1167,6 +1223,7 @@ export function createPlatform(
       .object({
         connectionId: id,
         skillId: id.optional(),
+        imageSkillId: id.optional(),
         skillIds: skillIdsSchema,
         sessionId: id.optional(),
         messages: z
@@ -1209,6 +1266,23 @@ export function createPlatform(
       ...data.skillIds,
       ...(data.skillId ? [data.skillId] : []),
     ]);
+    const imageSkill = data.imageSkillId
+      ? selectedSkills.find(
+          (skill) =>
+            skill.id === data.imageSkillId &&
+            skill.capability?.kind === "image",
+        )
+      : undefined;
+    if (data.imageSkillId && !imageSkill)
+      fail(403, "图片技能未选择、已停用或无权使用，请重新选择");
+    if (imageSkill && data.workspaceAccess === "view")
+      fail(403, "当前工作区为仅可查看，不能调用图片生成技能");
+    if (imageSkill)
+      data.messages.unshift({
+        role: "system",
+        content:
+          "本轮已安排公司图片生成技能。请完成用户要求的完整文字部分；图片调用将在文字输出后由服务执行并附于同一回复。当前尚未生成成功，不要宣称图片已完成，不要编造图片链接或占位图。",
+      });
     const skillResources = await resourcesFor(selectedSkills);
     if (selectedSkills.length) {
       data.messages.unshift({
@@ -1349,11 +1423,81 @@ export function createPlatform(
         if (typeof content !== "string" || !content.trim())
           fail(502, "模型未返回可显示的文本");
       }
+      let image: string | undefined;
+      if (imageSkill) {
+        const toolId = "image-skill-" + imageSkill.id;
+        emit({
+          type: "tool",
+          id: toolId,
+          name: imageSkill.name,
+          status: "running",
+        });
+        try {
+          const current = userById(actor.id);
+          if (!current?.enabled || !current.department_enabled)
+            fail(403, "账号或部门已停用，无法继续生成图片");
+          const fresh = userView(current);
+          if (
+            !imageSkills(store, fresh).some(
+              (skill) => skill.id === imageSkill.id,
+            )
+          )
+            fail(403, "图片技能已停用或授权发生变更，请重新选择");
+          const imageRow = getConnection(
+            imageSkill.capability!.connectionId,
+            fresh,
+            "image",
+          );
+          signal.throwIfAborted();
+          const prompt = [
+            "根据本轮用户需求生成一张配图，文字回复仅作为背景参考，不要截图或复述整篇回复。",
+            data.messages.findLast((message) => message.role === "user")
+              ?.content ?? "",
+            "配套文字：",
+            content,
+          ]
+            .join("\n\n")
+            .slice(0, 12000);
+          const result = await invoke(
+            imageRow,
+            "/images/generations",
+            {
+              model: imageRow.model,
+              prompt,
+              n: 1,
+              ...(/^dall-e/i.test(imageRow.model)
+                ? { response_format: "b64_json" }
+                : {}),
+            },
+            signal,
+          );
+          try {
+            image = generatedImage(result);
+          } catch (error) {
+            fail(502, (error as Error).message);
+          }
+          store.audit(actor.id, "model.image_skill_completed", imageRow.id);
+          emit({
+            type: "tool",
+            id: toolId,
+            name: imageSkill.name,
+            status: "done",
+          });
+        } catch (error) {
+          emit({
+            type: "tool",
+            id: toolId,
+            name: imageSkill.name,
+            status: signal.aborted ? "stopped" : "error",
+          });
+          throw error;
+        }
+      }
       store.audit(actor.id, "model.chat_completed", row.id);
       if (streaming) {
-        emit({ type: "done", content, usage });
+        emit({ type: "done", content, usage, ...(image ? { image } : {}) });
         res.end();
-      } else res.json({ content, usage });
+      } else res.json({ content, usage, ...(image ? { image } : {}) });
     } catch (error) {
       const timeout =
         signal.aborted && signal.reason instanceof ChatTimeoutError

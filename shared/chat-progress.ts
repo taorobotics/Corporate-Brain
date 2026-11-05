@@ -23,7 +23,7 @@ export type ChatProgress =
   | { type: "reasoning"; id: string; text: string; append?: boolean }
   | Extract<TraceItem, { type: "tool" }>
   | { type: "text"; text: string }
-  | { type: "done"; content: string; usage?: ChatUsage }
+  | { type: "done"; content: string; image?: string; usage?: ChatUsage }
   | { type: "error"; message: string };
 
 export function safeSources(value: unknown): ChatSource[] {

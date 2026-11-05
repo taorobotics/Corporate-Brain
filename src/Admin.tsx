@@ -440,7 +440,7 @@ export default function Admin(props: WorkspaceProps) {
                       <h3>
                         {c.name}{" "}
                         <span className="badge">
-                          {c.kind === "chat" ? "对话" : "图片"}
+                          {c.kind === "chat" ? "对话" : "图片生成技能"}
                         </span>
                       </h3>
                       <p>
@@ -494,11 +494,7 @@ export default function Admin(props: WorkspaceProps) {
                       <Button
                         onClick={() =>
                           void action(async () => {
-                            await api(
-                              `/connections/${c.id}`,
-                              {},
-                              "DELETE",
-                            );
+                            await api(`/connections/${c.id}`, {}, "DELETE");
                             await load();
                           })
                         }

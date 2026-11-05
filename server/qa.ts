@@ -134,6 +134,49 @@ app.get("/model-service-fixture/models", (req, res) => {
     ],
   });
 });
+let imageSkillCalls = 0;
+app.post("/image-skill-fixture/chat/completions", (req, res) => {
+  if (req.headers.authorization !== "Bearer synthetic-image-skill-ui-key")
+    return res.sendStatus(401);
+  const messages = req.body.messages;
+  const routing = messages[0]?.content.includes("You route tasks");
+  const context = routing ? JSON.parse(messages.at(-1).content) : undefined;
+  const generate = context?.messages.at(-1)?.content.includes("生成配图");
+  res.json({
+    choices: [
+      {
+        message: {
+          content: routing
+            ? JSON.stringify({
+                kind: generate ? "image" : "chat",
+                mode: "standard",
+                seconds: 10,
+                skillIds: generate
+                  ? context.availableSkills.map((skill: any) => skill.id)
+                  : [],
+              })
+            : "隔离验收文字回复：这段介绍由对话模型完成，图片技能按需求单独调用。",
+        },
+      },
+    ],
+  });
+});
+app.post("/image-skill-fixture/images/generations", (req, res) => {
+  if (req.headers.authorization !== "Bearer synthetic-image-skill-ui-key")
+    return res.sendStatus(401);
+  imageSkillCalls++;
+  res.json({
+    data: [
+      {
+        b64_json:
+          "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+/l9sAAAAASUVORK5CYII=",
+      },
+    ],
+  });
+});
+app.get("/image-skill-fixture/stats", (_req, res) =>
+  res.json({ images: imageSkillCalls }),
+);
 app.use(express.static(resolve("dist")));
 app.get("/{*path}", (_req, res) => res.sendFile(resolve("dist/index.html")));
 const server = app.listen(0, "127.0.0.1", () => {

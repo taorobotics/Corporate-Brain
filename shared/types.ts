@@ -45,6 +45,7 @@ export type SkillPackage = {
   requiredTools: string[];
 };
 export type Skill = SkillPackage & {
+  capability?: { kind: "image"; connectionId: string; model: string };
   imported?: import("./skill-import").ImportedSkillSource;
   id: string;
   authorId: string;

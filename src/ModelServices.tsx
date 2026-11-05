@@ -271,7 +271,7 @@ export function ModelServiceDialog({
                         value={item.kind}
                         options={[
                           { value: "chat", label: "对话" },
-                          { value: "image", label: "图片" },
+                          { value: "image", label: "图片生成技能" },
                         ]}
                         onValueChange={(value) =>
                           setSelected((items) =>
@@ -312,7 +312,7 @@ export function ModelServiceDialog({
               onValueChange={(value) => setKind(value as "chat" | "image")}
               options={[
                 { value: "chat", label: "对话" },
-                { value: "image", label: "图片" },
+                { value: "image", label: "图片生成技能" },
               ]}
             />
             <Button
@@ -334,8 +334,9 @@ export function ModelServiceDialog({
           </div>
           <p className="muted model-service-help">
             官方选项使用各服务商的 OpenAI
-            兼容接口。模型列表与可调用权限以所填密钥为准；图片用途需要支持
-            images/generations 的服务。获取列表不会发起内容生成。
+            兼容接口。模型列表与可调用权限以所填密钥为准；图片生成技能需要支持
+            images/generations 并返回 base64
+            图片。配置后自动加入公司技能，在对话中按需调用。获取列表不会发起内容生成。
           </p>
           <Field label="允许使用的部门（不选表示全公司）">
             <div className="source-list">
@@ -451,6 +452,7 @@ export function ModelServiceCards({
               <div className="service-model-tags">
                 {s.models.map((m) => (
                   <span className="badge" key={m.kind + m.model}>
+                    {m.kind === "image" ? "图片技能 · " : ""}
                     {m.model}
                   </span>
                 ))}

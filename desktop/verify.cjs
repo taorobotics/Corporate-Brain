@@ -798,6 +798,22 @@ async function waitFor(test, label, timeout = 12000) {
   checks.push(
     "Real streamed reasoning/tool event fixtures, source links, expandable disclosure, separate answer, static reduced-motion Grok-ball, local trace reload, partial error/cancel, no-reasoning fallback and conversation isolation",
   );
+  const nativeRename = fs.rename;
+  let transientProfileLock = false;
+  if (process.platform === "win32") fs.rename = async (from, to) => {
+    if (!transientProfileLock && String(from).startsWith(dir) && String(from).endsWith("state.json.tmp")) {
+      transientProfileLock = true;
+      throw Object.assign(new Error("Synthetic transient profile lock"), { code: "EPERM" });
+    }
+    return nativeRename(from, to);
+  };
+  try {
+    await require("./verify-image-skills.cjs")({ js, click, fill, waitFor, request, selectOption, key, checks, capture, port });
+    if (process.platform === "win32") {
+      assert.equal(transientProfileLock, true);
+      checks.push("Windows transient profile replacement lock is retried without deleting the old snapshot; subsequent text/image writes and reload complete through the native bridge");
+    }
+  } finally { fs.rename = nativeRename; }
   for (const fixture of modelFixtures)
     await request(`/connections/${fixture.id}`, {}, "DELETE");
   await js(`location.reload()`);

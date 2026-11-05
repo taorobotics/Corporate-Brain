@@ -6,4 +6,5 @@ export type AutomaticPlan = {
   seconds: number;
   connectionId: string;
   skillIds?: string[];
+  imageSkillId?: string;
 };

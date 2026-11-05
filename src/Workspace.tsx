@@ -171,12 +171,17 @@ export default function Workspace(props: WorkspaceProps) {
   const taskModels = connections.filter((c) => c.enabled && c.kind === "chat");
   const model =
     taskModels.find((c) => c.id === state.settings.model) ?? taskModels[0];
-  const installedSkills = state.installed.flatMap((saved) => {
-    const current = skills.find(
-      (skill) => skill.id === saved.id && skill.status === "published",
-    );
-    return current ? [current] : [];
-  });
+  const installedSkills = [
+    ...skills.filter((skill) => skill.capability?.kind === "image"),
+    ...state.installed
+      .filter((saved) => !saved.capability)
+      .flatMap((saved) => {
+        const current = skills.find(
+          (skill) => skill.id === saved.id && skill.status === "published",
+        );
+        return current ? [current] : [];
+      }),
+  ];
   const skillMode = state.settings.skillMode ?? "auto";
   const selectedSkillIds = (state.settings.skillIds ?? []).filter((id) =>
     installedSkills.some((skill) => skill.id === id),
@@ -445,6 +450,7 @@ export default function Workspace(props: WorkspaceProps) {
           attachments: currentAttachments.map(({ name }) => ({ name })),
           workspaceAccess: workspace?.access ?? "edit",
           skillMode,
+          imageSkills: true,
           skillIds:
             skillMode === "auto"
               ? installedSkills.map((skill) => skill.id)
@@ -601,6 +607,7 @@ export default function Workspace(props: WorkspaceProps) {
       const response = await streamChat(
         {
           connectionId: responseModel.id,
+          ...(plan.imageSkillId ? { imageSkillId: plan.imageSkillId } : {}),
           skillIds: plan.skillIds ?? [],
           sessionId: updated.id,
           messages: [
@@ -634,7 +641,7 @@ export default function Workspace(props: WorkspaceProps) {
       saveReply(
         response.content ?? "图片已生成，可以继续保存。",
         "done",
-        undefined,
+        response.image,
         response.usage,
       );
     } catch (e) {
@@ -721,7 +728,7 @@ export default function Workspace(props: WorkspaceProps) {
     );
   }
   const filteredSkills = (
-    filter === "installed" ? state.installed : skills
+    filter === "installed" ? installedSkills : skills
   ).filter(
     (skill) =>
       (filter === "installed" ||
@@ -1480,7 +1487,8 @@ export default function Workspace(props: WorkspaceProps) {
                         <small>
                           {skill.authorName} · v{skill.version}
                         </small>
-                        {state.installed.some((s) => s.id === skill.id) ? (
+                        {skill.capability ||
+                        state.installed.some((s) => s.id === skill.id) ? (
                           <div className="inline-actions">
                             <Button
                               onClick={() => {
@@ -1494,7 +1502,7 @@ export default function Workspace(props: WorkspaceProps) {
                             >
                               使用 <ArrowRight size={15} />
                             </Button>
-                            {filter === "installed" && (
+                            {filter === "installed" && !skill.capability && (
                               <Button
                                 onClick={() => {
                                   setState((s) => ({
@@ -1721,7 +1729,7 @@ export default function Workspace(props: WorkspaceProps) {
           <div className="tabs">
             <button className="active">公司提供</button>
             <span className="tab-note">
-              当前接通 OpenAI 兼容的对话与图片接口
+              对话模型与图片生成技能由公司统一提供
             </span>
           </div>
           {!connections.length ? (
@@ -1747,18 +1755,29 @@ export default function Workspace(props: WorkspaceProps) {
                   <div>
                     <h3>{c.name}</h3>
                     <p>
-                      {c.model} · {c.kind === "chat" ? "对话" : "图片"}
+                      {c.model} · {c.kind === "chat" ? "对话" : "图片生成技能"}
                     </p>
                     <small>{c.baseUrl}</small>
                   </div>
                   <span className="badge">公司连接</span>
                   <Button
                     onClick={() => {
-                      patchSettings({ model: c.id });
-                      notify("已设置为所选用途的模型。");
+                      if (c.kind === "image") {
+                        patchSettings({
+                          skillMode: "manual",
+                          skillIds: [
+                            ...new Set([...selectedSkillIds, c.id]),
+                          ].slice(-16),
+                        });
+                        navigate("chat");
+                        notify("图片技能已就绪，直接在对话中提出配图需求。");
+                      } else {
+                        patchSettings({ model: c.id });
+                        notify("已设置为对话模型。");
+                      }
                     }}
                   >
-                    选用
+                    {c.kind === "image" ? "使用图片技能" : "选用"}
                   </Button>
                 </div>
               ))}
@@ -1767,10 +1786,10 @@ export default function Workspace(props: WorkspaceProps) {
           <div className="notice">
             <SlidersHorizontal size={20} />
             <div>
-              <strong>个人连接与更多服务协议</strong>
+              <strong>对话与图片技能</strong>
               <p>
-                个人密钥的系统安全存储、Anthropic、视频及 MCP
-                适配仍在接入；当前不保存个人明文密钥。
+                对话模型用于聊天。图片服务自动成为公司技能，提出配图需求时由 AI
+                按权限调用，密钥只保存在公司服务器。
               </p>
             </div>
           </div>
@@ -1886,24 +1905,42 @@ export default function Workspace(props: WorkspaceProps) {
               </>
             )}
             <p className="muted">
-              {detail.requiredTools.length
-                ? `依赖工具：${detail.requiredTools.join("、")}`
-                : "此版本未声明外部工具依赖。"}
+              {detail.capability
+                ? "公司提供的图片技能已就绪，按你的部门权限使用，无需安装或填写密钥。"
+                : detail.requiredTools.length
+                  ? `依赖工具：${detail.requiredTools.join("、")}`
+                  : "此版本未声明外部工具依赖。"}
             </p>
             <footer>
+              {!detail.capability && (
+                <Button
+                  onClick={() => {
+                    download(
+                      "SKILL.md",
+                      `# ${detail.name}\n\n${detail.description}\n\n${detail.instructions}`,
+                      "text/markdown",
+                    );
+                  }}
+                >
+                  导出 SKILL.md
+                </Button>
+              )}
               <Button
+                primary
                 onClick={() => {
-                  download(
-                    "SKILL.md",
-                    `# ${detail.name}\n\n${detail.description}\n\n${detail.instructions}`,
-                    "text/markdown",
-                  );
+                  if (detail.capability) {
+                    patchSettings({
+                      skillMode: "manual",
+                      skillIds: [
+                        ...new Set([...selectedSkillIds, detail.id]),
+                      ].slice(-16),
+                    });
+                    setDetail(null);
+                    navigate("chat");
+                  } else void install(detail);
                 }}
               >
-                导出 SKILL.md
-              </Button>
-              <Button primary onClick={() => void install(detail)}>
-                安装到本机
+                {detail.capability ? "在对话中使用" : "安装到本机"}
               </Button>
             </footer>
           </div>
