@@ -13,7 +13,9 @@ export type DeepSeekSyncEnv = {
 };
 
 function baseUrl(env: DeepSeekSyncEnv) {
-  const value = (env.DEEPSEEK_CHAT_BASE_URL ?? "https://api.deepseek.com/v1").trim();
+  const value = (
+    env.DEEPSEEK_CHAT_BASE_URL ?? "https://api.deepseek.com/v1"
+  ).trim();
   const parsed = new URL(value);
   if (
     !["https:", "http:"].includes(parsed.protocol) ||
@@ -24,7 +26,9 @@ function baseUrl(env: DeepSeekSyncEnv) {
     parsed.search ||
     parsed.hash
   )
-    throw new Error("DEEPSEEK_CHAT_BASE_URL 必须是 HTTPS 地址（本机可使用 HTTP）");
+    throw new Error(
+      "DEEPSEEK_CHAT_BASE_URL 必须是 HTTPS 地址（本机可使用 HTTP）",
+    );
   return value.replace(/\/$/, "");
 }
 
@@ -40,7 +44,7 @@ export function syncDeepSeekConnections(
     "UPDATE connections SET base_url=?,model=?,kind='chat',departments='[]',secret=?,enabled=1 WHERE id=?",
   );
   const insert = store.db.prepare(
-    "INSERT INTO connections VALUES(?,?,?,?,?,?,?,1)",
+    "INSERT INTO connections(id,name,base_url,model,kind,departments,secret,enabled) VALUES(?,?,?,?,?,?,?,1)",
   );
   for (const item of models) {
     const existing = store.db

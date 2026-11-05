@@ -123,6 +123,17 @@ const { app, library } = createPlatform({
     },
   },
 });
+app.get("/model-service-fixture/models", (req, res) => {
+  if (req.headers.authorization !== "Bearer synthetic-model-service-ui-key")
+    return res.status(401).json({ error: "Synthetic key required" });
+  res.json({
+    data: [
+      { id: "qa-service-model-a" },
+      { id: "qa-service-model-b" },
+      { id: "qa-service-model-c" },
+    ],
+  });
+});
 app.use(express.static(resolve("dist")));
 app.get("/{*path}", (_req, res) => res.sendFile(resolve("dist/index.html")));
 const server = app.listen(0, "127.0.0.1", () => {

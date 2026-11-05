@@ -66,6 +66,8 @@ export type Connection = {
   departments: string[];
   hasKey: boolean;
   enabled: number;
+  serviceId?: string;
+  serviceName?: string;
 };
 export type Message = {
   id: string;

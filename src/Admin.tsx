@@ -32,6 +32,7 @@ import { SkillSourceDetails } from "./SkillImport";
 import FeedbackAdmin from "./FeedbackAdmin";
 import { KnowledgeAdmin } from "./Knowledge";
 import { GenerateAccounts, AccountPassword, AccountNote } from "./AccountTools";
+import { ModelServiceCards, ModelServiceDialog } from "./ModelServices";
 const statusNames = {
   pending: "待审核",
   published: "已发布",
@@ -194,7 +195,7 @@ export default function Admin(props: WorkspaceProps) {
         {page === "admin-models" && companyAdmin && (
           <Button primary onClick={() => setDialog("connection")}>
             <Plus size={19} />
-            添加模型连接
+            自定义配置
           </Button>
         )}
       </header>
@@ -418,85 +419,95 @@ export default function Admin(props: WorkspaceProps) {
               密钥仅保存在服务器，员工端按权限使用
             </span>
           </div>
+          {companyAdmin && (
+            <ModelServiceCards
+              departments={departments}
+              refresh={refresh}
+              notify={notify}
+              revision={connections}
+            />
+          )}
           {connections.length ? (
             <div className="connection-list">
-              {connections.map((c) => (
-                <div key={c.id} className="connection-card">
-                  <span className="card-icon">
-                    <Plug size={24} />
-                  </span>
-                  <div>
-                    <h3>
-                      {c.name}{" "}
-                      <span className="badge">
-                        {c.kind === "chat" ? "对话" : "图片"}
-                      </span>
-                    </h3>
-                    <p>
-                      {c.model} · {c.baseUrl}
-                    </p>
-                    <small>
-                      {c.departments.length
-                        ? c.departments
-                            .map(
-                              (id) =>
-                                departments.find((d) => d.id === id)?.name ??
-                                id,
-                            )
-                            .join("、")
-                        : "全公司可用"}{" "}
-                      · 密钥已保护保存
-                    </small>
-                  </div>
-                  <span className={`status ${c.enabled ? "good" : ""}`}>
-                    {c.enabled ? "已启用" : "已停用"}
-                  </span>
-                  {companyAdmin && c.enabled === 1 && (
-                    <Button
-                      onClick={() =>
-                        void action(async () => {
-                          if (c.kind !== "chat") {
+              {connections
+                .filter((c) => !c.serviceId)
+                .map((c) => (
+                  <div key={c.id} className="connection-card">
+                    <span className="card-icon">
+                      <Plug size={24} />
+                    </span>
+                    <div>
+                      <h3>
+                        {c.name}{" "}
+                        <span className="badge">
+                          {c.kind === "chat" ? "对话" : "图片"}
+                        </span>
+                      </h3>
+                      <p>
+                        {c.model} · {c.baseUrl}
+                      </p>
+                      <small>
+                        {c.departments.length
+                          ? c.departments
+                              .map(
+                                (id) =>
+                                  departments.find((d) => d.id === id)?.name ??
+                                  id,
+                              )
+                              .join("、")
+                          : "全公司可用"}{" "}
+                        · 密钥已保护保存
+                      </small>
+                    </div>
+                    <span className={`status ${c.enabled ? "good" : ""}`}>
+                      {c.enabled ? "已启用" : "已停用"}
+                    </span>
+                    {companyAdmin && c.enabled === 1 && (
+                      <Button
+                        onClick={() =>
+                          void action(async () => {
+                            if (c.kind !== "chat") {
+                              notify(
+                                "图片连接请通过真实图片任务验证，当前没有发起生成或扣费。",
+                              );
+                              return;
+                            }
+                            const result = await api("/generate/chat", {
+                              connectionId: c.id,
+                              messages: [
+                                {
+                                  role: "user",
+                                  content: "连接测试，请仅回复 OK。",
+                                },
+                              ],
+                            });
                             notify(
-                              "图片连接请通过真实图片任务验证，当前没有发起生成或扣费。",
+                              `实际调用成功：${result.content.slice(0, 80)}`,
                             );
-                            return;
-                          }
-                          const result = await api("/generate/chat", {
-                            connectionId: c.id,
-                            messages: [
-                              {
-                                role: "user",
-                                content: "连接测试，请仅回复 OK。",
-                              },
-                            ],
-                          });
-                          notify(
-                            `实际调用成功：${result.content.slice(0, 80)}`,
-                          );
-                        })
-                      }
-                    >
-                      测试连接
-                    </Button>
-                  )}
-                  {companyAdmin && c.enabled === 1 && (
-                    <Button
-                      onClick={() =>
-                        void action(async () => {
-                          await api(
-                            `/connections/${c.id}`,
-                            undefined,
-                            "DELETE",
-                          );
-                          await load();
-                        })
-                      }
-                    >
-                      停用
-                    </Button>
-                  )}
-                </div>
-              ))}
+                          })
+                        }
+                      >
+                        测试连接
+                      </Button>
+                    )}
+                    {companyAdmin && c.enabled === 1 && (
+                      <Button
+                        onClick={() =>
+                          void action(async () => {
+                            await api(
+                              `/connections/${c.id}`,
+                              {},
+                              "DELETE",
+                            );
+                            await load();
+                          })
+                        }
+                      >
+                        停用
+                      </Button>
+                    )}
+                  </div>
+                ))}
             </div>
           ) : (
             <Empty
@@ -1020,102 +1031,14 @@ export default function Admin(props: WorkspaceProps) {
         </Modal>
       )}
       {dialog === "connection" && (
-        <Modal wide title="添加公司模型连接" close={() => setDialog("")}>
-          <form
-            onSubmit={(e) => {
-              e.preventDefault();
-              const data = new FormData(e.currentTarget);
-              void action(async () => {
-                await api("/connections", {
-                  name: data.get("name"),
-                  kind: data.get("kind"),
-                  baseUrl: data.get("baseUrl"),
-                  model: data.get("model"),
-                  apiKey: data.get("apiKey"),
-                  departments: data.getAll("departments"),
-                });
-                setDialog("");
-                await load();
-                notify("连接配置已保存，请用实际调用验证服务能力。");
-              });
-            }}
-          >
-            <div className="form-grid">
-              <Field label="连接名称">
-                <input name="name" required placeholder="例如：公司对话服务" />
-              </Field>
-              <Field label="服务用途">
-                <SelectField
-                  label="服务用途"
-                  name="kind"
-                  defaultValue="chat"
-                  options={[
-                    {
-                      value: "chat",
-                      label: "对话",
-                      description: "OpenAI 兼容接口",
-                    },
-                    {
-                      value: "image",
-                      label: "图片",
-                      description: "返回 b64_json 格式图片",
-                    },
-                  ]}
-                />
-              </Field>
-            </div>
-            <Field label="服务地址（包括 API 前缀）">
-              <input
-                name="baseUrl"
-                type="url"
-                required
-                placeholder="https://api.example.com/v1"
-              />
-            </Field>
-            <Field label="模型标识">
-              <input
-                name="model"
-                required
-                placeholder="填写服务实际支持的模型 ID"
-              />
-            </Field>
-            <Field label="API 密钥">
-              <input
-                name="apiKey"
-                type="password"
-                autoComplete="off"
-                required
-              />
-            </Field>
-            <Field label="允许使用的部门（不选表示全公司）">
-              <div className="source-list">
-                {departments.filter((d) => d.enabled).length ? (
-                  departments
-                    .filter((d) => d.enabled)
-                    .map((d) => (
-                      <label className="checkbox-row" key={d.id}>
-                        <input
-                          type="checkbox"
-                          name="departments"
-                          value={d.id}
-                        />
-                        <span>{d.name}</span>
-                      </label>
-                    ))
-                ) : (
-                  <p className="muted">
-                    暂无可选部门；保存后将按全公司范围开放。
-                  </p>
-                )}
-              </div>
-            </Field>
-            <footer>
-              <Button primary type="submit" disabled={busy}>
-                保存连接
-              </Button>
-            </footer>
-          </form>
-        </Modal>
+        <ModelServiceDialog
+          departments={departments}
+          close={() => setDialog("")}
+          saved={async () => {
+            await load();
+            notify("模型配置已保存，员工可在对话中选择已授权的模型。");
+          }}
+        />
       )}
       {dialog === "review" && targetSkill && (
         <Modal

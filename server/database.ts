@@ -86,6 +86,20 @@ export function createStore(file: string) {
   db.exec(
     "CREATE UNIQUE INDEX IF NOT EXISTS skill_import_identity ON skills(owner_department_id,json_extract(import_source,'$.digest'),json_extract(import_source,'$.entry')) WHERE import_source IS NOT NULL",
   );
+  db.exec(
+    "CREATE TABLE IF NOT EXISTS model_services(id TEXT PRIMARY KEY,provider TEXT NOT NULL,name TEXT NOT NULL,base_url TEXT NOT NULL,departments TEXT NOT NULL,secret TEXT NOT NULL)",
+  );
+  if (
+    !(
+      db.prepare("PRAGMA table_info(connections)").all() as { name: string }[]
+    ).some((c) => c.name === "service_id")
+  )
+    db.exec(
+      "ALTER TABLE connections ADD COLUMN service_id TEXT REFERENCES model_services(id)",
+    );
+  db.exec(
+    "CREATE UNIQUE INDEX IF NOT EXISTS connection_service_model ON connections(service_id,model,kind) WHERE service_id IS NOT NULL",
+  );
   const keyFile =
     file === ":memory:" ? undefined : join(dirname(file), "secrets.key");
   const key =

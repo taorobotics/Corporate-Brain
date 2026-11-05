@@ -35,6 +35,12 @@ import {
 } from "../shared/attachments";
 import { DshManager, DshUnavailableError } from "./dsh";
 import { syncDeepSeekConnections } from "./deepseek-sync";
+import {
+  connectionSelect,
+  resolveConnection,
+  migrateLinoRoute,
+  mountModelServices,
+} from "./model-services";
 import type { ChatProgress } from "../shared/chat-progress";
 import { readChatResponse } from "./chat-stream";
 import { createChatDeadline, ChatTimeoutError } from "./chat-deadline";
@@ -193,6 +199,8 @@ function connectionView(row: Row): Connection {
     departments: JSON.parse(row.departments),
     hasKey: !!row.secret,
     enabled: row.enabled,
+    serviceId: row.service_id ?? undefined,
+    serviceName: row.service_name ?? undefined,
   };
 }
 export function createPlatform(
@@ -208,6 +216,7 @@ export function createPlatform(
 ) {
   const store = createStore(options.database ?? ".data/platform.sqlite");
   syncDeepSeekConnections(store);
+  migrateLinoRoute(store);
   const dsh = process.env.BRAIN_DSH_ENABLED === "0" ? null : new DshManager();
   const { db } = store;
   const app = express();
@@ -846,8 +855,10 @@ export function createPlatform(
   app.get("/api/connections", (req, res) => {
     const actor = getActor(req);
     const rows = (
-      db.prepare("SELECT * FROM connections ORDER BY name").all() as Row[]
-    ).map(connectionView);
+      db.prepare(connectionSelect + " ORDER BY c.name").all() as Row[]
+    )
+      .map(resolveConnection)
+      .map(connectionView);
     res.json(
       rows.filter(
         (row) =>
@@ -885,7 +896,9 @@ export function createPlatform(
       fail(400, "服务地址不能包含账号、查询参数或片段");
     data.departments.forEach(activeDepartment);
     const connectionId = randomUUID();
-    db.prepare("INSERT INTO connections VALUES(?,?,?,?,?,?,?,1)").run(
+    db.prepare(
+      "INSERT INTO connections(id,name,base_url,model,kind,departments,secret,enabled) VALUES(?,?,?,?,?,?,?,1)",
+    ).run(
       connectionId,
       data.name,
       data.baseUrl.replace(/\/$/, ""),
@@ -914,9 +927,10 @@ export function createPlatform(
     store.audit(actor.id, "connection.disabled", String(req.params.id));
     res.json({ ok: true });
   });
+  mountModelServices(app, store, getActor, fail);
   function getConnection(connectionId: string, actor: User, kind: string) {
     const row = db
-      .prepare("SELECT * FROM connections WHERE id=? AND enabled=1")
+      .prepare(connectionSelect + " WHERE c.id=? AND c.enabled=1")
       .get(connectionId) as Row | undefined;
     if (
       !row ||
@@ -926,7 +940,7 @@ export function createPlatform(
         !JSON.parse(row.departments).includes(actor.departmentId))
     )
       fail(403, "模型未配置、已停用或无权使用");
-    return row;
+    return resolveConnection(row);
   }
   async function invoke(row: Row, endpoint: string, payload: unknown) {
     let response: globalThis.Response;

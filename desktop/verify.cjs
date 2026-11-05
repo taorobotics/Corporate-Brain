@@ -934,8 +934,8 @@ async function waitFor(test, label, timeout = 12000) {
   await waitFor(() => has("设计部"), "department list");
   await capture("admin-departments.png");
   await js(`location.hash='admin-models';location.reload()`);
-  await waitFor(() => has("添加模型连接"), "admin model connections");
-  await click("添加模型连接");
+  await waitFor(() => has("自定义配置"), "admin model connections");
+  await click("自定义配置");
   await waitFor(
     () =>
       js(
@@ -952,6 +952,121 @@ async function waitFor(test, label, timeout = 12000) {
   );
   assert.deepEqual(modelDepartmentWidths, [16, 16, 16]);
   await capture("admin-model-connection.png");
+  const providers = await js(
+    `Array.from(document.querySelectorAll('.provider-option strong')).map(el=>el.textContent)`,
+  );
+  assert.equal(providers.length, 11);
+  assert.equal(providers[0], "LinoRoute推荐");
+  for (const name of [
+    "DeepSeek",
+    "Kimi",
+    "千问",
+    "腾讯混元",
+    "智谱",
+    "MiniMax",
+    "OpenAI / GPT",
+    "Gemini",
+    "Claude",
+    "自定义服务",
+  ])
+    assert.ok(providers.includes(name));
+  await js(`document.querySelectorAll('.provider-option')[1].click()`);
+  assert.equal(
+    await js(`document.querySelector('.modal input[name="baseUrl"]').value`),
+    "https://api.deepseek.com/v1",
+  );
+  await js(`document.querySelectorAll('.provider-option')[0].click()`);
+  await fill(
+    '.modal input[name="baseUrl"]',
+    `http://127.0.0.1:${port}/model-service-fixture`,
+  );
+  await fill('.modal input[name="apiKey"]', "synthetic-model-service-ui-key");
+  await click("获取 / 刷新模型");
+  await waitFor(() => has("已获取 3 个模型"), "provider model list received");
+  await js(
+    `Array.from(document.querySelectorAll('.model-catalog-row input')).slice(0,2).forEach(el=>el.click())`,
+  );
+  assert.equal(
+    await js(
+      `document.querySelectorAll('.model-catalog-row input:checked').length`,
+    ),
+    2,
+  );
+  await capture("model-service-multiple-models.png");
+  await click("保存配置");
+  await waitFor(
+    () =>
+      js(
+        `!document.querySelector('.modal') && !!document.querySelector('.model-service-list .connection-card')`,
+      ),
+    "provider multi-model configuration saved",
+  );
+  const serviceBefore = (await request("/model-services"))[0];
+  assert.equal(serviceBefore.models.length, 2);
+  const connectionsBefore = (await request("/connections")).filter(
+    (c) => c.serviceId === serviceBefore.id,
+  );
+  assert.equal(connectionsBefore.length, 2);
+  assert.ok(connectionsBefore.every((c) => c.hasKey));
+  await click("管理模型");
+  await waitFor(
+    () => js(`!!document.querySelector('.modal')`),
+    "saved provider reopened",
+  );
+  assert.equal(
+    await js(`document.querySelector('.modal input[name="apiKey"]').value`),
+    "",
+  );
+  assert.equal(
+    await js(
+      `document.querySelectorAll('.model-catalog-row input:checked').length`,
+    ),
+    2,
+  );
+  await click("获取 / 刷新模型");
+  await waitFor(
+    () => has("已获取 3 个模型"),
+    "provider refresh reuses saved credential",
+  );
+  assert.equal(
+    await js(
+      `document.querySelectorAll('.model-catalog-row input:checked').length`,
+    ),
+    2,
+  );
+  await fill('input[aria-label="搜索模型标识"]', "model-b");
+  assert.equal(
+    await js(`document.querySelectorAll('.model-catalog-row').length`),
+    1,
+  );
+  await js(`document.documentElement.dataset.theme='dark'`);
+  win.setContentSize(550, 850);
+  await capture("model-service-dark-narrow.png");
+  assert.equal(
+    await js(`document.documentElement.scrollWidth <= innerWidth`),
+    true,
+  );
+  await js(`document.documentElement.dataset.theme='light'`);
+  win.setContentSize(1586, 992);
+  await fill('input[aria-label="搜索模型标识"]', "");
+  await js(`document.querySelector('.model-catalog-row input').click()`);
+  await click("保存配置");
+  await waitFor(
+    () => js(`!document.querySelector('.modal')`),
+    "provider model selection updated",
+  );
+  const connectionsAfter = await request("/connections");
+  assert.equal(
+    connectionsAfter.find((c) => c.id === connectionsBefore[0].id).enabled,
+    0,
+  );
+  assert.equal(
+    connectionsAfter.find((c) => c.id === connectionsBefore[1].id).enabled,
+    1,
+  );
+  for (const c of connectionsBefore)
+    await request(`/connections/${c.id}`, {}, "DELETE");
+  await click("自定义配置");
   await key("Escape");
   await waitFor(
     () => js(`!document.querySelector('.modal')`),
@@ -959,6 +1074,7 @@ async function waitFor(test, label, timeout = 12000) {
   );
   checks.push(
     "Company model authorization shows department names and keeps checkboxes at their intended size",
+    "Provider presets recommend LinoRoute first; native multi-model discovery, selection, save, retained IDs, key-free refresh, search and dark narrow layout passed using an isolated local upstream; no real model generation",
   );
   await click("查看员工端");
   await waitFor(() => has("今天，一起完成些什么"), "employee workbench");
