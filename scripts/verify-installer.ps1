@@ -49,6 +49,23 @@ function Wait-ClientWindow([Diagnostics.Process]$Client, [string]$ExpectedPath) 
   } while ([DateTime]::UtcNow -lt $until)
   throw 'Isolated client did not show its native window'
 }
+function Close-ClientWindow([Diagnostics.Process]$Client, [string]$ExpectedPath) {
+  $Client.Refresh()
+  if ($Client.HasExited) { throw 'Test client exited before receiving the close request' }
+  $actualPath = (Get-CimInstance Win32_Process -Filter "ProcessId = $($Client.Id)" -Property ExecutablePath).ExecutablePath
+  if ($actualPath -ne $ExpectedPath) { throw 'Refusing close request for an unexpected client executable' }
+  # Process.CloseMainWindow uses the first unowned visible HWND, which may be a
+  # Chromium helper rather than the BrowserWindow. Address the actual owned,
+  # full-size Electron window and still require natural application shutdown.
+  $windows = @([InstallerWindow]::Windows($Client.Id) | Where-Object { $_.Visible -and $_.ClassName -like 'Chrome_WidgetWin_*' -and $_.Width -ge 500 -and $_.Height -ge 300 })
+  if ($windows.Count -ne 1) { throw "Expected one full-size test client window; found $($windows.Count)" }
+  if (-not [InstallerWindow]::PostMessage($windows[0].Handle,0x10,[IntPtr]::Zero,[IntPtr]::Zero)) { throw 'Test client window did not accept WM_CLOSE' }
+  if (-not $Client.WaitForExit(15000)) {
+    $state = [ordered]@{ processId=$Client.Id; executable=$actualPath; closeTarget=$windows[0]; remainingWindows=@([InstallerWindow]::Windows($Client.Id)) }
+    $state | ConvertTo-Json -Depth 5 | Set-Content -LiteralPath (Join-Path $workspacePath 'artifacts/installer-timeout.json') -Encoding utf8
+    throw 'Test client did not close naturally after WM_CLOSE'
+  }
+}
 function Assert-ButtonFeedback([IntPtr]$Window, [string]$Text, [string]$Name) {
   $button = Get-InstallerControls $Window | Where-Object { $_.ClassName -eq 'Button' -and $_.Text.Replace('&','') -eq $Text } | Select-Object -First 1
   if (-not $button -or -not $button.Enabled) { throw "Enabled button missing: $Text" }
@@ -205,11 +222,7 @@ try {
       if ($process.HasExited) { throw 'Automatic installer exited before the old client closed' }
       if (@([InstallerWindow]::Windows($process.Id) | Where-Object Visible).Count -ne 0) { throw 'Automatic update displayed an installer wizard' }
       if ((Get-FileHash -LiteralPath $appPath).Hash -ne $oldHash) { throw 'Installer changed the application before the old client exited' }
-      # The pinned client can replace its startup window while readiness is checked.
-      # Refresh Process's cached window handle before sending the real close request.
-      $oldClient.Refresh()
-      if (-not $oldClient.CloseMainWindow()) { throw 'Old client has no current window accepting a close request' }
-      if (-not $oldClient.WaitForExit(15000)) { throw 'Old client did not close after saving' }
+      Close-ClientWindow $oldClient $appPath
       if (-not $process.WaitForExit(120000) -or $process.ExitCode -ne 0) { throw 'Background update failed or did not restart' }
       if ((Get-ItemProperty -LiteralPath $registryPath).InstallLocation -ne $qaTarget) { throw 'Automatic update changed the original directory' }
       if ((Get-Item -LiteralPath $appPath).VersionInfo.ProductVersion -notin @($version,"$version.0")) { throw 'Automatic update installed the wrong version' }
@@ -217,9 +230,7 @@ try {
       if ((Get-FileHash -LiteralPath $sentinel).Hash -ne $sentinelHash) { throw 'Automatic update changed personal records' }
       $restarted = Get-Process -Name '公司大脑' -ErrorAction SilentlyContinue | Where-Object { $_.Path -eq $appPath -and $_.MainWindowHandle -ne 0 } | Select-Object -First 1
       if (-not $restarted) { throw 'Updated client did not show its window' }
-      $restarted.Refresh()
-      if (-not $restarted.CloseMainWindow()) { throw 'Updated test client has no current window accepting a close request' }
-      if (-not $restarted.WaitForExit(15000)) { throw 'Updated test client did not close' }
+      Close-ClientWindow $restarted $appPath
     }
     # Simulate a user who has removed the desktop link. The updater must not recreate it.
     $desktopLink = Join-Path ([Environment]::GetFolderPath('Desktop')) '公司大脑.lnk'
