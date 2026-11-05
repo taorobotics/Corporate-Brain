@@ -77,8 +77,7 @@
 }
 :root[data-skin="claude"]
   :is(.chat-welcome h1, .message.assistant .message-markdown) {
-  font-family:
-    "Skin Newsreader", "Noto Serif CJK SC", "Songti SC", var(--font-ui);
+  font-family: inherit;
 }
 :root[data-skin="claude"] :is(pre, code) {
   font-family: "Skin Mono", monospace;

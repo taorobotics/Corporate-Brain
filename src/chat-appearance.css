@@ -1,0 +1,289 @@
+/* Shared reading layout; colors continue to follow the employee's chosen skin. */
+.chat {
+  --chat-width: 960px;
+  --chat-text-size: 17px;
+}
+.chat-header {
+  min-height: 70px;
+  height: 70px;
+  padding-inline: 26px;
+}
+.chat-header > strong {
+  font-size: 17px;
+  font-weight: 600;
+}
+.messages {
+  padding: 36px max(28px, calc((100% - var(--chat-width)) / 2)) 32px;
+  scrollbar-width: thin;
+  scrollbar-color: color-mix(in srgb, var(--muted) 30%, transparent) transparent;
+}
+.message {
+  max-width: var(--chat-width);
+  margin-bottom: 36px;
+  gap: 16px;
+  font-size: var(--chat-text-size);
+  color: var(--ink);
+}
+.message-avatar {
+  width: 36px;
+  padding-top: 4px;
+}
+.message.user {
+  margin-bottom: 42px;
+}
+.message.user > .message-avatar {
+  display: none;
+}
+.message.user .message-body {
+  max-width: 82%;
+  padding: 18px 23px;
+  border-radius: 22px;
+}
+.message-markdown {
+  line-height: 1.8;
+  letter-spacing: 0.01em;
+}
+.message-markdown :is(p, blockquote, ul, ol, pre, hr),
+.message-table-group {
+  margin-block: 14px;
+}
+.message-markdown :is(h1, h2, h3, h4) {
+  margin: 30px 0 12px;
+  line-height: 1.4;
+  letter-spacing: 0;
+  font-weight: 600;
+}
+.message-markdown h1 {
+  font-size: 1.5em;
+}
+.message-markdown h2 {
+  font-size: 1.3em;
+}
+.message-markdown h3 {
+  font-size: 1.14em;
+}
+.message-markdown h4 {
+  font-size: 1em;
+}
+.message-markdown strong {
+  font-weight: 600;
+}
+.message-markdown :is(ul, ol) {
+  padding-left: 1.5em;
+}
+.message-markdown li + li {
+  margin-top: 7px;
+}
+.message-markdown li::marker {
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+}
+.message-markdown pre {
+  padding: 16px 18px;
+  border-radius: 12px;
+  font-size: 0.88em;
+}
+.message-table {
+  font-size: 0.86em;
+  line-height: 1.7;
+}
+.message-table :is(th, td) {
+  padding: 12px 16px;
+}
+.message-actions {
+  margin-top: 16px;
+}
+.chat .thinking-process {
+  padding-bottom: 14px;
+  margin-bottom: 20px;
+  border-bottom: 1px solid var(--line);
+}
+.chat .reasoning-entry {
+  font-size: 16px;
+  line-height: 1.85;
+}
+.chat-welcome h1 {
+  font-size: 30px;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+}
+.chat-welcome p {
+  font-size: 15px;
+  line-height: 1.8;
+}
+.composer-wrap {
+  max-width: calc(var(--chat-width) + 64px);
+  padding: 0 32px 12px;
+}
+:root[data-skin] .composer {
+  padding: 16px 18px 13px;
+  border-radius: 24px;
+  box-shadow: 0 5px 24px color-mix(in srgb, var(--ink) 4%, transparent);
+  transition: border-color 160ms ease;
+}
+:root[data-skin] .composer:focus-within {
+  border-color: color-mix(in srgb, var(--accent) 45%, var(--line));
+}
+.composer > textarea {
+  font-size: 17px;
+  line-height: 1.75;
+  min-height: 76px;
+  padding: 4px 3px 10px;
+}
+.composer textarea::placeholder {
+  color: color-mix(in srgb, var(--muted) 78%, var(--panel));
+}
+.composer-tools {
+  gap: 7px;
+}
+.composer-tools :is(.select-trigger, .text-button) {
+  font-size: 13px;
+}
+.send {
+  width: 40px;
+  height: 40px;
+}
+.composer-note {
+  color: var(--muted);
+  font-size: 11px;
+  line-height: 1.5;
+  text-align: center;
+  flex-wrap: wrap;
+}
+:root[data-skin="claude"]:not([data-theme="dark"]) .message.user .message-body {
+  background: #eeebe4;
+}
+:root[data-skin="claude"]:not([data-theme="dark"]) .composer {
+  background: #fffefa;
+}
+.application:not(.admin-app) .sidebar {
+  width: 264px;
+  padding-inline: 16px;
+}
+.application:not(.admin-app) .sidebar-brand {
+  height: 88px;
+}
+.application:not(.admin-app) .main-nav {
+  gap: 5px;
+  margin-bottom: 24px;
+}
+.application:not(.admin-app) .main-nav > button {
+  min-height: 46px;
+  padding: 12px 14px;
+  font-size: 16px;
+  line-height: 1.4;
+  border-radius: 12px;
+}
+.application:not(.admin-app) .main-nav > button:first-child {
+  justify-content: center;
+  margin-bottom: 12px;
+  border: 1px solid var(--line);
+  background: var(--panel);
+  font-weight: 500;
+}
+.application:not(.admin-app) .main-nav > button:first-child:hover {
+  background: var(--active);
+}
+.application:not(.admin-app) .history {
+  border-color: var(--line);
+}
+.application:not(.admin-app) .history-search {
+  font-size: 13px;
+}
+.application:not(.admin-app) .history-list button {
+  font-size: 14px;
+  line-height: 1.5;
+  border-radius: 10px;
+}
+@media (min-width: 1440px) {
+  .chat {
+    --chat-text-size: 18px;
+  }
+}
+@media (max-width: 1080px) {
+  .application:not(.admin-app) .sidebar {
+    width: 218px;
+    padding-inline: 12px;
+  }
+  .application:not(.admin-app) .main-nav > button {
+    font-size: 15px;
+    padding-inline: 10px;
+  }
+  .messages {
+    padding-inline: 22px;
+  }
+  .composer-wrap {
+    padding-inline: 22px;
+  }
+}
+@media (max-width: 780px) {
+  .chat {
+    --chat-text-size: 16px;
+  }
+  .application:not(.admin-app) .sidebar {
+    width: 180px;
+    padding-inline: 8px;
+  }
+  .application:not(.admin-app) .main-nav > button {
+    font-size: 13px;
+    gap: 8px;
+  }
+  .chat-header {
+    padding-inline: 16px;
+    height: 60px;
+    min-height: 60px;
+  }
+  .chat-header > strong {
+    font-size: 15px;
+  }
+  .messages {
+    padding: 24px 16px;
+  }
+  .message {
+    gap: 10px;
+    margin-bottom: 28px;
+  }
+  .message.user .message-body {
+    max-width: 94%;
+    padding: 14px 16px;
+    border-radius: 18px;
+  }
+  .composer-wrap {
+    padding: 0 12px 9px;
+  }
+  :root[data-skin] .composer {
+    padding: 13px 12px 10px;
+    border-radius: 20px;
+  }
+  .composer > textarea {
+    font-size: 16px;
+    min-height: 68px;
+  }
+  .composer-tools {
+    gap: 2px;
+  }
+  .composer-tools .select-trigger {
+    max-width: 140px;
+    padding-inline: 6px;
+  }
+  .composer-tools > .text-button {
+    font-size: 0;
+  }
+  .composer-note {
+    font-size: 10px;
+  }
+  .chat-welcome h1 {
+    font-size: 24px;
+  }
+  .chat-welcome p {
+    font-size: 13px;
+  }
+  .message-table :is(th, td) {
+    padding: 10px 12px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  :root[data-skin] .composer {
+    transition: none;
+  }
+}

@@ -1553,6 +1553,7 @@ async function waitFor(test, label, timeout = 12000) {
     "Another employee installs the shared Skill without author history",
   );
   await require("./verify-personal-models.cjs")({js,click,fill,waitFor,request,selectOption,key,capture,checks,win});
+  await require("./verify-chat-appearance.cjs")({js,click,waitFor,request,selectOption,capture,checks,win});
   for (const [page, label] of [
     ["projects", "项目"],
     ["knowledge", "公司知识"],
