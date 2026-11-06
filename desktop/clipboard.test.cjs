@@ -4,10 +4,13 @@ const { writeClipboard } = require("./clipboard.cjs");
 
 test("copy writes the original text and accepts OS line-ending normalization", async () => {
   const text = "原文 **Markdown**\n第二行";
-  let written;
+  let written,
+    writes = 0;
   await writeClipboard(
     {
       writeText: async (value) => {
+        writes++;
+        await new Promise((resolve) => setTimeout(resolve, 10));
         written = value;
       },
       readText: async () => written.replace(/\n/g, "\r\n"),
@@ -15,6 +18,26 @@ test("copy writes the original text and accepts OS line-ending normalization", a
     text,
   );
   assert.equal(written, text);
+  assert.equal(writes, 1);
+});
+
+test("rapid copies commit in order so an earlier retry cannot overwrite the latest click", async () => {
+  let value = "";
+  const writes = [];
+  const clipboard = {
+    writeText: async (text) => {
+      await new Promise((r) => setTimeout(r, 10));
+      value = text;
+      writes.push(text);
+    },
+    readText: async () => value,
+  };
+  await Promise.all([
+    writeClipboard(clipboard, "first"),
+    writeClipboard(clipboard, "last"),
+  ]);
+  assert.deepEqual(writes, ["first", "last"]);
+  assert.equal(value, "last");
 });
 test("copy recovers from transient clipboard ownership without false success", async () => {
   let writes = 0;

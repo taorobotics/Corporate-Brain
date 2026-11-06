@@ -1,5 +1,5 @@
 const assert = require("node:assert/strict");
-const { clipboard } = require("electron");
+const { clipboard, ClipboardItem } = require("electron");
 
 module.exports = async ({
   js,
@@ -17,7 +17,18 @@ module.exports = async ({
   );
   const size = win.getContentSize(),
     minimum = win.getMinimumSize();
-  const originalClipboard = await clipboard.read();
+  const originalClipboard = await Promise.all(
+    (await clipboard.read()).map(
+      async (item) =>
+        new ClipboardItem(
+          Object.fromEntries(
+            await Promise.all(
+              item.types.map(async (type) => [type, await item.getType(type)]),
+            ),
+          ),
+        ),
+    ),
+  );
   const at = await js(
     `(() => {const today=new Date();today.setHours(17,0,9,0);const yesterday=new Date(today);yesterday.setDate(yesterday.getDate()-1);yesterday.setHours(15,31,0,0);return {today:today.toISOString(),yesterday:yesterday.toISOString()}})()`,
   );
