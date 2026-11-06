@@ -231,11 +231,15 @@ export default function Workspace(props: WorkspaceProps) {
   }
   async function chooseWorkspaceFolder() {
     if (!window.brainDesktop) {
-      notify("网页端无法读取本地目录，请使用桌面客户端选择工作区。");
+      notify("请在桌面客户端选择项目文件夹，AI 才能读取电脑上的资料。");
       return;
     }
-    const selected = await window.brainDesktop.selectDirectory();
-    if (selected) patchWorkspace({ folder: selected });
+    try {
+      const selected = await window.brainDesktop.selectDirectory();
+      if (selected) patchWorkspace({ folder: selected });
+    } catch (error) {
+      notify((error as Error).message);
+    }
   }
   function localFolderMention(value: string) {
     const match = value.match(
@@ -596,7 +600,7 @@ export default function Workspace(props: WorkspaceProps) {
         );
         if (!vision)
           throw Error(
-            "附件或工作区包含画面，但当前没有可识图的模型，请联系管理员配置。",
+            "附件或项目文件夹包含画面，但当前没有可识图的模型，请联系管理员配置。",
           );
         responseModel = vision;
       }
@@ -698,7 +702,7 @@ export default function Workspace(props: WorkspaceProps) {
   async function saveImage(image: string) {
     try {
       if (workspace?.access === "view") {
-        notify("当前工作区为仅可查看，先切换到工作区内修改或完全权限。");
+        notify("当前项目为仅可查看，先切换到项目内修改或完全权限。");
         return;
       }
       const extension = image.startsWith("data:image/jpeg;")
@@ -766,7 +770,7 @@ export default function Workspace(props: WorkspaceProps) {
               <span className="header-divider" />
               <div className="workspace-controls">
                 <SelectField
-                  label="工作区"
+                  label="切换项目"
                   variant="quiet"
                   side="bottom"
                   value={workspace?.id ?? null}
@@ -780,19 +784,13 @@ export default function Workspace(props: WorkspaceProps) {
                   options={state.workspaces.map((item) => ({
                     value: item.id,
                     label: item.name,
-                    description: item.description || "个人工作区",
+                    description: item.description || "本机项目与文件夹设置",
                   }))}
                   action={{
-                    label: "添加工作区",
+                    label: "添加本地项目",
                     onClick: () => setWorkspaceDialog(true),
                   }}
                 />
-                <IconButton
-                  label="选择工作区目录"
-                  onClick={() => void chooseWorkspaceFolder()}
-                >
-                  <Folder size={16} />
-                </IconButton>
               </div>
               <span className="bar-spacer" />
               <Button onClick={() => newDraft()}>
@@ -988,6 +986,21 @@ export default function Workspace(props: WorkspaceProps) {
                   回到最新内容
                 </button>
               )}
+              <section className="project-folder" aria-label="项目文件夹">
+                <Folder size={21} aria-hidden="true" />
+                <div className="project-folder-info">
+                  <strong>项目文件夹</strong>
+                  <span title={workspace?.folder ?? undefined}>
+                    {workspace?.folder || "选择电脑上的文件夹，让 AI 读取其中的资料"}
+                  </span>
+                </div>
+                <Button
+                  onClick={() => void chooseWorkspaceFolder()}
+                  disabled={busy}
+                >
+                  {workspace?.folder ? "更换文件夹" : "选择文件夹"}
+                </Button>
+              </section>
               <div
                 className="composer"
                 onDragOver={(e) => {
@@ -1126,7 +1139,7 @@ export default function Workspace(props: WorkspaceProps) {
                     manage={() => navigate("models")}
                   />
                   <SelectField
-                    label="工作区权限"
+                    label="项目权限"
                     variant="quiet"
                     side="top"
                     align="end"
@@ -1676,7 +1689,7 @@ export default function Workspace(props: WorkspaceProps) {
                 <span>本地文件</span>
                 <small>
                   {window.brainDesktop
-                    ? "已接通系统文件选择与工作区目录只读扫描"
+                    ? "已接通系统文件选择与项目文件夹只读扫描"
                     : "可上传选定文件，本地目录助手尚未接通"}
                 </small>
               </div>
@@ -1988,7 +2001,7 @@ export default function Workspace(props: WorkspaceProps) {
         </Modal>
       )}
       {workspaceDialog && (
-        <Modal title="添加工作区" close={() => setWorkspaceDialog(false)}>
+        <Modal title="添加本地项目" close={() => setWorkspaceDialog(false)}>
           <form
             onSubmit={(e) => {
               e.preventDefault();
@@ -2006,10 +2019,10 @@ export default function Workspace(props: WorkspaceProps) {
                 activeWorkspaceId: item.id,
               }));
               setWorkspaceDialog(false);
-              notify("工作区已添加到本机。");
+              notify("本地项目已添加，可在输入框上方选择项目文件夹。");
             }}
           >
-            <Field label="工作区名称">
+            <Field label="项目名称">
               <input
                 name="name"
                 required
@@ -2022,12 +2035,12 @@ export default function Workspace(props: WorkspaceProps) {
                 name="description"
                 rows={3}
                 maxLength={500}
-                placeholder="这个工作区用于什么任务？"
+                placeholder="这个项目用于什么任务？"
               />
             </Field>
             <footer>
               <Button primary type="submit">
-                添加工作区
+                添加本地项目
               </Button>
             </footer>
           </form>

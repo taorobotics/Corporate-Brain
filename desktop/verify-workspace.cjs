@@ -3,6 +3,7 @@ const fs = require("node:fs/promises");
 const { join } = require("node:path");
 const { createServer } = require("node:http");
 const { once } = require("node:events");
+const { dialog } = require("electron");
 
 // Real native scan -> renderer -> authenticated HTTP API -> synthetic model.
 // No renderer fetch replacement and no access to company models or employee files.
@@ -15,8 +16,10 @@ module.exports = async ({
   capture,
   checks,
   dir,
+  win,
+  selectOption,
 }) => {
-  const folder = join(dir, "large-project-fixture");
+  const folder = join(dir, "示例研发项目-资料与视频制作-项目文件夹-用于长路径显示验收");
   await fs.mkdir(folder);
   await fs.writeFile(
     join(folder, "README.md"),
@@ -63,6 +66,9 @@ module.exports = async ({
   const saved = await js(
     `window.brainDesktop.readState(${JSON.stringify(actor.id)})`,
   );
+  const originalDialog = dialog.showOpenDialog;
+  const size = win.getContentSize();
+  const minimumSize = win.getMinimumSize();
   const restoreFolder = async () => {
     await js(
       `(async()=>{const state=await window.brainDesktop.readState(${JSON.stringify(actor.id)});state.workspaces=${JSON.stringify(saved.workspaces)};state.activeWorkspaceId=${JSON.stringify(saved.activeWorkspaceId)};state.settings.model=${JSON.stringify(saved.settings.model)};await window.brainDesktop.writeState(${JSON.stringify(actor.id)},state)})()`,
@@ -84,7 +90,7 @@ module.exports = async ({
       native.files.reduce((sum, f) => sum + f.content.length, 0) > 2000000,
     );
     await js(
-      `(async()=>{const state=await window.brainDesktop.readState(${JSON.stringify(actor.id)});state.workspaces[0].folder=${JSON.stringify(folder)};state.activeWorkspaceId=state.workspaces[0].id;state.settings.model=${JSON.stringify(connection.id)};await window.brainDesktop.writeState(${JSON.stringify(actor.id)},state)})()`,
+      `(async()=>{const state=await window.brainDesktop.readState(${JSON.stringify(actor.id)});state.workspaces[0].folder=null;state.activeWorkspaceId=state.workspaces[0].id;state.settings.model=${JSON.stringify(connection.id)};await window.brainDesktop.writeState(${JSON.stringify(actor.id)},state)})()`,
     );
     await js("location.reload()");
     await waitFor(
@@ -94,6 +100,54 @@ module.exports = async ({
         ),
       "large folder model ready",
     );
+    await waitFor(() => js(`!!document.querySelector('.project-folder .button')`), "visible folder choice");
+    await waitFor(() => js(`!document.querySelector('.entry-experience')`), "project folder startup revealed");
+    assert.equal(await js(`document.querySelector('.project-folder').textContent.includes('选择电脑上的文件夹')`), true);
+    await capture("project-folder-empty-light.png");
+    const selections = [];
+    dialog.showOpenDialog = async (_window, options) => {
+      assert.deepEqual(options.properties, ["openDirectory"]);
+      selections.push(folder);
+      return { canceled: false, filePaths: [folder] };
+    };
+    await click("选择文件夹");
+    await waitFor(() => js(`document.querySelector('.project-folder-info span')?.textContent===${JSON.stringify(folder)}`), "selected folder visible through native IPC");
+    await waitFor(async () => (await js(`window.brainDesktop.readState(${JSON.stringify(actor.id)})`)).workspaces[0].folder === folder, "folder persisted");
+    await capture("project-folder-selected-light.png");
+    dialog.showOpenDialog = async () => ({ canceled: true, filePaths: [] });
+    await click("更换文件夹");
+    assert.equal(await js(`document.querySelector('.project-folder-info span').textContent`), folder);
+    dialog.showOpenDialog = async () => ({ canceled: false, filePaths: [dir] });
+    await click("更换文件夹");
+    await waitFor(() => js(`document.querySelector('.project-folder-info span').textContent===${JSON.stringify(dir)}`), "replacement folder visible");
+    dialog.showOpenDialog = async () => ({ canceled: false, filePaths: [folder] });
+    await click("更换文件夹");
+    await waitFor(async () => (await js(`window.brainDesktop.readState(${JSON.stringify(actor.id)})`)).workspaces[0].folder === folder, "replacement persisted");
+    await js("location.reload()");
+    await waitFor(() => js(`document.querySelector('.project-folder-info span')?.title===${JSON.stringify(folder)}`), "folder restored on reload with full path tooltip");
+    await js("location.hash='settings'");
+    await waitFor(() => js(`document.body.innerText.includes('本地记录与备份')`), "folder dark settings");
+    await selectOption("外观", "深色");
+    await js("location.hash='chat'");
+    await waitFor(() => js(`!!document.querySelector('.project-folder')`), "folder dark chat");
+    win.setMinimumSize(600, 600);
+    win.setContentSize(700, 900);
+    await capture("project-folder-dark-narrow.png");
+    const layout = await js(`(() => { const card=document.querySelector('.project-folder'),button=card.querySelector('.button'),path=card.querySelector('span'),r=button.getBoundingClientRect();return {overflow:document.documentElement.scrollWidth>innerWidth,visible:r.left>=0&&r.right<=innerWidth&&r.bottom<=innerHeight,ellipsis:getComputedStyle(path).textOverflow,background:getComputedStyle(card).backgroundColor,theme:document.documentElement.dataset.theme}; })()`);
+    assert.equal(layout.overflow, false);
+    assert.equal(layout.visible, true);
+    assert.equal(layout.ellipsis, "ellipsis");
+    assert.equal(layout.theme, "dark");
+    assert.notEqual(layout.background, "rgb(255, 255, 255)");
+    await js("location.hash='settings'");
+    await waitFor(() => js(`document.body.innerText.includes('本地记录与备份')`), "restore folder theme");
+    await selectOption("外观", "默认（浅色）");
+    win.setMinimumSize(...minimumSize);
+    win.setContentSize(...size);
+    await js("location.hash='chat'");
+    await waitFor(() => js(`!!document.querySelector('.project-folder')`), "restore folder chat");
+    assert.equal(selections.length, 1);
+    checks.push("Prominent project folder: native IPC selection, cancel preserves path, change persists across reload, full-path tooltip, actual dark theme and 700px layout without overflow; synthetic files only");
     await fill(
       'textarea[aria-label="任务输入"]',
       "目录长度回归验收：请分析当前工作区的文件内容",
@@ -133,6 +187,9 @@ module.exports = async ({
       "Multi-megabyte directory: real native read, bounded prioritized excerpts, actual router/chat HTTP, model receipt, successful reply and visible read-scope progress; no company models called",
     );
   } finally {
+    dialog.showOpenDialog = originalDialog;
+    win.setMinimumSize(...minimumSize);
+    win.setContentSize(...size);
     await restoreFolder();
     if (connection)
       await request(`/connections/${connection.id}`, {}, "DELETE");

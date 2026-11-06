@@ -42,12 +42,12 @@ export const WORKSPACE_ACCESS_OPTIONS: ReadonlyArray<{
   {
     value: "view",
     label: "仅可查看",
-    description: "可以读取当前工作区，不能写入或修改文件。",
+    description: "可以读取当前项目，不能写入或修改文件。",
   },
   {
     value: "edit",
-    label: "工作区内修改",
-    description: "可以在当前工作区内创建和修改文件。",
+    label: "项目内修改",
+    description: "可以在当前项目内创建和修改文件。",
   },
   {
     value: "full",
@@ -59,8 +59,8 @@ export const WORKSPACE_ACCESS_OPTIONS: ReadonlyArray<{
 export function defaultWorkspace(): LocalWorkspace {
   return {
     id: "default-workspace",
-    name: "默认工作区",
-    description: "个人本地工作区",
+    name: "默认项目",
+    description: "本机项目与文件夹设置",
     folder: null,
     access: "edit",
   };
@@ -92,7 +92,10 @@ export function normalizeLocalState(
     })
     .map((workspace) => ({
       id: workspace.id,
-      name: workspace.name.trim().slice(0, 100) || "未命名工作区",
+      name:
+        workspace.id === "default-workspace" && workspace.name === "默认工作区"
+          ? "默认项目"
+          : workspace.name.trim().slice(0, 100) || "未命名项目",
       description: (workspace.description ?? "").slice(0, 500),
       folder: typeof workspace.folder === "string" ? workspace.folder : null,
       access: normalizeAccess(workspace.access),

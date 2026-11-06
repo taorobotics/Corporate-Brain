@@ -36,6 +36,14 @@ test("workspace normalization keeps named workspaces and falls back from unknown
   assert.equal(state.workspaces[0].folder, "C:/safe");
 });
 
+test("legacy default project keeps its folder and access while custom names stay intact", () => {
+  const old = { id: "default-workspace", name: "默认工作区", description: "", folder: "D:/team", access: "view" as const };
+  const state = normalizeLocalState({ workspaces: [old], activeWorkspaceId: old.id });
+  assert.deepEqual(state.workspaces[0], { ...old, name: "默认项目" });
+  assert.equal(state.activeWorkspaceId, old.id);
+  assert.equal(normalizeLocalState({ workspaces: [{ ...old, name: "我的研发项目" }] }).workspaces[0].name, "我的研发项目");
+});
+
 test("mode and permission catalogs expose the four DSH modes and three access levels", () => {
   assert.deepEqual(
     DSH_MODE_OPTIONS.map((option) => option.value),
