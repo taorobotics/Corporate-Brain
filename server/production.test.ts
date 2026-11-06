@@ -20,6 +20,7 @@ import { createServer } from "node:http";
 import { once } from "node:events";
 import { productionReply, productionOutcome } from "../shared/production-reply";
 import type { Message } from "../shared/types";
+import { ProductionOutputError } from "./production-output";
 
 async function fixture(
   t: { after: (fn: () => Promise<void>) => void },
@@ -386,6 +387,45 @@ test("model source with unsafe paths is not executed or written outside its task
   await queue.start(owner, task.id);
   assert.equal((await done(task.id)).status, "failed");
 });
+
+test("interrupted generation keeps its private draft and success removes drafts from delivery", async (t) => {
+  let calls = 0;
+  const f = await fixture(
+    t,
+    async (_owner, _connection, _messages, _signal, _reasoning, updates) => {
+      calls++;
+      await updates.checkpoint(
+        '{"files":[{"path":"main.js","content":"unfinished',
+      );
+      if (calls === 1)
+        throw new ProductionOutputError("生成中断，草稿已保留", false);
+      return JSON.stringify({
+        files: [{ path: "main.js", content: "complete" }],
+      });
+    },
+  );
+  const task = await f.create();
+  await f.queue.start(f.owner, task.id);
+  assert.equal((await f.done(task.id)).status, "failed");
+  assert.equal(calls, 1);
+  assert.match(
+    await readFile(
+      join(f.root, f.owner, task.id, "drafts/generate.partial.json"),
+      "utf8",
+    ),
+    /unfinished/,
+  );
+  await f.queue.start(f.owner, task.id);
+  assert.equal((await f.done(task.id)).status, "ready");
+  const manifest = f.queue.manifest(f.owner, task.id, f.deviceId);
+  assert.equal(
+    manifest.files.some((file) => file.path.startsWith("drafts/")),
+    false,
+  );
+  await assert.rejects(stat(join(f.root, f.owner, task.id, "drafts")), {
+    code: "ENOENT",
+  });
+});
 test("cancellation aborts generation before removing all task files", async (t) => {
   let started = false;
   const { queue, owner, create, root } = await fixture(
@@ -447,7 +487,51 @@ test("server restart preserves ready output and marks interrupted tasks retryabl
 });
 test("production HTTP endpoints enforce login, Origin, declared uploads and model access", async (t) => {
   const root = await mkdtemp(join(tmpdir(), "brain-production-http-"));
-  const p = createPlatform({ database: join(root, "test.sqlite") }),
+  const generated = JSON.stringify({
+    files: [
+      { path: "main.js", content: 'console.log("完整源码\\n保留转义");' },
+    ],
+  });
+  const split = generated.indexOf("\\n") + 1;
+  let outputCalls = 0;
+  const p = createPlatform({
+      database: join(root, "test.sqlite"),
+      modelTransport: async (_row, _url, init) => {
+        const body = JSON.parse(String(init.body));
+        assert.equal(body.max_tokens, 256000);
+        if (body.messages[0].content.startsWith("Plan the production"))
+          return Response.json({
+            choices: [
+              {
+                message: {
+                  content: JSON.stringify({
+                    title: "分段验收",
+                    brief: "生成完整代码文件",
+                  }),
+                },
+              },
+            ],
+          });
+        outputCalls++;
+        const content =
+          outputCalls === 1
+            ? generated.slice(0, split)
+            : generated.slice(split);
+        return new Response(
+          "data: " +
+            JSON.stringify({
+              choices: [
+                {
+                  delta: { content },
+                  finish_reason: outputCalls === 1 ? "length" : "stop",
+                },
+              ],
+            }) +
+            "\n\ndata: [DONE]\n\n",
+          { headers: { "content-type": "text/event-stream" } },
+        );
+      },
+    }),
     server = createServer(p.app);
   server.listen(0, "127.0.0.1");
   await once(server, "listening");
@@ -488,7 +572,7 @@ test("production HTTP endpoints enforce login, Origin, declared uploads and mode
     {
       name: "合成模型",
       baseUrl: "http://127.0.0.1:1",
-      model: "fixture",
+      model: "deepseek-flash",
       kind: "chat",
       apiKey: "synthetic-placeholder",
     },
@@ -545,4 +629,26 @@ test("production HTTP endpoints enforce login, Origin, declared uploads and mode
   );
   assert.equal(badUpload.status, 400);
   await request(`/production/${task.id}/cancel`, {}, cookie);
+  const continued = await (
+    await request("/production", { ...payload, inputs: [] }, cookie)
+  ).json();
+  assert.equal(
+    (await request(`/production/${continued.id}/start`, {}, cookie)).status,
+    200,
+  );
+  let current;
+  for (let n = 0; n < 150; n++) {
+    current = p.production.list(owner).find((j) => j.id === continued.id)!;
+    if (["ready", "failed"].includes(current.status)) break;
+    await new Promise((r) => setTimeout(r, 10));
+  }
+  assert.equal(current!.status, "ready", current!.error);
+  assert.equal(outputCalls, 2);
+  assert.equal(
+    await readFile(
+      join(root, "production", owner, continued.id, "code/main.js"),
+      "utf8",
+    ),
+    JSON.parse(generated).files[0].content,
+  );
 });

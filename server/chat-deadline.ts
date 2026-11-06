@@ -22,7 +22,7 @@ export function createChatDeadline({
 }: {
   parent?: AbortSignal;
   idleMs?: number;
-  maxMs?: number;
+  maxMs?: number | null;
 } = {}) {
   const controller = new AbortController();
   const signal = parent
@@ -33,11 +33,14 @@ export function createChatDeadline({
   const toolStates = new Map<string, string>();
   const reasoning = new Map<string, string>();
   let text = "";
-  const maximum = setTimeout(
-    () => controller.abort(new ChatTimeoutError("duration")),
-    maxMs,
-  );
-  maximum.unref();
+  const maximum =
+    maxMs === null
+      ? undefined
+      : setTimeout(
+          () => controller.abort(new ChatTimeoutError("duration")),
+          maxMs,
+        );
+  maximum?.unref();
   const armIdle = () => {
     if (disposed || signal.aborted) return;
     clearTimeout(idle);

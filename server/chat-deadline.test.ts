@@ -2,6 +2,19 @@ import assert from "node:assert/strict";
 import { test } from "node:test";
 import { createChatDeadline, ChatTimeoutError } from "./chat-deadline";
 
+test("production may use an idle-only deadline while real output continues", (t) => {
+  t.mock.timers.enable({ apis: ["setTimeout"] });
+  const deadline = createChatDeadline({ idleMs: 100, maxMs: null });
+  t.after(deadline.dispose);
+  for (let i = 0; i < 20; i++) {
+    t.mock.timers.tick(90);
+    deadline.observe({ type: "text", text: "continued output " + i });
+    assert.equal(deadline.signal.aborted, false);
+  }
+  t.mock.timers.tick(100);
+  assert.equal(deadline.signal.reason.kind, "idle");
+});
+
 test("active image reasoning and tool work continue beyond the old three-minute cutoff", (t) => {
   t.mock.timers.enable({ apis: ["setTimeout"] });
   const deadline = createChatDeadline();

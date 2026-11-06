@@ -20,10 +20,7 @@ import { mountDocuments } from "./documents";
 import { mountProfile } from "./profile";
 import { mountAccounts, saveManagedPassword, usernameSchema } from "./accounts";
 import { mountProduction, ProductionError } from "./production";
-import {
-  productionCompletionBody,
-  productionCompletionText,
-} from "./production-output";
+import { completeProduction, ProductionOutputError } from "./production-output";
 import { defaultAvatar } from "../shared/avatars";
 import {
   visualInputs,
@@ -1033,7 +1030,7 @@ export function createPlatform(
         fail(403, "员工账号当前不可用");
       getConnection(connectionId, userView(row), "chat");
     },
-    async generate(owner, connectionId, messages, signal, reasoning) {
+    async generate(owner, connectionId, messages, signal, reasoning, updates) {
       const actor = userById(owner);
       if (
         !actor ||
@@ -1043,39 +1040,41 @@ export function createPlatform(
       )
         fail(403, "员工账号当前不可用");
       const row = getConnection(connectionId, userView(actor), "chat");
-      const response = await fetchModel(
-        row,
-        `${row.base_url}/chat/completions`,
-        {
-          method: "POST",
-          redirect: "error",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${store.decrypt(row.secret)}`,
-          },
-          body: JSON.stringify(productionCompletionBody(row.model, messages)),
-          signal: AbortSignal.any([signal, AbortSignal.timeout(240_000)]),
+      const content = await completeProduction({
+        model: row.model,
+        messages,
+        signal,
+        reasoning,
+        updates,
+        request: async (body, requestSignal) => {
+          const current = userById(owner);
+          if (
+            !current ||
+            !current.enabled ||
+            !current.department_enabled ||
+            current.must_change
+          )
+            throw new ProductionOutputError(
+              "员工账号当前不可用，生成草稿已保留",
+              false,
+            );
+          const active = getConnection(connectionId, userView(current), "chat");
+          if (active.model !== row.model || active.base_url !== row.base_url)
+            throw new ProductionOutputError(
+              "模型配置已更改，生成草稿已保留，请重试",
+              false,
+            );
+          return fetchModel(active, `${active.base_url}/chat/completions`, {
+            method: "POST",
+            redirect: "error",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${store.decrypt(active.secret)}`,
+            },
+            body: JSON.stringify(body),
+            signal: requestSignal,
+          });
         },
-      );
-      if (!response.ok)
-        throw new ProductionError(
-          502,
-          `模型服务返回 ${response.status}，请检查模型配置或余额`,
-        );
-      const result = await readChatResponse(
-        response,
-        (event) => {
-          if (event.type === "reasoning") reasoning?.(event.text, event.append);
-        },
-        { contentLimit: 5_000_001, allowEmpty: true },
-      );
-      const content = productionCompletionText({
-        choices: [
-          {
-            finish_reason: result.finishReason,
-            message: { content: result.content },
-          },
-        ],
       });
       store.audit(owner, "production.generated", connectionId);
       return content;
