@@ -8,6 +8,7 @@ const {
   mkdir,
   symlink,
   stat,
+  realpath,
 } = require("node:fs/promises");
 const { tmpdir } = require("node:os"),
   { join } = require("node:path"),
@@ -18,7 +19,9 @@ const {
   checkedDirectory,
 } = require("./production.cjs");
 async function fixture(t) {
-  const dir = await mkdtemp(join(tmpdir(), "brain-local-production-"));
+  const dir = await realpath(
+    await mkdtemp(join(tmpdir(), "brain-local-production-")),
+  );
   const output = join(dir, "employee");
   await mkdir(output);
   let acks = 0,

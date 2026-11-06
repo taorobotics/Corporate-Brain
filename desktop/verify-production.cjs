@@ -40,7 +40,9 @@ const wait = async (fn, label, ms = 45000) => {
 };
 (async () => {
   try {
-    dir = await fs.mkdtemp(join(tmpdir(), "brain-production-ui-"));
+    dir = await fs.realpath(
+      await fs.mkdtemp(join(tmpdir(), "brain-production-ui-")),
+    );
     app.setPath("userData", join(dir, "profile"));
     const output = join(dir, "employee-output");
     await fs.mkdir(output);
