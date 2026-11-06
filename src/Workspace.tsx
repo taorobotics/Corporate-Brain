@@ -600,15 +600,15 @@ export default function Workspace(props: WorkspaceProps) {
           );
         responseModel = vision;
       }
+      const outputDevice = window.brainDesktop?.production
+        ? await window.brainDesktop.production.state(user.id)
+        : undefined;
       setPendingReply((current) =>
         current
           ? { ...current, phase: "waiting", modelName: responseModel.name }
           : null,
       );
       controller.signal.throwIfAborted();
-      const outputDevice = window.brainDesktop?.production
-        ? await window.brainDesktop.production.state(user.id)
-        : undefined;
       const response = await streamChat(
         {
           connectionId: responseModel.id,

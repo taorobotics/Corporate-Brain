@@ -378,6 +378,10 @@ export class DshManager {
         await rm(skillDirectory, { recursive: true, force: true });
     }
     const files = outputDirectory ? await dshOutputFiles(outputDirectory) : [];
+    if (files.length) {
+      if (this.entries.get(key) === currentEntry) this.entries.delete(key);
+      await currentEntry.harness.close().catch(() => {});
+    }
     if (outputDirectory && !files.length)
       await rm(outputDirectory, { recursive: true, force: true });
     if (!result.finalResponse.trim() && !files.length) {
