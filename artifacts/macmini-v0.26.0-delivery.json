@@ -1,0 +1,642 @@
+{
+  "version": "0.26.0",
+  "sourceCommit": "5e1e188cf035934a74721701064d55b3c71f8492",
+  "result": "passed",
+  "verifiedAt": "2026-11-06T02:43:42.607Z",
+  "features": {
+    "claudeFamiliesAdded": [
+      "Sonnet",
+      "Haiku"
+    ],
+    "imageModels": [
+      "gpt-image-2.6-flare",
+      "gpt-image-2.6-sunburst",
+      "gpt-image-2.6-flare-c",
+      "gpt-image-2.6-sunburst-c"
+    ],
+    "automaticImageSkills": true,
+    "routingMetadataIncludesPurposeAndBilling": true,
+    "defaultFinalImageModel": "gpt-image-2.6-sunburst-c",
+    "defaultDraftImageModel": "gpt-image-2.6-flare-c",
+    "oneImageProviderPerTurn": true,
+    "currentChatModelRetained": true,
+    "ordinaryTextAndVisionDoNotGenerateImages": true,
+    "scopesAndViewOnlyPolicyPreserved": true
+  },
+  "deployment": {
+    "url": "https://192.168.20.21:14443",
+    "health": {
+      "status": "ok",
+      "version": "0.26.0",
+      "chatStorage": "device-only"
+    },
+    "backup": "/Users/staff01/CorporateBrainServer/backups/before-v0.26.0-2026-11-06T02-05-33-136Z",
+    "counts": {
+      "users": 224,
+      "departments": 13,
+      "nas_sources": 14,
+      "skills": 3
+    },
+    "dataPreserved": true,
+    "modelSettingsPreservedBeforeAdditions": true,
+    "modelCredentialsPreserved": true,
+    "primaryAdministratorPreserved": true,
+    "tlsVerified": true,
+    "cloudBusinessServiceChanged": false
+  },
+  "models": {
+    "version": "0.26.0",
+    "result": "passed",
+    "checkedAt": "2026-11-06T02:06:50.993Z",
+    "sourceSettingsAndCredentialsPreserved": true,
+    "existingConnectionsPreserved": true,
+    "chatModelsAdded": [
+      "claude-haiku-4-5-20251001",
+      "claude-haiku-5-5",
+      "claude-sonnet-4-5-20250929",
+      "claude-sonnet-5",
+      "claude-sonnet-5-5",
+      "claude-sonnet-4-6"
+    ],
+    "imageSkillsAdded": [
+      "gpt-image-2.6-flare",
+      "gpt-image-2.6-sunburst",
+      "gpt-image-2.6-flare-c",
+      "gpt-image-2.6-sunburst-c"
+    ],
+    "automaticImageSkillsVisible": true,
+    "routingModel": "claude-sonnet-4-6",
+    "routingCases": [
+      {
+        "case": "gpt-image-2.6-sunburst-c",
+        "selected": "gpt-image-2.6-sunburst-c",
+        "passed": true
+      },
+      {
+        "case": "gpt-image-2.6-flare-c",
+        "selected": "gpt-image-2.6-flare-c",
+        "passed": true
+      },
+      {
+        "case": "gpt-image-2.6-sunburst",
+        "selected": "gpt-image-2.6-sunburst",
+        "passed": true
+      },
+      {
+        "case": "ordinary-text",
+        "selected": null,
+        "passed": true
+      }
+    ],
+    "modelGenerationsInThisCheck": 0,
+    "syntheticRoutingCalls": 4,
+    "upstreamProbe": {
+      "checkedAt": "2026-11-06T01:50:15.674Z",
+      "completedAt": "2026-11-06T01:52:16.307Z",
+      "tlsVerified": true,
+      "results": [
+        {
+          "kind": "chat",
+          "model": "claude-haiku-4-5-20251001",
+          "passed": true,
+          "status": 200,
+          "responseModel": "claude-haiku-4-5-20251001",
+          "usage": {
+            "prompt_tokens": 12,
+            "completion_tokens": 4,
+            "total_tokens": 16,
+            "prompt_tokens_details": {
+              "cached_tokens": 0,
+              "text_tokens": 0,
+              "audio_tokens": 0,
+              "image_tokens": 0
+            },
+            "completion_tokens_details": {
+              "text_tokens": 0,
+              "audio_tokens": 0,
+              "reasoning_tokens": 0
+            }
+          },
+          "elapsedMs": 2103
+        },
+        {
+          "kind": "chat",
+          "model": "claude-haiku-5-5",
+          "passed": true,
+          "status": 200,
+          "responseModel": "claude-haiku-5-5",
+          "usage": {
+            "prompt_tokens": 72,
+            "completion_tokens": 1,
+            "total_tokens": 73,
+            "prompt_tokens_details": {
+              "cached_tokens": 63,
+              "text_tokens": 0,
+              "audio_tokens": 0,
+              "image_tokens": 0
+            },
+            "completion_tokens_details": {
+              "text_tokens": 0,
+              "audio_tokens": 0,
+              "reasoning_tokens": 0
+            }
+          },
+          "elapsedMs": 7887
+        },
+        {
+          "kind": "chat",
+          "model": "claude-sonnet-4-5-20250929",
+          "passed": true,
+          "status": 200,
+          "responseModel": "claude-sonnet-4-5-20250929",
+          "usage": {
+            "prompt_tokens": 11,
+            "completion_tokens": 3,
+            "total_tokens": 14,
+            "prompt_tokens_details": {
+              "cached_tokens": 0,
+              "text_tokens": 0,
+              "audio_tokens": 0,
+              "image_tokens": 0
+            },
+            "completion_tokens_details": {
+              "text_tokens": 0,
+              "audio_tokens": 0,
+              "reasoning_tokens": 0
+            }
+          },
+          "elapsedMs": 8560
+        },
+        {
+          "kind": "chat",
+          "model": "claude-sonnet-5",
+          "passed": true,
+          "status": 200,
+          "responseModel": "claude-sonnet-5",
+          "usage": {
+            "prompt_tokens": 16,
+            "completion_tokens": 4,
+            "total_tokens": 20,
+            "prompt_tokens_details": {
+              "cached_tokens": 0,
+              "text_tokens": 0,
+              "audio_tokens": 0,
+              "image_tokens": 0
+            },
+            "completion_tokens_details": {
+              "text_tokens": 0,
+              "audio_tokens": 0,
+              "reasoning_tokens": 0
+            }
+          },
+          "elapsedMs": 3623
+        },
+        {
+          "kind": "chat",
+          "model": "claude-sonnet-5-5",
+          "passed": true,
+          "status": 200,
+          "responseModel": "claude-sonnet-5-5",
+          "usage": {
+            "prompt_tokens": 18,
+            "completion_tokens": 4,
+            "total_tokens": 22,
+            "prompt_tokens_details": {
+              "cached_tokens": 0,
+              "text_tokens": 0,
+              "audio_tokens": 0,
+              "image_tokens": 0
+            },
+            "completion_tokens_details": {
+              "text_tokens": 0,
+              "audio_tokens": 0,
+              "reasoning_tokens": 0
+            }
+          },
+          "elapsedMs": 3714
+        },
+        {
+          "kind": "chat",
+          "model": "claude-sonnet-4-6",
+          "passed": true,
+          "status": 200,
+          "responseModel": "claude-sonnet-4-6",
+          "usage": {
+            "prompt_tokens": 72,
+            "completion_tokens": 1,
+            "total_tokens": 73,
+            "prompt_tokens_details": {
+              "cached_tokens": 63,
+              "text_tokens": 0,
+              "audio_tokens": 0,
+              "image_tokens": 0
+            },
+            "completion_tokens_details": {
+              "text_tokens": 0,
+              "audio_tokens": 0,
+              "reasoning_tokens": 0
+            }
+          },
+          "elapsedMs": 17139
+        },
+        {
+          "kind": "image",
+          "model": "gpt-image-2.6-flare",
+          "passed": true,
+          "status": 200,
+          "responseFormat": "b64_json",
+          "width": 1024,
+          "height": 1024,
+          "format": "png",
+          "bytes": 782695,
+          "sha256": "8be6c86b667e5b099fc20e06c5a869ac7eaa209bc52aee03c610ff5fc1606459",
+          "usage": {
+            "input_tokens": 25,
+            "input_tokens_details": {
+              "image_tokens": 0,
+              "text_tokens": 25
+            },
+            "output_tokens": 824,
+            "output_tokens_details": {
+              "image_tokens": 824,
+              "text_tokens": 0
+            },
+            "total_tokens": 849
+          },
+          "elapsedMs": 9228
+        },
+        {
+          "kind": "image",
+          "model": "gpt-image-2.6-sunburst",
+          "passed": true,
+          "status": 200,
+          "responseFormat": "b64_json",
+          "width": 1024,
+          "height": 1024,
+          "format": "png",
+          "bytes": 756237,
+          "sha256": "3cdf4c750baa6740b20156db8fca4eeee6b523fbc3e310bf1afc29d6402693e6",
+          "usage": {
+            "input_tokens": 25,
+            "input_tokens_details": {
+              "image_tokens": 0,
+              "text_tokens": 25
+            },
+            "output_tokens": 824,
+            "output_tokens_details": {
+              "image_tokens": 824,
+              "text_tokens": 0
+            },
+            "total_tokens": 849
+          },
+          "elapsedMs": 12558
+        },
+        {
+          "kind": "image",
+          "model": "gpt-image-2.6-flare-c",
+          "passed": true,
+          "status": 200,
+          "responseFormat": "b64_json",
+          "width": 1024,
+          "height": 1024,
+          "format": "png",
+          "bytes": 680620,
+          "sha256": "31422a679432b803601c3e1d9bebc232b6710c04b13631da476d69c60d51e5e3",
+          "usage": {
+            "input_tokens": 19,
+            "output_tokens": 1056,
+            "total_tokens": 1075,
+            "input_tokens_details": {
+              "text_tokens": 19,
+              "image_tokens": 0,
+              "cached_tokens": 0
+            },
+            "output_tokens_details": {
+              "text_tokens": 0,
+              "image_tokens": 1056,
+              "reasoning_tokens": 0
+            }
+          },
+          "elapsedMs": 26515
+        },
+        {
+          "kind": "image",
+          "model": "gpt-image-2.6-sunburst-c",
+          "passed": true,
+          "status": 200,
+          "responseFormat": "b64_json",
+          "width": 1024,
+          "height": 1024,
+          "format": "png",
+          "bytes": 633704,
+          "sha256": "8c64ecf798f1dca89191434a0c7c2e400adca9a46c58009303ab012cec33e761",
+          "usage": {
+            "input_tokens": 96,
+            "input_tokens_details": {
+              "text_tokens": 96,
+              "image_tokens": 0
+            },
+            "output_tokens": 229,
+            "output_tokens_details": {
+              "text_tokens": 0,
+              "image_tokens": 229
+            },
+            "total_tokens": 325
+          },
+          "elapsedMs": 29247
+        }
+      ]
+    },
+    "originalProviderIdentityVerified": false,
+    "temporaryEmployeeAccountsRemoved": true
+  },
+  "liveUi": {
+    "version": "0.26.0",
+    "result": "passed",
+    "verifiedAt": "2026-11-06T02:14:54.533Z",
+    "server": "https://192.168.20.21:14443",
+    "tlsVerified": true,
+    "temporaryEmployeeOnly": true,
+    "chatModelsVisible": [
+      "claude-haiku-4-5-20251001",
+      "claude-haiku-5-5",
+      "claude-sonnet-4-5-20250929",
+      "claude-sonnet-4-6",
+      "claude-sonnet-5",
+      "claude-sonnet-5-5"
+    ],
+    "imageSkillsAutomaticallyAvailable": 4,
+    "skillMode": "auto",
+    "selectedChatModel": "claude-sonnet-4-6",
+    "selectedImageModel": "gpt-image-2.6-sunburst-c",
+    "sameReplyTextAndImage": true,
+    "localReplyRetainedAfterReload": true,
+    "image": {
+      "width": 1278,
+      "height": 1230,
+      "bytes": 1180723,
+      "sha256": "68be6bc3ae6aac2b6a7adfa9a0a32fbc5c0733c40fceea339f2b7bc67ff7d53e"
+    },
+    "actualImageCalls": 1,
+    "validationResumedFromSavedReply": true,
+    "noSecondGeneration": true,
+    "physicalEmployeeDeviceTested": false
+  },
+  "localChecks": {
+    "windowsNodeTests": 138,
+    "macNodeTests": 138,
+    "windowsNasWorkerTests": 5,
+    "macNasWorkerTests": 5,
+    "native": {
+      "desktop-verification-windows": 47,
+      "startup-verification-windows": 9,
+      "profile-verification-windows": 7,
+      "production-ui-windows": 4,
+      "mac-desktop-verification": 45,
+      "mac-startup-verification": 9,
+      "mac-profile-verification": 7,
+      "mac-production-ui-darwin": 5
+    },
+    "actualMacRender": {
+      "seconds": 3,
+      "frames": 72,
+      "width": 1280,
+      "height": 720,
+      "audio": true,
+      "bytes": 135833,
+      "sha256": "d170d88adc3915053998d42a47497fd7eea12f58510cfedaa7d4b0cbad8d7609"
+    },
+    "physicalEmployeeDeviceTested": false
+  },
+  "lanDistribution": {
+    "channels": {
+      "win32-x64": {
+        "name": "Corporate-Brain-Setup-0.26.0-x64.exe",
+        "bytes": 120004013,
+        "sha256": "5612dc4e28eb63c7c96ce53687b907af98f02b1a4913b7ccc576d622f61487f5"
+      },
+      "darwin-arm64": {
+        "name": "Corporate-Brain-0.26.0-macOS-arm64.dmg",
+        "bytes": 138651027,
+        "sha256": "a062362b5e031db02135b5fd6f8f11a46dce7b9bd048557246ea2a06b22be8a4"
+      }
+    },
+    "authenticatedFullDownloads": [
+      {
+        "platform": "win32-x64",
+        "version": "0.26.0",
+        "bytes": 120004013,
+        "sha256": "5612dc4e28eb63c7c96ce53687b907af98f02b1a4913b7ccc576d622f61487f5"
+      },
+      {
+        "platform": "darwin-arm64",
+        "version": "0.26.0",
+        "bytes": 138651027,
+        "sha256": "a062362b5e031db02135b5fd6f8f11a46dce7b9bd048557246ea2a06b22be8a4"
+      }
+    ],
+    "priorClientUpdater": {
+      "version": "0.26.0",
+      "result": "passed",
+      "checkedAt": "2026-11-06T02:08:11.707Z",
+      "actualPriorVersionModule": true,
+      "results": [
+        {
+          "target": "win32-x64",
+          "version": "0.26.0",
+          "bytes": 120004013,
+          "sha256": "5612dc4e28eb63c7c96ce53687b907af98f02b1a4913b7ccc576d622f61487f5",
+          "oldClientVersion": "0.25.0",
+          "state": "ready",
+          "installerExecuted": false
+        },
+        {
+          "target": "darwin-arm64",
+          "version": "0.26.0",
+          "bytes": 138651027,
+          "sha256": "a062362b5e031db02135b5fd6f8f11a46dce7b9bd048557246ea2a06b22be8a4",
+          "oldClientVersion": "0.25.0",
+          "state": "ready",
+          "installerExecuted": false
+        }
+      ]
+    },
+    "temporaryTestAccountRemoved": true,
+    "defaultServer": "https://192.168.20.21:14443",
+    "independentlyBuiltFromProductTag": true,
+    "intelMacActivated": false
+  },
+  "githubRelease": {
+    "status": "passed",
+    "runId": 42147388448,
+    "runUrl": "https://github.com/taorobotics/Corporate-Brain/actions/runs/42147388448",
+    "releaseId": 436005912,
+    "tag": "v0.26.0",
+    "url": "https://github.com/taorobotics/Corporate-Brain/releases/tag/v0.26.0",
+    "draft": false,
+    "publicLatest": "v0.26.0",
+    "productCommit": "5e1e188cf035934a74721701064d55b3c71f8492",
+    "verificationToolsCommit": "5e1e188cf035934a74721701064d55b3c71f8492",
+    "sourceAndTagPushed": true,
+    "assetsVerified": [
+      {
+        "name": "Corporate-Brain-0.26.0-macOS-arm64.dmg",
+        "bytes": 139860153,
+        "digest": "sha256:7283bff9e80328b9615eef03c871709a9edaef3a6a30a1566a4add786fcfaa3c"
+      },
+      {
+        "name": "Corporate-Brain-0.26.0-macOS-x64.dmg",
+        "bytes": 145378854,
+        "digest": "sha256:998ffbc3b51d724e84f9681676b3479b46c21823966466f1f7a30f3fbf964a7a"
+      },
+      {
+        "name": "Corporate-Brain-Server-0.26.0.zip",
+        "bytes": 22619382,
+        "digest": "sha256:577a1c98f9cf5c4638fbc898c20031c7a2f689ce4eb09849a02ebdf9dbff0de0"
+      },
+      {
+        "name": "Corporate-Brain-Setup-0.26.0-x64.exe",
+        "bytes": 120004023,
+        "digest": "sha256:1c25a4f78c66426f2f313939a033b1f0af02cb740d3c04f4221be667ca3d9910"
+      },
+      {
+        "name": "macos-verification-arm64.json",
+        "bytes": 9545,
+        "digest": "sha256:984e09175b6bd072ec3573437e6566ddf095cd0e20467fb361afeca17557de78"
+      },
+      {
+        "name": "macos-verification-x64.json",
+        "bytes": 9541,
+        "digest": "sha256:1926a9fd7ebd92d90405b7a7c986e34448e91788225cd567a205db3cd784272c"
+      },
+      {
+        "name": "server-verification.json",
+        "bytes": 17243,
+        "digest": "sha256:3f685535227051813982f7068581ce95dbc59ab97c3ad8206f82fb9b112fd4d7"
+      },
+      {
+        "name": "SHA256SUMS-macOS-arm64.txt",
+        "bytes": 105,
+        "digest": "sha256:825240c80ff4fe2402fd2383d12a77f217ff9e19b715aac5ad540e994f8c0031"
+      },
+      {
+        "name": "SHA256SUMS-macOS-x64.txt",
+        "bytes": 103,
+        "digest": "sha256:b6a0d34d836ef984eea1c436bfd762e6e0b85d2ae50d405fb1b0564af8584a55"
+      },
+      {
+        "name": "SHA256SUMS-Server.txt",
+        "bytes": 100,
+        "digest": "sha256:0fc590666656a6c09decb43dcd3e0c97cb54a0516c20d8c5ad7dc4659522f1fb"
+      },
+      {
+        "name": "SHA256SUMS-Windows-x64.txt",
+        "bytes": 103,
+        "digest": "sha256:e553b8433ebf5b2f579798396c4b88635a7d2fd0b44ab738fa218be4853116e0"
+      },
+      {
+        "name": "SHA256SUMS.txt",
+        "bytes": 411,
+        "digest": "sha256:b65cceb6452af0d6c13c04beb1928d5d3a6f6225cf168edef1be1a5df9f0a18c"
+      },
+      {
+        "name": "windows-verification-x64.json",
+        "bytes": 12331,
+        "digest": "sha256:75d9288de5f2a74ff59bd48c5115c818d05efd481e6e9fc8692dc49b308fb852"
+      }
+    ],
+    "installersAndServer": [
+      {
+        "name": "Corporate-Brain-Setup-0.26.0-x64.exe",
+        "bytes": 120004023,
+        "sha256": "1c25a4f78c66426f2f313939a033b1f0af02cb740d3c04f4221be667ca3d9910"
+      },
+      {
+        "name": "Corporate-Brain-0.26.0-macOS-arm64.dmg",
+        "bytes": 139860153,
+        "sha256": "7283bff9e80328b9615eef03c871709a9edaef3a6a30a1566a4add786fcfaa3c"
+      },
+      {
+        "name": "Corporate-Brain-0.26.0-macOS-x64.dmg",
+        "bytes": 145378854,
+        "sha256": "998ffbc3b51d724e84f9681676b3479b46c21823966466f1f7a30f3fbf964a7a"
+      },
+      {
+        "name": "Corporate-Brain-Server-0.26.0.zip",
+        "bytes": 22619382,
+        "sha256": "577a1c98f9cf5c4638fbc898c20031c7a2f689ce4eb09849a02ebdf9dbff0de0"
+      }
+    ],
+    "windows": {
+      "realInstallUpgradeUninstall": true,
+      "lifecycleChecks": 17,
+      "handoffChecks": 5,
+      "signature": "NotSigned",
+      "physicalEmployeeDeviceTested": false
+    },
+    "macPlatforms": [
+      {
+        "architecture": "arm64",
+        "packageMountAndLaunch": "passed",
+        "desktopChecks": 45,
+        "signing": "ad-hoc",
+        "notarized": false
+      },
+      {
+        "architecture": "x64",
+        "packageMountAndLaunch": "passed",
+        "desktopChecks": 45,
+        "signing": "ad-hoc",
+        "notarized": false
+      }
+    ],
+    "distribution": {
+      "status": "completed",
+      "conclusion": "success",
+      "url": "https://github.com/taorobotics/Corporate-Brain/actions/runs/42147388448/job/127672725965"
+    },
+    "checkedAt": "2026-11-06T02:42:47.853Z"
+  },
+  "cloudInstallerMirror": {
+    "version": "0.26.0",
+    "result": "passed",
+    "assets": [
+      {
+        "target": "win32-x64",
+        "name": "Corporate-Brain-Setup-0.26.0-x64.exe",
+        "bytes": 120004023,
+        "sha256": "1c25a4f78c66426f2f313939a033b1f0af02cb740d3c04f4221be667ca3d9910"
+      },
+      {
+        "target": "darwin-arm64",
+        "name": "Corporate-Brain-0.26.0-macOS-arm64.dmg",
+        "bytes": 139860153,
+        "sha256": "7283bff9e80328b9615eef03c871709a9edaef3a6a30a1566a4add786fcfaa3c"
+      },
+      {
+        "target": "darwin-x64",
+        "name": "Corporate-Brain-0.26.0-macOS-x64.dmg",
+        "bytes": 145378854,
+        "sha256": "998ffbc3b51d724e84f9681676b3479b46c21823966466f1f7a30f3fbf964a7a"
+      }
+    ],
+    "checkedAt": "2026-11-06T02:42:29.292Z"
+  },
+  "signing": {
+    "windows": "NotSigned",
+    "mac": "ad-hoc",
+    "appleNotarized": false
+  },
+  "privateDataIncludedInPublicArtifacts": false,
+  "cloudBusinessHealth": {
+    "result": "passed",
+    "checkedAt": "2026-11-06T02:32:51.685Z",
+    "health": {
+      "status": "ok",
+      "version": "0.11.6",
+      "chatStorage": "device-only"
+    },
+    "tlsVerified": true,
+    "businessServiceChanged": false
+  }
+}
