@@ -191,6 +191,22 @@ const wait = async (fn, label, ms = 45000) => {
       enabled: true,
     });
     const js = (source) => web.executeJavaScript(source, true);
+    const capture = async () => {
+      for (let attempt = 0; attempt < 3; attempt++) {
+        win.showInactive();
+        await new Promise((r) => setTimeout(r, 300));
+        try {
+          const image = await web.capturePage(undefined, {
+            stayHidden: true,
+            stayAwake: true,
+          });
+          assert.equal(image.isEmpty(), false);
+          return image;
+        } catch (error) {
+          if (attempt === 2) throw error;
+        }
+      }
+    };
     const click = (label) =>
       js(
         `(()=>{const b=[...document.querySelectorAll('button')].find(x=>x.getAttribute('aria-label')===${JSON.stringify(label)}||x.textContent.trim()===${JSON.stringify(label)});if(!b)throw Error('Missing '+${JSON.stringify(label)});b.click();return true;})()`,
@@ -298,9 +314,7 @@ const wait = async (fn, label, ms = 45000) => {
     );
     await fs.writeFile(
       "artifacts/workflow-chat-running.png",
-      (
-        await web.capturePage(undefined, { stayHidden: true, stayAwake: true })
-      ).toPNG(),
+      (await capture()).toPNG(),
     );
     releaseGeneration();
     await wait(
@@ -352,9 +366,7 @@ const wait = async (fn, label, ms = 45000) => {
     );
     await fs.writeFile(
       "artifacts/workflow-chat-code.png",
-      (
-        await web.capturePage(undefined, { stayHidden: true, stayAwake: true })
-      ).toPNG(),
+      (await capture()).toPNG(),
     );
     checks.push(
       "Same chat renderer shows real streamed model reasoning and its reply without a stage panel or progress card; completion waits for the native receipt and all files match SHA-256 before server cleanup",
@@ -443,9 +455,7 @@ const wait = async (fn, label, ms = 45000) => {
     );
     await fs.writeFile(
       "artifacts/workflow-chat-failure.png",
-      (
-        await web.capturePage(undefined, { stayHidden: true, stayAwake: true })
-      ).toPNG(),
+      (await capture()).toPNG(),
     );
     await click("在此重试");
     await wait(
@@ -494,7 +504,7 @@ const wait = async (fn, label, ms = 45000) => {
         { code: "ENOENT" },
       );
       await js(
-        `(()=>{const root=document.querySelector('.chat-production');root.querySelector('.workflow-files').open=true;[...root.querySelectorAll('.workflow-files li')].find(x=>x.textContent.includes('output/video.mp4')).querySelector('button').click();return true;})()`,
+        `(()=>{const root=document.querySelector('.chat-production');root.querySelector('.workflow-files').open=true;root.querySelector('[title="预览：output/video.mp4"]').click();return true;})()`,
       );
       await wait(
         () =>
@@ -511,12 +521,7 @@ const wait = async (fn, label, ms = 45000) => {
       assert.ok(Math.abs(metadata.duration - 2) < 0.1);
       await fs.writeFile(
         "artifacts/workflow-chat-video.png",
-        (
-          await web.capturePage(undefined, {
-            stayHidden: true,
-            stayAwake: true,
-          })
-        ).toPNG(),
+        (await capture()).toPNG(),
       );
       checks.push(
         "Real Canvas/FFmpeg video renders from chat, all files save and clear on server, local inline video preview decodes at 1280x720 and 2 seconds",
@@ -601,12 +606,30 @@ const wait = async (fn, label, ms = 45000) => {
     );
     await fs.writeFile(
       "artifacts/workflow-chat-gif.png",
-      (
-        await web.capturePage(undefined, { stayHidden: true, stayAwake: true })
-      ).toPNG(),
+      (await capture()).toPNG(),
     );
     win.setContentSize(900, 760);
-    await js(`document.documentElement.dataset.theme='dark';true`);
+    await js(`location.hash='settings';true`);
+    await wait(
+      () => js(`!!document.querySelector('.production-location')`),
+      "appearance settings",
+    );
+    await click("外观");
+    await wait(
+      () => js(`!!document.querySelector('.select-popup[data-open]')`),
+      "appearance picker",
+    );
+    await js(
+      `[...document.querySelectorAll('[role="option"]')].find(x=>x.querySelector('.select-option-label')?.textContent==='深色').click();true`,
+    );
+    await wait(
+      () =>
+        js(
+          `document.documentElement.dataset.theme==='dark'&&getComputedStyle(document.documentElement).getPropertyValue('--bg').trim()==='#181715'`,
+        ),
+      "persisted dark colors",
+    );
+    await js(`document.querySelector('[data-history-title]').click();true`);
     await wait(
       () =>
         js(
@@ -620,9 +643,7 @@ const wait = async (fn, label, ms = 45000) => {
     );
     await fs.writeFile(
       "artifacts/screenshots/chat-files-dark-narrow.png",
-      (
-        await web.capturePage(undefined, { stayHidden: true, stayAwake: true })
-      ).toPNG(),
+      (await capture()).toPNG(),
     );
     win.setContentSize(1320, 920);
     web.reload();
