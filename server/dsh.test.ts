@@ -26,6 +26,74 @@ test("DSH modes map to the shipped presets and workspace permissions map to sand
   assert.equal(dshPermissionMode("full"), "danger-full-access");
 });
 
+test(
+  "a real SDK tool loop stops after the budget and returns existing exported images instead of losing the files",
+  { timeout: 60000 },
+  async (t) => {
+    const root = await mkdtemp(join(tmpdir(), "brain-dsh-export-loop-")),
+      manager = new DshManager(root);
+    let calls = 0,
+      output = "";
+    const png = Buffer.from(
+      "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=",
+      "base64",
+    );
+    const server = createServer(async (req, res) => {
+      try {
+        let raw = "";
+        for await (const chunk of req) raw += chunk;
+        const payload = JSON.parse(raw);
+        if (!output) {
+          const text = payload.messages
+            .map((m: any) =>
+              typeof m.content === "string"
+                ? m.content
+                : (m.content ?? []).map((b: any) => b.text ?? "").join("\n"),
+            )
+            .join("\n");
+          const match = /本轮成果目录 ([\s\S]+?)。用户/.exec(text);
+          assert.ok(match);
+          output = match[1];
+          await writeFile(join(output, "result.png"), png);
+        }
+        calls++;
+        res.writeHead(200, { "content-type": "text/event-stream" });
+        res.end(
+          `data: ${JSON.stringify({ choices: [{ index: 0, delta: { role: "assistant", tool_calls: [{ index: 0, id: "call_" + calls, type: "function", function: { name: "read_image", arguments: JSON.stringify({ file_path: join(output, "result.png") }) } }] }, finish_reason: "tool_calls" }] })}\n\ndata: [DONE]\n\n`,
+        );
+      } catch (error) {
+        res.writeHead(500, { "content-type": "application/json" });
+        res.end(JSON.stringify({ error: String(error) }));
+      }
+    }).listen(0, "127.0.0.1");
+    await once(server, "listening");
+    t.after(async () => {
+      await manager.close();
+      server.closeAllConnections();
+      server.close();
+      await rm(root, { recursive: true, force: true });
+    });
+    const result = await manager.runDetailed({
+      connectionId: "fixture",
+      baseUrl: `http://127.0.0.1:${(server.address() as any).port}/v1`,
+      model: "fixture",
+      apiKey: "local-fixture-only",
+      userId: "employee",
+      sessionId: "loop",
+      deliverFiles: true,
+      messages: [{ role: "user", content: "创建图片文件" }],
+      attachments: [],
+    });
+    assert.equal(calls, 65);
+    assert.deepEqual(result.output?.files, ["result.png"]);
+    assert.match(result.content, /重复检查已停止/);
+    assert.deepEqual(
+      await readFile(join(result.output!.directory, "result.png")),
+      png,
+    );
+  },
+);
+
 test("DSH combines independent skill resources, cleans failures and admits visual attachments", async (t) => {
   let resourceObserved = false;
   const requests: string[] = [];

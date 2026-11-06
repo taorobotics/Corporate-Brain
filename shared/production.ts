@@ -1,4 +1,4 @@
-export type ProductionKind = "code" | "video";
+export type ProductionKind = "code" | "video" | "files";
 export type ProductionStatus =
   | "uploading"
   | "queued"

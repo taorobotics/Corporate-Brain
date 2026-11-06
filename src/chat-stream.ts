@@ -4,7 +4,12 @@ export async function streamChat(
   body: unknown,
   signal: AbortSignal,
   receive: (event: ChatProgress) => void,
-): Promise<{ content: string; image?: string; usage?: ChatUsage }> {
+): Promise<{
+  content: string;
+  image?: string;
+  usage?: ChatUsage;
+  productionTaskId?: string;
+}> {
   const encoded = JSON.stringify(body);
   if (new TextEncoder().encode(encoded).length > 15 * 1024 * 1024)
     throw new Error("对话与附件内容过大，请减少附件或在新对话中分批分析。");
@@ -32,7 +37,14 @@ export async function streamChat(
   const reader = response.body.getReader(),
     decoder = new TextDecoder();
   let buffer = "",
-    result: { content: string; image?: string; usage?: ChatUsage } | undefined;
+    result:
+      | {
+          content: string;
+          image?: string;
+          usage?: ChatUsage;
+          productionTaskId?: string;
+        }
+      | undefined;
   const consume = (line: string) => {
     if (!line.trim()) return;
     const event = JSON.parse(line) as ChatProgress;
@@ -43,6 +55,7 @@ export async function streamChat(
         content: event.content,
         image: event.image,
         usage: event.usage,
+        productionTaskId: event.productionTaskId,
       };
   };
   try {

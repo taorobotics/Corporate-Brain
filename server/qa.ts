@@ -7,6 +7,9 @@ import { readFileSync, mkdtempSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { createHash } from "node:crypto";
 import { installerName } from "./updates";
+import { DshUnavailableError } from "./dsh";
+import { mkdirSync, writeFileSync } from "node:fs";
+import { realpath } from "node:fs/promises";
 const origins: string[] = [];
 const current = JSON.parse(readFileSync("package.json", "utf8"))
   .version.split(".")
@@ -25,9 +28,41 @@ const fixtureFiles: Record<string, string> = {
     "MIT License\nCopyright (c) Corporate Brain QA\nPermission is hereby granted, free of charge, to any person obtaining a copy.\n",
   "references/guide.md": "这是随技能一起导入的参考资料，不包含员工数据。",
 };
-const { app, library } = createPlatform({
+const { app, library, production } = createPlatform({
   database: ":memory:",
   origins,
+  ...(process.env.BRAIN_QA_EXPORT_ROOT
+    ? {
+        dsh: {
+          close: async () => {},
+          runDetailed: async (options: import("./dsh").DshRunOptions) => {
+            if (!options.messages.at(-1)?.content.includes("合成 GIF 回传验收"))
+              throw new DshUnavailableError(
+                "Disposable QA uses a synthetic provider",
+              );
+            if (!options.deliverFiles)
+              throw Error("Native device was not supplied for chat files");
+            mkdirSync(process.env.BRAIN_QA_EXPORT_ROOT!, { recursive: true });
+            const directory = await realpath(
+              mkdtempSync(join(process.env.BRAIN_QA_EXPORT_ROOT!, "turn-")),
+            );
+            const gif = Buffer.from(
+              "47494638396101000100800000000000ffffff21f904000a0000002c000000000100010000020244010021f904000a0000002c00000000010001000002024c01003b",
+              "hex",
+            );
+            writeFileSync(join(directory, "sticker.gif"), gif);
+            writeFileSync(
+              join(directory, "README.md"),
+              "Synthetic GIF export from ordinary chat.",
+            );
+            return {
+              content: "已生成合成 GIF 文件与说明，请查看本机成果。",
+              output: { directory, files: ["sticker.gif", "README.md"] },
+            };
+          },
+        },
+      }
+    : {}),
   modelTransport: (row, url, init) =>
     url.startsWith("https://personal-ui.invalid/")
       ? fetch(
@@ -134,6 +169,17 @@ const { app, library } = createPlatform({
     },
   },
 });
+if (process.env.BRAIN_QA_EXPORT_ROOT) {
+  const accept = production.acceptFiles.bind(production);
+  production.acceptFiles = async (...args) => {
+    try {
+      return await accept(...args);
+    } catch (error) {
+      console.error("Synthetic export fixture failure", error);
+      throw error;
+    }
+  };
+}
 app.get("/model-service-fixture/models", (req, res) => {
   if (req.headers.authorization !== "Bearer synthetic-model-service-ui-key")
     return res.status(401).json({ error: "Synthetic key required" });

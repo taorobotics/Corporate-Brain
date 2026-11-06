@@ -170,12 +170,28 @@ class ProductionLocal {
       !(
         path === "output/video.mp4" ||
         path.startsWith("code/") ||
-        path === "plan.md"
+        path === "plan.md" ||
+        (path.startsWith("files/") &&
+          /\.(?:gif|png|jpe?g|webp|mp4|webm|txt|md|json|csv|js|ts|tsx|jsx|py|html|css|svg)$/i.test(
+            path,
+          ))
       )
     )
-      throw Error("只能预览当前账号已保存的成片和源代码");
-    const video = path === "output/video.mp4";
-    if (file.size > (video ? 64 * 1024 ** 2 : 512 * 1024))
+      throw Error("只能预览当前账号已保存的成果文件");
+    const mediaType = /\.gif$/i.test(path)
+      ? "image/gif"
+      : /\.png$/i.test(path)
+        ? "image/png"
+        : /\.jpe?g$/i.test(path)
+          ? "image/jpeg"
+          : /\.webp$/i.test(path)
+            ? "image/webp"
+            : /\.mp4$/i.test(path)
+              ? "video/mp4"
+              : /\.webm$/i.test(path)
+                ? "video/webm"
+                : undefined;
+    if (file.size > (mediaType ? 64 * 1024 ** 2 : 512 * 1024))
       throw Error("文件较大，请打开成果文件夹查看");
     const target = join(receipt.directory, path);
     if (resolve(await fs.realpath(target)) !== resolve(target))
@@ -191,8 +207,20 @@ class ProductionLocal {
       const bytes = await handle.readFile();
       if (createHash("sha256").update(bytes).digest("hex") !== file.sha256)
         throw Error("文件已被修改，请在成果文件夹中查看");
-      return video
-        ? { mime: "video/mp4", bytes: new Uint8Array(bytes) }
+      if (
+        mediaType === "image/gif" &&
+        !/^GIF8[79]a$/.test(bytes.subarray(0, 6).toString())
+      )
+        throw Error("GIF 文件格式无效");
+      if (
+        mediaType === "image/png" &&
+        !bytes
+          .subarray(0, 8)
+          .equals(Buffer.from([137, 80, 78, 71, 13, 10, 26, 10]))
+      )
+        throw Error("PNG 文件格式无效");
+      return mediaType
+        ? { mime: mediaType, bytes: new Uint8Array(bytes) }
         : { mime: "text/plain", content: bytes.toString("utf8") };
     } finally {
       await handle.close();

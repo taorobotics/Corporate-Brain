@@ -30,6 +30,9 @@ export function createChatDeadline({
     : controller.signal;
   let idle: ReturnType<typeof setTimeout> | undefined;
   let disposed = false;
+  const toolStates = new Map<string, string>();
+  const reasoning = new Map<string, string>();
+  let text = "";
   const maximum = setTimeout(
     () => controller.abort(new ChatTimeoutError("duration")),
     maxMs,
@@ -56,12 +59,19 @@ export function createChatDeadline({
   return {
     signal,
     observe(event: ChatProgress) {
-      if (
-        event.type === "tool" ||
-        ((event.type === "reasoning" || event.type === "text") &&
-          event.text.trim())
-      )
-        armIdle();
+      let changed = false;
+      if (event.type === "tool") {
+        changed = toolStates.get(event.id) !== event.status;
+        toolStates.set(event.id, event.status);
+      } else if (event.type === "text" && event.text.trim()) {
+        changed = text !== event.text;
+        text = event.text;
+      } else if (event.type === "reasoning" && event.text.trim()) {
+        changed =
+          Boolean(event.append) || reasoning.get(event.id) !== event.text;
+        reasoning.set(event.id, event.text);
+      }
+      if (changed) armIdle();
     },
     dispose,
   };

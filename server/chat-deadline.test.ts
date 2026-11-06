@@ -10,7 +10,7 @@ test("active image reasoning and tool work continue beyond the old three-minute 
     t.mock.timers.tick(100_000);
     deadline.observe(
       i % 2
-        ? { type: "tool", id: "image", name: "read_image", status: "done" }
+        ? { type: "tool", id: "image-" + i, name: "read_image", status: "done" }
         : {
             type: "reasoning",
             id: "r",
@@ -38,7 +38,7 @@ test("empty events cannot keep a stalled provider alive, and active work still h
   const active = createChatDeadline({ idleMs: 100, maxMs: 250 });
   for (let i = 0; i < 3; i++) {
     t.mock.timers.tick(80);
-    active.observe({ type: "text", text: "持续输出" });
+    active.observe({ type: "text", text: "持续输出" + i });
   }
   assert.equal(active.signal.aborted, false);
   t.mock.timers.tick(10);
@@ -59,4 +59,19 @@ test("completion clears timers and explicit cancellation remains immediate and i
   t.mock.timers.tick(1_000_000);
   assert.equal(complete.signal.aborted, false);
   assert.equal(other.signal.reason.kind, "idle");
+});
+
+test("duplicate text snapshots, reasoning snapshots and tool statuses cannot renew an idle request", (t) => {
+  t.mock.timers.enable({ apis: ["setTimeout"] });
+  const deadline = createChatDeadline({ idleMs: 100, maxMs: 1000 });
+  const events = [
+    { type: "text", text: "unchanged" },
+    { type: "reasoning", id: "r", text: "unchanged" },
+    { type: "tool", id: "call", name: "read_image", status: "done" },
+  ] as const;
+  for (const event of events) deadline.observe(event);
+  t.mock.timers.tick(80);
+  for (const event of events) deadline.observe(event);
+  t.mock.timers.tick(20);
+  assert.equal(deadline.signal.reason.kind, "idle");
 });

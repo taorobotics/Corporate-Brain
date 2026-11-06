@@ -16,6 +16,7 @@ let server,
   failed = false;
 const checks = [];
 let failureCalls = 0;
+let qaErrors = "";
 let releaseGeneration;
 const generationGate = new Promise((resolve) => {
   releaseGeneration = resolve;
@@ -73,9 +74,11 @@ const wait = async (fn, label, ms = 45000) => {
         return send({
           kind: request.includes("合成图片验收")
             ? "image"
-            : request.includes("合成视频验收")
-              ? "video"
-              : "code",
+            : request.includes("合成 GIF 回传验收")
+              ? "chat"
+              : request.includes("合成视频验收")
+                ? "video"
+                : "code",
           mode: "standard",
           seconds: 2,
         });
@@ -138,9 +141,12 @@ const wait = async (fn, label, ms = 45000) => {
         ...process.env,
         ELECTRON_RUN_AS_NODE: undefined,
         BRAIN_PRODUCTION_ROOT: join(dir, "server-tasks"),
+        BRAIN_QA_EXPORT_ROOT: join(dir, "qa-exports"),
       },
     });
-    server.stderr.on("data", () => {});
+    server.stderr.on("data", (bytes) => {
+      qaErrors = (qaErrors + bytes.toString()).slice(-6000);
+    });
     const port = await new Promise((resolvePort, reject) => {
       const timer = setTimeout(
         () => reject(Error("QA startup timeout")),
@@ -507,6 +513,78 @@ const wait = async (fn, label, ms = 45000) => {
         "Real Canvas/FFmpeg video renders from chat, all files save and clear on server, local inline video preview decodes at 1280x720 and 2 seconds",
       );
     }
+    await click("新建任务");
+    await fill(
+      '[aria-label="任务输入"]',
+      "合成 GIF 回传验收：在普通对话中生成 GIF 和说明文件。",
+      "HTMLTextAreaElement",
+    );
+    await click("发送任务");
+    await wait(
+      async () => {
+        const state = await js(
+          `({saved:document.querySelector('.chat-production')?.dataset.status==='saved',error:document.querySelector('.task-error')?.innerText})`,
+        );
+        if (state.error) throw Error("Chat export failed: " + state.error);
+        return state.saved;
+      },
+      "ordinary chat GIF saved",
+      60000,
+    );
+    const gifState = await js(
+      `window.brainDesktop.production.state(${JSON.stringify(user.id)})`,
+    );
+    const gifReceipt = gifState.receipts.find((r) =>
+      r.files.some((f) => f.path === "files/sticker.gif"),
+    );
+    assert.ok(gifReceipt);
+    for (const file of gifReceipt.files)
+      assert.equal(
+        createHash("sha256")
+          .update(await fs.readFile(join(gifReceipt.directory, file.path)))
+          .digest("hex"),
+        file.sha256,
+      );
+    await assert.rejects(
+      fs.stat(join(dir, "server-tasks", user.id, gifReceipt.id)),
+      { code: "ENOENT" },
+    );
+    await js(
+      `(()=>{const root=document.querySelector('.chat-production');root.querySelector('.workflow-files').open=true;[...root.querySelectorAll('.workflow-files li')].find(x=>x.textContent.includes('files/sticker.gif')).querySelector('button').click();return true})()`,
+    );
+    await wait(
+      () =>
+        js(
+          `document.querySelector('.workflow-image-preview')?.naturalWidth===1`,
+        ),
+      "GIF inline image preview decoded",
+    );
+    assert.equal(
+      await js(`document.querySelectorAll('.workflow-preview video').length`),
+      0,
+    );
+    await fs.writeFile(
+      "artifacts/workflow-chat-gif.png",
+      (
+        await web.capturePage(undefined, { stayHidden: true, stayAwake: true })
+      ).toPNG(),
+    );
+    web.reload();
+    await wait(
+      () => js(`!!document.querySelector('[data-history-title]')`),
+      "GIF conversation history reload",
+    );
+    await js(`document.querySelector('[data-history-title]').click();true`);
+    await wait(
+      () =>
+        js(
+          `document.querySelector('.chat-production .message-markdown')?.textContent.includes('合成 GIF 文件')`,
+        ),
+      "GIF reply and file association retained",
+    );
+    checks.push(
+      "Ordinary chat exports GIF and README to the native device, validates both files before server cleanup, decodes GIF inline as an image, and retains the reply and file association after reload",
+    );
     const tasks = await js(`fetch('/api/production').then(r=>r.json())`);
 
     const report = {
@@ -528,8 +606,32 @@ const wait = async (fn, label, ms = 45000) => {
     console.log(JSON.stringify(report));
   } catch (error) {
     failed = true;
+    await fs.writeFile(
+      `artifacts/production-ui-${process.platform}.json`,
+      JSON.stringify(
+        {
+          version: require("../package.json").version,
+          result: "failed",
+          checks,
+          error: String(error),
+          syntheticFixtureProvider: true,
+        },
+        null,
+        2,
+      ),
+    );
     console.error(error.stack);
+    console.error(qaErrors);
+    if (win && !win.isDestroyed()) {
+      console.error(
+        "Synthetic QA page: " +
+          (await win.webContents
+            .executeJavaScript("document.body.innerText.slice(-5000)")
+            .catch(() => "unavailable")),
+      );
+    }
   } finally {
+    app.removeAllListeners("window-all-closed");
     server?.send?.("close");
     server?.kill();
     provider?.close();

@@ -10,8 +10,11 @@ import {
   readdir,
   lstat,
   statfs,
+  open,
+  realpath,
+  unlink,
 } from "node:fs/promises";
-import { createReadStream, createWriteStream } from "node:fs";
+import { constants, createReadStream, createWriteStream } from "node:fs";
 import {
   resolve,
   join,
@@ -222,6 +225,154 @@ export class ProductionQueue {
         )
         .all(owner) as unknown as Job[]
     ).map((j) => this.view(j));
+  }
+  /** Host-only handoff from one completed DSH turn, never a client filesystem path. */
+  async acceptFiles(
+    owner: string,
+    connectionId: string,
+    deviceId: string,
+    output: { directory: string; files: string[] },
+  ) {
+    await this.initialized;
+    uuid.parse(owner);
+    uuid.parse(deviceId);
+    this.options.authorize(owner, connectionId);
+    const source = resolve(output.directory);
+    if (
+      (await realpath(source)) !== source ||
+      (await lstat(source)).isSymbolicLink()
+    )
+      fail(400, "成果目录含链接");
+    if (!output.files.length || output.files.length > 64)
+      fail(413, "每次最多回传 64 个成果文件");
+    const paths = output.files.map(safeProductionPath);
+    paths.forEach((path) => safeProductionPath("files/" + path));
+    if (new Set(paths.map((p) => p.toLowerCase())).size !== paths.length)
+      fail(400, "成果文件名不能重复");
+    const counts = this.db
+      .prepare(
+        "SELECT owner FROM production_tasks WHERE status NOT IN ('saved','cancelled')",
+      )
+      .all() as { owner: string }[];
+    if (
+      counts.length >= 64 ||
+      counts.filter((j) => j.owner === owner).length >= 3
+    )
+      fail(429, "请先保存或取消已有任务，每人最多同时保留 3 个任务");
+    const id = randomUUID(),
+      now = new Date().toISOString();
+    this.db
+      .prepare(
+        "INSERT INTO production_tasks(id,owner,deviceId,kind,status,createdAt,updatedAt) VALUES(?,?,?,'files','verifying',?,?)",
+      )
+      .run(id, owner, deviceId, now, now);
+    const job = this.job(id, owner),
+      dir = this.dir(job);
+    const files: ProductionFile[] = [];
+    try {
+      await mkdir(dir, { recursive: true, mode: 0o700 });
+      if (
+        (await realpath(dir)) !==
+        join(await realpath(this.root), relative(this.root, dir))
+      )
+        fail(500, "成果接收目录含链接");
+      for (const path of paths) {
+        const from = join(source, path),
+          targetPath = "files/" + path,
+          target = join(dir, targetPath);
+        if ((await realpath(from)) !== from) fail(400, "成果文件含链接");
+        const handle = await open(
+          from,
+          constants.O_RDONLY | (constants.O_NOFOLLOW || 0),
+        );
+        try {
+          const before = await handle.stat();
+          if (!before.isFile() || before.nlink !== 1 || before.size > maxFile)
+            fail(413, "成果文件过大或不是普通文件");
+          if (
+            files.reduce((sum, f) => sum + f.size, 0) + before.size >
+            maxTotal
+          )
+            fail(413, "成果总量最多 512 MB");
+          const disk = await statfs(this.root);
+          if (disk.bavail * disk.bsize < 2 * 1024 ** 3 + before.size)
+            fail(507, "服务器可用空间不足，请先回传已有任务");
+          await mkdir(dirname(target), { recursive: true, mode: 0o700 });
+          let copied = 0;
+          await pipeline(
+            handle.createReadStream({ autoClose: false }),
+            new Transform({
+              transform(chunk, _encoding, callback) {
+                copied += chunk.length;
+                callback(
+                  copied > before.size
+                    ? new ProductionError(409, "成果仍在增长，请完成后再回传")
+                    : null,
+                  chunk,
+                );
+              },
+            }),
+            createWriteStream(target, { flags: "wx", mode: 0o600 }),
+          );
+          const after = await handle.stat();
+          if (
+            before.size !== after.size ||
+            before.mtimeMs !== after.mtimeMs ||
+            before.ctimeMs !== after.ctimeMs
+          )
+            fail(409, "成果仍在修改，请完成后再回传");
+          files.push({
+            path: targetPath,
+            size: after.size,
+            sha256: await hashFile(target),
+          });
+        } finally {
+          await handle.close();
+        }
+      }
+      this.options.authorize(owner, connectionId);
+      this.db
+        .prepare(
+          "UPDATE production_tasks SET manifest=?,token=?,bytes=? WHERE id=?",
+        )
+        .run(
+          JSON.stringify(files),
+          randomBytes(32).toString("hex"),
+          files.reduce((sum, f) => sum + f.size, 0),
+          id,
+        );
+      this.set(id, "ready", 100);
+    } catch (error) {
+      const info = await lstat(dir).catch(() => undefined);
+      if (
+        info?.isDirectory() &&
+        !info.isSymbolicLink() &&
+        (await realpath(dir)) ===
+          join(await realpath(this.root), relative(this.root, dir))
+      )
+        await rm(dir, { recursive: true, force: true });
+      this.db
+        .prepare("DELETE FROM production_tasks WHERE id=? AND owner=?")
+        .run(id, owner);
+      throw error;
+    }
+    // Transfer ownership to the verified queue copy. Never remove changed files
+    // or follow links; the queue copy remains until the device acknowledges it.
+    for (const file of files) {
+      const original = join(source, file.path.slice("files/".length));
+      try {
+        if (
+          (await realpath(source)) === source &&
+          (await realpath(original)) === original &&
+          (await lstat(original)).nlink === 1 &&
+          (await hashFile(original)) === file.sha256
+        )
+          await unlink(original);
+      } catch {
+        /* The checked queue copy is ready; a changed source is retained. */
+      }
+    }
+    return this.view(this.job(id, owner));
   }
   private dir(job: Job) {
     const dir = resolve(this.root, uuid.parse(job.owner), uuid.parse(job.id));

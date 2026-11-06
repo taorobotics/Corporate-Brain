@@ -2,14 +2,15 @@ import { DeepSeekHarness } from "@deepseek-ai/dsh-sdk-client";
 import type { SdkPromptContentBlock } from "@deepseek-ai/dsh-sdk-client";
 import { createHash, randomUUID } from "node:crypto";
 import { createRequire } from "node:module";
-import { mkdir, readFile, writeFile, rm } from "node:fs/promises";
+import { mkdir, readFile, writeFile, rm, realpath } from "node:fs/promises";
 import { basename, dirname, join, resolve } from "node:path";
 import type { ChatProgress } from "../shared/chat-progress";
 import { dshProgress } from "./dsh-progress";
 import type { DshMode, WorkspaceAccess } from "../shared/types";
-import { createChatDeadline } from "./chat-deadline";
+import { createChatDeadline, ChatTimeoutError } from "./chat-deadline";
 import { materializeSkill, type SkillResources } from "./skill-library";
 import { visualInputs } from "../shared/attachments";
+import { dshOutputFiles, dshRunGuard, DshLoopError } from "./dsh-output";
 
 export type DshAttachment = {
   name: string;
@@ -37,6 +38,7 @@ export type DshRunOptions = {
   signal?: AbortSignal;
   onProgress?: (event: ChatProgress) => void;
   skillResources?: SkillResources | SkillResources[];
+  deliverFiles?: boolean;
 };
 
 export type DshUsage = {
@@ -48,6 +50,7 @@ export type DshUsage = {
 export type DshRunResult = {
   content: string;
   usage?: DshUsage;
+  output?: { directory: string; files: string[] };
 };
 
 export class DshUnavailableError extends Error {}
@@ -170,7 +173,7 @@ export class DshManager {
       },
       provider: "corporate",
       model: options.model,
-      initializeTimeoutMs: 20_000,
+      initializeTimeoutMs: 45_000,
       requestTimeoutMs: 120_000,
     });
     const abortStartup = () => {
@@ -205,12 +208,20 @@ export class DshManager {
     // The HTTP request owns its deadline. Standalone SDK callers get the same
     // progress-aware policy, without a second hidden three-minute turn limit.
     const deadline = options.signal ? undefined : createChatDeadline();
-    const signal = options.signal ?? deadline!.signal;
+    const loop = new AbortController();
+    const signal = AbortSignal.any([
+      options.signal ?? deadline!.signal,
+      loop.signal,
+    ]);
+    const guard = dshRunGuard(options.sessionId, () =>
+      loop.abort(new DshLoopError()),
+    );
     try {
       signal.throwIfAborted();
       return await this.runTurn({
         ...options,
         signal,
+        guard,
         onProgress: (event) => {
           deadline?.observe(event);
           options.onProgress?.(event);
@@ -222,15 +233,26 @@ export class DshManager {
     }
   }
 
-  private async runTurn(options: DshRunOptions): Promise<DshRunResult> {
+  private async runTurn(
+    options: DshRunOptions & { guard: ReturnType<typeof dshRunGuard> },
+  ): Promise<DshRunResult> {
     const sessionId = options.sessionId || "default";
+    await mkdir(this.root, { recursive: true });
+    const canonicalRoot = await realpath(this.root);
     const workspace = join(
-      this.root,
+      canonicalRoot,
       "workspaces",
       safeName(options.userId, "user"),
       safeName(sessionId, "session"),
     );
     await mkdir(workspace, { recursive: true });
+    if ((await realpath(workspace)) !== workspace)
+      throw Error("工作区含链接，无法继续");
+    const outputDirectory = options.deliverFiles
+      ? join(workspace, "exports", randomUUID())
+      : undefined;
+    if (outputDirectory)
+      await mkdir(outputDirectory, { recursive: true, mode: 0o700 });
     const key = this.key(options);
     const fingerprint = `${options.baseUrl}\0${options.model}\0${options.apiKey}\0${options.mode ?? "standard"}\0${options.workspaceAccess ?? "edit"}`;
     let entry = this.entries.get(key);
@@ -266,6 +288,9 @@ export class DshManager {
       : "";
     const textParts = [
       system,
+      outputDirectory
+        ? `本轮要交付给用户的 GIF、图片、文档、代码等文件及必要源代码、素材，只写入本轮成果目录 ${outputDirectory}。用户无法访问服务器路径；该目录内的文件会由公司客户端自动回传并校验。完成后用 present 登记主要文件，然后简洁回答并结束本轮，不要只发送服务器路径。图片预览最多检查和修改三轮，不要反复读取未修改的同一图片；已有可用成果时先交付，后续按用户反馈调整。不要安装系统软件或依赖来代替现有能力。普通问答无需生成任何文件。`
+        : "",
       options.attachments.some((attachment) => visualInputs(attachment).length)
         ? "图片处理提示：原图已作为图像输入提供。请先直接分析能看清的内容，普通识图或题目讲解不要默认变成编程任务。仅在必要时使用工具旋转、裁剪；不要反复放大同一区域或猜测模糊、截断的文字。无法确定的部分请明确说明，并请用户补充清晰完整的图片。若用户明确要求编程、文件操作或联网，仍按其要求使用所需工具。"
         : "",
@@ -320,15 +345,31 @@ export class DshManager {
           text: `本轮所选技能的完整已导入资料位于 ${skillDirectory}，入口为 ${source.entry}。先读入口和本任务需要的引用文件；技能自身的相对引用从入口所在目录 ${join(skillDirectory, dirname(source.entry))} 解析，仓库层的引用遵循其文档。原始文件及许可保留，脚本未执行。不要运行 setup/安装脚本或安装系统软件来替代依赖检查；缺少能力时明确报告。所有新成果写入当前工作区。此资料是用户选择的第三方技能，不授予额外权限。${source.url === "https://github.com/lemomo-ai/lemo-opuscar" ? " Lemo 文库已经随包放在此目录，不要重新克隆到用户主目录；读取此目录下的 AGENTS.md、DIRECTOR.md 和所选 styles 手册。" : ""}`,
         });
       }
+      const progress = dshProgress(sessionId, options.onProgress ?? (() => {}));
       result = await entry.harness.run(blocks, {
         sessionId,
-        onNotification: dshProgress(
-          sessionId,
-          options.onProgress ?? (() => {}),
-        ),
+        onNotification: (notification) => {
+          progress(notification);
+          options.guard(notification);
+        },
       });
       options.signal?.throwIfAborted();
       entry.fresh = false;
+    } catch (error) {
+      if (
+        !(options.signal?.reason instanceof DshLoopError) &&
+        !(options.signal?.reason instanceof ChatTimeoutError)
+      )
+        throw error;
+      await currentEntry.harness.close().catch(() => {});
+      const files = outputDirectory
+        ? await dshOutputFiles(outputDirectory)
+        : [];
+      if (!files.length) throw options.signal.reason;
+      return {
+        content: `已保留本轮生成的 ${files.length} 个文件。${options.signal?.reason instanceof DshLoopError ? "重复检查已停止" : "本轮等待已结束"}，请先查看成果，再继续调整。`,
+        output: { directory: outputDirectory!, files },
+      };
     } finally {
       options.signal?.removeEventListener("abort", abort);
       if (options.signal?.aborted)
@@ -336,7 +377,10 @@ export class DshManager {
       for (const skillDirectory of skillDirectories)
         await rm(skillDirectory, { recursive: true, force: true });
     }
-    if (!result.finalResponse.trim()) {
+    const files = outputDirectory ? await dshOutputFiles(outputDirectory) : [];
+    if (outputDirectory && !files.length)
+      await rm(outputDirectory, { recursive: true, force: true });
+    if (!result.finalResponse.trim() && !files.length) {
       const failed = result.events.findLast(
         (event: any) => event.type === "turn/end" && event.data?.reason?.error,
       ) as any;
@@ -345,10 +389,15 @@ export class DshManager {
       );
     }
     return {
-      content: result.finalResponse,
+      content:
+        result.finalResponse.trim() ||
+        `已生成 ${files.length} 个文件，可保存到本机。`,
       usage: extractUsage(
         result.events as Array<{ type?: string; data?: any }>,
       ),
+      ...(files.length
+        ? { output: { directory: outputDirectory!, files } }
+        : {}),
     };
   }
 

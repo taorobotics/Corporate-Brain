@@ -9,6 +9,8 @@ import {
   stat,
   writeFile,
   mkdir,
+  realpath,
+  symlink,
 } from "node:fs/promises";
 import { join } from "node:path";
 import { tmpdir } from "node:os";
@@ -83,6 +85,83 @@ async function fixture(
     done,
   };
 }
+test("chat file handoff preserves GIF and source bytes, isolates employee/device and cleans only after verified local receipt", async (t) => {
+  const f = await fixture(t),
+    source = join(await realpath(f.root), "turn-export");
+  await mkdir(join(source, "source"), { recursive: true });
+  const gif = Buffer.from("GIF89a-synthetic-export"),
+    code = Buffer.from("print('fixture')");
+  await writeFile(join(source, "sticker.gif"), gif);
+  await writeFile(join(source, "source", "animation.py"), code);
+  const task = await f.queue.acceptFiles(f.owner, f.connectionId, f.deviceId, {
+    directory: source,
+    files: ["sticker.gif", "source/animation.py"],
+  });
+  assert.equal(task.kind, "files");
+  assert.equal(task.status, "ready");
+  assert.throws(() => f.queue.manifest(f.other, task.id, f.deviceId), /无权/);
+  assert.throws(
+    () => f.queue.manifest(f.owner, task.id, randomUUID()),
+    /提交任务的电脑/,
+  );
+  const manifest = f.queue.manifest(f.owner, task.id, f.deviceId);
+  assert.deepEqual(
+    manifest.files.map((file) => file.path),
+    ["files/sticker.gif", "files/source/animation.py"],
+  );
+  const file = await f.queue.download(f.owner, task.id, f.deviceId, 0);
+  assert.deepEqual(await readFile(file.target), gif);
+  await assert.rejects(stat(join(source, "sticker.gif")), /ENOENT/);
+  await assert.rejects(
+    f.queue.acknowledge(f.owner, task.id, {
+      deviceId: f.deviceId,
+      token: manifest.token,
+      files: manifest.files.slice(0, 1),
+    }),
+    /确认不匹配/,
+  );
+  assert.equal((await stat(file.target)).size, gif.length);
+  await f.queue.acknowledge(f.owner, task.id, {
+    deviceId: f.deviceId,
+    token: manifest.token,
+    files: manifest.files,
+  });
+  await assert.rejects(stat(file.target), /ENOENT/);
+  assert.equal(f.queue.list(f.owner)[0].status, "saved");
+});
+
+test("chat export handoff rejects traversal, duplicate paths and symlinks without consuming queue slots or deleting source", async (t) => {
+  const f = await fixture(t),
+    source = join(await realpath(f.root), "turn-export");
+  await mkdir(source);
+  await writeFile(join(source, "ok.txt"), "retained");
+  await assert.rejects(
+    f.queue.acceptFiles(f.owner, f.connectionId, f.deviceId, {
+      directory: source,
+      files: ["../private"],
+    }),
+    /文件名/,
+  );
+  await assert.rejects(
+    f.queue.acceptFiles(f.owner, f.connectionId, f.deviceId, {
+      directory: source,
+      files: ["ok.txt", "OK.txt"],
+    }),
+    /重复/,
+  );
+  if (process.platform !== "win32") {
+    await symlink(join(source, "ok.txt"), join(source, "linked.txt"));
+    await assert.rejects(
+      f.queue.acceptFiles(f.owner, f.connectionId, f.deviceId, {
+        directory: source,
+        files: ["linked.txt"],
+      }),
+      /链接/,
+    );
+  }
+  assert.equal(f.queue.list(f.owner).length, 0);
+  assert.equal(await readFile(join(source, "ok.txt"), "utf8"), "retained");
+});
 test("production exposes supplied reasoning before completion and stores ordinary replies without future steps or fabricated thoughts", async (t) => {
   let release!: () => void;
   const gate = new Promise<void>((resolve) => {

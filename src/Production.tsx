@@ -127,6 +127,7 @@ export function ChatProduction({
   const [preview, setPreview] = useState<{
     url?: string;
     text?: string;
+    mime?: string;
     name: string;
   } | null>(null);
   const [previewError, setPreviewError] = useState("");
@@ -172,6 +173,7 @@ export function ChatProduction({
         result.bytes
           ? {
               name: path,
+              mime: result.mime,
               url: URL.createObjectURL(
                 new Blob([new Uint8Array(result.bytes)], { type: result.mime }),
               ),
@@ -221,6 +223,10 @@ export function ChatProduction({
                 <small>{Math.max(1, Math.ceil(file.size / 1024))} KB</small>
                 {(file.path.startsWith("code/") ||
                   file.path === "output/video.mp4" ||
+                  (file.path.startsWith("files/") &&
+                    /\.(?:gif|png|jpe?g|webp|mp4|webm|txt|md|json|csv|js|ts|tsx|jsx|py|html|css|svg)$/i.test(
+                      file.path,
+                    )) ||
                   file.path === "plan.md") && (
                   <Button
                     disabled={previewBusy}
@@ -240,7 +246,13 @@ export function ChatProduction({
             <strong>{preview.name}</strong>
             <Button onClick={() => setPreview(null)}>关闭预览</Button>
           </div>
-          {preview.url ? (
+          {preview.url && preview.mime?.startsWith("image/") ? (
+            <img
+              src={preview.url}
+              alt={preview.name}
+              className="workflow-image-preview"
+            />
+          ) : preview.url ? (
             <video
               src={preview.url}
               controls

@@ -34,6 +34,7 @@ import {
   ATTACHMENT_TEXT_LIMIT_MESSAGE,
 } from "../shared/attachments";
 import { DshManager, DshUnavailableError } from "./dsh";
+import { DshLoopError } from "./dsh-output";
 import { syncDeepSeekConnections } from "./deepseek-sync";
 import { imageSkills, generatedImage } from "./image-skills";
 import {
@@ -230,12 +231,15 @@ export function createPlatform(
     chatTimeouts?: { idleMs?: number; maxMs?: number };
     skillLibrary?: SkillLibraryOptions;
     nas?: NasOptions;
+    dsh?: Pick<DshManager, "runDetailed" | "close">;
   } = {},
 ) {
   const store = createStore(options.database ?? ".data/platform.sqlite");
   syncDeepSeekConnections(store);
   migrateLinoRoute(store);
-  const dsh = process.env.BRAIN_DSH_ENABLED === "0" ? null : new DshManager();
+  const dsh =
+    options.dsh ??
+    (process.env.BRAIN_DSH_ENABLED === "0" ? null : new DshManager());
   const { db } = store;
   const fetchModel = options.modelTransport ?? modelFetch;
   const app = express();
@@ -1252,6 +1256,7 @@ export function createPlatform(
         connectionId: id,
         skillId: id.optional(),
         imageSkillId: id.optional(),
+        deviceId: id.optional(),
         skillIds: skillIdsSchema,
         sessionId: id.optional(),
         messages: z
@@ -1334,7 +1339,7 @@ export function createPlatform(
       deadline.observe(event);
       if (
         (event.type === "text" && event.text) ||
-        event.type === "reasoning" ||
+        (event.type === "reasoning" && event.text.trim()) ||
         event.type === "tool"
       )
         hasProgress = true;
@@ -1362,6 +1367,7 @@ export function createPlatform(
       : undefined;
     try {
       let content: string | undefined;
+      let productionTaskId: string | undefined;
       let usage:
         | { inputTokens?: number; outputTokens?: number; totalTokens?: number }
         | undefined;
@@ -1390,16 +1396,32 @@ export function createPlatform(
             mode: data.mode,
             workspaceAccess: data.workspaceAccess,
             skillResources,
+            deliverFiles:
+              Boolean(data.deviceId) && data.workspaceAccess !== "view",
             signal,
             onProgress: emit,
           });
           content = result.content;
           usage = result.usage;
+          if (result.output && data.deviceId) {
+            if (data.workspaceAccess === "view")
+              fail(403, "当前工作区为仅可查看，不能交付新成果");
+            const task = await production.acceptFiles(
+              actor.id,
+              row.id,
+              data.deviceId,
+              result.output,
+            );
+            productionTaskId = task.id;
+          }
         } finally {
           await proxy?.close();
         }
       } catch (error) {
         signal.throwIfAborted();
+        if (error instanceof ApiError || error instanceof ProductionError)
+          throw error;
+        if (error instanceof DshLoopError) fail(502, error.message);
         // Visual requests can be accepted by the OpenAI-compatible provider even
         // when a DSH preset rejects the image block. Retry those requests through
         // the direct chat endpoint so an uploaded image is still sent to the model.
@@ -1535,9 +1557,21 @@ export function createPlatform(
       }
       store.audit(actor.id, "model.chat_completed", row.id);
       if (streaming) {
-        emit({ type: "done", content, usage, ...(image ? { image } : {}) });
+        emit({
+          type: "done",
+          content,
+          usage,
+          ...(image ? { image } : {}),
+          ...(productionTaskId ? { productionTaskId } : {}),
+        });
         res.end();
-      } else res.json({ content, usage, ...(image ? { image } : {}) });
+      } else
+        res.json({
+          content,
+          usage,
+          ...(image ? { image } : {}),
+          ...(productionTaskId ? { productionTaskId } : {}),
+        });
     } catch (error) {
       const timeout =
         signal.aborted && signal.reason instanceof ChatTimeoutError
@@ -1551,7 +1585,7 @@ export function createPlatform(
           ? timeout.message
           : signal.aborted
             ? "请求已停止，已保留收到的内容"
-            : error instanceof ApiError
+            : error instanceof ApiError || error instanceof ProductionError
               ? error.message
               : "模型响应中断，已保留收到的内容，请稍后重试",
       });

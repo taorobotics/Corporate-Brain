@@ -174,3 +174,38 @@ test("preview reads only verified saved output from this profile and never execu
   await writeFile(join(receipt.directory, "code/main.js"), "employee edit");
   await assert.rejects(f.local.preview(f.id, "code/main.js"), /变化|修改/);
 });
+
+test("saved chat GIF files preview as images while HTML source remains inert text", async (t) => {
+  const f = await fixture(t);
+  const receipt = await f.local.collect(f.id);
+  const config = JSON.parse(await readFile(f.options.file, "utf8"));
+  const gif = Buffer.from(
+      "R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7",
+      "base64",
+    ),
+    html = Buffer.from("<script>throw Error('must not execute')</script>");
+  await mkdir(join(receipt.directory, "files"));
+  for (const [name, bytes] of [
+    ["sticker.gif", gif],
+    ["index.html", html],
+  ]) {
+    await writeFile(join(receipt.directory, "files", name), bytes);
+    config.receipts[0].files.push({
+      path: "files/" + name,
+      size: bytes.length,
+      sha256: createHash("sha256").update(bytes).digest("hex"),
+    });
+  }
+  await writeFile(f.options.file, JSON.stringify(config));
+  const image = await f.local.preview(f.id, "files/sticker.gif");
+  assert.equal(image.mime, "image/gif");
+  assert.deepEqual(Buffer.from(image.bytes), gif);
+  const text = await f.local.preview(f.id, "files/index.html");
+  assert.equal(text.mime, "text/plain");
+  assert.equal(text.content, html.toString());
+  await writeFile(
+    join(receipt.directory, "files/sticker.gif"),
+    Buffer.alloc(gif.length),
+  );
+  await assert.rejects(f.local.preview(f.id, "files/sticker.gif"), /变化|修改/);
+});

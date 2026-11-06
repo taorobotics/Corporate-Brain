@@ -606,9 +606,13 @@ export default function Workspace(props: WorkspaceProps) {
           : null,
       );
       controller.signal.throwIfAborted();
+      const outputDevice = window.brainDesktop?.production
+        ? await window.brainDesktop.production.state(user.id)
+        : undefined;
       const response = await streamChat(
         {
           connectionId: responseModel.id,
+          ...(outputDevice ? { deviceId: outputDevice.deviceId } : {}),
           ...(plan.imageSkillId ? { imageSkillId: plan.imageSkillId } : {}),
           skillIds: plan.skillIds ?? [],
           sessionId: updated.id,
@@ -640,6 +644,8 @@ export default function Workspace(props: WorkspaceProps) {
         controller.signal,
         progress,
       );
+      productionTaskId = response.productionTaskId;
+      if (productionTaskId) await props.production.refresh();
       saveReply(
         response.content ?? "图片已生成，可以继续保存。",
         "done",
