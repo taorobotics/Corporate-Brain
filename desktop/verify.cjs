@@ -11,6 +11,32 @@ app.disableHardwareAcceleration();
 const errors = [],
   checks = [];
 let server;
+let captureRetries = 0;
+async function captureImage(contents, rectangle) {
+  for (let attempt = 0; attempt < 3; attempt++) {
+    BrowserWindow.fromWebContents(contents)?.showInactive();
+    await new Promise((resolve) => setTimeout(resolve, 250));
+    try {
+      const picture = await contents.capturePage(rectangle, {
+        stayHidden: true,
+        stayAwake: true,
+      });
+      assert.equal(
+        picture.isEmpty(),
+        false,
+        "Verification screenshot must contain real pixels",
+      );
+      return picture;
+    } catch (error) {
+      if (error.message !== "UnknownVizError" || attempt === 2) throw error;
+      captureRetries++;
+      console.log(
+        "Retrying transient Chromium screenshot failure",
+        captureRetries,
+      );
+    }
+  }
+}
 async function waitFor(test, label, timeout = 12000) {
   const end = Date.now() + timeout;
   while (Date.now() < end) {
@@ -94,7 +120,7 @@ async function waitFor(test, label, timeout = 12000) {
     await js(`document.querySelector('[aria-label="关闭提示"]')?.click()`);
     await js(`document.fonts.ready.then(() => true)`);
     await new Promise((resolve) => setTimeout(resolve, 250));
-    const image = await web.capturePage();
+    const image = await captureImage(web);
     await fs.writeFile(join(shots, name), image.toPNG());
   }
   async function verifyWindowControls(label, exercise = false) {
@@ -190,8 +216,15 @@ async function waitFor(test, label, timeout = 12000) {
   const selectOption = async (label, text) => {
     await openSelect(label);
     if (label === "选择模型") {
-      const nested = await js(`(() => {const group=[...document.querySelectorAll('[data-model-labels]')].find(el=>JSON.parse(el.dataset.modelLabels).includes(${JSON.stringify(text)}));if(!group)return false;group.click();return true})()`);
-      if (nested) await waitFor(() => js(`!!document.querySelector('.model-picker-submenu[data-open]')`), "provider submenu");
+      const nested = await js(
+        `(() => {const group=[...document.querySelectorAll('[data-model-labels]')].find(el=>JSON.parse(el.dataset.modelLabels).includes(${JSON.stringify(text)}));if(!group)return false;group.click();return true})()`,
+      );
+      if (nested)
+        await waitFor(
+          () =>
+            js(`!!document.querySelector('.model-picker-submenu[data-open]')`),
+          "provider submenu",
+        );
     }
     await js(
       `(() => { const option = Array.from(document.querySelectorAll('.select-popup[data-open] [role="option"],.select-popup[data-open] [role="menuitemradio"]')).find(el => el.dataset.modelName === ${JSON.stringify(text)} || el.querySelector('.select-option-label')?.textContent === ${JSON.stringify(text)}); if (!option) throw new Error('Missing option: ' + ${JSON.stringify(text)}); option.click(); })()`,
@@ -412,7 +445,7 @@ async function waitFor(test, label, timeout = 12000) {
   );
   await fs.writeFile(
     join(shots, "dropdown-composer-detail.png"),
-    (await web.capturePage(composerRegion)).toPNG(),
+    (await captureImage(web, composerRegion)).toPNG(),
   );
   await key("Escape");
   await waitFor(
@@ -807,20 +840,42 @@ async function waitFor(test, label, timeout = 12000) {
   );
   const nativeRename = fs.rename;
   let transientProfileLock = false;
-  if (process.platform === "win32") fs.rename = async (from, to) => {
-    if (!transientProfileLock && String(from).startsWith(dir) && String(from).endsWith("state.json.tmp")) {
-      transientProfileLock = true;
-      throw Object.assign(new Error("Synthetic transient profile lock"), { code: "EPERM" });
-    }
-    return nativeRename(from, to);
-  };
+  if (process.platform === "win32")
+    fs.rename = async (from, to) => {
+      if (
+        !transientProfileLock &&
+        String(from).startsWith(dir) &&
+        String(from).endsWith("state.json.tmp")
+      ) {
+        transientProfileLock = true;
+        throw Object.assign(new Error("Synthetic transient profile lock"), {
+          code: "EPERM",
+        });
+      }
+      return nativeRename(from, to);
+    };
   try {
-    await require("./verify-image-skills.cjs")({ js, click, fill, waitFor, request, selectOption, key, checks, capture, port });
+    await require("./verify-image-skills.cjs")({
+      js,
+      click,
+      fill,
+      waitFor,
+      request,
+      selectOption,
+      key,
+      checks,
+      capture,
+      port,
+    });
     if (process.platform === "win32") {
       assert.equal(transientProfileLock, true);
-      checks.push("Windows transient profile replacement lock is retried without deleting the old snapshot; subsequent text/image writes and reload complete through the native bridge");
+      checks.push(
+        "Windows transient profile replacement lock is retried without deleting the old snapshot; subsequent text/image writes and reload complete through the native bridge",
+      );
     }
-  } finally { fs.rename = nativeRename; }
+  } finally {
+    fs.rename = nativeRename;
+  }
   for (const fixture of modelFixtures)
     await request(`/connections/${fixture.id}`, {}, "DELETE");
   await js(`location.reload()`);
@@ -1031,7 +1086,17 @@ async function waitFor(test, label, timeout = 12000) {
   );
   assert.equal(connectionsBefore.length, 2);
   assert.ok(connectionsBefore.every((c) => c.hasKey));
-  await require("./verify-model-picker.cjs")({js,click,request,waitFor,capture,key,checks,win,service:serviceBefore});
+  await require("./verify-model-picker.cjs")({
+    js,
+    click,
+    request,
+    waitFor,
+    capture,
+    key,
+    checks,
+    win,
+    service: serviceBefore,
+  });
   await click("管理模型");
   await waitFor(
     () => js(`!!document.querySelector('.modal')`),
@@ -1445,7 +1510,14 @@ async function waitFor(test, label, timeout = 12000) {
     JSON.stringify(actualFonts, null, 2),
   );
   web.debugger.detach();
-  await request("/model-services",{provider:"linoroute",name:"员工模型库验收",baseUrl:`http://127.0.0.1:${port}/image-skill-fixture`,apiKey:"synthetic-image-skill-ui-key",departments:[],models:[{model:"qa-text",kind:"chat"}]});
+  await request("/model-services", {
+    provider: "linoroute",
+    name: "员工模型库验收",
+    baseUrl: `http://127.0.0.1:${port}/image-skill-fixture`,
+    apiKey: "synthetic-image-skill-ui-key",
+    departments: [],
+    models: [{ model: "qa-text", kind: "chat" }],
+  });
   await js(`document.querySelector('[aria-label="打开账号菜单"]').click()`);
   await click("退出登录");
   await waitFor(() => has("登录公司账号"), "logout");
@@ -1560,8 +1632,28 @@ async function waitFor(test, label, timeout = 12000) {
   checks.push(
     "Another employee installs the shared Skill without author history",
   );
-  await require("./verify-personal-models.cjs")({js,click,fill,waitFor,request,selectOption,key,capture,checks,win});
-  await require("./verify-chat-appearance.cjs")({js,click,waitFor,request,selectOption,capture,checks,win});
+  await require("./verify-personal-models.cjs")({
+    js,
+    click,
+    fill,
+    waitFor,
+    request,
+    selectOption,
+    key,
+    capture,
+    checks,
+    win,
+  });
+  await require("./verify-chat-appearance.cjs")({
+    js,
+    click,
+    waitFor,
+    request,
+    selectOption,
+    capture,
+    checks,
+    win,
+  });
   for (const [page, label] of [
     ["projects", "项目"],
     ["knowledge", "公司知识"],
@@ -1618,7 +1710,7 @@ async function waitFor(test, label, timeout = 12000) {
   );
   await fs.writeFile(
     join(shots, "desktop-server-setup.png"),
-    (await setupWindow.webContents.capturePage()).toPNG(),
+    (await captureImage(setupWindow.webContents)).toPNG(),
   );
   const rejected = await setupWindow.webContents.executeJavaScript(
     `window.companyConnection.connect('http://untrusted.example.com')`,
@@ -1645,7 +1737,7 @@ async function waitFor(test, label, timeout = 12000) {
   );
   await fs.writeFile(
     join(shots, "client-offline-legal.png"),
-    (await legalWindow.webContents.capturePage()).toPNG(),
+    (await captureImage(legalWindow.webContents)).toPNG(),
   );
   legalWindow.close();
   checks.push(
@@ -1663,6 +1755,7 @@ async function waitFor(test, label, timeout = 12000) {
   const report = {
     result: "passed",
     runtime: "Electron real window + real preload bridge",
+    captureRetries,
     productionModelsCalled: false,
     database: "disposable in-memory",
     checks,

@@ -81,20 +81,42 @@ async function waitFor(check, label) {
   );
   assert.equal(await evalOverlay("typeof window.brainDesktop"), "undefined");
   await waitFor(
-    () => evalOverlay("Array.from(document.querySelectorAll('.entry-logo')).length === 2 && Array.from(document.querySelectorAll('.entry-logo')).every(img => img.complete && img.naturalWidth === 512)"),
+    () =>
+      evalOverlay(
+        "Array.from(document.querySelectorAll('.entry-logo')).length === 2 && Array.from(document.querySelectorAll('.entry-logo')).every(img => img.complete && img.naturalWidth === 512)",
+      ),
     "bundled company logo loads offline under startup CSP",
   );
-  assert.equal(await evalOverlay("getComputedStyle(document.querySelector('.entry-logo-wrap')).backgroundColor.replaceAll(' ', '')"), "rgba(0,0,0,0)", "Startup logo must not have a white plate");
+  assert.equal(
+    await evalOverlay(
+      "getComputedStyle(document.querySelector('.entry-logo-wrap')).backgroundColor.replaceAll(' ', '')",
+    ),
+    "rgba(0,0,0,0)",
+    "Startup logo must not have a white plate",
+  );
   checks.push(
     "Warm startup remains responsive offline; default ignores dark OS; minimal isolated preload",
   );
   const shots = resolve("artifacts/screenshots");
   await mkdir(shots, { recursive: true });
   async function capture(name) {
-    await new Promise((done) => setTimeout(done, 350));
-    await writeFile(join(shots, name), (await overlay().capturePage()).toPNG());
+    for (let attempt = 0; attempt < 3; attempt++) {
+      win.showInactive();
+      await new Promise((done) => setTimeout(done, 350));
+      try {
+        const picture = await overlay().capturePage(undefined, {
+          stayHidden: true,
+          stayAwake: true,
+        });
+        assert.equal(picture.isEmpty(), false);
+        await writeFile(join(shots, name), picture.toPNG());
+        return;
+      } catch (error) {
+        if (error.message !== "UnknownVizError" || attempt === 2) throw error;
+      }
+    }
   }
-  await new Promise(done => setTimeout(done, 3700));
+  await new Promise((done) => setTimeout(done, 3700));
   await capture("client-startup.png");
   await evalOverlay("document.getElementById('skip').click()");
   await waitFor(
@@ -173,7 +195,7 @@ async function waitFor(check, label) {
     await evalOverlay("document.documentElement.dataset.theme"),
     "dark",
   );
-  await new Promise(done => setTimeout(done, 3700));
+  await new Promise((done) => setTimeout(done, 3700));
   await capture("client-startup-dark.png");
   await evalOverlay("document.getElementById('skip').click()");
   await waitFor(
