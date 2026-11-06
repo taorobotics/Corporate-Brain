@@ -1,4 +1,5 @@
-import { useEffect, useRef, useState, type FormEvent } from "react";
+import { Fragment, useEffect, useRef, useState, type FormEvent } from "react";
+import UserMessageActions, { QuestionTime } from "./UserMessageActions";
 import {
   Plus,
   ArrowUp,
@@ -809,120 +810,128 @@ export default function Workspace(props: WorkspaceProps) {
                   </div>
                 )}
                 {conversation?.messages.map((message) => (
-                  <div key={message.id} className={`message ${message.role}`}>
-                    <span className="message-avatar">
-                      {message.role === "user" ? (
-                        <Avatar user={user} size={30} />
-                      ) : message.trace ? (
-                        <GrokBall
-                          emotion="19"
-                          size={36}
-                          active={
-                            !!message.productionTaskId &&
-                            props.production.tasks.some(
-                              (task) =>
-                                task.id === message.productionTaskId &&
-                                !["saved", "failed", "cancelled"].includes(
-                                  task.status,
-                                ),
-                            )
-                          }
-                        />
-                      ) : (
-                        <Sparkle size={25} weight="fill" />
-                      )}
-                    </span>
-                    <div className="message-body">
-                      {message.trace && !message.productionTaskId && (
-                        <ThinkingProcess
-                          items={message.trace.items}
-                          status={message.trace.status}
-                          elapsed={message.trace.elapsed}
-                        />
-                      )}
-                      {!message.productionTaskId && (
-                        <MessageContent content={message.content} />
-                      )}
-                      {message.productionTaskId && (
-                        <ChatProduction
-                          id={message.productionTaskId}
-                          controller={props.production}
-                          message={message}
-                        />
-                      )}
-                      {!!message.attachments?.length && (
-                        <div className="message-attachments">
-                          {message.attachments.map((a, index) => (
-                            <button
-                              key={index}
-                              onClick={() => setAttachmentPreview(a)}
-                              title={a.name}
-                            >
-                              {a.image || a.images?.[0] ? (
-                                <img
-                                  src={a.image ?? a.images?.[0].image}
-                                  alt={a.name}
-                                />
-                              ) : (
-                                <FileText size={26} />
-                              )}
-                              <span>{a.name}</span>
-                            </button>
-                          ))}
-                        </div>
-                      )}
-                      {message.image && (
-                        <>
-                          <button
-                            className="generated-image"
-                            onClick={() => setPreview(message.image!)}
-                          >
-                            <img
-                              src={message.image}
-                              alt="生成成果，点击展开预览"
-                            />
-                            <ArrowsOutSimple size={20} />
-                          </button>
-                          <div className="image-actions">
-                            <Button
-                              onClick={() => void saveImage(message.image!)}
-                            >
-                              <DownloadSimple size={16} />
-                              保存到本地
-                            </Button>
-                            <Button disabled title="NAS 归档服务尚未接通">
-                              <Folder size={16} />
-                              归档 NAS
-                            </Button>
+                  <Fragment key={message.id}>
+                    {message.role === "user" && (
+                      <QuestionTime at={message.at} />
+                    )}
+                    <div className={`message ${message.role}`}>
+                      <span className="message-avatar">
+                        {message.role === "user" ? (
+                          <Avatar user={user} size={30} />
+                        ) : message.trace ? (
+                          <GrokBall
+                            emotion="19"
+                            size={36}
+                            active={
+                              !!message.productionTaskId &&
+                              props.production.tasks.some(
+                                (task) =>
+                                  task.id === message.productionTaskId &&
+                                  !["saved", "failed", "cancelled"].includes(
+                                    task.status,
+                                  ),
+                              )
+                            }
+                          />
+                        ) : (
+                          <Sparkle size={25} weight="fill" />
+                        )}
+                      </span>
+                      <div className="message-body">
+                        {message.trace && !message.productionTaskId && (
+                          <ThinkingProcess
+                            items={message.trace.items}
+                            status={message.trace.status}
+                            elapsed={message.trace.elapsed}
+                          />
+                        )}
+                        {!message.productionTaskId && (
+                          <MessageContent content={message.content} />
+                        )}
+                        {message.productionTaskId && (
+                          <ChatProduction
+                            id={message.productionTaskId}
+                            controller={props.production}
+                            message={message}
+                          />
+                        )}
+                        {!!message.attachments?.length && (
+                          <div className="message-attachments">
+                            {message.attachments.map((a, index) => (
+                              <button
+                                key={index}
+                                onClick={() => setAttachmentPreview(a)}
+                                title={a.name}
+                              >
+                                {a.image || a.images?.[0] ? (
+                                  <img
+                                    src={a.image ?? a.images?.[0].image}
+                                    alt={a.name}
+                                  />
+                                ) : (
+                                  <FileText size={26} />
+                                )}
+                                <span>{a.name}</span>
+                              </button>
+                            ))}
                           </div>
-                        </>
-                      )}
-                      {message.role === "assistant" && (
-                        <MessageActions
-                          message={message}
-                          conversation={conversation}
-                          notify={notify}
-                          save={(feedback) =>
-                            setState((s) => ({
-                              ...s,
-                              conversations: s.conversations.map((c) =>
-                                c.id === conversation.id
-                                  ? {
-                                      ...c,
-                                      messages: c.messages.map((m) =>
-                                        m.id === message.id
-                                          ? { ...m, feedback }
-                                          : m,
-                                      ),
-                                    }
-                                  : c,
-                              ),
-                            }))
-                          }
-                        />
+                        )}
+                        {message.image && (
+                          <>
+                            <button
+                              className="generated-image"
+                              onClick={() => setPreview(message.image!)}
+                            >
+                              <img
+                                src={message.image}
+                                alt="生成成果，点击展开预览"
+                              />
+                              <ArrowsOutSimple size={20} />
+                            </button>
+                            <div className="image-actions">
+                              <Button
+                                onClick={() => void saveImage(message.image!)}
+                              >
+                                <DownloadSimple size={16} />
+                                保存到本地
+                              </Button>
+                              <Button disabled title="NAS 归档服务尚未接通">
+                                <Folder size={16} />
+                                归档 NAS
+                              </Button>
+                            </div>
+                          </>
+                        )}
+                        {message.role === "assistant" && (
+                          <MessageActions
+                            message={message}
+                            conversation={conversation}
+                            notify={notify}
+                            save={(feedback) =>
+                              setState((s) => ({
+                                ...s,
+                                conversations: s.conversations.map((c) =>
+                                  c.id === conversation.id
+                                    ? {
+                                        ...c,
+                                        messages: c.messages.map((m) =>
+                                          m.id === message.id
+                                            ? { ...m, feedback }
+                                            : m,
+                                        ),
+                                      }
+                                    : c,
+                                ),
+                              }))
+                            }
+                          />
+                        )}
+                      </div>
+                      {message.role === "user" && (
+                        <UserMessageActions message={message} notify={notify} />
                       )}
                     </div>
-                  </div>
+                  </Fragment>
                 ))}
                 {pendingReply &&
                   pendingReply.conversationId === conversation?.id && (

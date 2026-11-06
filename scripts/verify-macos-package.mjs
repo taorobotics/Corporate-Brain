@@ -43,7 +43,7 @@ try {
 
   const asar = join(app, 'Contents/Resources/app.asar');
   const files = listPackage(asar).map(path => path.replace(/^\//, '')).filter(path => !listPackage(asar).some(other => other.startsWith(`/${path}/`))).sort();
-  const allowed = ['fonts.css', 'fonts/NotoSansSC-VF.woff2', 'fonts/OFL.txt', 'fonts/source.json', 'main.cjs', 'updates.cjs', 'install.cjs', 'production.cjs', 'package.json', 'preload.cjs', 'server-preload.cjs', 'server-setup.html', 'server-setup.js', 'startup.cjs', 'startup.html', 'startup.js', 'appearance.cjs', 'startup-preload.cjs', 'startup.css', 'entry-scene.js', 'entry-scene.css', ...legalFiles].sort();
+  const allowed = ['fonts.css', 'fonts/NotoSansSC-VF.woff2', 'fonts/OFL.txt', 'fonts/source.json', 'main.cjs', 'updates.cjs', 'install.cjs', 'production.cjs', 'clipboard.cjs', 'package.json', 'preload.cjs', 'server-preload.cjs', 'server-setup.html', 'server-setup.js', 'startup.cjs', 'startup.html', 'startup.js', 'appearance.cjs', 'startup-preload.cjs', 'startup.css', 'entry-scene.js', 'entry-scene.css', ...legalFiles].sort();
   assert.deepEqual(files, [...allowed, ...brandFiles].sort());
   assert.equal(JSON.parse(extractFile(asar, 'package.json').toString()).version, version);
   assert.equal(JSON.parse(await readFile(join(app, 'Contents/Resources/company-server.json'), 'utf8')).url, process.env.BRAIN_APP_URL || '', 'Packaged company connection must match the configured release destination');

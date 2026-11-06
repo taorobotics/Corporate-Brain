@@ -1654,6 +1654,16 @@ async function waitFor(test, label, timeout = 12000) {
     checks,
     win,
   });
+  await require("./verify-user-messages.cjs")({
+    js,
+    click,
+    waitFor,
+    request,
+    selectOption,
+    capture,
+    checks,
+    win,
+  });
   for (const [page, label] of [
     ["projects", "项目"],
     ["knowledge", "公司知识"],

@@ -12,7 +12,7 @@ export async function copyText(text: string) {
       : [];
     const input = document.createElement("textarea");
     input.value = text;
-    input.setAttribute("aria-label", "复制回答文本");
+    input.setAttribute("aria-label", "复制文本");
     input.style.cssText = "position:fixed;left:-10000px;top:0;";
     document.body.append(input);
     try {

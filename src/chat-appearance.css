@@ -30,6 +30,30 @@
 }
 .message.user {
   margin-bottom: 42px;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  justify-items: end;
+  gap: 5px;
+}
+.question-time {
+  margin: 8px auto 22px;
+  max-width: var(--chat-width);
+  text-align: center;
+  font-size: 13px;
+  color: var(--muted);
+}
+.user-message-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+  padding-right: 4px;
+  color: var(--muted);
+  font-size: 12px;
+}
+.user-message-actions time {
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
 }
 .message.user > .message-avatar {
   display: none;
