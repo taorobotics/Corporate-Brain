@@ -5,6 +5,12 @@ import { once } from "node:events";
 import { randomUUID } from "node:crypto";
 import { createPlatform } from "./platform";
 import { generatedImage } from "./image-skills";
+import {
+  chooseImageSkill,
+  imageModelProfile,
+  imageRequestOptions,
+} from "./image-models";
+import type { Skill } from "../shared/types";
 import { streamChat } from "../src/chat-stream";
 
 const png =
@@ -18,6 +24,9 @@ test("image APIs are company skills; chat and image execute in one authorized re
     imageStatus = 200,
     imageBody = png;
   let lastChatMessages: any[] = [];
+  let expectedImageModel = "synthetic-image",
+    lastImagePayload: any,
+    lastRouteSkills: any[] = [];
   let releaseChat: (() => void) | undefined,
     chatGate: Promise<void> | undefined;
   let onChat: (() => void) | undefined;
@@ -32,7 +41,8 @@ test("image APIs are company skills; chat and image execute in one authorized re
     assert.ok(!raw.includes("synthetic-image-api-key"));
     if (req.url === "/v1/images/generations") {
       images++;
-      assert.equal(body.model, "synthetic-image");
+      assert.equal(body.model, expectedImageModel);
+      lastImagePayload = body;
       assert.equal(req.headers.authorization, "Bearer synthetic-image-api-key");
       assert.ok(body.prompt.includes("Synthetic written answer"));
       if (holdImage) {
@@ -52,6 +62,7 @@ test("image APIs are company skills; chat and image execute in one authorized re
     }
     assert.equal(req.headers.authorization, "Bearer synthetic-chat-api-key");
     if (body.messages[0].content.includes("You route tasks")) {
+      lastRouteSkills = JSON.parse(body.messages[1].content).availableSkills;
       res.end(
         JSON.stringify({
           choices: [{ message: { content: JSON.stringify(decision) } }],
@@ -456,6 +467,130 @@ test("image APIs are company skills; chat and image execute in one authorized re
     },
   );
   await t.test(
+    "all four GPT Image variants route individually, expose useful metadata, and request base64 through the same chat",
+    async () => {
+      const models = [
+        "gpt-image-2.6-sunburst",
+        "gpt-image-2.6-flare",
+        "gpt-image-2.6-sunburst-c",
+        "gpt-image-2.6-flare-c",
+      ];
+      await req(
+        "/model-services",
+        {
+          ...imageConfig,
+          serviceId: service.id,
+          models: [
+            { model: "synthetic-image", kind: "image" },
+            ...models.map((model) => ({ model, kind: "image" })),
+          ],
+        },
+        admin.cookie,
+      );
+      const candidates = (
+        await req("/skills", undefined, employee)
+      ).data.filter((s: any) => models.includes(s.capability?.model));
+      assert.equal(candidates.length, 4);
+      const candidateIds = candidates.map((s: any) => s.id);
+      try {
+        for (const model of models) {
+          const selected = candidates.find(
+            (s: any) => s.capability.model === model,
+          );
+          decision = {
+            kind: "image",
+            skillIds: [
+              selected.id,
+              ...candidateIds.filter((id: string) => id !== selected.id),
+            ],
+          };
+          const plan = await req(
+            "/generate/plan",
+            { ...planBody, skillIds: candidateIds },
+            employee,
+          );
+          assert.equal(plan.status, 200);
+          assert.equal(plan.data.connectionId, chat.id);
+          assert.equal(plan.data.imageSkillId, selected.id);
+          assert.deepEqual(plan.data.skillIds, [selected.id]);
+          const metadata = lastRouteSkills.find(
+            (s: any) => s.id === selected.id,
+          ).capability;
+          assert.equal(metadata.kind, "image");
+          assert.equal(
+            metadata.routing.purpose,
+            model.includes("sunburst") ? "final" : "draft",
+          );
+          assert.equal(
+            metadata.routing.billing,
+            model.endsWith("-c") ? "per-image" : "usage",
+          );
+          expectedImageModel = model;
+          const result = await req(
+            "/generate/chat",
+            {
+              ...body,
+              skillIds: plan.data.skillIds,
+              imageSkillId: plan.data.imageSkillId,
+            },
+            employee,
+          );
+          assert.equal(result.status, 200);
+          assert.equal(result.data.image, "data:image/png;base64," + png);
+          assert.equal(lastImagePayload.response_format, "b64_json");
+          const legacy = await req(
+            "/generate/image",
+            {
+              connectionId: selected.id,
+              prompt: "Synthetic written answer: a blue circle",
+            },
+            employee,
+          );
+          assert.equal(legacy.status, 200);
+          assert.equal(legacy.data.image, "data:image/png;base64," + png);
+          assert.equal(lastImagePayload.response_format, "b64_json");
+        }
+        decision = { kind: "image", skillIds: [] };
+        const fallback = await req(
+          "/generate/plan",
+          { ...planBody, skillIds: candidateIds.reverse() },
+          employee,
+        );
+        assert.equal(
+          fallback.data.imageSkillId,
+          candidates.find(
+            (s: any) => s.capability.model === "gpt-image-2.6-sunburst-c",
+          ).id,
+        );
+        decision = { kind: "chat", skillIds: candidateIds };
+        const before = images;
+        const plain = await req(
+          "/generate/plan",
+          {
+            ...planBody,
+            skillIds: candidateIds,
+            messages: [
+              {
+                role: "user",
+                content: "Explain the difference between these image models.",
+              },
+            ],
+          },
+          employee,
+        );
+        assert.equal(plain.data.imageSkillId, undefined);
+        assert.equal(images, before);
+      } finally {
+        expectedImageModel = "synthetic-image";
+        await req(
+          "/model-services",
+          { ...imageConfig, serviceId: service.id },
+          admin.cookie,
+        );
+      }
+    },
+  );
+  await t.test(
     "revoked image authorization is rechecked after the chat answer, then restored with the same skill ID",
     async () => {
       chatGate = new Promise<void>((resolve) => {
@@ -506,6 +641,28 @@ test("image APIs are company skills; chat and image execute in one authorized re
       );
     },
   );
+});
+
+test("image routing defaults respect explicit choices and leave native providers' payloads intact", () => {
+  const make = (model: string, id: string) =>
+    ({ id, capability: { kind: "image", model, connectionId: id } }) as Skill;
+  const skills = [
+    make("gpt-image-2.6-flare", "a"),
+    make("gpt-image-2.6-sunburst-c", "b"),
+    make("gpt-image-2.6-flare-c", "c"),
+  ];
+  assert.equal(chooseImageSkill(skills, [])?.id, "b");
+  assert.equal(chooseImageSkill(skills, ["c"])?.id, "c");
+  assert.equal(chooseImageSkill([], []), undefined);
+  assert.equal(imageModelProfile("gpt-image-2.6-flare-c")?.purpose, "draft");
+  assert.equal(imageModelProfile("unrelated-image"), undefined);
+  assert.deepEqual(imageRequestOptions("gpt-image-2.6-sunburst-c"), {
+    response_format: "b64_json",
+  });
+  assert.deepEqual(imageRequestOptions("dall-e-3"), {
+    response_format: "b64_json",
+  });
+  assert.deepEqual(imageRequestOptions("gpt-image-1"), {});
 });
 
 test("generated image transport validates data type, format and bounded size", () => {

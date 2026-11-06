@@ -1,5 +1,6 @@
 import type { Skill, User } from "../shared/types";
 import type { Store } from "./database";
+import { imageModelProfile } from "./image-models";
 import {
   connectionSelect,
   resolveConnection,
@@ -22,7 +23,7 @@ export function imageSkills(store: Store, actor: User): Skill[] {
       id: row.id,
       ownerUserId: row.owner_user_id ?? undefined,
       name: "图片生成 · " + row.name,
-      description: `使用 ${row.model} 按需生成图片，可与对话及其他技能组合。普通聊天和图片分析不会触发出图。`,
+      description: `使用 ${row.model} 按需生成图片，可与对话及其他技能组合。${imageModelProfile(row.model)?.description ?? ""}普通聊天和图片分析不会触发出图。`,
       version: "1.0.0",
       instructions:
         "此技能提供公司图片生成能力。只有用户明确要求生成或配图时才使用；普通问答、识图和讨论能力时不生成。对话模型完成文字部分，图片生成由本轮图片技能调用完成；不得声称尚未成功的生成已完成，不要输出占位图片或编造下载链接。",

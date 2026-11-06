@@ -37,6 +37,11 @@ import { DshManager, DshUnavailableError } from "./dsh";
 import { syncDeepSeekConnections } from "./deepseek-sync";
 import { imageSkills, generatedImage } from "./image-skills";
 import {
+  chooseImageSkill,
+  imageModelProfile,
+  imageRequestOptions,
+} from "./image-models";
+import {
   connectionSelect,
   resolveConnection,
   migrateLinoRoute,
@@ -1151,6 +1156,15 @@ export function createPlatform(
                     id: skill.id,
                     name: skill.name,
                     description: skill.description.slice(0, 500),
+                    ...(skill.capability?.kind === "image"
+                      ? {
+                          capability: {
+                            kind: "image",
+                            model: skill.capability.model,
+                            routing: imageModelProfile(skill.capability.model),
+                          },
+                        }
+                      : {}),
                   })),
                 }),
               },
@@ -1181,20 +1195,20 @@ export function createPlatform(
           : pickRoutedSkills(plan.skillIds, candidates);
       let connectionId = row.id;
       if (plan.kind === "image" && data.imageSkills) {
-        const available = candidates.filter(
-          (skill) => skill.capability?.kind === "image",
-        );
-        const image =
-          available.find((skill) => skillIds.includes(skill.id)) ??
-          available[0];
+        const image = chooseImageSkill(candidates, skillIds);
         if (!image)
           fail(
             409,
             "当前没有可调用的图片生成技能，请选择已授权的图片技能或切换为自动调用；管理员可在模型与服务中配置图片技能",
           );
-        const selected = skillIds.includes(image.id)
-          ? skillIds
-          : [...skillIds.slice(0, 15), image.id];
+        const selected = skillIds.filter(
+          (id) =>
+            id === image.id ||
+            !candidates.some(
+              (s) => s.id === id && s.capability?.kind === "image",
+            ),
+        );
+        if (!selected.includes(image.id)) selected.splice(15, 1, image.id);
         store.audit(actor.id, "model.image_skill_routed", image.id);
         return res.json({
           ...plan,
@@ -1355,7 +1369,8 @@ export function createPlatform(
       try {
         if (!dsh) throw new DshUnavailableError("DSH 已由管理员停用");
         const proxy =
-          (row.owner_user_id && !row.source_service_id) || modelUsesCustomDns(row.base_url)
+          (row.owner_user_id && !row.source_service_id) ||
+          modelUsesCustomDns(row.base_url)
             ? await privateModelProxy(
                 row,
                 store.decrypt(row.secret),
@@ -1492,9 +1507,7 @@ export function createPlatform(
               model: imageRow.model,
               prompt,
               n: 1,
-              ...(/^dall-e/i.test(imageRow.model)
-                ? { response_format: "b64_json" }
-                : {}),
+              ...imageRequestOptions(imageRow.model),
             },
             signal,
           );
@@ -1571,6 +1584,7 @@ export function createPlatform(
       model: row.model,
       prompt: data.prompt + (context ? "\n\n" + context : ""),
       n: 1,
+      ...imageRequestOptions(row.model),
     });
     const item = result.data?.[0];
     if (!item?.b64_json)
