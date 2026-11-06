@@ -59,7 +59,7 @@ export const WORKSPACE_ACCESS_OPTIONS: ReadonlyArray<{
 export function defaultWorkspace(): LocalWorkspace {
   return {
     id: "default-workspace",
-    name: "默认项目",
+    name: "默认工作区",
     description: "本机项目与文件夹设置",
     folder: null,
     access: "edit",
@@ -93,8 +93,8 @@ export function normalizeLocalState(
     .map((workspace) => ({
       id: workspace.id,
       name:
-        workspace.id === "default-workspace" && workspace.name === "默认工作区"
-          ? "默认项目"
+        workspace.id === "default-workspace" && workspace.name === "默认项目"
+          ? "默认工作区"
           : workspace.name.trim().slice(0, 100) || "未命名项目",
       description: (workspace.description ?? "").slice(0, 500),
       folder: typeof workspace.folder === "string" ? workspace.folder : null,
@@ -113,6 +113,15 @@ export function normalizeLocalState(
     conversations: Array.isArray(value?.conversations)
       ? value.conversations.map((conversation) => ({
           ...conversation,
+          workspaceId: normalizedWorkspaces.some(
+            (w) => w.id === conversation.workspaceId,
+          )
+            ? conversation.workspaceId
+            : (
+                normalizedWorkspaces.find(
+                  (w) => w.id === "default-workspace",
+                ) ?? normalizedWorkspaces[0]
+              ).id,
           messages: conversation.messages.map((message) => ({
             ...message,
             trace: normalizeTrace(message.trace),

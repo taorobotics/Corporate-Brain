@@ -91,6 +91,7 @@ export type Message = {
 };
 export type Conversation = {
   id: string;
+  workspaceId?: string;
   title: string;
   messages: Message[];
   createdAt: string;

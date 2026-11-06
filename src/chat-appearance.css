@@ -115,42 +115,65 @@
   max-width: calc(var(--chat-width) + 64px);
   padding: 0 32px 12px;
 }
-.project-folder {
+.workspace-start-controls {
   display: flex;
   align-items: center;
-  gap: 12px;
-  margin-bottom: 10px;
-  padding: 12px 16px;
-  border: 1px solid var(--line);
-  border-radius: 14px;
-  background: var(--panel);
-}
-.project-folder > svg {
-  flex-shrink: 0;
-  color: var(--accent);
-}
-.project-folder-info {
-  flex: 1;
+  margin: 0 0 8px 5px;
   min-width: 0;
 }
-.project-folder-info strong {
-  display: block;
-  font-size: 14px;
-  font-weight: 600;
+.workspace-start-controls .select-trigger {
+  max-width: 100%;
 }
-.project-folder-info span {
-  display: block;
-  margin-top: 3px;
+.workspace-start-controls .select-value {
   overflow: hidden;
   text-overflow: ellipsis;
-  white-space: nowrap;
-  font-size: 12px;
+}
+.section-label .icon-button {
+  width: 26px;
+  height: 26px;
+}
+.workspace-group {
+  margin-bottom: 8px;
+}
+.workspace-heading {
+  display: flex;
+  align-items: center;
+  min-width: 0;
+  gap: 1px;
+}
+.history-list .workspace-heading button {
+  padding: 7px 3px;
+  border-radius: 7px;
+}
+.history-list .workspace-collapse,
+.history-list .workspace-new-chat {
+  width: 25px;
+  flex-shrink: 0;
+  display: flex;
+  justify-content: center;
   color: var(--muted);
 }
-.project-folder .button {
+.history-list .workspace-select {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  min-width: 0;
+  flex: 1;
+  font-size: 13px;
+}
+.workspace-select span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.workspace-select svg {
   flex-shrink: 0;
-  min-height: 36px;
-  border-color: color-mix(in srgb, var(--accent) 40%, var(--line));
+}
+.workspace-select.active {
+  color: var(--accent);
+}
+.history-list .workspace-conversations button {
+  padding: 9px 12px 9px 29px;
+  font-size: 13px;
 }
 :root[data-skin] .composer {
   padding: 16px 18px 13px;

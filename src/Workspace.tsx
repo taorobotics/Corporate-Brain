@@ -116,7 +116,6 @@ export default function Workspace(props: WorkspaceProps) {
     [projectDialog, setProjectDialog] = useState(false),
     [importSkill, setImportSkill] = useState(false),
     [selectedProject, setSelectedProject] = useState<string | null>(null),
-    [workspaceDialog, setWorkspaceDialog] = useState(false),
     [pendingReply, setPendingReply] = useState<PendingReply | null>(null),
     [taskConversationId, setTaskConversationId] = useState<string | null>(null);
   const [taskError, setTaskError] = useState("");
@@ -195,8 +194,10 @@ export default function Workspace(props: WorkspaceProps) {
         )
       : [];
   const workspace =
-    state.workspaces.find((item) => item.id === state.activeWorkspaceId) ??
-    state.workspaces[0];
+    state.workspaces.find(
+      (item) =>
+        item.id === (conversation?.workspaceId ?? state.activeWorkspaceId),
+    ) ?? state.workspaces[0];
   useEffect(() => {
     setPreview(null);
     setSearch("");
@@ -228,18 +229,6 @@ export default function Workspace(props: WorkspaceProps) {
         item.id === workspace.id ? { ...item, ...value } : item,
       ),
     }));
-  }
-  async function chooseWorkspaceFolder() {
-    if (!window.brainDesktop) {
-      notify("请在桌面客户端选择项目文件夹，AI 才能读取电脑上的资料。");
-      return;
-    }
-    try {
-      const selected = await window.brainDesktop.selectDirectory();
-      if (selected) patchWorkspace({ folder: selected });
-    } catch (error) {
-      notify((error as Error).message);
-    }
   }
   function localFolderMention(value: string) {
     const match = value.match(
@@ -327,6 +316,7 @@ export default function Workspace(props: WorkspaceProps) {
     if (!current) {
       current = {
         id: crypto.randomUUID(),
+        workspaceId: workspace?.id,
         title: (text.trim() || attachments[0]?.name || "附件分析").slice(0, 32),
         messages: [],
         createdAt: new Date().toISOString(),
@@ -533,6 +523,7 @@ export default function Workspace(props: WorkspaceProps) {
             productionTaskId = task.id;
             props.production.track(task);
           },
+          workspace?.folder,
         );
         productionTaskId = task.id;
         saveReply("", "done");
@@ -767,31 +758,6 @@ export default function Workspace(props: WorkspaceProps) {
           <section className="chat">
             <header className="chat-header">
               <strong>{conversation?.title ?? "新建任务"}</strong>
-              <span className="header-divider" />
-              <div className="workspace-controls">
-                <SelectField
-                  label="切换项目"
-                  variant="quiet"
-                  side="bottom"
-                  value={workspace?.id ?? null}
-                  onValueChange={(value) =>
-                    setState((current) => ({
-                      ...current,
-                      activeWorkspaceId: value,
-                    }))
-                  }
-                  icon={<Folder size={17} />}
-                  options={state.workspaces.map((item) => ({
-                    value: item.id,
-                    label: item.name,
-                    description: item.description || "本机项目与文件夹设置",
-                  }))}
-                  action={{
-                    label: "添加本地项目",
-                    onClick: () => setWorkspaceDialog(true),
-                  }}
-                />
-              </div>
               <span className="bar-spacer" />
               <Button onClick={() => newDraft()}>
                 <Sparkle size={18} />
@@ -986,21 +952,29 @@ export default function Workspace(props: WorkspaceProps) {
                   回到最新内容
                 </button>
               )}
-              <section className="project-folder" aria-label="项目文件夹">
-                <Folder size={21} aria-hidden="true" />
-                <div className="project-folder-info">
-                  <strong>项目文件夹</strong>
-                  <span title={workspace?.folder ?? undefined}>
-                    {workspace?.folder || "选择电脑上的文件夹，让 AI 读取其中的资料"}
-                  </span>
+              {!conversation?.messages.length && (
+                <div className="workspace-start-controls">
+                  <SelectField
+                    label="工作区"
+                    variant="quiet"
+                    side="top"
+                    value={workspace?.id ?? null}
+                    disabled={busy}
+                    onValueChange={(value) =>
+                      setState((s) => ({ ...s, activeWorkspaceId: value }))
+                    }
+                    icon={<Folder size={17} />}
+                    options={state.workspaces.map((w) => ({
+                      value: w.id,
+                      label: w.name,
+                    }))}
+                    action={{
+                      label: "新建工作区…",
+                      onClick: () => void props.createWorkspace(),
+                    }}
+                  />
                 </div>
-                <Button
-                  onClick={() => void chooseWorkspaceFolder()}
-                  disabled={busy}
-                >
-                  {workspace?.folder ? "更换文件夹" : "选择文件夹"}
-                </Button>
-              </section>
+              )}
               <div
                 className="composer"
                 onDragOver={(e) => {
@@ -1139,7 +1113,7 @@ export default function Workspace(props: WorkspaceProps) {
                     manage={() => navigate("models")}
                   />
                   <SelectField
-                    label="项目权限"
+                    label="工作区权限"
                     variant="quiet"
                     side="top"
                     align="end"
@@ -1995,52 +1969,6 @@ export default function Workspace(props: WorkspaceProps) {
             <footer>
               <Button primary type="submit">
                 创建项目
-              </Button>
-            </footer>
-          </form>
-        </Modal>
-      )}
-      {workspaceDialog && (
-        <Modal title="添加本地项目" close={() => setWorkspaceDialog(false)}>
-          <form
-            onSubmit={(e) => {
-              e.preventDefault();
-              const data = new FormData(e.currentTarget);
-              const item = {
-                id: crypto.randomUUID(),
-                name: String(data.get("name")).trim(),
-                description: String(data.get("description") ?? "").trim(),
-                folder: null,
-                access: "edit" as const,
-              };
-              setState((current) => ({
-                ...current,
-                workspaces: [item, ...current.workspaces],
-                activeWorkspaceId: item.id,
-              }));
-              setWorkspaceDialog(false);
-              notify("本地项目已添加，可在输入框上方选择项目文件夹。");
-            }}
-          >
-            <Field label="项目名称">
-              <input
-                name="name"
-                required
-                maxLength={100}
-                placeholder="例如：safeChat"
-              />
-            </Field>
-            <Field label="说明">
-              <textarea
-                name="description"
-                rows={3}
-                maxLength={500}
-                placeholder="这个项目用于什么任务？"
-              />
-            </Field>
-            <footer>
-              <Button primary type="submit">
-                添加本地项目
               </Button>
             </footer>
           </form>

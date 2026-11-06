@@ -1,7 +1,7 @@
 const { app, BrowserWindow, dialog, shell } = require("electron");
 const { spawn } = require("node:child_process");
 const fs = require("node:fs/promises"),
-  { resolve, join } = require("node:path"),
+  { resolve, join, dirname } = require("node:path"),
   { tmpdir } = require("node:os");
 const { createServer } = require("node:http"),
   { once } = require("node:events"),
@@ -44,13 +44,18 @@ const wait = async (fn, label, ms = 45000) => {
     app.setPath("userData", join(dir, "profile"));
     const output = join(dir, "employee-output");
     await fs.mkdir(output);
+    let workspaceOutput = join(dir, "workspace-project");
+    const firstWorkspace = workspaceOutput;
+    await fs.mkdir(workspaceOutput);
     const material = join(dir, "brief.txt");
     await fs.writeFile(material, "Synthetic project brief.");
     const originalDialog = dialog.showOpenDialog.bind(dialog);
     dialog.showOpenDialog = async (window, options) =>
       options?.title === "选择成果自动保存位置"
         ? { canceled: false, filePaths: [output] }
-        : originalDialog(window, options);
+        : options?.properties?.join() === "openDirectory"
+          ? { canceled: false, filePaths: [workspaceOutput] }
+          : originalDialog(window, options);
     provider = createServer(async (req, res) => {
       let input = "";
       for await (const chunk of req) input += chunk;
@@ -260,6 +265,17 @@ const wait = async (fn, label, ms = 45000) => {
       0,
     );
     const doc = await web.debugger.sendCommand("DOM.getDocument");
+    await js(
+      `window.brainDesktop.production.chooseDirectory(${JSON.stringify(user.id)})`,
+    );
+    await click("新建工作区");
+    await wait(
+      () =>
+        js(
+          `document.querySelector('[aria-label="工作区"]')?.textContent.includes('workspace-project')`,
+        ),
+      "project workspace selected",
+    );
     const input = await web.debugger.sendCommand("DOM.querySelector", {
       nodeId: doc.root.nodeId,
       selector: '[aria-label="选择附件"]',
@@ -341,6 +357,14 @@ const wait = async (fn, label, ms = 45000) => {
       `window.brainDesktop.production.state(${JSON.stringify(user.id)})`,
     );
     const receipt = local.receipts[0];
+    assert.equal(dirname(receipt.directory), firstWorkspace);
+    assert.equal(local.directory, output);
+    assert.equal(
+      await js(
+        `window.brainDesktop.production.collect(${JSON.stringify(user.id)},${JSON.stringify(receipt.id)},'default-workspace').then(()=>false,()=>true)`,
+      ),
+      true,
+    );
     assert.ok(receipt.files.some((f) => f.path === "plan.md"));
     assert.ok(receipt.files.some((f) => f.path === "materials/brief.txt"));
     for (const file of receipt.files)
@@ -528,6 +552,16 @@ const wait = async (fn, label, ms = 45000) => {
       );
     }
     await click("新建任务");
+    workspaceOutput = join(dir, "workspace-gif");
+    await fs.mkdir(workspaceOutput);
+    await click("新建工作区");
+    await wait(
+      () =>
+        js(
+          `document.querySelector('[aria-label="工作区"]')?.textContent.includes('workspace-gif')`,
+        ),
+      "second workspace selected",
+    );
     await fill(
       '[aria-label="任务输入"]',
       "合成 GIF 回传验收：在普通对话中生成 GIF 和说明文件。",
@@ -552,6 +586,11 @@ const wait = async (fn, label, ms = 45000) => {
       r.files.some((f) => f.path === "files/sticker.gif"),
     );
     assert.ok(gifReceipt);
+    assert.equal(dirname(gifReceipt.directory), workspaceOutput);
+    assert.equal(dirname(receipt.directory), firstWorkspace);
+    checks.push(
+      "Workspace output routing: code saved under workspace A, ordinary chat GIF under workspace B, unchanged default directory, forged cross-workspace IPC rejected, verified files and server cleanup",
+    );
     for (const file of gifReceipt.files)
       assert.equal(
         createHash("sha256")
@@ -629,7 +668,9 @@ const wait = async (fn, label, ms = 45000) => {
         ),
       "persisted dark colors",
     );
-    await js(`document.querySelector('[data-history-title]').click();true`);
+    await js(
+      `document.querySelector('[data-history-title^="合成 GIF 回传验收"]').click();true`,
+    );
     await wait(
       () =>
         js(
@@ -651,7 +692,9 @@ const wait = async (fn, label, ms = 45000) => {
       () => js(`!!document.querySelector('[data-history-title]')`),
       "GIF conversation history reload",
     );
-    await js(`document.querySelector('[data-history-title]').click();true`);
+    await js(
+      `document.querySelector('[data-history-title^="合成 GIF 回传验收"]').click();true`,
+    );
     await wait(
       () =>
         js(

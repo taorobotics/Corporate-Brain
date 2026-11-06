@@ -37,11 +37,54 @@ test("workspace normalization keeps named workspaces and falls back from unknown
 });
 
 test("legacy default project keeps its folder and access while custom names stay intact", () => {
-  const old = { id: "default-workspace", name: "默认工作区", description: "", folder: "D:/team", access: "view" as const };
-  const state = normalizeLocalState({ workspaces: [old], activeWorkspaceId: old.id });
-  assert.deepEqual(state.workspaces[0], { ...old, name: "默认项目" });
+  const old = {
+    id: "default-workspace",
+    name: "默认工作区",
+    description: "",
+    folder: "D:/team",
+    access: "view" as const,
+  };
+  const state = normalizeLocalState({
+    workspaces: [old],
+    activeWorkspaceId: old.id,
+  });
+  assert.deepEqual(state.workspaces[0], old);
+  assert.equal(
+    normalizeLocalState({ workspaces: [{ ...old, name: "默认项目" }] })
+      .workspaces[0].name,
+    "默认工作区",
+  );
   assert.equal(state.activeWorkspaceId, old.id);
-  assert.equal(normalizeLocalState({ workspaces: [{ ...old, name: "我的研发项目" }] }).workspaces[0].name, "我的研发项目");
+  assert.equal(
+    normalizeLocalState({ workspaces: [{ ...old, name: "我的研发项目" }] })
+      .workspaces[0].name,
+    "我的研发项目",
+  );
+});
+
+test("legacy conversations go to the default workspace and named conversations retain their workspace", () => {
+  const workspaces = [
+    defaultWorkspace(),
+    { ...defaultWorkspace(), id: "research", name: "研发" },
+  ];
+  const conversation = {
+    id: "old",
+    title: "历史记录",
+    messages: [],
+    createdAt: "2026-11-06",
+  };
+  const state = normalizeLocalState({
+    workspaces,
+    activeWorkspaceId: "research",
+    conversations: [
+      conversation,
+      { ...conversation, id: "new", workspaceId: "research" },
+    ],
+  });
+  assert.deepEqual(
+    state.conversations.map((c) => c.workspaceId),
+    ["default-workspace", "research"],
+  );
 });
 
 test("mode and permission catalogs expose the four DSH modes and three access levels", () => {

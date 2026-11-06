@@ -67,9 +67,14 @@ export type ProductionLocal = {
   receipts: ProductionReceipt[];
 };
 export type ProductionBridge = {
+  workspaceFolders?: boolean;
   state(userId: string): Promise<ProductionLocal>;
   chooseDirectory(userId: string): Promise<ProductionLocal>;
-  collect(userId: string, taskId: string): Promise<ProductionReceipt>;
+  collect(
+    userId: string,
+    taskId: string,
+    workspaceId?: string,
+  ): Promise<ProductionReceipt>;
   open(userId: string, taskId?: string): Promise<void>;
   reveal?(userId: string, taskId: string, path: string): Promise<void>;
   preview?(

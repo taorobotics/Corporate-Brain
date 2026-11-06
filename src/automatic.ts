@@ -9,12 +9,16 @@ export async function submitAutomaticProduction(
   files: File[],
   signal: AbortSignal,
   created: (task: ProductionTask) => void,
+  workspaceFolder?: string | null,
 ) {
   const bridge = window.brainDesktop?.production;
   if (!bridge) throw Error("请使用桌面客户端接收代码或视频成果。");
   let local = await bridge.state(userId);
-  if (!local.directory) local = await bridge.chooseDirectory(userId);
-  if (!local.directory)
+  if (workspaceFolder && !bridge.workspaceFolders)
+    throw Error("请先更新客户端，才能把成果保存到当前工作区。");
+  if (!workspaceFolder && !local.directory)
+    local = await bridge.chooseDirectory(userId);
+  if (!workspaceFolder && !local.directory)
     throw Error("尚未选择成果保存位置；选择本机文件夹后即可继续制作。");
   signal.throwIfAborted();
   if (prompt.length > 18000)

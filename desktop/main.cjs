@@ -161,9 +161,30 @@ ipcMain.handle("production:choose", async (event, userId) => {
   });
   return result.canceled ? local.state() : local.choose(result.filePaths[0]);
 });
-ipcMain.handle("production:collect", async (event, userId, id) =>
-  (await productionProfile(event, userId)).collect(id),
-);
+ipcMain.handle("production:collect", async (event, userId, id, workspaceId) => {
+  const local = await productionProfile(event, userId);
+  let directory;
+  if (workspaceId !== undefined) {
+    if (typeof workspaceId !== "string" || workspaceId.length > 100)
+      throw Error("工作区标识无效");
+    const file = await profile(event, userId);
+    await waitWithTimeout(
+      writes.get(file) || Promise.resolve(),
+      "本机记录仍在保存，请稍后重试。",
+    );
+    const state = JSON.parse(await fs.readFile(file, "utf8"));
+    const conversation = state.conversations?.find((c) =>
+      c.messages?.some((m) => m.productionTaskId === id),
+    );
+    const workspace = state.workspaces?.find((w) => w.id === workspaceId);
+    if (!workspace || conversation?.workspaceId !== workspaceId)
+      throw Error("任务与本机工作区不匹配，请稍后重试。");
+    if (workspace.access === "view")
+      throw Error("当前工作区为仅可查看，无法保存成果。");
+    directory = workspace.folder || undefined;
+  }
+  return local.collect(id, directory);
+});
 ipcMain.handle("production:preview", async (event, userId, id, path) =>
   (await productionProfile(event, userId)).preview(id, path),
 );

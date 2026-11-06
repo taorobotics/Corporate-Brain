@@ -19,7 +19,10 @@ module.exports = async ({
   win,
   selectOption,
 }) => {
-  const folder = join(dir, "示例研发项目-资料与视频制作-项目文件夹-用于长路径显示验收");
+  const folder = join(
+    dir,
+    "示例研发项目-资料与视频制作-项目文件夹-用于长路径显示验收",
+  );
   await fs.mkdir(folder);
   await fs.writeFile(
     join(folder, "README.md"),
@@ -100,54 +103,108 @@ module.exports = async ({
         ),
       "large folder model ready",
     );
-    await waitFor(() => js(`!!document.querySelector('.project-folder .button')`), "visible folder choice");
-    await waitFor(() => js(`!document.querySelector('.entry-experience')`), "project folder startup revealed");
-    assert.equal(await js(`document.querySelector('.project-folder').textContent.includes('选择电脑上的文件夹')`), true);
-    await capture("project-folder-empty-light.png");
-    const selections = [];
+    await waitFor(
+      () =>
+        js(
+          `!!document.querySelector('.workspace-start-controls')&&!document.querySelector('.entry-experience')`,
+        ),
+      "workspace picker on new chat",
+    );
+    await capture("workspace-new-chat-light.png");
+    let picked = folder,
+      selections = 0;
     dialog.showOpenDialog = async (_window, options) => {
       assert.deepEqual(options.properties, ["openDirectory"]);
-      selections.push(folder);
-      return { canceled: false, filePaths: [folder] };
+      selections++;
+      return picked
+        ? { canceled: false, filePaths: [picked] }
+        : { canceled: true, filePaths: [] };
     };
-    await click("选择文件夹");
-    await waitFor(() => js(`document.querySelector('.project-folder-info span')?.textContent===${JSON.stringify(folder)}`), "selected folder visible through native IPC");
-    await waitFor(async () => (await js(`window.brainDesktop.readState(${JSON.stringify(actor.id)})`)).workspaces[0].folder === folder, "folder persisted");
-    await capture("project-folder-selected-light.png");
-    dialog.showOpenDialog = async () => ({ canceled: true, filePaths: [] });
-    await click("更换文件夹");
-    assert.equal(await js(`document.querySelector('.project-folder-info span').textContent`), folder);
-    dialog.showOpenDialog = async () => ({ canceled: false, filePaths: [dir] });
-    await click("更换文件夹");
-    await waitFor(() => js(`document.querySelector('.project-folder-info span').textContent===${JSON.stringify(dir)}`), "replacement folder visible");
-    dialog.showOpenDialog = async () => ({ canceled: false, filePaths: [folder] });
-    await click("更换文件夹");
-    await waitFor(async () => (await js(`window.brainDesktop.readState(${JSON.stringify(actor.id)})`)).workspaces[0].folder === folder, "replacement persisted");
+    await click("工作区");
+    await click("新建工作区…");
+    await waitFor(
+      async () =>
+        (
+          await js(`window.brainDesktop.readState(${JSON.stringify(actor.id)})`)
+        ).workspaces.some((w) => w.folder === folder),
+      "native folder creates workspace",
+    );
+    const created = (
+      await js(`window.brainDesktop.readState(${JSON.stringify(actor.id)})`)
+    ).workspaces.find((w) => w.folder === folder);
+    assert.equal(created.name, require("node:path").basename(folder));
+    assert.equal(
+      await js(`document.body.innerText.includes(${JSON.stringify(folder)})`),
+      false,
+    );
+    await capture("workspace-folder-selected-light.png");
+    picked = null;
+    await click("新建工作区");
+    await waitFor(() => selections === 2, "cancel native folder dialog");
+    assert.equal(
+      (await js(`window.brainDesktop.readState(${JSON.stringify(actor.id)})`))
+        .workspaces.length,
+      saved.workspaces.length + 1,
+    );
+    picked = folder;
+    await click("新建工作区");
+    await waitFor(() => selections === 3, "existing folder reselected");
+    assert.equal(
+      (await js(`window.brainDesktop.readState(${JSON.stringify(actor.id)})`))
+        .workspaces.length,
+      saved.workspaces.length + 1,
+    );
+    picked = dir;
+    await click("新建工作区");
+    await waitFor(
+      async () =>
+        (
+          await js(`window.brainDesktop.readState(${JSON.stringify(actor.id)})`)
+        ).workspaces.some((w) => w.folder === dir),
+      "second workspace created",
+    );
+    await selectOption("工作区", created.name);
     await js("location.reload()");
-    await waitFor(() => js(`document.querySelector('.project-folder-info span')?.title===${JSON.stringify(folder)}`), "folder restored on reload with full path tooltip");
+    await waitFor(
+      () =>
+        js(
+          `document.querySelector('[aria-label="工作区"]')?.textContent.includes(${JSON.stringify(created.name)})&&!document.querySelector('.entry-experience')`,
+        ),
+      "workspace restored on reload",
+    );
     await js("location.hash='settings'");
-    await waitFor(() => js(`document.body.innerText.includes('本地记录与备份')`), "folder dark settings");
+    await waitFor(
+      () => js(`document.body.innerText.includes('本地记录与备份')`),
+      "workspace dark settings",
+    );
     await selectOption("外观", "深色");
     await js("location.hash='chat'");
-    await waitFor(() => js(`!!document.querySelector('.project-folder')`), "folder dark chat");
+    await waitFor(
+      () => js(`!!document.querySelector('.workspace-start-controls')`),
+      "workspace dark new chat",
+    );
     win.setMinimumSize(600, 600);
     win.setContentSize(700, 900);
-    await capture("project-folder-dark-narrow.png");
-    const layout = await js(`(() => { const card=document.querySelector('.project-folder'),button=card.querySelector('.button'),path=card.querySelector('span'),r=button.getBoundingClientRect();return {overflow:document.documentElement.scrollWidth>innerWidth,visible:r.left>=0&&r.right<=innerWidth&&r.bottom<=innerHeight,ellipsis:getComputedStyle(path).textOverflow,background:getComputedStyle(card).backgroundColor,theme:document.documentElement.dataset.theme}; })()`);
+    await capture("workspace-new-chat-dark-narrow.png");
+    const layout = await js(
+      `(() => { const r=document.querySelector('.workspace-start-controls').getBoundingClientRect();return {overflow:document.documentElement.scrollWidth>innerWidth,visible:r.left>=0&&r.right<=innerWidth&&r.bottom<=innerHeight,theme:document.documentElement.dataset.theme}; })()`,
+    );
     assert.equal(layout.overflow, false);
     assert.equal(layout.visible, true);
-    assert.equal(layout.ellipsis, "ellipsis");
     assert.equal(layout.theme, "dark");
-    assert.notEqual(layout.background, "rgb(255, 255, 255)");
     await js("location.hash='settings'");
-    await waitFor(() => js(`document.body.innerText.includes('本地记录与备份')`), "restore folder theme");
+    await waitFor(
+      () => js(`document.body.innerText.includes('本地记录与备份')`),
+      "restore workspace theme",
+    );
     await selectOption("外观", "默认（浅色）");
     win.setMinimumSize(...minimumSize);
     win.setContentSize(...size);
     await js("location.hash='chat'");
-    await waitFor(() => js(`!!document.querySelector('.project-folder')`), "restore folder chat");
-    assert.equal(selections.length, 1);
-    checks.push("Prominent project folder: native IPC selection, cancel preserves path, change persists across reload, full-path tooltip, actual dark theme and 700px layout without overflow; synthetic files only");
+    await waitFor(
+      () => js(`!!document.querySelector('.workspace-start-controls')`),
+      "restore workspace chat",
+    );
     await fill(
       'textarea[aria-label="任务输入"]',
       "目录长度回归验收：请分析当前工作区的文件内容",
@@ -174,7 +231,44 @@ module.exports = async ({
       () => js(`document.body.innerText.includes('已读取本地目录')`),
       "honest directory progress",
     );
-    await capture("workspace-large-folder.png");
+    assert.equal(
+      await js(
+        `!!document.querySelector('.workspace-start-controls, .project-folder, .chat-header .workspace-controls')`,
+      ),
+      false,
+    );
+    const owned = (
+      await js(`window.brainDesktop.readState(${JSON.stringify(actor.id)})`)
+    ).conversations.find((c) =>
+      c.messages.some((m) => m.content.includes("大目录读取验收成功")),
+    );
+    assert.equal(owned.workspaceId, created.id);
+    const other = (
+      await js(`window.brainDesktop.readState(${JSON.stringify(actor.id)})`)
+    ).workspaces.find((w) => w.folder === dir);
+    await click("打开工作区 " + other.name);
+    await waitFor(
+      () => js(`!!document.querySelector('.workspace-start-controls')`),
+      "new chat in other workspace",
+    );
+    assert.equal(
+      await js(
+        `document.querySelector('[data-workspace-id="'+${JSON.stringify(created.id)}+'"] [data-history-title]')?.textContent`,
+      ),
+      owned.title,
+    );
+    await click(owned.title);
+    await waitFor(
+      () =>
+        js(
+          `!!document.querySelector('.message.assistant')&&!document.querySelector('.workspace-start-controls')`,
+        ),
+      "old chat retains workspace and hides picker",
+    );
+    await capture("workspace-conversation-light.png");
+    checks.push(
+      "Workspace groups: native folder creation, cancel, deduplication, picker only on new chat, no persistent path card, conversation ownership and reopening, actual dark 700px layout; synthetic files only",
+    );
     await waitFor(async () => {
       const state = await js(
         `window.brainDesktop.readState(${JSON.stringify(actor.id)})`,

@@ -106,6 +106,29 @@ test("native collector persists all files before ACK and recovers interrupted tr
     );
   assert.equal((await restarted.state()).receipts.length, 1);
 });
+
+test("workspace output overrides the default only for its task and resume stays in the original directory", async (t) => {
+  const f = await fixture(t);
+  const first = join(f.dir, "workspace-a"),
+    second = join(f.dir, "workspace-b");
+  await mkdir(first);
+  await mkdir(second);
+  await writeFile(join(first, "employee-file.txt"), "keep this file");
+  f.corrupt(true);
+  await assert.rejects(f.local.collect(f.id, first), /校验/);
+  f.corrupt(false);
+  const receipt = await f.local.collect(f.id, second);
+  assert.equal(require("node:path").dirname(receipt.directory), first);
+  assert.equal((await f.local.state()).directory, f.output);
+  assert.equal(
+    await readFile(join(first, "employee-file.txt"), "utf8"),
+    "keep this file",
+  );
+  await assert.rejects(
+    f.local.collect(f.id, "relative-folder"),
+    /工作区文件夹/,
+  );
+});
 test("lost ACK responses recover from durable receipts and offline identity never acknowledges deletion", async (t) => {
   const f = await fixture(t);
   f.loseAck(true);

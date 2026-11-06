@@ -226,14 +226,19 @@ class ProductionLocal {
       await handle.close();
     }
   }
-  async collect(id) {
+  async collect(id, directory) {
     if (!uuid.test(id)) throw Error("任务标识无效");
+    if (
+      directory !== undefined &&
+      (typeof directory !== "string" || !isAbsolute(directory))
+    )
+      throw Error("工作区文件夹无效");
     if (this.busy) throw Error("正在保存另一份成果");
     this.busy = true;
     try {
       await this.verify();
       const config = await this.config();
-      if (!config.directory) throw Error("请先选择成果保存位置");
+      if (!config.directory && !directory) throw Error("请先选择成果保存位置");
       let pending = config.pending[id];
       let manifest;
       const previous = config.receipts.find((item) => item.id === id);
@@ -284,7 +289,7 @@ class ProductionLocal {
       }
       if (total > 2 * 1024 ** 3) throw Error("成果超过本机单任务容量限制");
       if (!pending) {
-        const root = await checkedDirectory(config.directory);
+        const root = await checkedDirectory(directory ?? config.directory);
         const folder = join(
           root,
           `公司大脑-${new Date().toISOString().slice(0, 10)}-${id}`,

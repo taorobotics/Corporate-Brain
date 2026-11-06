@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { FolderOpen, ArrowClockwise } from "@phosphor-icons/react";
-import type { User, Message } from "../shared/types";
+import type { User, Message, LocalState } from "../shared/types";
 import type {
   ProductionTask,
   ProductionLocal,
@@ -13,7 +13,9 @@ import { Button, Modal } from "./components";
 import { api } from "./api";
 import "./production.css";
 
-export function useProduction(user: User | null) {
+export function useProduction(user: User | null, profile: LocalState) {
+  const profileRef = useRef(profile);
+  profileRef.current = profile;
   const [tasks, setTasks] = useState<ProductionTask[]>([]),
     [local, setLocal] = useState<ProductionLocal | null>(null);
   const [error, setError] = useState(""),
@@ -38,15 +40,34 @@ export function useProduction(user: User | null) {
         if (!active) return;
         setTasks(list);
         setLocal(state);
-        if (bridge && state?.directory) {
+        if (bridge && state) {
           const ready = list.find(
             (task) =>
               task.deviceId === state.deviceId &&
-              ["ready", "cleaning"].includes(task.status),
+              ["ready", "cleaning"].includes(task.status) &&
+              profileRef.current.conversations.some((c) =>
+                c.messages.some((m) => m.productionTaskId === task.id),
+              ),
           );
           if (ready) {
+            const profile = profileRef.current;
+            const conversation = profile.conversations.find((c) =>
+              c.messages.some((m) => m.productionTaskId === ready.id),
+            );
+            const workspace = profile.workspaces.find(
+              (w) => w.id === conversation?.workspaceId,
+            );
+            if (workspace?.folder && !bridge.workspaceFolders)
+              throw Error(
+                "请先更新客户端，才能把成果保存到对应工作区；服务器文件会保留。",
+              );
+            if (!workspace?.folder && !state.directory) return;
             setSaving(ready.id);
-            await bridge.collect(user.id, ready.id);
+            await bridge.collect(
+              user.id,
+              ready.id,
+              bridge.workspaceFolders ? workspace?.id : undefined,
+            );
             if (!active) return;
             setLocal(await bridge.state(user.id));
             setTasks(await api<ProductionTask[]>("/production"));
@@ -127,6 +148,19 @@ export function useProduction(user: User | null) {
       }
     },
     refresh: () => refreshRef.current(),
+    save: async (id: string) => {
+      if (!user || !window.brainDesktop?.production) return;
+      try {
+        const bridge = window.brainDesktop.production;
+        let chosen = await bridge.state(user.id);
+        if (!chosen.directory) chosen = await bridge.chooseDirectory(user.id);
+        if (!chosen.directory) return;
+        await bridge.collect(user.id, id);
+        await refreshRef.current();
+      } catch (e) {
+        setError((e as Error).message);
+      }
+    },
   };
 }
 export type ProductionController = ReturnType<typeof useProduction>;
@@ -486,8 +520,12 @@ export function ChatProduction({
             停止任务
           </Button>
         )}
-        {task?.status === "ready" && !controller.local?.directory && (
-          <Button onClick={() => void controller.choose()}>选择保存位置</Button>
+        {task?.status === "ready" && (
+          <Button disabled={saving} onClick={() => void controller.save(id)}>
+            {controller.local?.directory
+              ? "保存到默认文件夹"
+              : "选择保存文件夹"}
+          </Button>
         )}
       </div>
       {cancel && (
@@ -522,12 +560,15 @@ export function ProductionLocation({
   return (
     <div className="setting-row production-location">
       <div>
-        <span>成果自动保存位置</span>
+        <span>默认成果保存位置</span>
         <small>
           {controller.local?.directory ||
             "选择此电脑的文件夹，代码、素材、成片都会保存到这里"}
         </small>
-        <small>完整保存并校验后，Mac mini 立即清理该任务文件。</small>
+        <small>
+          已选文件夹的工作区优先保存到工作区内。完整保存并校验后，Mac mini
+          清理该任务文件。
+        </small>
       </div>
       <Button
         disabled={!window.brainDesktop?.production || !!controller.saving}

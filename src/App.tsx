@@ -25,6 +25,7 @@ import {
   Copy,
   ClipboardText,
   SelectionAll,
+  Plus,
 } from "@phosphor-icons/react";
 import { ActionMenu } from "./Dropdown";
 import type {
@@ -65,6 +66,7 @@ export type WorkspaceProps = {
   page: string;
   navigate: (page: string) => void;
   conversationId: string | null;
+  createWorkspace: () => Promise<void>;
   setConversationId: (id: string | null) => void;
   departments: Department[];
   skills: Skill[];
@@ -95,6 +97,9 @@ export default function App() {
     [localLoadVersion, setLocalLoadVersion] = useState(0),
     [toast, setToast] = useState(""),
     [passwordOpen, setPasswordOpen] = useState(false);
+  const [historySearch, setHistorySearch] = useState("");
+  const [collapsedWorkspaces, setCollapsedWorkspaces] = useState<string[]>([]);
+  const creatingWorkspace = useRef(false);
   const [departments, setDepartments] = useState<Department[]>([]),
     [skills, setSkills] = useState<Skill[]>([]),
     [connections, setConnections] = useState<Connection[]>([]);
@@ -102,7 +107,56 @@ export default function App() {
     loadedProfile = useRef<string | null>(null);
   const notify = (message: string) => setToast(message);
   const updates = useDesktopUpdates(!!user && !user.mustChange);
-  const production = useProduction(user);
+  const production = useProduction(user, state);
+  async function createWorkspace() {
+    if (creatingWorkspace.current) return;
+    if (!window.brainDesktop) {
+      notify("请在桌面客户端选择本地文件夹来新建工作区。");
+      return;
+    }
+    creatingWorkspace.current = true;
+    try {
+      const folder = await window.brainDesktop.selectDirectory();
+      if (!folder) return;
+      const existing = state.workspaces.find((w) => w.folder === folder);
+      const workspace = existing ?? {
+        id: crypto.randomUUID(),
+        name:
+          folder
+            .replace(/[\\/]+$/, "")
+            .split(/[\\/]/)
+            .at(-1) || "本地工作区",
+        description: "本地项目文件夹",
+        folder,
+        access: "edit" as const,
+      };
+      setState((s) => ({
+        ...s,
+        activeWorkspaceId: workspace.id,
+        workspaces: existing ? s.workspaces : [...s.workspaces, workspace],
+      }));
+      setCollapsedWorkspaces((ids) => ids.filter((id) => id !== workspace.id));
+      setConversationId(null);
+      navigate("chat");
+    } catch (e) {
+      notify((e as Error).message);
+    } finally {
+      creatingWorkspace.current = false;
+    }
+  }
+  useEffect(() => {
+    if (!conversationId) return;
+    setState((s) => {
+      const id = s.conversations.find(
+        (c) => c.id === conversationId,
+      )?.workspaceId;
+      return id &&
+        id !== s.activeWorkspaceId &&
+        s.workspaces.some((w) => w.id === id)
+        ? { ...s, activeWorkspaceId: id }
+        : s;
+    });
+  }, [conversationId]);
   const [legalOpen, setLegalOpen] = useState(false);
   const [authBusy, setAuthBusy] = useState(false),
     [enteredUser, setEnteredUser] = useState<string | null>(null);
@@ -205,6 +259,8 @@ export default function App() {
     setLocalError("");
     setSkinPreview(null);
     setConversationId(null);
+    setHistorySearch("");
+    setCollapsedWorkspaces([]);
     setState(emptyState());
     setDepartments([]);
     setSkills([]);
@@ -407,6 +463,7 @@ export default function App() {
     page,
     navigate,
     conversationId,
+    createWorkspace,
     setConversationId,
     departments,
     skills,
@@ -614,40 +671,130 @@ export default function App() {
                   </nav>
                   <div className="history">
                     <div className="section-label">
-                      最近 <CaretDown size={12} />
+                      工作区
                       <span>仅本机</span>
+                      <IconButton
+                        label="新建工作区"
+                        onClick={() => void createWorkspace()}
+                      >
+                        <Plus size={16} />
+                      </IconButton>
                     </div>
                     <input
                       className="history-search"
                       aria-label="搜索本地对话"
                       placeholder="搜索对话"
-                      onChange={(e) => {
-                        for (const item of document.querySelectorAll<HTMLElement>(
-                          "[data-history-title]",
-                        ))
-                          item.hidden = !item.dataset.historyTitle
-                            ?.toLowerCase()
-                            .includes(e.target.value.toLowerCase());
-                      }}
+                      value={historySearch}
+                      onChange={(e) => setHistorySearch(e.target.value)}
                     />
                     <div className="history-list">
-                      {state.conversations.map((c) => (
-                        <button
-                          data-history-title={c.title}
-                          className={
-                            conversationId === c.id && page === "chat"
-                              ? "selected"
-                              : ""
-                          }
-                          key={c.id}
-                          onClick={() => {
-                            setConversationId(c.id);
-                            navigate("chat");
-                          }}
-                        >
-                          {c.title}
-                        </button>
-                      ))}
+                      {state.workspaces.map((workspace) => {
+                        const conversations = state.conversations.filter(
+                          (c) =>
+                            c.workspaceId === workspace.id &&
+                            c.title
+                              .toLowerCase()
+                              .includes(historySearch.toLowerCase()),
+                        );
+                        if (
+                          historySearch &&
+                          !conversations.length &&
+                          !workspace.name
+                            .toLowerCase()
+                            .includes(historySearch.toLowerCase())
+                        )
+                          return null;
+                        const expanded =
+                          !!historySearch ||
+                          !collapsedWorkspaces.includes(workspace.id);
+                        return (
+                          <section
+                            className="workspace-group"
+                            data-workspace-id={workspace.id}
+                            key={workspace.id}
+                          >
+                            <div className="workspace-heading">
+                              <button
+                                className="workspace-collapse"
+                                aria-label={`${expanded ? "收起" : "展开"}工作区 ${workspace.name}`}
+                                aria-expanded={expanded}
+                                onClick={() =>
+                                  setCollapsedWorkspaces((ids) =>
+                                    expanded
+                                      ? [...ids, workspace.id]
+                                      : ids.filter((id) => id !== workspace.id),
+                                  )
+                                }
+                              >
+                                <CaretDown
+                                  size={12}
+                                  style={{
+                                    transform: expanded
+                                      ? undefined
+                                      : "rotate(-90deg)",
+                                  }}
+                                />
+                              </button>
+                              <button
+                                className={`workspace-select ${state.activeWorkspaceId === workspace.id ? "active" : ""}`}
+                                aria-label={`打开工作区 ${workspace.name}`}
+                                onClick={() => {
+                                  setState((s) => ({
+                                    ...s,
+                                    activeWorkspaceId: workspace.id,
+                                  }));
+                                  setConversationId(null);
+                                  navigate("chat");
+                                  setCollapsedWorkspaces((ids) =>
+                                    ids.filter((id) => id !== workspace.id),
+                                  );
+                                }}
+                              >
+                                <Folder size={17} />
+                                <span>{workspace.name}</span>
+                              </button>
+                              <button
+                                className="workspace-new-chat"
+                                aria-label={`在${workspace.name}中新建对话`}
+                                onClick={() => {
+                                  setState((s) => ({
+                                    ...s,
+                                    activeWorkspaceId: workspace.id,
+                                  }));
+                                  setConversationId(null);
+                                  navigate("chat");
+                                  setCollapsedWorkspaces((ids) =>
+                                    ids.filter((id) => id !== workspace.id),
+                                  );
+                                }}
+                              >
+                                <Plus size={15} />
+                              </button>
+                            </div>
+                            {expanded && (
+                              <div className="workspace-conversations">
+                                {conversations.map((c) => (
+                                  <button
+                                    data-history-title={c.title}
+                                    className={
+                                      conversationId === c.id && page === "chat"
+                                        ? "selected"
+                                        : ""
+                                    }
+                                    key={c.id}
+                                    onClick={() => {
+                                      setConversationId(c.id);
+                                      navigate("chat");
+                                    }}
+                                  >
+                                    {c.title}
+                                  </button>
+                                ))}
+                              </div>
+                            )}
+                          </section>
+                        );
+                      })}
                       {!state.conversations.length && (
                         <p className="history-hint">你的任务会显示在这里</p>
                       )}
