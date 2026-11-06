@@ -69,6 +69,8 @@ contextBridge.exposeInMainWorld("brainDesktop", {
     preview: (id, task, path) =>
       ipcRenderer.invoke("production:preview", id, task, path),
     open: (id, task) => ipcRenderer.invoke("production:open", id, task),
+    reveal: (id, task, path) =>
+      ipcRenderer.invoke("production:reveal", id, task, path),
   },
   copyText: (text) => ipcRenderer.invoke("clipboard:write", text),
   readState: (id) => ipcRenderer.invoke("local:read", id),

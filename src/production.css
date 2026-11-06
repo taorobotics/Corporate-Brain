@@ -19,10 +19,99 @@
   align-items: center;
   padding: 7px 0;
 }
-.workflow-files li span {
+.workflow-files li > .production-file-link {
   flex: 1;
   min-width: 0;
   overflow-wrap: anywhere;
+}
+.production-folder-link,
+.production-file-link {
+  border: 0;
+  padding: 0;
+  font: inherit;
+  text-align: left;
+  color: #2765a0;
+  background: transparent;
+  cursor: pointer;
+  overflow-wrap: anywhere;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.production-folder-link svg {
+  display: inline;
+  margin-right: 5px;
+  vertical-align: -2px;
+}
+.production-folder-link:hover,
+.production-file-link:hover {
+  color: var(--accent);
+}
+.production-folder-link:focus-visible,
+.production-file-link:focus-visible,
+.production-thumbnail:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 4px;
+}
+.production-gallery {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(160px, 100%), 1fr));
+  gap: 14px;
+  max-width: 760px;
+  margin: 18px 0;
+}
+.production-image {
+  margin: 0;
+  min-width: 0;
+}
+.production-thumbnail {
+  display: grid;
+  place-items: center;
+  width: 100%;
+  aspect-ratio: 1;
+  max-height: 320px;
+  padding: 8px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--panel);
+  color: var(--muted);
+  font: inherit;
+  font-size: 12px;
+  cursor: zoom-in;
+}
+.production-thumbnail img {
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  object-fit: contain;
+}
+.production-image figcaption {
+  margin-top: 7px;
+  font-size: 12px;
+}
+.production-image-full {
+  width: 100%;
+  max-height: 65vh;
+}
+.production-file-shortcuts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px 20px;
+  margin: 14px 0;
+  font-size: 14px;
+}
+.production-file-shortcuts button {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+  max-width: 100%;
+}
+.production-file-shortcuts svg {
+  flex-shrink: 0;
+}
+[data-theme="dark"] .production-folder-link,
+[data-theme="dark"] .production-file-link {
+  color: #8fbef0;
 }
 .workflow-files .button {
   padding: 4px 10px;

@@ -404,5 +404,24 @@ class ProductionLocal {
     await checkedDirectory(folder);
     return folder;
   }
+  async fileLocation(id, path) {
+    await this.verify();
+    if (!uuid.test(id)) throw Error("任务标识无效");
+    safePath(path);
+    const receipt = (await this.config()).receipts.find(
+      (item) => item.id === id,
+    );
+    if (!receipt?.files.some((file) => file.path === path))
+      throw Error("只能定位当前账号已保存的成果文件");
+    const target = join(receipt.directory, path);
+    const stat = await fs.lstat(target);
+    if (
+      !stat.isFile() ||
+      stat.nlink !== 1 ||
+      resolve(await fs.realpath(target)) !== resolve(target)
+    )
+      throw Error("成果文件含链接或已移动");
+    return target;
+  }
 }
 module.exports = { ProductionLocal, safePath, checkedDirectory };

@@ -172,6 +172,12 @@ ipcMain.handle("production:open", async (event, userId, id) => {
   const error = await shell.openPath(folder);
   if (error) throw new Error("文件夹无法打开");
 });
+ipcMain.handle("production:reveal", async (event, userId, id, path) => {
+  const file = await (
+    await productionProfile(event, userId)
+  ).fileLocation(id, path);
+  shell.showItemInFolder(file);
+});
 const writes = new Map();
 const LOCAL_PROFILE_TIMEOUT_MS = 10_000;
 

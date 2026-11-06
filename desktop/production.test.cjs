@@ -209,3 +209,28 @@ test("saved chat GIF files preview as images while HTML source remains inert tex
   );
   await assert.rejects(f.local.preview(f.id, "files/sticker.gif"), /变化|修改/);
 });
+
+test("file quick links resolve only the current account's saved ordinary files", async (t) => {
+  const f = await fixture(t);
+  const receipt = await f.local.collect(f.id);
+  assert.equal(
+    await f.local.fileLocation(f.id, "code/main.js"),
+    join(receipt.directory, "code/main.js"),
+  );
+  await assert.rejects(
+    f.local.fileLocation(randomUUID(), "code/main.js"),
+    /当前账号/,
+  );
+  await assert.rejects(f.local.fileLocation(f.id, "../outside"), /不安全/);
+  await assert.rejects(f.local.fileLocation(f.id, "unlisted.txt"), /当前账号/);
+  const outside = join(f.dir, "outside-code");
+  await mkdir(outside);
+  await writeFile(join(outside, "main.js"), "outside");
+  await rm(join(receipt.directory, "code"), { recursive: true });
+  await symlink(
+    outside,
+    join(receipt.directory, "code"),
+    process.platform === "win32" ? "junction" : "dir",
+  );
+  await assert.rejects(f.local.fileLocation(f.id, "code/main.js"), /链接|移动/);
+});

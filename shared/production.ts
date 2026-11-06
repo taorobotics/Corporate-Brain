@@ -71,6 +71,7 @@ export type ProductionBridge = {
   chooseDirectory(userId: string): Promise<ProductionLocal>;
   collect(userId: string, taskId: string): Promise<ProductionReceipt>;
   open(userId: string, taskId?: string): Promise<void>;
+  reveal?(userId: string, taskId: string, path: string): Promise<void>;
   preview?(
     userId: string,
     taskId: string,

@@ -1,7 +1,11 @@
 import { useEffect, useRef, useState } from "react";
 import { FolderOpen, ArrowClockwise } from "@phosphor-icons/react";
 import type { User, Message } from "../shared/types";
-import type { ProductionTask, ProductionLocal } from "../shared/production";
+import type {
+  ProductionTask,
+  ProductionLocal,
+  ProductionFile,
+} from "../shared/production";
 import { productionReply, productionOutcome } from "../shared/production-reply";
 import { ThinkingProcess } from "./ChatLoading";
 import MessageContent from "./MessageContent";
@@ -82,6 +86,7 @@ export function useProduction(user: User | null) {
     if (!user) return;
     try {
       await window.brainDesktop?.production?.open(user.id, id);
+      setError("");
     } catch (e) {
       setError((e as Error).message);
     }
@@ -94,6 +99,17 @@ export function useProduction(user: User | null) {
     saving,
     choose,
     open,
+    reveal: async (id: string, path: string) => {
+      if (!user) return;
+      try {
+        const bridge = window.brainDesktop?.production;
+        if (bridge?.reveal) await bridge.reveal(user.id, id, path);
+        else await bridge?.open(user.id, id);
+        setError("");
+      } catch (e) {
+        setError((e as Error).message);
+      }
+    },
     actionBusy,
     track: (task: ProductionTask) =>
       setTasks((list) => [task, ...list.filter((item) => item.id !== task.id)]),
@@ -114,6 +130,98 @@ export function useProduction(user: User | null) {
   };
 }
 export type ProductionController = ReturnType<typeof useProduction>;
+function SavedImage({
+  file,
+  id,
+  controller,
+  show,
+}: {
+  file: ProductionFile;
+  id: string;
+  controller: ProductionController;
+  show: () => void;
+}) {
+  const target = useRef<HTMLButtonElement>(null);
+  const [url, setUrl] = useState("");
+  const [error, setError] = useState("");
+  useEffect(() => {
+    let active = true,
+      loaded = false,
+      objectUrl = "";
+    setUrl("");
+    setError("");
+    const load = async () => {
+      if (loaded) return;
+      loaded = true;
+      try {
+        const result = await window.brainDesktop!.production!.preview!(
+          controller.userId,
+          id,
+          file.path,
+        );
+        if (!active) return;
+        if (
+          !result.bytes ||
+          !/^image\/(?:gif|png|jpeg|webp)$/.test(result.mime)
+        )
+          throw Error("图片预览暂不可用");
+        objectUrl = URL.createObjectURL(
+          new Blob([new Uint8Array(result.bytes)], { type: result.mime }),
+        );
+        setUrl(objectUrl);
+      } catch {
+        if (active) setError("图片暂无法预览，点击重试");
+      }
+    };
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries.some((entry) => entry.isIntersecting)) {
+          observer.disconnect();
+          void load();
+        }
+      },
+      { rootMargin: "150px" },
+    );
+    if (target.current) observer.observe(target.current);
+    return () => {
+      active = false;
+      observer.disconnect();
+      if (objectUrl) URL.revokeObjectURL(objectUrl);
+    };
+  }, [controller.userId, id, file.path, file.sha256]);
+  return (
+    <figure className="production-image">
+      <button
+        ref={target}
+        type="button"
+        className="production-thumbnail"
+        aria-label={`预览图片：${file.path}`}
+        onClick={show}
+      >
+        {url && !error ? (
+          <img
+            src={url}
+            alt={file.path.split("/").at(-1)}
+            loading="lazy"
+            onError={() => setError("图片无法显示，可打开本地文件")}
+          />
+        ) : (
+          <span>{error || "正在读取图片…"}</span>
+        )}
+      </button>
+      <figcaption>
+        <button
+          type="button"
+          className="production-file-link"
+          title="在文件夹中显示"
+          onClick={() => void controller.reveal(id, file.path)}
+        >
+          {file.path.split("/").at(-1)}
+        </button>
+      </figcaption>
+    </figure>
+  );
+}
 export function ChatProduction({
   id,
   controller,
@@ -140,6 +248,22 @@ export function ChatProduction({
   );
   const task = controller.tasks.find((item) => item.id === id);
   const receipt = controller.local?.receipts.find((item) => item.id === id);
+  let imageBytes = 0;
+  const images = window.brainDesktop?.production?.preview
+    ? (receipt?.files ?? [])
+        .filter((file) => {
+          if (
+            !file.path.startsWith("files/") ||
+            !/\.(?:gif|png|jpe?g|webp)$/i.test(file.path) ||
+            file.size > 8 * 1024 ** 2 ||
+            imageBytes + file.size > 32 * 1024 ** 2
+          )
+            return false;
+          imageBytes += file.size;
+          return true;
+        })
+        .slice(0, 8)
+    : [];
   const status = task?.status ?? (receipt ? "saved" : undefined);
   const saving = controller.saving === id;
   const terminal = status && ["saved", "failed", "cancelled"].includes(status);
@@ -209,17 +333,79 @@ export function ChatProduction({
       />
       <MessageContent content={reply.content} />
       <p className="production-outcome" role="status">
-        {productionOutcome(task, receipt, saving)}
+        {receipt && !saving ? (
+          <>
+            已保存到本机：{" "}
+            <button
+              type="button"
+              className="production-folder-link"
+              title="打开成果文件夹"
+              onClick={() => void controller.open(id)}
+            >
+              <FolderOpen size={15} />
+              {receipt.directory}
+            </button>
+            {task?.status === "cleaning" ? "（正在清理服务器副本）" : ""}
+          </>
+        ) : (
+          productionOutcome(task, receipt, saving)
+        )}
       </p>
       {task?.error && <small role="alert">{task.error}</small>}
       {controller.error && <small role="alert">{controller.error}</small>}
+      {!!images.length && (
+        <div className="production-gallery" aria-label="成果图片预览">
+          {images.map((file) => (
+            <SavedImage
+              key={file.path}
+              file={file}
+              id={id}
+              controller={controller}
+              show={() => void previewFile(file.path)}
+            />
+          ))}
+        </div>
+      )}
+      {!!receipt?.files.length && (
+        <div
+          className="production-file-shortcuts"
+          aria-label="成果文件快捷入口"
+        >
+          {receipt.files
+            .filter((file) => !/\.(?:gif|png|jpe?g|webp)$/i.test(file.path))
+            .sort(
+              (a, b) =>
+                Number(/\.zip$/i.test(b.path)) - Number(/\.zip$/i.test(a.path)),
+            )
+            .slice(0, 6)
+            .map((file) => (
+              <button
+                key={file.path}
+                type="button"
+                className="production-file-link"
+                title={`在文件夹中显示：${file.path}`}
+                onClick={() => void controller.reveal(id, file.path)}
+              >
+                <FolderOpen size={17} />
+                {file.path.split("/").at(-1)}
+              </button>
+            ))}
+        </div>
+      )}
       {!!receipt?.files.length && (
         <details className="workflow-files">
           <summary>成果文件 · {receipt.files.length} 个</summary>
           <ul>
             {receipt.files.map((file) => (
               <li key={file.path}>
-                <span>{file.path}</span>
+                <button
+                  type="button"
+                  className="production-file-link"
+                  title="在文件夹中显示"
+                  onClick={() => void controller.reveal(id, file.path)}
+                >
+                  {file.path}
+                </button>
                 <small>{Math.max(1, Math.ceil(file.size / 1024))} KB</small>
                 {(file.path.startsWith("code/") ||
                   file.path === "output/video.mp4" ||
@@ -229,6 +415,7 @@ export function ChatProduction({
                     )) ||
                   file.path === "plan.md") && (
                   <Button
+                    title={`预览：${file.path}`}
                     disabled={previewBusy}
                     onClick={() => void previewFile(file.path)}
                   >
@@ -240,31 +427,39 @@ export function ChatProduction({
           </ul>
         </details>
       )}
-      {preview && (
-        <div className="workflow-preview">
-          <div>
-            <strong>{preview.name}</strong>
-            <Button onClick={() => setPreview(null)}>关闭预览</Button>
+      {preview?.url && preview.mime?.startsWith("image/") ? (
+        <Modal title={preview.name} close={() => setPreview(null)} wide>
+          <img
+            src={preview.url}
+            alt={preview.name}
+            className="workflow-image-preview production-image-full"
+          />
+          <Button onClick={() => void controller.reveal(id, preview.name)}>
+            <FolderOpen size={17} />
+            在文件夹中显示
+          </Button>
+        </Modal>
+      ) : (
+        preview && (
+          <div className="workflow-preview">
+            <div>
+              <strong>{preview.name}</strong>
+              <Button onClick={() => setPreview(null)}>关闭预览</Button>
+            </div>
+            {preview.url ? (
+              <video
+                src={preview.url}
+                controls
+                preload="metadata"
+                aria-label="制作成片预览"
+              />
+            ) : (
+              <pre>
+                <code>{preview.text}</code>
+              </pre>
+            )}
           </div>
-          {preview.url && preview.mime?.startsWith("image/") ? (
-            <img
-              src={preview.url}
-              alt={preview.name}
-              className="workflow-image-preview"
-            />
-          ) : preview.url ? (
-            <video
-              src={preview.url}
-              controls
-              preload="metadata"
-              aria-label="制作成片预览"
-            />
-          ) : (
-            <pre>
-              <code>{preview.text}</code>
-            </pre>
-          )}
-        </div>
+        )
       )}
       {previewError && <small role="alert">{previewError}</small>}
       <div className="production-actions">

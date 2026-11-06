@@ -1,4 +1,4 @@
-const { app, BrowserWindow, dialog } = require("electron");
+const { app, BrowserWindow, dialog, shell } = require("electron");
 const { spawn } = require("node:child_process");
 const fs = require("node:fs/promises"),
   { resolve, join } = require("node:path"),
@@ -15,6 +15,15 @@ let server,
   win,
   failed = false;
 const checks = [];
+const openedFolders = [],
+  revealedFiles = [];
+shell.openPath = async (path) => {
+  openedFolders.push(path);
+  return "";
+};
+shell.showItemInFolder = (path) => {
+  revealedFiles.push(path);
+};
 let failureCalls = 0;
 let qaErrors = "";
 let releaseGeneration;
@@ -332,7 +341,7 @@ const wait = async (fn, label, ms = 45000) => {
       { code: "ENOENT" },
     );
     await js(
-      `(()=>{const root=document.querySelector('.chat-production');root.querySelector('.workflow-files').open=true;[...root.querySelectorAll('.workflow-files li')].find(x=>x.textContent.includes('code/README.md')).querySelector('button').click();return true;})()`,
+      `(()=>{const root=document.querySelector('.chat-production');root.querySelector('.workflow-files').open=true;root.querySelector('[title="预览：code/README.md"]').click();return true;})()`,
     );
     await wait(
       () =>
@@ -549,9 +558,27 @@ const wait = async (fn, label, ms = 45000) => {
       fs.stat(join(dir, "server-tasks", user.id, gifReceipt.id)),
       { code: "ENOENT" },
     );
-    await js(
-      `(()=>{const root=document.querySelector('.chat-production');root.querySelector('.workflow-files').open=true;[...root.querySelectorAll('.workflow-files li')].find(x=>x.textContent.includes('files/sticker.gif')).querySelector('button').click();return true})()`,
+    await wait(
+      () =>
+        js(
+          `document.querySelector('.production-gallery img')?.naturalWidth===1`,
+        ),
+      "GIF automatically displayed in chat",
     );
+    await js(`document.querySelector('.production-folder-link').click();true`);
+    await wait(
+      async () => openedFolders.includes(gifReceipt.directory),
+      "saved path opens its own receipt folder",
+    );
+    await js(
+      `document.querySelector('.production-image .production-file-link').click();true`,
+    );
+    await wait(
+      async () =>
+        revealedFiles.includes(join(gifReceipt.directory, "files/sticker.gif")),
+      "image quick link reveals its saved file",
+    );
+    await js(`document.querySelector('.production-thumbnail').click();true`);
     await wait(
       () =>
         js(
@@ -563,12 +590,41 @@ const wait = async (fn, label, ms = 45000) => {
       await js(`document.querySelectorAll('.workflow-preview video').length`),
       0,
     );
+    await js(`document.querySelector('[aria-label="关闭弹窗"]').click();true`);
+    await js(
+      `document.querySelector('.production-file-shortcuts button').click();true`,
+    );
+    await wait(
+      async () =>
+        revealedFiles.includes(join(gifReceipt.directory, "files/README.md")),
+      "document quick link reveals the exact saved file",
+    );
     await fs.writeFile(
       "artifacts/workflow-chat-gif.png",
       (
         await web.capturePage(undefined, { stayHidden: true, stayAwake: true })
       ).toPNG(),
     );
+    win.setContentSize(900, 760);
+    await js(`document.documentElement.dataset.theme='dark';true`);
+    await wait(
+      () =>
+        js(
+          `document.querySelector('.production-gallery img')?.naturalWidth===1`,
+        ),
+      "dark narrow gallery stays visible",
+    );
+    assert.equal(
+      await js(`document.documentElement.scrollWidth<=window.innerWidth`),
+      true,
+    );
+    await fs.writeFile(
+      "artifacts/screenshots/chat-files-dark-narrow.png",
+      (
+        await web.capturePage(undefined, { stayHidden: true, stayAwake: true })
+      ).toPNG(),
+    );
+    win.setContentSize(1320, 920);
     web.reload();
     await wait(
       () => js(`!!document.querySelector('[data-history-title]')`),
@@ -582,8 +638,15 @@ const wait = async (fn, label, ms = 45000) => {
         ),
       "GIF reply and file association retained",
     );
+    await wait(
+      () =>
+        js(
+          `document.querySelector('.production-gallery img')?.naturalWidth===1`,
+        ),
+      "saved GIF automatically reloads from local files",
+    );
     checks.push(
-      "Ordinary chat exports GIF and README to the native device, validates both files before server cleanup, decodes GIF inline as an image, and retains the reply and file association after reload",
+      "Ordinary chat exports GIF and README, validates before server cleanup, automatically displays the saved GIF in light/dark narrow layouts and after reload, opens full preview, routes folder/image/document quick links through native receipt checks; shell launch is intercepted in isolated QA",
     );
     const tasks = await js(`fetch('/api/production').then(r=>r.json())`);
 
