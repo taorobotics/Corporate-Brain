@@ -188,7 +188,7 @@ const wait = async (fn, label, ms = 45000) => {
       );
     const fill = (selector, value, type = "HTMLInputElement") =>
       js(
-        `(()=>{const e=document.querySelector(${JSON.stringify(selector)});Object.getOwnPropertyDescriptor(${type}.prototype,'value').set.call(e,${JSON.stringify(value)});e.dispatchEvent(new Event('input',{bubbles:true}));return true;})()`,
+        `(()=>{const e=document.querySelector(${JSON.stringify(selector)});Object.getOwnPropertyDescriptor(${type}.prototype,'value').set.call(e,${JSON.stringify(value)});e.dispatchEvent(new Event('input',{bubbles:true}));return new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(()=>resolve(true))));})()`,
       );
     await wait(
       () =>

@@ -24,6 +24,7 @@ export function useChatScroll(conversationKey: string | null, nearEnd = 48) {
     if (conversationKey === null || !container || !content) return;
     let frame = 0;
     let touchY = 0;
+    let scrollbarInteraction = false;
     let previousHeight = container.scrollHeight;
     let previousViewport = container.clientHeight;
     const distance = () =>
@@ -60,7 +61,8 @@ export function useChatScroll(conversationKey: string | null, nearEnd = 48) {
       // Browsers clamp scrollTop as content collapses or the viewport resizes.
       // A layout-driven upward movement is not the employee reading history.
       if (resized && following.current) schedule();
-      else if (change < -1 && distance() > nearEnd) pause();
+      // A late layout/clamping scroll can arrive after ResizeObserver has
+      // updated the size snapshot. Only explicit navigation pauses following.
       else if (change > 1 && distance() <= nearEnd) following.current = true;
       previousTop.current = container.scrollTop;
       previousHeight = container.scrollHeight;
@@ -70,6 +72,29 @@ export function useChatScroll(conversationKey: string | null, nearEnd = 48) {
     const wheel = (event: WheelEvent) => {
       if (!ownsEvent(event)) return;
       if (event.deltaY < 0) pause();
+    };
+    const pointerDown = (event: PointerEvent) => {
+      if (event.target !== container) return;
+      const bounds = container.getBoundingClientRect();
+      const gutter = Math.max(
+        14,
+        container.offsetWidth - container.clientWidth,
+      );
+      if (
+        event.clientX >= bounds.right - gutter &&
+        event.clientX <= bounds.right
+      ) {
+        scrollbarInteraction = true;
+        pause();
+      }
+    };
+    const pointerUp = () => {
+      if (!scrollbarInteraction) return;
+      scrollbarInteraction = false;
+      if (distance() <= nearEnd) {
+        following.current = true;
+        schedule();
+      }
     };
     const touchStart = (event: TouchEvent) => {
       if (!ownsEvent(event)) return;
@@ -100,6 +125,8 @@ export function useChatScroll(conversationKey: string | null, nearEnd = 48) {
     observer.observe(container);
     container.addEventListener("scroll", scroll, { passive: true });
     container.addEventListener("wheel", wheel, { passive: true });
+    container.addEventListener("pointerdown", pointerDown, { passive: true });
+    window.addEventListener("pointerup", pointerUp, { passive: true });
     container.addEventListener("touchstart", touchStart, { passive: true });
     container.addEventListener("touchmove", touchMove, { passive: true });
     container.addEventListener("keydown", keyDown);
@@ -108,6 +135,8 @@ export function useChatScroll(conversationKey: string | null, nearEnd = 48) {
       cancelAnimationFrame(frame);
       container.removeEventListener("scroll", scroll);
       container.removeEventListener("wheel", wheel);
+      container.removeEventListener("pointerdown", pointerDown);
+      window.removeEventListener("pointerup", pointerUp);
       container.removeEventListener("touchstart", touchStart);
       container.removeEventListener("touchmove", touchMove);
       container.removeEventListener("keydown", keyDown);

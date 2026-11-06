@@ -148,6 +148,29 @@ module.exports = async function verifyChatScroll({
   await js(`document.querySelector('.chat-loading .thinking-toggle').click()`);
   await atEnd();
 
+  // A layout-driven clamp can arrive after the resize snapshot was updated.
+  // Without user navigation it must not silently turn off subsequent following.
+  await js(
+    `(()=>{const el=document.querySelector('.messages');el.scrollTop=Math.max(0,el.scrollTop-180);})()`,
+  );
+  await settle();
+  await emit({ type: "text", text: paragraph });
+  await atEnd();
+
+  await js(
+    `(()=>{const el=document.querySelector('.messages'),r=el.getBoundingClientRect();el.dispatchEvent(new PointerEvent('pointerdown',{bubbles:true,clientX:r.right-2,clientY:r.top+100}));el.scrollTop=Math.max(0,el.scrollTop-200);window.dispatchEvent(new PointerEvent('pointerup',{bubbles:true}));})()`,
+  );
+  await settle();
+  const scrollbarPaused = await metrics();
+  await emit({ type: "text", text: paragraph.repeat(3) });
+  await settle();
+  assert.ok(
+    Math.abs((await metrics()).top - scrollbarPaused.top) <= 2,
+    "scrollbar reading stays paused during new output",
+  );
+  await js(`document.querySelector('.chat-jump-latest').click()`);
+  await atEnd();
+
   const point = await js(
     `(() => {const r=document.querySelector('.messages').getBoundingClientRect();return {x:Math.round(r.left+r.width/2),y:Math.round(r.top+r.height/2)};})()`,
   );
