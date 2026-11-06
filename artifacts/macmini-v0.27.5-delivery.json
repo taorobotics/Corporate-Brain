@@ -1,0 +1,412 @@
+{
+  "version": "0.27.5",
+  "sourceCommit": "57927fa1e47dedccba815952b9e5a4778614c0a1",
+  "result": "passed",
+  "verifiedAt": "2026-11-06T07:28:49.781Z",
+  "features": {
+    "automaticLocalImageGallery": true,
+    "animatedGifPlayback": true,
+    "clickImageToEnlarge": true,
+    "folderPathQuickLink": true,
+    "fileAndArchiveQuickLinks": true,
+    "nativeFileRevealRestrictedToOwnReceipt": true,
+    "legacyRevealFallsBackToFolder": true,
+    "lazyImageReads": true,
+    "automaticPreviewLimits": {
+      "images": 8,
+      "singleBytes": 8388608,
+      "totalBytes": 33554432
+    },
+    "localImageIntegrityChecksPreserved": true,
+    "lightAndActualDarkNarrowChecked": true,
+    "reloadRestoresLocalGallery": true,
+    "generatedHtmlAndSourceRemainInert": true
+  },
+  "localChecks": {
+    "production-ui-windows": 5,
+    "mac-production-ui": 6,
+    "nodeTestsWindows": 152,
+    "nodeTestsMac": 152,
+    "nasWorkerTestsEach": 5
+  },
+  "macminiDeployment": {
+    "version": "0.27.5",
+    "result": "passed",
+    "verifiedAt": "2026-11-06T07:06:40.001Z",
+    "sourceCommit": "57927fa1e47dedccba815952b9e5a4778614c0a1",
+    "serverArchiveSha256": "0bb7ed8d1ac31b2473e9e73ab389f0eb36a8ed5fe5aa74e2bc8c1e22ddb32ec6",
+    "health": {
+      "status": "ok",
+      "version": "0.27.5",
+      "chatStorage": "device-only"
+    },
+    "httpsHealth": {
+      "status": "ok",
+      "version": "0.27.5",
+      "chatStorage": "device-only"
+    },
+    "loginServicesVerified": true,
+    "counts": {
+      "users": 224,
+      "departments": 13,
+      "nas_sources": 14,
+      "skills": 3
+    },
+    "avatarAssetsVerified": 100,
+    "dataPreserved": true,
+    "modelSettingsPreserved": true,
+    "modelCredentialsPreserved": true,
+    "backup": "/Users/staff01/CorporateBrainServer/backups/before-v0.27.5-2026-11-06T07-06-35-990Z",
+    "writeBoundary": "/Users/staff01/CorporateBrainServer"
+  },
+  "strictHttpsUi": {
+    "version": "0.27.5",
+    "result": "passed",
+    "tlsVerified": true,
+    "health": {
+      "status": "ok",
+      "version": "0.27.5",
+      "chatStorage": "device-only"
+    },
+    "assets": [
+      {
+        "path": "/assets/index-DPoAOZ7X.js",
+        "bytes": 999800,
+        "sha256": "3085de7a381508ac51af6bc0271f84c689f9fb3a2dfcbd074d59dbab4186e2e7"
+      },
+      {
+        "path": "/assets/index-Cc38SWD4.css",
+        "bytes": 105907,
+        "sha256": "dc7e8fa25d9dd21a8b87526df80500f214b2aa121e3caa34e2d2352041b9dbfa"
+      }
+    ],
+    "checkedAt": "2026-11-06T07:07:34.778Z"
+  },
+  "macminiUpdates": {
+    "version": "0.27.5",
+    "result": "passed",
+    "sourceCommit": "57927fa1e47dedccba815952b9e5a4778614c0a1",
+    "assets": {
+      "win32-x64": {
+        "name": "Corporate-Brain-Setup-0.27.5-x64.exe",
+        "bytes": 120004375,
+        "sha256": "9f06fa0c9dde310e356c83fcfdbf7903ffc224bfaea0665bb8cb93f588f981d2"
+      },
+      "darwin-arm64": {
+        "name": "Corporate-Brain-0.27.5-macOS-arm64.dmg",
+        "bytes": 139860782,
+        "sha256": "ce4947c456a08f5e0c90c6a4be5f373fa5f21e57aa9e46674755547e09d0ad79"
+      },
+      "darwin-x64": {
+        "name": "Corporate-Brain-0.27.5-macOS-x64.dmg",
+        "bytes": 145379327,
+        "sha256": "3886ac9a4db1f6265fbe8f5bfc78ecdb5f0a6fa9ff7542677313783b7976194e"
+      }
+    },
+    "verifiedAt": "2026-11-06T07:26:28.544Z",
+    "sameBytesAsGitHub": true,
+    "existingCompanyAddressPreservedOnUpgrade": true,
+    "freshInstallRequiresCompanyAddress": "https://192.168.20.21:14443",
+    "imported": {
+      "version": "0.27.5",
+      "notes": "# v0.27.5 · 长代码输出与自动接续修复\n\n## 员工端更新\n\n- 修复制作视频和项目代码时，单次输出被固定为 12,000 Token，思考或长源代码用完预算后直接失败的问题。DeepSeek Flash/V4 制作请求采用当前官方 Harness 适配器使用的 256,000 Token 输出预算；其他兼容模型沿用供应商默认预算，不再强加统一的 12,000 上限。\n- 服务商以长度边界结束响应时，保留已输出的 JSON 和源代码，自动接着补完；只携带一份已生成前文，不重复塞入每一段历史。完整性与语法检查通过后才渲染和交付，不把截断代码当作成片。\n- 移除动画源代码“16,000 字符以内”的提示限制，并扩大完整动画源码可校验的范围。制作生成阶段改为检测持续无新内容，不再按固定四分钟切断仍在输出的请求；停止、账号与模型授权检查继续生效。\n- 制作期间定期保存当前任务的私有生成草稿；网络中断或模型反复没有补充正文时保留草稿，避免无效重试。成功后只交付完整源码、素材和成片，清除中间草稿；用户取消任务时仍按原流程清理该任务。\n\n## 客户端与服务器更新\n\n本次修复位于公司业务服务器，Mac mini 备份升级后，已有客户端重新打开或重试任务即可使用；桌面安装包同时递增版本供自动更新。Windows 通过左下角检查更新，下载校验后点击安装，沿用原目录与公司地址并重启；Mac 使用对应架构 DMG 替换。首次安装需填写公司提供的 HTTPS 地址。\n\n管理员先停止服务并备份数据库、密钥及部署配置，再部署服务器包，沿用原有数据、权限、NAS、模型和 HTTPS 设置。云服务器只同步安装包镜像，Mac mini 继续承载公司业务。\n\n## 实际验证与边界\n\n回归覆盖 JSON 字符串及转义中间截断后的多段接续、重复代码原样保留、只有思考没有正文时的恢复、无进展停止、网络断流草稿保留、用户取消、持续输出无固定总时限，以及经真实公司接口生成完整项目文件的链路。测试采用隔离账号与合成模型服务，不声称这些回归验证了真实模型的内容质量。\n\nWindows 和 Mac mini 均通过 152 项 Node 测试、5 项 NAS 测试与生产构建。Windows 原生成果链路 5 项、Mac 原生成果链路 6 项检查通过；Mac 包括 2 秒、1280×720 视频的实际渲染和本地解码。三平台公开安装与更新验收以 Release 的检查记录为准。\n\n“自动接续”不能取消服务商的单次输出、上下文窗口或账户额度边界。当前版本继续校验任务文件容量、路径、账号隔离和渲染环境；不会无限重复空响应，也不会执行未完成或未经校验的代码。DeepSeek 预算依据 [官方 Harness 适配器默认配置](https://github.com/deepseek-ai/deepseek-harness/blob/master/packages/llm/llm-deepseek/src/defaults.ts)，推理与正文行为参考 [DeepSeek 思考模式说明](https://api-docs.deepseek.com/guides/thinking_mode/)。\n\n原创代码采用 MIT，第三方保留原许可；随包提供许可、隐私及签名说明，不含数据库、密钥、员工对话、内部技能或私人生成素材。Windows 尚无可信代码签名；Mac 为 ad-hoc 签名，未做 Apple 公证。各平台实际构建与安装验收记录随 Release 提供。\n",
+      "publishedAt": "2026-11-06T07:12:55Z",
+      "assets": {
+        "win32-x64": {
+          "name": "Corporate-Brain-Setup-0.27.5-x64.exe",
+          "bytes": 120004375,
+          "sha256": "9f06fa0c9dde310e356c83fcfdbf7903ffc224bfaea0665bb8cb93f588f981d2"
+        },
+        "darwin-arm64": {
+          "name": "Corporate-Brain-0.27.5-macOS-arm64.dmg",
+          "bytes": 139860782,
+          "sha256": "ce4947c456a08f5e0c90c6a4be5f373fa5f21e57aa9e46674755547e09d0ad79"
+        },
+        "darwin-x64": {
+          "name": "Corporate-Brain-0.27.5-macOS-x64.dmg",
+          "bytes": 145379327,
+          "sha256": "3886ac9a4db1f6265fbe8f5bfc78ecdb5f0a6fa9ff7542677313783b7976194e"
+        }
+      }
+    }
+  },
+  "realPriorUpdater": {
+    "version": "0.27.5",
+    "result": "passed",
+    "checkedAt": "2026-11-06T07:26:29.455Z",
+    "actualPriorVersionModule": true,
+    "results": [
+      {
+        "target": "win32-x64",
+        "version": "0.27.5",
+        "bytes": 120004375,
+        "sha256": "9f06fa0c9dde310e356c83fcfdbf7903ffc224bfaea0665bb8cb93f588f981d2",
+        "oldClientVersion": "0.27.4",
+        "state": "ready",
+        "installerExecuted": false
+      },
+      {
+        "target": "darwin-arm64",
+        "version": "0.27.5",
+        "bytes": 139860782,
+        "sha256": "ce4947c456a08f5e0c90c6a4be5f373fa5f21e57aa9e46674755547e09d0ad79",
+        "oldClientVersion": "0.27.4",
+        "state": "ready",
+        "installerExecuted": false
+      },
+      {
+        "target": "darwin-x64",
+        "version": "0.27.5",
+        "bytes": 145379327,
+        "sha256": "3886ac9a4db1f6265fbe8f5bfc78ecdb5f0a6fa9ff7542677313783b7976194e",
+        "oldClientVersion": "0.27.4",
+        "state": "ready",
+        "installerExecuted": false
+      }
+    ]
+  },
+  "githubRelease": {
+    "status": "passed",
+    "runId": 42178287216,
+    "runUrl": "https://github.com/taorobotics/Corporate-Brain/actions/runs/42178287216",
+    "releaseId": 436197671,
+    "tag": "v0.27.5",
+    "url": "https://github.com/taorobotics/Corporate-Brain/releases/tag/v0.27.5",
+    "draft": false,
+    "publicLatest": "v0.27.5",
+    "productCommit": "57927fa1e47dedccba815952b9e5a4778614c0a1",
+    "verificationToolsCommit": "57927fa1e47dedccba815952b9e5a4778614c0a1",
+    "sourceAndTagPushed": true,
+    "assetsVerified": [
+      {
+        "name": "Corporate-Brain-0.27.5-macOS-arm64.dmg",
+        "bytes": 139860782,
+        "digest": "sha256:ce4947c456a08f5e0c90c6a4be5f373fa5f21e57aa9e46674755547e09d0ad79"
+      },
+      {
+        "name": "Corporate-Brain-0.27.5-macOS-x64.dmg",
+        "bytes": 145379327,
+        "digest": "sha256:3886ac9a4db1f6265fbe8f5bfc78ecdb5f0a6fa9ff7542677313783b7976194e"
+      },
+      {
+        "name": "Corporate-Brain-Server-0.27.5.zip",
+        "bytes": 22627601,
+        "digest": "sha256:0519bee9a260d8a3dab89d42e9bfa6054af29ae3d5cfc525dfd851c1b781493f"
+      },
+      {
+        "name": "Corporate-Brain-Setup-0.27.5-x64.exe",
+        "bytes": 120004375,
+        "digest": "sha256:9f06fa0c9dde310e356c83fcfdbf7903ffc224bfaea0665bb8cb93f588f981d2"
+      },
+      {
+        "name": "macos-verification-arm64.json",
+        "bytes": 9545,
+        "digest": "sha256:b76b02525e7d7fa24a0e74dab45ec843748c1cd3bfcb9323e917b8c25b24aa9a"
+      },
+      {
+        "name": "macos-verification-x64.json",
+        "bytes": 9541,
+        "digest": "sha256:a8a7009105f7442082d36f13ddcb020a75467de7d133040375b9e1a2423c1cf6"
+      },
+      {
+        "name": "server-verification.json",
+        "bytes": 17271,
+        "digest": "sha256:396b3470920813e5823a9328895578926b39129620c7a825849c670bfa89be87"
+      },
+      {
+        "name": "SHA256SUMS-macOS-arm64.txt",
+        "bytes": 105,
+        "digest": "sha256:bacb34a1ffd77fca43f46a81a8d072fd0930d231a2010a34b7affad8f493c2bc"
+      },
+      {
+        "name": "SHA256SUMS-macOS-x64.txt",
+        "bytes": 103,
+        "digest": "sha256:fa66676acd091e46a979692d1a6ee061c2d53a6e6348592197ec45e493deda38"
+      },
+      {
+        "name": "SHA256SUMS-Server.txt",
+        "bytes": 100,
+        "digest": "sha256:34d7a0c5df481a655b904069a977ce4f3877380bcf5d14bbb5ef42f5e00b8e62"
+      },
+      {
+        "name": "SHA256SUMS-Windows-x64.txt",
+        "bytes": 103,
+        "digest": "sha256:b1a8ad4f599dea27ce38c6b35cc8cda6db907c68bf17907c9e3af251b14c09e5"
+      },
+      {
+        "name": "SHA256SUMS.txt",
+        "bytes": 411,
+        "digest": "sha256:f4bb1fd86d768c14f850cbc43777eab4c1ba579a241ba3f1d1a0955731ea18ed"
+      },
+      {
+        "name": "windows-verification-x64.json",
+        "bytes": 12331,
+        "digest": "sha256:5d942b64637c26889d0b5b3042031ba1436f907d70af6b3bd7d8308af11242a2"
+      }
+    ],
+    "installersAndServer": [
+      {
+        "name": "Corporate-Brain-Setup-0.27.5-x64.exe",
+        "bytes": 120004375,
+        "sha256": "9f06fa0c9dde310e356c83fcfdbf7903ffc224bfaea0665bb8cb93f588f981d2"
+      },
+      {
+        "name": "Corporate-Brain-0.27.5-macOS-arm64.dmg",
+        "bytes": 139860782,
+        "sha256": "ce4947c456a08f5e0c90c6a4be5f373fa5f21e57aa9e46674755547e09d0ad79"
+      },
+      {
+        "name": "Corporate-Brain-0.27.5-macOS-x64.dmg",
+        "bytes": 145379327,
+        "sha256": "3886ac9a4db1f6265fbe8f5bfc78ecdb5f0a6fa9ff7542677313783b7976194e"
+      },
+      {
+        "name": "Corporate-Brain-Server-0.27.5.zip",
+        "bytes": 22627601,
+        "sha256": "0519bee9a260d8a3dab89d42e9bfa6054af29ae3d5cfc525dfd851c1b781493f"
+      }
+    ],
+    "windows": {
+      "realInstallUpgradeUninstall": true,
+      "lifecycleChecks": 17,
+      "handoffChecks": 5,
+      "signature": "NotSigned",
+      "physicalEmployeeDeviceTested": false
+    },
+    "macPlatforms": [
+      {
+        "architecture": "arm64",
+        "packageMountAndLaunch": "passed",
+        "desktopChecks": 45,
+        "signing": "ad-hoc",
+        "notarized": false
+      },
+      {
+        "architecture": "x64",
+        "packageMountAndLaunch": "passed",
+        "desktopChecks": 45,
+        "signing": "ad-hoc",
+        "notarized": false
+      }
+    ],
+    "distribution": {
+      "status": "completed",
+      "conclusion": "success",
+      "url": "https://github.com/taorobotics/Corporate-Brain/actions/runs/42178287216/job/127765242705"
+    },
+    "checkedAt": "2026-11-06T07:26:28.160Z"
+  },
+  "cloudInstallerMirror": {
+    "version": "0.27.5",
+    "result": "passed",
+    "assets": [
+      {
+        "target": "win32-x64",
+        "name": "Corporate-Brain-Setup-0.27.5-x64.exe",
+        "bytes": 120004375,
+        "sha256": "9f06fa0c9dde310e356c83fcfdbf7903ffc224bfaea0665bb8cb93f588f981d2"
+      },
+      {
+        "target": "darwin-arm64",
+        "name": "Corporate-Brain-0.27.5-macOS-arm64.dmg",
+        "bytes": 139860782,
+        "sha256": "ce4947c456a08f5e0c90c6a4be5f373fa5f21e57aa9e46674755547e09d0ad79"
+      },
+      {
+        "target": "darwin-x64",
+        "name": "Corporate-Brain-0.27.5-macOS-x64.dmg",
+        "bytes": 145379327,
+        "sha256": "3886ac9a4db1f6265fbe8f5bfc78ecdb5f0a6fa9ff7542677313783b7976194e"
+      }
+    ],
+    "checkedAt": "2026-11-06T07:27:23.962Z"
+  },
+  "cloudBusinessHealth": {
+    "result": "passed",
+    "checkedAt": "2026-11-06T07:14:21.265Z",
+    "health": {
+      "status": "ok",
+      "version": "0.11.6",
+      "chatStorage": "device-only"
+    },
+    "tlsVerified": true,
+    "businessServiceChanged": false
+  },
+  "privateRecoveredMediaPublished": false,
+  "temporaryTestAccountsAndSessionsRemoved": true,
+  "existingEmployeeClientInstallationChanged": false,
+  "coreDshExecutionChanged": false,
+  "signing": {
+    "windows": "NotSigned",
+    "mac": "ad-hoc",
+    "appleNotarized": false
+  },
+  "liveModelProduction": {
+    "version": "0.27.5",
+    "result": "passed",
+    "checkedAt": "2026-11-06T07:08:57.071Z",
+    "actualModel": "deepseek-flash",
+    "actualProviderUsed": true,
+    "requestedOutputBudget": 256000,
+    "renderedVideo": true,
+    "allFilesSavedAndSha256Verified": true,
+    "videoDecodedByFfmpeg": true,
+    "seconds": 2,
+    "width": 1280,
+    "height": 720,
+    "fps": 24,
+    "elapsedMs": 8646,
+    "files": [
+      {
+        "path": "code/README.md",
+        "size": 276,
+        "sha256": "9850fb248711b837d6c241531df9a02859f8055ca65b0cbbef5c134b371440d6"
+      },
+      {
+        "path": "code/animation.js",
+        "size": 525,
+        "sha256": "0fbfd7a376322cd5ad9b85145825846790eb23f0f766611e43fcce0933b6a290"
+      },
+      {
+        "path": "code/render-settings.json",
+        "size": 87,
+        "sha256": "0324830322d73d0a98b17d2423a3d8d4de3c51ce09731e6152d1a35f1614b30c"
+      },
+      {
+        "path": "output/video.mp4",
+        "size": 9344,
+        "sha256": "7f07ceea77af62e1a98b6da9f68b95fa79d4ed64ca716f8c416a8878a830df55"
+      },
+      {
+        "path": "plan.md",
+        "size": 812,
+        "sha256": "495b9b87e7698607936b23c5704d7ecfe8a89ee82024ef02b84a89f5f12f92fb"
+      },
+      {
+        "path": "request.txt",
+        "size": 222,
+        "sha256": "abbe218e2febd8dbf0b474824a58fae123985b1582b483f588a366dd99616946"
+      }
+    ],
+    "serverStatus": "saved",
+    "serverBytes": 0,
+    "syntheticTaskOnly": true,
+    "originalFailedEmployeeTaskChanged": false
+  },
+  "productionGenerationChanged": true,
+  "productionOutput": {
+    "removedFixed12000Budget": true,
+    "deepSeekRequestBudget": 256000,
+    "otherProvidersUseOwnDefaults": true,
+    "providerLimitsStillApply": true,
+    "automaticLengthContinuation": true,
+    "privateDraftCheckpoints": true,
+    "activeOutputHasNoFourMinuteTotalCutoff": true,
+    "idleStallProtection": true,
+    "repeatedCodeBytesPreserved": true,
+    "successfulDeliveryExcludesDrafts": true,
+    "incompleteSourceNeverRendered": true,
+    "sourceCapacityCharacters": 2000000,
+    "responseCapacityCharacters": 5000000
+  }
+}
