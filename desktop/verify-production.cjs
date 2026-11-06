@@ -15,6 +15,7 @@ let server,
   win,
   failed = false;
 const checks = [];
+const controls = require("./verify-chat-control.cjs").fixture();
 const openedFolders = [],
   revealedFiles = [];
 shell.openPath = async (path) => {
@@ -62,6 +63,7 @@ const wait = async (fn, label, ms = 45000) => {
       let input = "";
       for await (const chunk of req) input += chunk;
       const payload = JSON.parse(input);
+      if (controls.handle(res, payload)) return;
       const send = (content) => {
         res.writeHead(200, { "Content-Type": "application/json" });
         res.end(
@@ -714,6 +716,16 @@ const wait = async (fn, label, ms = 45000) => {
     checks.push(
       "Ordinary chat exports GIF and README, validates before server cleanup, automatically displays the saved GIF in light/dark narrow layouts and after reload, opens full preview, routes folder/image/document quick links through native receipt checks; shell launch is intercepted in isolated QA",
     );
+    await require("./verify-chat-control.cjs").verify({
+      js,
+      click,
+      fill,
+      wait,
+      capture,
+      checks,
+      win,
+      controls,
+    });
     const tasks = await js(`fetch('/api/production').then(r=>r.json())`);
 
     const report = {

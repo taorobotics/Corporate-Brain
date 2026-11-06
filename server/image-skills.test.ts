@@ -427,43 +427,53 @@ test("image APIs are company skills; chat and image execute in one authorized re
     },
   );
   await t.test(
-    "stopping the chat cancels the in-flight image API request",
+    "stopping chat or direct image generation cancels the in-flight image API request",
     async () => {
-      holdImage = true;
-      const started = new Promise<void>((resolve) => {
-        onImage = resolve;
-      });
-      const closed = new Promise<void>((resolve) => {
-        onImageClosed = resolve;
-      });
-      const controller = new AbortController();
-      const pending = fetch(base + "/generate/chat", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Cookie: employee,
-          Accept: "application/x-ndjson",
-        },
-        body: JSON.stringify(body),
-        signal: controller.signal,
-      }).then((r) => r.text());
-      const rejected = assert.rejects(pending, { name: "AbortError" });
-      await started;
-      controller.abort();
-      await rejected;
-      await Promise.race([
-        closed,
-        new Promise((_, reject) => {
-          const timer = setTimeout(
-            () => reject(Error("Image request was not cancelled")),
-            3000,
-          );
-          timer.unref();
-        }),
-      ]);
-      holdImage = false;
-      onImage = undefined;
-      onImageClosed = undefined;
+      for (const route of ["/generate/chat", "/generate/image"]) {
+        holdImage = true;
+        const started = new Promise<void>((resolve) => {
+          onImage = resolve;
+        });
+        const closed = new Promise<void>((resolve) => {
+          onImageClosed = resolve;
+        });
+        const controller = new AbortController();
+        const pending = fetch(base + route, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Cookie: employee,
+            Accept: "application/x-ndjson",
+          },
+          body: JSON.stringify(
+            route === "/generate/chat"
+              ? body
+              : {
+                  connectionId: image.id,
+                  prompt:
+                    "Synthetic written answer for direct image cancellation",
+                },
+          ),
+          signal: controller.signal,
+        }).then((r) => r.text());
+        const rejected = assert.rejects(pending, { name: "AbortError" });
+        await started;
+        controller.abort();
+        await rejected;
+        await Promise.race([
+          closed,
+          new Promise((_, reject) => {
+            const timer = setTimeout(
+              () => reject(Error("Image request was not cancelled")),
+              3000,
+            );
+            timer.unref();
+          }),
+        ]);
+        holdImage = false;
+        onImage = undefined;
+        onImageClosed = undefined;
+      }
     },
   );
   await t.test(

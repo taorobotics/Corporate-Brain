@@ -48,8 +48,7 @@
 }
 .thinking-toggle:focus-visible,
 .thinking-scroll:focus-visible,
-.thinking-follow:focus-visible,
-.thinking-stop:focus-visible {
+.thinking-follow:focus-visible {
   outline: 2px solid var(--accent);
   outline-offset: 4px;
   border-radius: 4px;
@@ -189,19 +188,6 @@
   font-size: 12px;
   opacity: 0.8;
   margin: 0 0 8px;
-}
-.thinking-stop {
-  border: 1px solid var(--border);
-  background: transparent;
-  color: var(--muted);
-  border-radius: 6px;
-  padding: 5px 10px;
-  font-size: 12px;
-  cursor: pointer;
-  margin-top: 8px;
-}
-.thinking-stop:hover {
-  color: var(--text);
 }
 .thinking-title.is-active {
   animation: thinking-breathe 1.8s ease-in-out infinite;

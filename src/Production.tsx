@@ -11,6 +11,7 @@ import { ThinkingProcess } from "./ChatLoading";
 import MessageContent from "./MessageContent";
 import { Button, Modal } from "./components";
 import { api } from "./api";
+import { cancelProduction } from "./automatic";
 import "./production.css";
 
 export function useProduction(user: User | null, profile: LocalState) {
@@ -135,14 +136,23 @@ export function useProduction(user: User | null, profile: LocalState) {
     track: (task: ProductionTask) =>
       setTasks((list) => [task, ...list.filter((item) => item.id !== task.id)]),
     action: async (id: string, operation: "start" | "cancel") => {
-      if (actionBusy) return;
+      if (actionBusy) return false;
       setActionBusy(id);
       try {
-        await api(`/production/${id}/${operation}`, {});
+        const task =
+          operation === "cancel"
+            ? await cancelProduction(id)
+            : await api<ProductionTask>(`/production/${id}/${operation}`, {});
+        setTasks((list) => [
+          task,
+          ...list.filter((item) => item.id !== task.id),
+        ]);
         setError("");
         await refreshRef.current();
+        return true;
       } catch (e) {
         setError((e as Error).message);
+        return false;
       } finally {
         setActionBusy("");
       }
@@ -265,7 +275,6 @@ export function ChatProduction({
   controller: ProductionController;
   message?: Message;
 }) {
-  const [cancel, setCancel] = useState(false);
   const [preview, setPreview] = useState<{
     url?: string;
     text?: string;
@@ -512,14 +521,6 @@ export function ChatProduction({
             在此重试
           </Button>
         )}
-        {task && !["saved", "cancelled", "cleaning"].includes(task.status) && (
-          <Button
-            disabled={saving || !!controller.actionBusy}
-            onClick={() => setCancel(true)}
-          >
-            停止任务
-          </Button>
-        )}
         {task?.status === "ready" && (
           <Button disabled={saving} onClick={() => void controller.save(id)}>
             {controller.local?.directory
@@ -528,27 +529,6 @@ export function ChatProduction({
           </Button>
         )}
       </div>
-      {cancel && (
-        <Modal title="停止这份任务？" close={() => setCancel(false)}>
-          <p>
-            将停止制作并清理 Mac mini
-            上该任务的临时文件，已经保存到本机的文件会保留。
-          </p>
-          <div className="production-actions">
-            <Button onClick={() => setCancel(false)}>继续制作</Button>
-            <Button
-              primary
-              disabled={!!controller.actionBusy}
-              onClick={() => {
-                setCancel(false);
-                void controller.action(id, "cancel");
-              }}
-            >
-              停止并清理
-            </Button>
-          </div>
-        </Modal>
-      )}
     </section>
   );
 }

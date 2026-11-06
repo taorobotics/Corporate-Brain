@@ -780,7 +780,7 @@ async function waitFor(test, label, timeout = 12000) {
   );
   await js(`window.__emitProgress({type:'text',text:'停止前收到的内容。'})`);
   await waitFor(() => has("停止前收到的内容。"), "partial before stop");
-  await click("停止生成");
+  await click("中止回复");
   await waitFor(
     () =>
       js(

@@ -227,6 +227,23 @@
   width: 40px;
   height: 40px;
 }
+.composer-actions {
+  display: flex;
+  flex-shrink: 0;
+  gap: 6px;
+  margin-left: auto;
+}
+.composer-actions .send {
+  margin-left: 0;
+}
+.composer .composer-actions .send.stop {
+  background: var(--ink);
+  color: var(--bg);
+}
+.send:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
+}
 .composer-note {
   color: var(--muted);
   font-size: 11px;

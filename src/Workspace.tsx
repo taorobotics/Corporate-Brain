@@ -28,6 +28,7 @@ import {
   ShieldCheck,
   Sun,
   Moon,
+  Stop,
 } from "@phosphor-icons/react";
 import { SelectField } from "./Dropdown";
 import SkillPicker from "./SkillPicker";
@@ -136,13 +137,23 @@ export default function Workspace(props: WorkspaceProps) {
     showLatest,
     jumpToLatest,
   } = useChatScroll(page === "chat" ? (conversationId ?? "new") : null);
-  const activeRequest = useRef<AbortController | null>(null);
+  const activeRequest = useRef<{
+    controller: AbortController;
+    conversationId: string;
+    done: Promise<void>;
+    taskId?: string;
+  } | null>(null);
+  const [stopping, setStopping] = useState(false);
+  const stoppingRef = useRef(false);
+  const [followUp, setFollowUp] = useState<{ conversationId: string } | null>(
+    null,
+  );
   const mounted = useRef(true);
   useEffect(() => {
     mounted.current = true;
     return () => {
       mounted.current = false;
-      activeRequest.current?.abort();
+      activeRequest.current?.controller.abort();
       fileRead.current?.abort();
     };
   }, []);
@@ -170,6 +181,71 @@ export default function Workspace(props: WorkspaceProps) {
     });
   }, [props.production.tasks, setState]);
   const conversation = state.conversations.find((c) => c.id === conversationId);
+  const activeTasks = props.production.tasks.filter(
+    (task) =>
+      [
+        "uploading",
+        "queued",
+        "planning",
+        "generating",
+        "rendering",
+        "verifying",
+      ].includes(task.status) &&
+      conversation?.messages.some(
+        (message) => message.productionTaskId === task.id,
+      ),
+  );
+  const currentBusy =
+    (busy && taskConversationId === conversationId) || activeTasks.length > 0;
+  useEffect(() => {
+    if (!followUp) return;
+    if (followUp.conversationId !== conversationId) {
+      setFollowUp(null);
+      notify("补充要求尚未发送，请回到原对话后继续。");
+    } else if (!busy && !stopping && !activeTasks.length) {
+      setFollowUp(null);
+      void send();
+    }
+  }, [followUp, busy, stopping, activeTasks.length, conversationId]);
+  async function stopCurrent() {
+    if (stoppingRef.current || !conversation) return false;
+    stoppingRef.current = true;
+    setStopping(true);
+    const run =
+      activeRequest.current?.conversationId === conversation.id
+        ? activeRequest.current
+        : null;
+    const ids = new Set(activeTasks.map((task) => task.id));
+    try {
+      run?.controller.abort();
+      await run?.done;
+      if (run?.taskId) ids.add(run.taskId);
+      for (const id of ids) {
+        if (!(await props.production.action(id, "cancel")))
+          throw Error(
+            "未能确认任务已中止，请检查连接后重试；补充要求尚未发送。",
+          );
+      }
+      return true;
+    } catch (error) {
+      notify((error as Error).message);
+      return false;
+    } finally {
+      stoppingRef.current = false;
+      if (mounted.current) setStopping(false);
+    }
+  }
+  async function submit() {
+    if (
+      stoppingRef.current ||
+      followUp ||
+      (!text.trim() && !attachments.length)
+    )
+      return;
+    if (!currentBusy) return send();
+    setFollowUp({ conversationId: conversation!.id });
+    if (!(await stopCurrent())) setFollowUp(null);
+  }
   const taskModels = connections.filter((c) => c.enabled && c.kind === "chat");
   const model =
     taskModels.find((c) => c.id === state.settings.model) ?? taskModels[0];
@@ -298,6 +374,7 @@ export default function Workspace(props: WorkspaceProps) {
       (!text.trim() && !attachments.length) ||
       busy ||
       activeRequest.current ||
+      stoppingRef.current ||
       fileRead.current
     )
       return;
@@ -355,7 +432,16 @@ export default function Workspace(props: WorkspaceProps) {
     }
     setBusy(true);
     const controller = new AbortController();
-    activeRequest.current = controller;
+    let complete!: () => void;
+    const run = {
+      controller,
+      conversationId: updated.id,
+      done: new Promise<void>((resolve) => {
+        complete = resolve;
+      }),
+      taskId: undefined as string | undefined,
+    };
+    activeRequest.current = run;
     const startedAt = Date.now();
     let items: TraceItem[] = [],
       partial = "";
@@ -420,12 +506,13 @@ export default function Workspace(props: WorkspaceProps) {
       const progress = (
         event: import("../shared/chat-progress").ChatProgress,
       ) => {
+        if (controller.signal.aborted) return;
         items = updateTrace(items, event);
         if (event.type === "text") partial = event.text;
         if (!progressTimer)
           progressTimer = setTimeout(() => {
             progressTimer = undefined;
-            if (mounted.current)
+            if (mounted.current && !controller.signal.aborted)
               setPendingReply((current) =>
                 current?.conversationId === updated.id
                   ? { ...current, items, content: partial }
@@ -485,6 +572,7 @@ export default function Workspace(props: WorkspaceProps) {
         plan.kind !== "image" && currentAttachments.length < 8
           ? await readWorkspaceContext(requestText, currentAttachments)
           : [];
+      controller.signal.throwIfAborted();
       if (workspaceAttachments.length)
         progress({
           type: "tool",
@@ -522,10 +610,12 @@ export default function Workspace(props: WorkspaceProps) {
           controller.signal,
           (task) => {
             productionTaskId = task.id;
+            run.taskId = task.id;
             props.production.track(task);
           },
           workspace?.folder,
         );
+        controller.signal.throwIfAborted();
         productionTaskId = task.id;
         saveReply("", "done");
         await props.production.refresh();
@@ -563,6 +653,7 @@ export default function Workspace(props: WorkspaceProps) {
           130000,
           controller.signal,
         );
+        controller.signal.throwIfAborted();
         progress({
           type: "tool",
           id: toolId,
@@ -640,6 +731,7 @@ export default function Workspace(props: WorkspaceProps) {
         controller.signal,
         progress,
       );
+      controller.signal.throwIfAborted();
       productionTaskId = response.productionTaskId;
       if (productionTaskId) await props.production.refresh();
       saveReply(
@@ -654,9 +746,10 @@ export default function Workspace(props: WorkspaceProps) {
         setTaskError((e as Error).message);
     } finally {
       if (progressTimer) clearTimeout(progressTimer);
-      activeRequest.current = null;
+      if (activeRequest.current === run) activeRequest.current = null;
       setPendingReply(null);
       setBusy(false);
+      complete();
     }
   }
   function newDraft(existing?: Draft) {
@@ -935,10 +1028,7 @@ export default function Workspace(props: WorkspaceProps) {
                 ))}
                 {pendingReply &&
                   pendingReply.conversationId === conversation?.id && (
-                    <ChatLoading
-                      request={pendingReply}
-                      stop={() => activeRequest.current?.abort()}
-                    />
+                    <ChatLoading request={pendingReply} />
                   )}
                 {taskError && taskConversationId === conversation?.id && (
                   <div className="task-error" role="alert">
@@ -1069,7 +1159,12 @@ export default function Workspace(props: WorkspaceProps) {
                 )}
                 <textarea
                   aria-label="任务输入"
-                  placeholder="直接描述需求，AI 会自动选择所需能力"
+                  placeholder={
+                    currentBusy
+                      ? "补充要求，发送后将中止当前执行并继续"
+                      : "直接描述需求，AI 会自动选择所需能力"
+                  }
+                  disabled={stopping || !!followUp}
                   value={text}
                   onChange={(e) => setText(e.target.value)}
                   onPaste={(e) => {
@@ -1085,7 +1180,7 @@ export default function Workspace(props: WorkspaceProps) {
                       !e.nativeEvent.isComposing
                     ) {
                       e.preventDefault();
-                      void send();
+                      void submit();
                     }
                   }}
                 />
@@ -1137,20 +1232,45 @@ export default function Workspace(props: WorkspaceProps) {
                       icon: <ShieldCheck size={18} />,
                     }))}
                   />
-                  <button
-                    className="send"
-                    aria-label="发送任务"
-                    disabled={
-                      (!text.trim() && !attachments.length) || busy || !!reading
-                    }
-                    onClick={() => void send()}
-                  >
-                    {busy ? (
-                      <CircleNotch className="spin" size={21} />
-                    ) : (
-                      <ArrowUp size={22} />
+                  <div className="composer-actions">
+                    {currentBusy && (
+                      <button
+                        type="button"
+                        className="send stop"
+                        aria-label={stopping ? "正在中止" : "中止回复"}
+                        title="中止当前执行，保留已收到的内容"
+                        disabled={stopping || !!props.production.actionBusy}
+                        onClick={() => void stopCurrent()}
+                      >
+                        {stopping ? (
+                          <CircleNotch className="spin" size={21} />
+                        ) : (
+                          <Stop size={19} weight="fill" />
+                        )}
+                      </button>
                     )}
-                  </button>
+                    {(!currentBusy ||
+                      text.trim() ||
+                      attachments.length > 0) && (
+                      <button
+                        className="send"
+                        aria-label={currentBusy ? "发送补充要求" : "发送任务"}
+                        title={
+                          currentBusy ? "中止当前执行并按补充要求继续" : "发送"
+                        }
+                        disabled={
+                          (!text.trim() && !attachments.length) ||
+                          (busy && !currentBusy) ||
+                          !!reading ||
+                          stopping ||
+                          !!followUp
+                        }
+                        onClick={() => void submit()}
+                      >
+                        <ArrowUp size={22} />
+                      </button>
+                    )}
+                  </div>
                 </div>
               </div>
               <div className="composer-note">

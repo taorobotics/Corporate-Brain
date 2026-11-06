@@ -200,13 +200,7 @@ function toolLabel(name: string) {
   return `工具 · ${name}`;
 }
 
-export default function ChatLoading({
-  request,
-  stop,
-}: {
-  request: PendingReply;
-  stop: () => void;
-}) {
+export default function ChatLoading({ request }: { request: PendingReply }) {
   const [now, setNow] = useState(Date.now());
   useEffect(() => {
     const timer = setInterval(() => setNow(Date.now()), 1000);
@@ -243,11 +237,6 @@ export default function ChatLoading({
           <div className="streaming-answer">
             <MessageContent content={request.content} />
           </div>
-        )}
-        {request.kind === "chat" && (
-          <button className="thinking-stop" onClick={stop}>
-            停止生成
-          </button>
         )}
       </div>
     </div>

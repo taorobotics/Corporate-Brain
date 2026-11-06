@@ -86,6 +86,27 @@ async function fixture(
     done,
   };
 }
+test("composer stop preserves completed output and only cancels an active owned task", async (t) => {
+  const f = await fixture(t);
+  const complete = await f.create();
+  await f.queue.start(f.owner, complete.id);
+  assert.equal((await f.done(complete.id)).status, "ready");
+  assert.equal(
+    (await f.queue.cancel(f.owner, complete.id, true)).status,
+    "ready",
+  );
+  assert.ok(f.queue.manifest(f.owner, complete.id, f.deviceId).files.length);
+  const active = await f.create();
+  await assert.rejects(f.queue.cancel(f.other, active.id, true), /无权/);
+  assert.equal(
+    (await f.queue.cancel(f.owner, active.id, true)).status,
+    "cancelled",
+  );
+  assert.equal(
+    f.queue.list(f.owner).find((task) => task.id === complete.id)?.status,
+    "ready",
+  );
+});
 test("chat file handoff preserves GIF and source bytes, isolates employee/device and cleans only after verified local receipt", async (t) => {
   const f = await fixture(t),
     source = join(await realpath(f.root), "turn-export");

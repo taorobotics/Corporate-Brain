@@ -1613,17 +1613,31 @@ export function createPlatform(
         ? 11998 - data.prompt.length
         : 12000 - data.prompt.length,
     );
-    const result = await invoke(row, "/images/generations", {
-      model: row.model,
-      prompt: data.prompt + (context ? "\n\n" + context : ""),
-      n: 1,
-      ...imageRequestOptions(row.model),
-    });
-    const item = result.data?.[0];
-    if (!item?.b64_json)
-      fail(502, "当前连接需返回 b64_json 图片，暂不接收远程图片链接");
-    store.audit(actor.id, "model.image_completed", row.id);
-    res.json({ image: `data:image/png;base64,${item.b64_json}` });
+    const controller = new AbortController();
+    const disconnected = () => {
+      if (!res.writableEnded) controller.abort();
+    };
+    res.on("close", disconnected);
+    try {
+      const result = await invoke(
+        row,
+        "/images/generations",
+        {
+          model: row.model,
+          prompt: data.prompt + (context ? "\n\n" + context : ""),
+          n: 1,
+          ...imageRequestOptions(row.model),
+        },
+        controller.signal,
+      );
+      const item = result.data?.[0];
+      if (!item?.b64_json)
+        fail(502, "当前连接需返回 b64_json 图片，暂不接收远程图片链接");
+      store.audit(actor.id, "model.image_completed", row.id);
+      res.json({ image: `data:image/png;base64,${item.b64_json}` });
+    } finally {
+      res.off("close", disconnected);
+    }
   });
   app.get("/api/audit", (req, res) => {
     admin(getActor(req));

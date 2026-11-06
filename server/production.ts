@@ -1008,10 +1008,12 @@ export class ProductionQueue {
     }
     return this.view(this.job(id, owner));
   }
-  async cancel(owner: string, id: string) {
+  async cancel(owner: string, id: string, activeOnly = false) {
     await this.initialized;
     let job = this.job(id, owner);
     if (job.status === "saved" || job.status === "cancelled")
+      return this.view(job);
+    if (activeOnly && ["ready", "cleaning", "failed"].includes(job.status))
       return this.view(job);
     if (this.uploads.has(id) || this.locks.has(id))
       fail(409, "当前正在传输，请完成后重试");
@@ -1062,7 +1064,13 @@ export function mountProduction(
     res.json(await queue.start(actor(req).id, String(req.params.id))),
   );
   app.post("/api/production/:id/cancel", async (req, res) =>
-    res.json(await queue.cancel(actor(req).id, String(req.params.id))),
+    res.json(
+      await queue.cancel(
+        actor(req).id,
+        String(req.params.id),
+        req.body?.activeOnly === true,
+      ),
+    ),
   );
   app.get("/api/production/:id/manifest", (req, res) =>
     res.json(
