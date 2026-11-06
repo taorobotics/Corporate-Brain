@@ -1,4 +1,11 @@
-import { Fragment, useEffect, useRef, useState, type FormEvent } from "react";
+import {
+  Fragment,
+  useEffect,
+  useRef,
+  useState,
+  type FormEvent,
+  type SetStateAction,
+} from "react";
 import UserMessageActions, { QuestionTime } from "./UserMessageActions";
 import {
   Plus,
@@ -91,6 +98,19 @@ import {
 import "./attachments.css";
 import Profile, { Avatar } from "./Profile";
 
+type ComposerDraft = {
+  text: string;
+  attachments: Attachment[];
+  reading: { name: string; status: string } | null;
+};
+const emptyDraft: ComposerDraft = { text: "", attachments: [], reading: null };
+type ChatRun = {
+  controller: AbortController;
+  done: Promise<void>;
+  taskId?: string;
+  reply?: Message;
+};
+
 export default function Workspace(props: WorkspaceProps) {
   const {
     user,
@@ -105,29 +125,60 @@ export default function Workspace(props: WorkspaceProps) {
     refresh,
     notify,
   } = props;
-  const [text, setText] = useState(""),
-    [busy, setBusy] = useState(false),
-    [search, setSearch] = useState(""),
+  const conversation = state.conversations.find((c) => c.id === conversationId);
+  const workspace =
+    state.workspaces.find(
+      (item) =>
+        item.id === (conversation?.workspaceId ?? state.activeWorkspaceId),
+    ) ?? state.workspaces[0];
+  const draftKey = conversationId ?? `new:${workspace?.id ?? "default"}`;
+  const [drafts, setDrafts] = useState<Record<string, ComposerDraft>>({});
+  const { text, attachments, reading } = drafts[draftKey] ?? emptyDraft;
+  const patchDraft = (value: Partial<ComposerDraft>) =>
+    setDrafts((all) => ({
+      ...all,
+      [draftKey]: { ...(all[draftKey] ?? emptyDraft), ...value },
+    }));
+  const setText = (text: string) => patchDraft({ text });
+  const setReading = (reading: ComposerDraft["reading"]) =>
+    patchDraft({ reading });
+  const setAttachments = (value: SetStateAction<Attachment[]>) =>
+    setDrafts((all) => {
+      const draft = all[draftKey] ?? emptyDraft;
+      return {
+        ...all,
+        [draftKey]: {
+          ...draft,
+          attachments:
+            typeof value === "function" ? value(draft.attachments) : value,
+        },
+      };
+    });
+  const [search, setSearch] = useState(""),
     [filter, setFilter] = useState("department");
   const [preview, setPreview] = useState<string | null>(null),
     [previewWidth, setPreviewWidth] = useState(42),
     [zoom, setZoom] = useState(100),
     [skillDraft, setSkillDraft] = useState<Draft | null>(null),
     [detail, setDetail] = useState<Skill | null>(null);
-  const [attachments, setAttachments] = useState<Attachment[]>([]),
-    [projectDialog, setProjectDialog] = useState(false),
+  const [projectDialog, setProjectDialog] = useState(false),
     [importSkill, setImportSkill] = useState(false),
-    [selectedProject, setSelectedProject] = useState<string | null>(null),
-    [pendingReply, setPendingReply] = useState<PendingReply | null>(null),
-    [taskConversationId, setTaskConversationId] = useState<string | null>(null);
-  const [taskError, setTaskError] = useState("");
-  const originalFiles = useRef(new Map<string, File>());
+    [selectedProject, setSelectedProject] = useState<string | null>(null);
+  const [pendingReplies, setPendingReplies] = useState<
+    Record<string, PendingReply>
+  >({});
+  const [taskErrors, setTaskErrors] = useState<Record<string, string>>({});
+  const pendingReply = pendingReplies[conversationId ?? ""];
+  const taskError = taskErrors[conversationId ?? ""];
+  const busy = !!pendingReply;
+  const originalFiles = useRef(new Map<string, Map<string, File>>());
+  function filesFor(key: string) {
+    if (!originalFiles.current.has(key))
+      originalFiles.current.set(key, new Map());
+    return originalFiles.current.get(key)!;
+  }
   const filesRef = useRef<HTMLInputElement>(null);
-  const fileRead = useRef<AbortController | null>(null);
-  const [reading, setReading] = useState<{
-    name: string;
-    status: string;
-  } | null>(null);
+  const fileReads = useRef(new Map<string, AbortController>());
   const [attachmentPreview, setAttachmentPreview] = useState<Attachment | null>(
     null,
   );
@@ -137,24 +188,26 @@ export default function Workspace(props: WorkspaceProps) {
     showLatest,
     jumpToLatest,
   } = useChatScroll(page === "chat" ? (conversationId ?? "new") : null);
-  const activeRequest = useRef<{
-    controller: AbortController;
-    conversationId: string;
-    done: Promise<void>;
-    taskId?: string;
-  } | null>(null);
-  const [stopping, setStopping] = useState(false);
-  const stoppingRef = useRef(false);
-  const [followUp, setFollowUp] = useState<{ conversationId: string } | null>(
-    null,
-  );
+  const activeRequests = useRef(new Map<string, ChatRun>());
+  const stoppingRefs = useRef(new Set<string>());
+  const [stoppingIds, setStoppingIds] = useState<Record<string, boolean>>({});
+  const stopping = !!stoppingIds[conversationId ?? ""];
+  const followUpRefs = useRef(new Set<string>());
+  const [followUpIds, setFollowUpIds] = useState<Record<string, boolean>>({});
+  const followUp = !!followUpIds[conversationId ?? ""];
+  const creatingChat = useRef(false);
+  const currentView = useRef({ page, conversationId, draftKey, state });
+  currentView.current = { page, conversationId, draftKey, state };
+  useEffect(() => {
+    creatingChat.current = false;
+  }, [conversationId]);
   const mounted = useRef(true);
   useEffect(() => {
     mounted.current = true;
     return () => {
       mounted.current = false;
-      activeRequest.current?.controller.abort();
-      fileRead.current?.abort();
+      for (const run of activeRequests.current.values()) run.controller.abort();
+      for (const controller of fileReads.current.values()) controller.abort();
     };
   }, []);
   useEffect(() => {
@@ -180,7 +233,6 @@ export default function Workspace(props: WorkspaceProps) {
       return changed ? { ...current, conversations } : current;
     });
   }, [props.production.tasks, setState]);
-  const conversation = state.conversations.find((c) => c.id === conversationId);
   const activeTasks = props.production.tasks.filter(
     (task) =>
       [
@@ -195,30 +247,19 @@ export default function Workspace(props: WorkspaceProps) {
         (message) => message.productionTaskId === task.id,
       ),
   );
-  const currentBusy =
-    (busy && taskConversationId === conversationId) || activeTasks.length > 0;
-  useEffect(() => {
-    if (!followUp) return;
-    if (followUp.conversationId !== conversationId) {
-      setFollowUp(null);
-      notify("补充要求尚未发送，请回到原对话后继续。");
-    } else if (!busy && !stopping && !activeTasks.length) {
-      setFollowUp(null);
-      void send();
-    }
-  }, [followUp, busy, stopping, activeTasks.length, conversationId]);
+  const currentBusy = busy || activeTasks.length > 0;
   async function stopCurrent() {
-    if (stoppingRef.current || !conversation) return false;
-    stoppingRef.current = true;
-    setStopping(true);
-    const run =
-      activeRequest.current?.conversationId === conversation.id
-        ? activeRequest.current
-        : null;
+    if (!conversation || stoppingRefs.current.has(conversation.id))
+      return false;
+    const id = conversation.id;
+    stoppingRefs.current.add(id);
+    setStoppingIds((all) => ({ ...all, [id]: true }));
+    const run = activeRequests.current.get(id);
     const ids = new Set(activeTasks.map((task) => task.id));
     try {
       run?.controller.abort();
       await run?.done;
+      if (!mounted.current) return false;
       if (run?.taskId) ids.add(run.taskId);
       for (const id of ids) {
         if (!(await props.production.action(id, "cancel")))
@@ -231,20 +272,34 @@ export default function Workspace(props: WorkspaceProps) {
       notify((error as Error).message);
       return false;
     } finally {
-      stoppingRef.current = false;
-      if (mounted.current) setStopping(false);
+      stoppingRefs.current.delete(id);
+      if (mounted.current) setStoppingIds((all) => ({ ...all, [id]: false }));
     }
   }
   async function submit() {
     if (
-      stoppingRef.current ||
-      followUp ||
+      stoppingRefs.current.has(conversationId ?? "") ||
+      followUpRefs.current.has(conversationId ?? "") ||
       (!text.trim() && !attachments.length)
     )
       return;
     if (!currentBusy) return send();
-    setFollowUp({ conversationId: conversation!.id });
-    if (!(await stopCurrent())) setFollowUp(null);
+    const id = conversation!.id;
+    const run = activeRequests.current.get(id);
+    followUpRefs.current.add(id);
+    setFollowUpIds((all) => ({ ...all, [id]: true }));
+    try {
+      if (await stopCurrent()) {
+        // The captured composer belongs to this conversation even after navigation.
+        const next = send(run?.reply);
+        followUpRefs.current.delete(id);
+        setFollowUpIds((all) => ({ ...all, [id]: false }));
+        await next;
+      }
+    } finally {
+      followUpRefs.current.delete(id);
+      if (mounted.current) setFollowUpIds((all) => ({ ...all, [id]: false }));
+    }
   }
   const taskModels = connections.filter((c) => c.enabled && c.kind === "chat");
   const model =
@@ -270,18 +325,10 @@ export default function Workspace(props: WorkspaceProps) {
           installedSkills.find((skill) => skill.id === id)!,
         )
       : [];
-  const workspace =
-    state.workspaces.find(
-      (item) =>
-        item.id === (conversation?.workspaceId ?? state.activeWorkspaceId),
-    ) ?? state.workspaces[0];
   useEffect(() => {
     setPreview(null);
     setSearch("");
-    fileRead.current?.abort();
-    setAttachments([]);
-    setReading(null);
-    originalFiles.current.clear();
+    setAttachmentPreview(null);
   }, [page, conversationId]);
   useEffect(() => {
     if (page !== "models") return;
@@ -324,7 +371,7 @@ export default function Workspace(props: WorkspaceProps) {
     return prepareWorkspaceAttachments(snapshot, existing);
   }
   async function chooseFiles(files?: FileList | File[] | null) {
-    if (fileRead.current || busy) {
+    if (fileReads.current.has(draftKey) || busy || stopping || followUp) {
       notify("请等待当前处理完成后再添加文件。");
       return;
     }
@@ -335,7 +382,7 @@ export default function Workspace(props: WorkspaceProps) {
       return;
     }
     const controller = new AbortController();
-    fileRead.current = controller;
+    fileReads.current.set(draftKey, controller);
     let accepted = [...attachments];
     const errors: string[] = [];
     try {
@@ -354,7 +401,7 @@ export default function Workspace(props: WorkspaceProps) {
           controller.signal.throwIfAborted();
           validateAttachmentBudget([...accepted, result]);
           accepted = [...accepted, result];
-          originalFiles.current.set(result.name, file);
+          filesFor(draftKey).set(result.name, file);
           if (mounted.current) setAttachments(accepted);
         } catch (error) {
           if (!controller.signal.aborted)
@@ -362,20 +409,22 @@ export default function Workspace(props: WorkspaceProps) {
         }
       }
     } finally {
-      if (fileRead.current === controller) fileRead.current = null;
+      if (fileReads.current.get(draftKey) === controller)
+        fileReads.current.delete(draftKey);
       if (mounted.current) {
         setReading(null);
         if (errors.length) notify(errors.join("\n"));
       }
     }
   }
-  async function send() {
+  async function send(precedingReply?: Message) {
     if (
       (!text.trim() && !attachments.length) ||
-      busy ||
-      activeRequest.current ||
-      stoppingRef.current ||
-      fileRead.current
+      !mounted.current ||
+      activeRequests.current.has(conversationId ?? "") ||
+      stoppingRefs.current.has(conversationId ?? "") ||
+      (!conversationId && creatingChat.current) ||
+      fileReads.current.has(draftKey)
     )
       return;
     const requestText =
@@ -386,12 +435,25 @@ export default function Workspace(props: WorkspaceProps) {
           (m) => m.role === "user" && m.attachments?.length,
         )?.attachments ?? []);
     const materialFiles = currentAttachments.map((attachment) =>
-      originalFiles.current.get(attachment.name),
+      filesFor(draftKey).get(attachment.name),
     );
-    jumpToLatest();
-    setTaskError("");
-    let current = conversation;
+    if (
+      currentView.current.page === "chat" &&
+      currentView.current.draftKey === draftKey
+    )
+      jumpToLatest();
+    let current =
+      currentView.current.state.conversations.find(
+        (c) => c.id === conversationId,
+      ) ?? conversation;
+    if (
+      current &&
+      precedingReply &&
+      !current.messages.some((m) => m.id === precedingReply.id)
+    )
+      current = { ...current, messages: [...current.messages, precedingReply] };
     if (!current) {
+      creatingChat.current = true;
       current = {
         id: crypto.randomUUID(),
         workspaceId: workspace?.id,
@@ -399,9 +461,23 @@ export default function Workspace(props: WorkspaceProps) {
         messages: [],
         createdAt: new Date().toISOString(),
       };
+      originalFiles.current.set(current.id, new Map(filesFor(draftKey)));
+      originalFiles.current.delete(draftKey);
       setConversationId(current.id);
     }
-    setTaskConversationId(current.id);
+    const replyId = current.id;
+    const setTaskError = (error: string) =>
+      setTaskErrors((all) => ({ ...all, [replyId]: error }));
+    const setPendingReply = (value: SetStateAction<PendingReply | null>) =>
+      setPendingReplies((all) => {
+        const pending =
+          typeof value === "function" ? value(all[replyId] ?? null) : value;
+        const next = { ...all };
+        if (pending) next[replyId] = pending;
+        else delete next[replyId];
+        return next;
+      });
+    setTaskError("");
     const sentAttachments = attachments.map((attachment) => ({
       ...attachment,
     }));
@@ -419,7 +495,11 @@ export default function Workspace(props: WorkspaceProps) {
     setState((s) => ({
       ...s,
       conversations: s.conversations.some((c) => c.id === updated.id)
-        ? s.conversations.map((c) => (c.id === updated.id ? updated : c))
+        ? s.conversations.map((c) =>
+            c.id === updated.id
+              ? { ...c, messages: [...c.messages, message] }
+              : c,
+          )
         : [updated, ...s.conversations],
     }));
     setText("");
@@ -430,18 +510,16 @@ export default function Workspace(props: WorkspaceProps) {
       );
       return;
     }
-    setBusy(true);
     const controller = new AbortController();
     let complete!: () => void;
-    const run = {
+    const run: ChatRun = {
       controller,
-      conversationId: updated.id,
       done: new Promise<void>((resolve) => {
         complete = resolve;
       }),
       taskId: undefined as string | undefined,
     };
-    activeRequest.current = run;
+    activeRequests.current.set(updated.id, run);
     const startedAt = Date.now();
     let items: TraceItem[] = [],
       partial = "";
@@ -475,6 +553,7 @@ export default function Workspace(props: WorkspaceProps) {
           elapsed: Math.max(0, Math.floor((Date.now() - startedAt) / 1000)),
         },
       };
+      run.reply = result;
       setState((s) => ({
         ...s,
         conversations: s.conversations.map((c) =>
@@ -746,9 +825,9 @@ export default function Workspace(props: WorkspaceProps) {
         setTaskError((e as Error).message);
     } finally {
       if (progressTimer) clearTimeout(progressTimer);
-      if (activeRequest.current === run) activeRequest.current = null;
+      if (activeRequests.current.get(updated.id) === run)
+        activeRequests.current.delete(updated.id);
       setPendingReply(null);
-      setBusy(false);
       complete();
     }
   }
@@ -1030,7 +1109,7 @@ export default function Workspace(props: WorkspaceProps) {
                   pendingReply.conversationId === conversation?.id && (
                     <ChatLoading request={pendingReply} />
                   )}
-                {taskError && taskConversationId === conversation?.id && (
+                {taskError && (
                   <div className="task-error" role="alert">
                     {taskError}
                     <button onClick={() => navigate("models")}>
@@ -1151,7 +1230,7 @@ export default function Workspace(props: WorkspaceProps) {
                     </span>
                     <button
                       type="button"
-                      onClick={() => fileRead.current?.abort()}
+                      onClick={() => fileReads.current.get(draftKey)?.abort()}
                     >
                       取消读取
                     </button>
@@ -1239,7 +1318,12 @@ export default function Workspace(props: WorkspaceProps) {
                         className="send stop"
                         aria-label={stopping ? "正在中止" : "中止回复"}
                         title="中止当前执行，保留已收到的内容"
-                        disabled={stopping || !!props.production.actionBusy}
+                        disabled={
+                          stopping ||
+                          activeTasks.some(
+                            (task) => props.production.actionBusy[task.id],
+                          )
+                        }
                         onClick={() => void stopCurrent()}
                       >
                         {stopping ? (
@@ -1260,7 +1344,6 @@ export default function Workspace(props: WorkspaceProps) {
                         }
                         disabled={
                           (!text.trim() && !attachments.length) ||
-                          (busy && !currentBusy) ||
                           !!reading ||
                           stopping ||
                           !!followUp

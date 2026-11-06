@@ -16,6 +16,7 @@ let server,
   failed = false;
 const checks = [];
 const controls = require("./verify-chat-control.cjs").fixture();
+const concurrent = require("./verify-concurrent-chats.cjs").fixture();
 const openedFolders = [],
   revealedFiles = [];
 shell.openPath = async (path) => {
@@ -63,6 +64,7 @@ const wait = async (fn, label, ms = 45000) => {
       let input = "";
       for await (const chunk of req) input += chunk;
       const payload = JSON.parse(input);
+      if (concurrent.handle(res, payload)) return;
       if (controls.handle(res, payload)) return;
       const send = (content) => {
         res.writeHead(200, { "Content-Type": "application/json" });
@@ -725,6 +727,20 @@ const wait = async (fn, label, ms = 45000) => {
       checks,
       win,
       controls,
+    });
+    await require("./verify-concurrent-chats.cjs").verify({
+      js,
+      click,
+      fill,
+      wait,
+      capture,
+      checks,
+      win,
+      concurrent,
+      account: {
+        username: "production-ui",
+        password: "Synthetic-Production-QA-2026",
+      },
     });
     const tasks = await js(`fetch('/api/production').then(r=>r.json())`);
 

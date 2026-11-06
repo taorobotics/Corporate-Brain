@@ -368,9 +368,25 @@ test("DSH cancellation closes only its request and a stopped session can run aga
     sessionId: "other",
     messages: [{ role: "user", content: "finish" }],
   });
-  abort.abort();
+  try {
+    assert.equal(
+      await Promise.race([
+        other,
+        new Promise((_, reject) =>
+          setTimeout(
+            () =>
+              reject(Error("Other conversation was blocked by the held turn")),
+            10000,
+          ).unref(),
+        ),
+      ]),
+      "other-session-ok",
+    );
+    assert.equal(abort.signal.aborted, false);
+  } finally {
+    abort.abort();
+  }
   await rejected;
-  assert.equal(await other, "other-session-ok");
   // A new turn in the cancelled conversation has a new runtime, not a poisoned lock.
   assert.equal(
     await manager.run({

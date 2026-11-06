@@ -15,19 +15,27 @@ import { cancelProduction } from "./automatic";
 import "./production.css";
 
 export function useProduction(user: User | null, profile: LocalState) {
+  const currentUser = useRef(user);
+  currentUser.current = user;
   const profileRef = useRef(profile);
   profileRef.current = profile;
   const [tasks, setTasks] = useState<ProductionTask[]>([]),
     [local, setLocal] = useState<ProductionLocal | null>(null);
   const [error, setError] = useState(""),
     [saving, setSaving] = useState("");
-  const [actionBusy, setActionBusy] = useState("");
+  const [actionBusy, setActionBusy] = useState<Record<string, boolean>>({});
+  const [taskErrors, setTaskErrors] = useState<Record<string, string>>({});
+  const actionLocks = useRef(new Set<string>());
+  const taskRevision = useRef(0);
   const refreshRef = useRef<() => Promise<void>>(async () => {});
   useEffect(() => {
     setTasks([]);
     setLocal(null);
     setError("");
     setSaving("");
+    actionLocks.current.clear();
+    setActionBusy({});
+    setTaskErrors({});
     if (!user || user.mustChange) return;
     let active = true,
       busy = false;
@@ -35,10 +43,12 @@ export function useProduction(user: User | null, profile: LocalState) {
       if (busy || !active) return;
       busy = true;
       try {
+        const revision = taskRevision.current;
         const list = await api<ProductionTask[]>("/production");
         const bridge = window.brainDesktop?.production;
         const state = bridge ? await bridge.state(user.id) : null;
         if (!active) return;
+        if (revision !== taskRevision.current) return;
         setTasks(list);
         setLocal(state);
         if (bridge && state) {
@@ -71,7 +81,10 @@ export function useProduction(user: User | null, profile: LocalState) {
             );
             if (!active) return;
             setLocal(await bridge.state(user.id));
-            setTasks(await api<ProductionTask[]>("/production"));
+            const revision = taskRevision.current;
+            const refreshed = await api<ProductionTask[]>("/production");
+            if (active && revision === taskRevision.current)
+              setTasks(refreshed);
           }
         }
         if (active) setError("");
@@ -133,28 +146,39 @@ export function useProduction(user: User | null, profile: LocalState) {
       }
     },
     actionBusy,
-    track: (task: ProductionTask) =>
-      setTasks((list) => [task, ...list.filter((item) => item.id !== task.id)]),
+    taskErrors,
+    track: (task: ProductionTask) => {
+      if (!user || currentUser.current?.id !== user.id) return;
+      taskRevision.current++;
+      setTasks((list) => [task, ...list.filter((item) => item.id !== task.id)]);
+    },
     action: async (id: string, operation: "start" | "cancel") => {
-      if (actionBusy) return false;
-      setActionBusy(id);
+      if (!user || currentUser.current?.id !== user.id) return false;
+      if (actionLocks.current.has(id)) return false;
+      actionLocks.current.add(id);
+      taskRevision.current++;
+      setActionBusy((all) => ({ ...all, [id]: true }));
       try {
         const task =
           operation === "cancel"
             ? await cancelProduction(id)
             : await api<ProductionTask>(`/production/${id}/${operation}`, {});
+        if (currentUser.current?.id !== user.id) return false;
+        taskRevision.current++;
         setTasks((list) => [
           task,
           ...list.filter((item) => item.id !== task.id),
         ]);
-        setError("");
+        setTaskErrors((all) => ({ ...all, [id]: "" }));
         await refreshRef.current();
         return true;
       } catch (e) {
-        setError((e as Error).message);
+        if (currentUser.current?.id === user.id)
+          setTaskErrors((all) => ({ ...all, [id]: (e as Error).message }));
         return false;
       } finally {
-        setActionBusy("");
+        actionLocks.current.delete(id);
+        setActionBusy((all) => ({ ...all, [id]: false }));
       }
     },
     refresh: () => refreshRef.current(),
@@ -395,7 +419,11 @@ export function ChatProduction({
         )}
       </p>
       {task?.error && <small role="alert">{task.error}</small>}
-      {controller.error && <small role="alert">{controller.error}</small>}
+      {(controller.taskErrors[id] || controller.error) && (
+        <small role="alert">
+          {controller.taskErrors[id] || controller.error}
+        </small>
+      )}
       {!!images.length && (
         <div className="production-gallery" aria-label="成果图片预览">
           {images.map((file) => (
@@ -514,7 +542,7 @@ export function ChatProduction({
         )}
         {task && ["failed", "uploading"].includes(task.status) && (
           <Button
-            disabled={!!controller.actionBusy}
+            disabled={!!controller.actionBusy[id]}
             onClick={() => void controller.action(id, "start")}
           >
             <ArrowClockwise size={17} />
