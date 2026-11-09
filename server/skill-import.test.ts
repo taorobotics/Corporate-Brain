@@ -14,6 +14,7 @@ import {
   safePackagePath,
   prepareUrl,
   publicSkillUrl,
+  publicSkillLookup,
 } from "./skill-import";
 import { createPlatform } from "./platform";
 import { materializeSkill } from "./skill-library";
@@ -206,6 +207,43 @@ test("public skill links validate redirects, block private egress, bound downloa
         ),
       ),
     /重定向/,
+  );
+});
+
+test("public link DNS independently resolves company proxy addresses without allowing private connections", async () => {
+  const resolver = (addresses: string[]) =>
+    ((_host: string, _options: any, callback: any) =>
+      callback(
+        null,
+        addresses.map((address) => ({ address, family: 4 })),
+      )) as typeof import("node:dns").lookup;
+  const result = (system: string[], remote: string[]) =>
+    new Promise<any>((resolve, reject) =>
+      publicSkillLookup(
+        "public.example",
+        { all: true },
+        (error: Error | null, records: any) =>
+          error ? reject(error) : resolve(records),
+        resolver(system),
+        resolver(remote),
+      ),
+    );
+  assert.deepEqual(await result(["172.29.0.21"], ["8.8.8.8"]), [
+    { address: "8.8.8.8", family: 4 },
+  ]);
+  assert.deepEqual(await result(["198.18.0.114"], ["1.1.1.1"]), [
+    { address: "1.1.1.1", family: 4 },
+  ]);
+  assert.deepEqual(await result(["8.8.8.8"], ["127.0.0.1"]), [
+    { address: "8.8.8.8", family: 4 },
+  ]);
+  await assert.rejects(
+    () => result(["172.29.0.21"], ["192.168.20.21"]),
+    /non-public/,
+  );
+  await assert.rejects(
+    () => result(["198.18.0.1"], ["8.8.8.8", "127.0.0.1"]),
+    /non-public/,
   );
 });
 

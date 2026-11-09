@@ -4,7 +4,12 @@ import { dirname, join } from "node:path";
 import { fromBuffer, type Entry, type ZipFile } from "yauzl";
 import { parseDocument } from "yaml";
 import { Agent } from "undici";
-import { personalModelUrl, publicModelLookup } from "./model-transport";
+import { lookup } from "node:dns";
+import {
+  personalModelUrl,
+  publicModelLookup,
+  scopedModelLookup,
+} from "./model-transport";
 import type {
   SkillImportCandidate,
   SkillImportPreview,
@@ -189,7 +194,29 @@ async function boundedResponse(
   return Buffer.concat(chunks);
 }
 
-const importAgent = new Agent({ connect: { lookup: publicModelLookup } });
+// Company networks and VPNs may return private proxy addresses for public
+// domains. Resolve those names independently, then validate the addresses used
+// by the socket; never connect to the private proxy on the caller's behalf.
+export function publicSkillLookup(
+  hostname: string,
+  options: any,
+  callback: any,
+  resolver: typeof lookup = lookup,
+  fallback = scopedModelLookup(new Set([hostname])),
+) {
+  publicModelLookup(
+    hostname,
+    options,
+    (error: Error | null, ...args: any[]) => {
+      if (!error) callback(null, ...args);
+      else publicModelLookup(hostname, options, callback, fallback);
+    },
+    resolver,
+  );
+}
+const importAgent = new Agent({
+  connect: { lookup: publicSkillLookup as typeof lookup },
+});
 export function publicSkillUrl(value: string, redirected = false) {
   try {
     const url = new URL(value);

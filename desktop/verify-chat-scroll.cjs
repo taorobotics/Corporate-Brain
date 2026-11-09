@@ -95,8 +95,15 @@ module.exports = async function verifyChatScroll({
     "resume process following",
   );
   await js(`document.querySelector('.chat-loading .thinking-scroll').focus()`);
-  web.sendInputEvent({ type: "keyDown", keyCode: "PageUp" });
-  web.sendInputEvent({ type: "keyUp", keyCode: "PageUp" });
+  // Use the same focused CDP input path as the rest of the desktop suite.
+  // Native key injection can be dropped by a headless Intel Mac runner.
+  for (const type of ["keyDown", "keyUp"])
+    await web.debugger.sendCommand("Input.dispatchKeyEvent", {
+      type,
+      key: "PageUp",
+      code: "PageUp",
+      windowsVirtualKeyCode: 33,
+    });
   await waitFor(
     async () => (await processMetrics()).gap > 50,
     "keyboard scrolls within process",
