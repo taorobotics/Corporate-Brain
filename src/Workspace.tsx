@@ -21,7 +21,6 @@ import {
   ArrowsOutSimple,
   SidebarSimple,
   DownloadSimple,
-  ArrowLeft,
   FileText,
   CircleNotch,
   UserCircle,
@@ -68,7 +67,6 @@ import {
   Modal,
   Empty,
   Search,
-  Field,
 } from "./components";
 import SkillEditor from "./SkillEditor";
 import SkillImport, { SkillSourceDetails } from "./SkillImport";
@@ -161,9 +159,7 @@ export default function Workspace(props: WorkspaceProps) {
     [zoom, setZoom] = useState(100),
     [skillDraft, setSkillDraft] = useState<Draft | null>(null),
     [detail, setDetail] = useState<Skill | null>(null);
-  const [projectDialog, setProjectDialog] = useState(false),
-    [importSkill, setImportSkill] = useState(false),
-    [selectedProject, setSelectedProject] = useState<string | null>(null);
+  const [importSkill, setImportSkill] = useState(false);
   const [pendingReplies, setPendingReplies] = useState<
     Record<string, PendingReply>
   >({});
@@ -889,7 +885,7 @@ export default function Workspace(props: WorkspaceProps) {
     }
   }
   const titles: Record<string, [string, string]> = {
-    projects: ["项目", "将任务、参考资料与可复用的工作流程整理在一起。"],
+    projects: ["项目", "每个项目保留独立对话，成果保存到你选择的本地文件夹。"],
     knowledge: ["公司知识", "连接公司的资料，让每次创作都有依据。"],
     skills: ["技能中心", "把好的工作方法沉淀下来，与同事一起使用。"],
     works: ["我的作品", "在这台设备上生成和保存的创作成果。"],
@@ -930,7 +926,9 @@ export default function Workspace(props: WorkspaceProps) {
         <div className={`chat-layout ${preview ? "has-preview" : ""}`}>
           <section className="chat">
             <header className="chat-header">
-              <strong>{conversation?.title ?? "新建任务"}</strong>
+              <strong>
+                {conversation?.title ?? workspace?.name ?? "新建任务"}
+              </strong>
               <span className="bar-spacer" />
               <Button onClick={() => newDraft()}>
                 <Sparkle size={18} />
@@ -1133,7 +1131,7 @@ export default function Workspace(props: WorkspaceProps) {
               {!conversation?.messages.length && (
                 <div className="workspace-start-controls">
                   <SelectField
-                    label="工作区"
+                    label="项目"
                     variant="quiet"
                     side="top"
                     value={workspace?.id ?? null}
@@ -1147,8 +1145,8 @@ export default function Workspace(props: WorkspaceProps) {
                       label: w.name,
                     }))}
                     action={{
-                      label: "新建工作区…",
-                      onClick: () => void props.createWorkspace(),
+                      label: "新建项目…",
+                      onClick: () => void props.createProject(),
                     }}
                   />
                 </div>
@@ -1296,7 +1294,7 @@ export default function Workspace(props: WorkspaceProps) {
                     manage={() => navigate("models")}
                   />
                   <SelectField
-                    label="工作区权限"
+                    label="项目权限"
                     variant="quiet"
                     side="top"
                     align="end"
@@ -1463,83 +1461,52 @@ export default function Workspace(props: WorkspaceProps) {
         <div className="page">
           <PageHeader
             action={
-              <Button primary onClick={() => setProjectDialog(true)}>
+              <Button primary onClick={() => void props.createProject()}>
                 <Plus size={18} />
                 新建项目
               </Button>
             }
           />
-          {selectedProject ? (
-            <>
-              <Button onClick={() => setSelectedProject(null)}>
-                <ArrowLeft size={17} />
-                全部项目
-              </Button>
-              <div className="project-detail">
-                <h2>
-                  {state.projects.find((p) => p.id === selectedProject)?.name}
-                </h2>
-                <p>
-                  {
-                    state.projects.find((p) => p.id === selectedProject)
-                      ?.description
-                  }
-                </p>
-                <p className="muted">
-                  个人项目保存在这台设备。共享项目服务与成员协作正在接入。
-                </p>
-                <Button
-                  primary
-                  onClick={() => {
-                    setConversationId(null);
-                    navigate("chat");
-                  }}
-                >
-                  开始新任务
+          <div className="tabs">
+            <button className="active">我的项目</button>
+            <span className="tab-note">仅保存在本机</span>
+          </div>
+          <Search value={search} onChange={setSearch} placeholder="搜索项目" />
+          {!state.workspaces.length ? (
+            <Empty
+              icon={<Folder size={36} />}
+              title="把工作整理成项目"
+              detail="为一项长期工作建立独立空间，从个人项目开始。"
+              action={
+                <Button onClick={() => void props.createProject()}>
+                  新建第一个项目
                 </Button>
-              </div>
-            </>
+              }
+            />
           ) : (
-            <>
-              <div className="tabs">
-                <button className="active">我的项目</button>
-                <span className="tab-note">仅保存在本机</span>
-              </div>
-              <Search
-                value={search}
-                onChange={setSearch}
-                placeholder="搜索项目"
-              />
-              {!state.projects.length ? (
-                <Empty
-                  icon={<Folder size={36} />}
-                  title="把工作整理成项目"
-                  detail="为一项长期工作建立独立空间，从个人项目开始。"
-                  action={
-                    <Button onClick={() => setProjectDialog(true)}>
-                      新建第一个项目
-                    </Button>
-                  }
-                />
-              ) : (
-                <div className="card-grid">
-                  {state.projects
-                    .filter((p) => p.name.includes(search))
-                    .map((p) => (
-                      <button
-                        className="project-card"
-                        key={p.id}
-                        onClick={() => setSelectedProject(p.id)}
-                      >
-                        <Folder size={25} />
-                        <h3>{p.name}</h3>
-                        <p>{p.description || "暂无说明"}</p>
-                        <small>个人项目 · 本机保存</small>
-                      </button>
-                    ))}
-                </div>
-              )}
-            </>
+            <div className="card-grid">
+              {state.workspaces
+                .filter((p) => p.name.includes(search))
+                .map((p) => (
+                  <button
+                    className="project-card"
+                    key={p.id}
+                    onClick={() => props.openProject(p.id)}
+                  >
+                    <Folder size={25} />
+                    <h3>{p.name}</h3>
+                    <p>{p.description || "暂无说明"}</p>
+                    <small>
+                      {
+                        state.conversations.filter(
+                          (c) => c.workspaceId === p.id,
+                        ).length
+                      }{" "}
+                      个对话 · {p.folder ? "已连接文件夹" : "未选择文件夹"}
+                    </small>
+                  </button>
+                ))}
+            </div>
           )}
         </div>
       )}
@@ -2151,41 +2118,6 @@ export default function Workspace(props: WorkspaceProps) {
               </Button>
             </footer>
           </div>
-        </Modal>
-      )}
-      {projectDialog && (
-        <Modal title="新建个人项目" close={() => setProjectDialog(false)}>
-          <form
-            onSubmit={(e) => {
-              e.preventDefault();
-              const data = new FormData(e.currentTarget);
-              setState((s) => ({
-                ...s,
-                projects: [
-                  {
-                    id: crypto.randomUUID(),
-                    name: String(data.get("name")),
-                    description: String(data.get("description")),
-                  },
-                  ...s.projects,
-                ],
-              }));
-              setProjectDialog(false);
-              notify("项目已保存在本机。");
-            }}
-          >
-            <Field label="项目名称">
-              <input name="name" required maxLength={100} />
-            </Field>
-            <Field label="说明">
-              <textarea name="description" rows={3} />
-            </Field>
-            <footer>
-              <Button primary type="submit">
-                创建项目
-              </Button>
-            </footer>
-          </form>
         </Modal>
       )}
     </>

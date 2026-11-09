@@ -110,6 +110,7 @@ export type LocalState = {
   conversations: Conversation[];
   drafts: Draft[];
   installed: Skill[];
+  /** Legacy cards, retained for backup compatibility and migrated into workspaces. */
   projects: { id: string; name: string; description: string }[];
   workspaces: LocalWorkspace[];
   activeWorkspaceId: string;

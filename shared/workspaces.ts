@@ -59,7 +59,7 @@ export const WORKSPACE_ACCESS_OPTIONS: ReadonlyArray<{
 export function defaultWorkspace(): LocalWorkspace {
   return {
     id: "default-workspace",
-    name: "默认工作区",
+    name: "默认项目",
     description: "本机项目与文件夹设置",
     folder: null,
     access: "edit",
@@ -93,8 +93,8 @@ export function normalizeLocalState(
     .map((workspace) => ({
       id: workspace.id,
       name:
-        workspace.id === "default-workspace" && workspace.name === "默认项目"
-          ? "默认工作区"
+        workspace.id === "default-workspace" && workspace.name === "默认工作区"
+          ? "默认项目"
           : workspace.name.trim().slice(0, 100) || "未命名项目",
       description: (workspace.description ?? "").slice(0, 500),
       folder: typeof workspace.folder === "string" ? workspace.folder : null,
@@ -103,6 +103,27 @@ export function normalizeLocalState(
   const normalizedWorkspaces = workspaces.length
     ? workspaces
     : [defaultWorkspace()];
+  // Older clients stored project cards separately from conversation workspaces.
+  // Migrate by identity, preserving similarly named projects and all histories.
+  for (const project of Array.isArray(value?.projects) ? value.projects : []) {
+    if (
+      !project ||
+      typeof project.id !== "string" ||
+      typeof project.name !== "string" ||
+      normalizedWorkspaces.some((w) => w.id === project.id)
+    )
+      continue;
+    normalizedWorkspaces.push({
+      id: project.id,
+      name: project.name.trim().slice(0, 100) || "未命名项目",
+      description:
+        typeof project.description === "string"
+          ? project.description.slice(0, 500)
+          : "",
+      folder: null,
+      access: "edit",
+    });
+  }
   const activeWorkspaceId = normalizedWorkspaces.some(
     (workspace) => workspace.id === value?.activeWorkspaceId,
   )
@@ -154,6 +175,35 @@ export function normalizeLocalState(
           ].slice(0, 16)
         : [],
     },
+  };
+}
+
+/** Creating a project is always additive, even when its folder is reused. */
+export function addLocalProject(
+  state: LocalState,
+  folder: string,
+  id: string,
+): LocalState {
+  if (state.workspaces.some((w) => w.id === id))
+    throw Error("项目标识已存在，请重新创建");
+  const base = (
+    folder
+      .replace(/[\\/]+$/, "")
+      .split(/[\\/]/)
+      .at(-1)
+      ?.trim() || "本地项目"
+  ).slice(0, 90);
+  let name = base,
+    index = 2;
+  const names = new Set(state.workspaces.map((w) => w.name));
+  while (names.has(name)) name = `${base} (${index++})`;
+  return {
+    ...state,
+    activeWorkspaceId: id,
+    workspaces: [
+      ...state.workspaces,
+      { id, name, description: "本地项目文件夹", folder, access: "edit" },
+    ],
   };
 }
 

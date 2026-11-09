@@ -69,12 +69,17 @@ module.exports = async ({
   const saved = await js(
     `window.brainDesktop.readState(${JSON.stringify(actor.id)})`,
   );
+  const legacyProject = {
+    id: "legacy-project-card-qa",
+    name: "历史项目迁移验收",
+    description: "旧版项目卡片",
+  };
   const originalDialog = dialog.showOpenDialog;
   const size = win.getContentSize();
   const minimumSize = win.getMinimumSize();
   const restoreFolder = async () => {
     await js(
-      `(async()=>{const state=await window.brainDesktop.readState(${JSON.stringify(actor.id)});state.workspaces=${JSON.stringify(saved.workspaces)};state.activeWorkspaceId=${JSON.stringify(saved.activeWorkspaceId)};state.settings.model=${JSON.stringify(saved.settings.model)};await window.brainDesktop.writeState(${JSON.stringify(actor.id)},state)})()`,
+      `(async()=>{const state=await window.brainDesktop.readState(${JSON.stringify(actor.id)});state.projects=${JSON.stringify(saved.projects)};state.workspaces=${JSON.stringify(saved.workspaces)};state.activeWorkspaceId=${JSON.stringify(saved.activeWorkspaceId)};state.settings.model=${JSON.stringify(saved.settings.model)};await window.brainDesktop.writeState(${JSON.stringify(actor.id)},state)})()`,
     );
   };
   try {
@@ -93,7 +98,7 @@ module.exports = async ({
       native.files.reduce((sum, f) => sum + f.content.length, 0) > 2000000,
     );
     await js(
-      `(async()=>{const state=await window.brainDesktop.readState(${JSON.stringify(actor.id)});state.workspaces[0].folder=null;state.activeWorkspaceId=state.workspaces[0].id;state.settings.model=${JSON.stringify(connection.id)};await window.brainDesktop.writeState(${JSON.stringify(actor.id)},state)})()`,
+      `(async()=>{const state=await window.brainDesktop.readState(${JSON.stringify(actor.id)});state.projects=[${JSON.stringify(legacyProject)},...(state.projects||[])];state.workspaces[0].folder=null;state.activeWorkspaceId=state.workspaces[0].id;state.settings.model=${JSON.stringify(connection.id)};await window.brainDesktop.writeState(${JSON.stringify(actor.id)},state)})()`,
     );
     await js("location.reload()");
     await waitFor(
@@ -111,6 +116,23 @@ module.exports = async ({
       "workspace picker on new chat",
     );
     await capture("workspace-new-chat-light.png");
+    await waitFor(
+      () =>
+        js(
+          `!!document.querySelector('[data-project-id="${legacyProject.id}"]')`,
+        ),
+      "legacy project appears in sidebar",
+    );
+    await waitFor(
+      async () =>
+        (
+          await js(`window.brainDesktop.readState(${JSON.stringify(actor.id)})`)
+        ).workspaces.some((w) => w.id === legacyProject.id),
+      "legacy project migration persisted",
+    );
+    const baseline = (
+      await js(`window.brainDesktop.readState(${JSON.stringify(actor.id)})`)
+    ).workspaces.length;
     let picked = folder,
       selections = 0;
     dialog.showOpenDialog = async (_window, options) => {
@@ -120,8 +142,10 @@ module.exports = async ({
         ? { canceled: false, filePaths: [picked] }
         : { canceled: true, filePaths: [] };
     };
-    await click("工作区");
-    await click("新建工作区…");
+    await js(
+      `document.querySelector('.workspace-start-controls [aria-label="项目"]').click()`,
+    );
+    await click("新建项目…");
     await waitFor(
       async () =>
         (
@@ -139,23 +163,65 @@ module.exports = async ({
     );
     await capture("workspace-folder-selected-light.png");
     picked = null;
-    await click("新建工作区");
+    await click("新建项目");
     await waitFor(() => selections === 2, "cancel native folder dialog");
     assert.equal(
       (await js(`window.brainDesktop.readState(${JSON.stringify(actor.id)})`))
         .workspaces.length,
-      saved.workspaces.length + 1,
+      baseline + 1,
     );
     picked = folder;
-    await click("新建工作区");
-    await waitFor(() => selections === 3, "existing folder reselected");
+    await click("新建项目");
+    await waitFor(
+      async () =>
+        (await js(`window.brainDesktop.readState(${JSON.stringify(actor.id)})`))
+          .workspaces.length ===
+        baseline + 2,
+      "same folder creates a separate project",
+    );
+    const afterDuplicate = await js(
+      `window.brainDesktop.readState(${JSON.stringify(actor.id)})`,
+    );
+    assert.equal(afterDuplicate.workspaces.length, baseline + 2);
+    assert.deepEqual(
+      afterDuplicate.workspaces.find((w) => w.id === created.id),
+      created,
+      "original project is not edited",
+    );
+    assert.notEqual(afterDuplicate.activeWorkspaceId, created.id);
     assert.equal(
-      (await js(`window.brainDesktop.readState(${JSON.stringify(actor.id)})`))
-        .workspaces.length,
-      saved.workspaces.length + 1,
+      afterDuplicate.workspaces.find(
+        (w) => w.id === afterDuplicate.activeWorkspaceId,
+      ).name,
+      created.name + " (2)",
+    );
+    assert.equal(
+      await js(
+        `document.querySelectorAll('.workspace-group[data-project-id]').length`,
+      ),
+      baseline + 2,
+    );
+    assert.equal(
+      await js(`document.querySelector('.workspace-number')?.textContent`),
+      "(2)",
     );
     picked = dir;
-    await click("新建工作区");
+    await click("项目");
+    await waitFor(
+      () => js(`!!document.querySelector('.project-card')`),
+      "project overview",
+    );
+    assert.equal(
+      await js(`document.querySelectorAll('.project-card').length`),
+      baseline + 2,
+    );
+    assert.equal(
+      await js(
+        `document.querySelector('.page').textContent.includes(${JSON.stringify(legacyProject.name)})`,
+      ),
+      true,
+    );
+    await js(`document.querySelector('.page-header .button').click()`);
     await waitFor(
       async () =>
         (
@@ -163,12 +229,12 @@ module.exports = async ({
         ).workspaces.some((w) => w.folder === dir),
       "second workspace created",
     );
-    await selectOption("工作区", created.name);
+    await selectOption("项目", created.name);
     await js("location.reload()");
     await waitFor(
       () =>
         js(
-          `document.querySelector('[aria-label="工作区"]')?.textContent.includes(${JSON.stringify(created.name)})&&!document.querySelector('.entry-experience')`,
+          `document.querySelector('[aria-label="项目"]')?.textContent.includes(${JSON.stringify(created.name)})&&!document.querySelector('.entry-experience')`,
         ),
       "workspace restored on reload",
     );
@@ -246,7 +312,7 @@ module.exports = async ({
     const other = (
       await js(`window.brainDesktop.readState(${JSON.stringify(actor.id)})`)
     ).workspaces.find((w) => w.folder === dir);
-    await click("打开工作区 " + other.name);
+    await click("打开项目 " + other.name);
     await waitFor(
       () => js(`!!document.querySelector('.workspace-start-controls')`),
       "new chat in other workspace",
@@ -266,8 +332,36 @@ module.exports = async ({
       "old chat retains workspace and hides picker",
     );
     await capture("workspace-conversation-light.png");
+    await click("项目");
+    await waitFor(
+      () => js(`!!document.querySelector('.project-card')`),
+      "project index shares sidebar data",
+    );
+    await js(
+      `[...document.querySelectorAll('.project-card')].find(c=>c.querySelector('h3')?.textContent===${JSON.stringify(created.name)}).click()`,
+    );
+    await waitFor(
+      () => js(`!!document.querySelector('.workspace-start-controls')`),
+      "project card opens a new chat in that project",
+    );
+    assert.equal(
+      (await js(`window.brainDesktop.readState(${JSON.stringify(actor.id)})`))
+        .activeWorkspaceId,
+      created.id,
+    );
+    assert.equal(
+      await js(
+        `document.querySelector('[data-project-id="${created.id}"] [data-history-title]')?.textContent`,
+      ),
+      owned.title,
+    );
+    assert.equal(
+      await js(`document.querySelector('.chat-header strong').textContent`),
+      created.name,
+    );
+    await capture("projects-independent-sidebar-light.png");
     checks.push(
-      "Workspace groups: native folder creation, cancel, deduplication, picker only on new chat, no persistent path card, conversation ownership and reopening, actual dark 700px layout; synthetic files only",
+      "Independent projects: folder creation, cancel, reused folders create unique identities without overwriting originals; legacy cards migrate, sidebar and overview match, conversation ownership and reopening persist, new-chat-only picker and dark 700px layout; synthetic files only",
     );
     await waitFor(async () => {
       const state = await js(

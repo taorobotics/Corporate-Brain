@@ -192,6 +192,12 @@
 .workspace-select svg {
   flex-shrink: 0;
 }
+.workspace-number {
+  flex-shrink: 0;
+  color: var(--muted);
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+}
 .workspace-select.active {
   color: var(--accent);
 }

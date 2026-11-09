@@ -434,7 +434,7 @@ async function waitFor(test, label, timeout = 12000) {
     ),
     true,
   );
-  await openSelect("工作区权限");
+  await openSelect("项目权限");
   assert.equal(
     await js(`document.querySelector('.select-popup[data-open]').dataset.side`),
     "top",
@@ -454,20 +454,20 @@ async function waitFor(test, label, timeout = 12000) {
   );
   await waitFor(
     () =>
-      js(`document.activeElement.getAttribute('aria-label') === '工作区权限'`),
+      js(`document.activeElement.getAttribute('aria-label') === '项目权限'`),
     "Escape restores select trigger focus",
   );
-  await openSelect("工作区");
-  assert.equal(await has("默认工作区"), true);
+  await openSelect("项目");
+  assert.equal(await has("默认项目"), true);
   await key("Escape");
-  await selectOption("工作区权限", "仅可查看");
+  await selectOption("项目权限", "仅可查看");
   assert.equal(
     await js(
-      `document.querySelector('[aria-label="工作区权限"]').textContent.includes('仅可查看')`,
+      `document.querySelector('[aria-label="项目权限"]').textContent.includes('仅可查看')`,
     ),
     true,
   );
-  await selectOption("工作区权限", "项目内修改");
+  await selectOption("项目权限", "项目内修改");
   checks.push(
     "Unified AI automatic composer removes task/mode selectors while retaining accessible workspace and permission choices",
   );
@@ -1684,7 +1684,7 @@ async function waitFor(test, label, timeout = 12000) {
     false,
   );
   checks.push("900px desktop viewport has no document overflow");
-  await openSelect("工作区权限");
+  await openSelect("项目权限");
   const bounds = await js(
     `(() => { const menu = document.querySelector('.select-popup[data-open]'); const r = menu.getBoundingClientRect(); return { left: r.left, top: r.top, right: r.right, bottom: r.bottom, width: innerWidth, height: innerHeight }; })()`,
   );

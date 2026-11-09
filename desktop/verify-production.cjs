@@ -274,11 +274,11 @@ const wait = async (fn, label, ms = 45000) => {
     await js(
       `window.brainDesktop.production.chooseDirectory(${JSON.stringify(user.id)})`,
     );
-    await click("新建工作区");
+    await click("新建项目");
     await wait(
       () =>
         js(
-          `document.querySelector('[aria-label="工作区"]')?.textContent.includes('workspace-project')`,
+          `document.querySelector('[aria-label="项目"]')?.textContent.includes('workspace-project')`,
         ),
       "project workspace selected",
     );
@@ -560,11 +560,11 @@ const wait = async (fn, label, ms = 45000) => {
     await click("新建任务");
     workspaceOutput = join(dir, "workspace-gif");
     await fs.mkdir(workspaceOutput);
-    await click("新建工作区");
+    await click("新建项目");
     await wait(
       () =>
         js(
-          `document.querySelector('[aria-label="工作区"]')?.textContent.includes('workspace-gif')`,
+          `document.querySelector('[aria-label="项目"]')?.textContent.includes('workspace-gif')`,
         ),
       "second workspace selected",
     );

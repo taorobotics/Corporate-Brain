@@ -6,6 +6,7 @@ import {
   defaultWorkspace,
   estimateTokens,
   normalizeLocalState,
+  addLocalProject,
 } from "./workspaces";
 
 test("workspace normalization creates a default workspace and migrates legacy modes", () => {
@@ -48,11 +49,11 @@ test("legacy default project keeps its folder and access while custom names stay
     workspaces: [old],
     activeWorkspaceId: old.id,
   });
-  assert.deepEqual(state.workspaces[0], old);
+  assert.deepEqual(state.workspaces[0], { ...old, name: "默认项目" });
   assert.equal(
     normalizeLocalState({ workspaces: [{ ...old, name: "默认项目" }] })
       .workspaces[0].name,
-    "默认工作区",
+    "默认项目",
   );
   assert.equal(state.activeWorkspaceId, old.id);
   assert.equal(
@@ -60,6 +61,74 @@ test("legacy default project keeps its folder and access while custom names stay
       .workspaces[0].name,
     "我的研发项目",
   );
+});
+
+test("creating a project in a reused folder preserves the original project, histories and permissions", () => {
+  const original = {
+    id: "first",
+    name: "campaign",
+    description: "Existing project",
+    folder: "D:/campaign",
+    access: "view" as const,
+  };
+  const conversation = {
+    id: "history",
+    workspaceId: original.id,
+    title: "Original conversation",
+    createdAt: "2026-11-09",
+    messages: [],
+  };
+  const state = normalizeLocalState({
+    workspaces: [original],
+    activeWorkspaceId: original.id,
+    conversations: [conversation],
+  });
+  const next = addLocalProject(state, original.folder, "second");
+  assert.equal(state.workspaces.length, 1);
+  assert.equal(next.workspaces.length, 2);
+  assert.deepEqual(next.workspaces[0], original);
+  assert.equal(next.activeWorkspaceId, "second");
+  assert.equal(next.workspaces[1].name, "campaign (2)");
+  assert.equal(next.workspaces[1].access, "edit");
+  assert.deepEqual(next.conversations, state.conversations);
+  const third = addLocalProject(next, original.folder, "third");
+  assert.equal(third.workspaces[2].name, "campaign (3)");
+  assert.equal(third.conversations[0].workspaceId, original.id);
+  assert.throws(
+    () => addLocalProject(third, original.folder, "first"),
+    /已存在/,
+  );
+});
+
+test("legacy project cards migrate once and existing workspace identities remain authoritative", () => {
+  const state = normalizeLocalState({
+    projects: [
+      { id: "legacy-a", name: "旧项目", description: "A" },
+      { id: "legacy-b", name: "旧项目", description: "B" },
+    ],
+  });
+  assert.deepEqual(
+    state.workspaces.map((w) => w.id),
+    ["default-workspace", "legacy-a", "legacy-b"],
+  );
+  assert.equal(state.workspaces[1].folder, null);
+  const edited = {
+    ...state,
+    workspaces: state.workspaces.map((w) =>
+      w.id === "legacy-a"
+        ? {
+            ...w,
+            name: "修改后的名称",
+            folder: "/local/project",
+            access: "view" as const,
+          }
+        : w,
+    ),
+  };
+  const restored = normalizeLocalState(edited);
+  assert.equal(restored.workspaces.length, 3);
+  assert.deepEqual(restored.workspaces[1], edited.workspaces[1]);
+  assert.deepEqual(normalizeLocalState(restored), restored);
 });
 
 test("legacy conversations go to the default workspace and named conversations retain their workspace", () => {
