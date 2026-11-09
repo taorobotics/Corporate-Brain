@@ -3,6 +3,8 @@ import { mkdir, readFile, writeFile } from "node:fs/promises";
 import { dirname, join } from "node:path";
 import { fromBuffer, type Entry, type ZipFile } from "yauzl";
 import { parseDocument } from "yaml";
+import { Agent } from "undici";
+import { personalModelUrl, publicModelLookup } from "./model-transport";
 import type {
   SkillImportCandidate,
   SkillImportPreview,
@@ -151,14 +153,20 @@ export function parseGithubUrl(value: string) {
   return { repo: `${owner}/${repo}`, ref, path };
 }
 
-async function boundedResponse(response: Response, limit: number) {
+async function boundedResponse(
+  response: Response,
+  limit: number,
+  generic = false,
+) {
   if (!response.ok)
     throw new SkillImportError(
-      response.status === 404
-        ? "仓库、分支或目录不存在，或不是公开仓库"
-        : response.status === 403 || response.status === 429
-          ? "GitHub 暂时限制请求，请稍后重试或上传 ZIP"
-          : "无法从 GitHub 下载，请稍后重试或上传 ZIP",
+      generic
+        ? "链接无法下载，请确认公开可访问，或下载后上传 ZIP"
+        : response.status === 404
+          ? "仓库、分支或目录不存在，或不是公开仓库"
+          : response.status === 403 || response.status === 429
+            ? "GitHub 暂时限制请求，请稍后重试或上传 ZIP"
+            : "无法从 GitHub 下载，请稍后重试或上传 ZIP",
       502,
     );
   if (Number(response.headers.get("content-length")) > limit)
@@ -179,6 +187,110 @@ async function boundedResponse(response: Response, limit: number) {
     await reader.cancel().catch(() => {});
   }
   return Buffer.concat(chunks);
+}
+
+const importAgent = new Agent({ connect: { lookup: publicModelLookup } });
+export function publicSkillUrl(value: string, redirected = false) {
+  try {
+    const url = new URL(value);
+    // Do not persist signed URLs or credentials in skill provenance or drafts.
+    const check = new URL(url);
+    if (redirected) check.search = "";
+    personalModelUrl(check.toString());
+    if (url.port || (!redirected && url.search) || url.hash) throw Error();
+    return url;
+  } catch {
+    return reject(
+      "请输入不含账号、查询参数的公开 HTTPS 链接；内网地址不支持，请改用上传 ZIP",
+    );
+  }
+}
+
+export async function prepareUrl(
+  value: string,
+  root: string,
+  fetcher: typeof fetch = fetch,
+): Promise<PreparedImport> {
+  let url = publicSkillUrl(value);
+  const originUrl = url.toString(),
+    originHost = url.hostname;
+  if (
+    url.hostname === "github.com" &&
+    /^\/[^/]+\/[^/]+\/blob\/[^/]+\//.test(url.pathname)
+  ) {
+    const tree = new URL(url);
+    tree.pathname = tree.pathname
+      .replace("/blob/", "/tree/")
+      .replace(/\/[^/]+$/, "");
+    return prepareGithub(tree.toString(), root, fetcher);
+  }
+  if (
+    url.hostname === "github.com" &&
+    /^\/[^/]+\/[^/]+(?:\/tree\/.*)?\/?$/.test(url.pathname)
+  )
+    return prepareGithub(url.toString(), root, fetcher);
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), 240_000);
+  try {
+    for (let redirects = 0; redirects <= 4; redirects++) {
+      const response = await fetcher(url.toString(), {
+        redirect: "manual",
+        signal: controller.signal,
+        headers: { "User-Agent": "Corporate-Brain-Skill-Importer" },
+        dispatcher: importAgent,
+      } as RequestInit);
+      if ([301, 302, 303, 307, 308].includes(response.status)) {
+        await response.body?.cancel();
+        const location = response.headers.get("location");
+        if (!location || redirects === 4)
+          reject("下载链接重定向过多或缺少地址");
+        url = publicSkillUrl(new URL(location, url).toString(), true);
+        continue;
+      }
+      const bytes = await boundedResponse(response, MAX_ZIP, true);
+      let result: PreparedImport;
+      if (bytes.subarray(0, 2).toString() === "PK") {
+        result = await prepareZip(bytes, root, "链接技能包.zip");
+      } else {
+        if (bytes.length > 200_000 || bytes.includes(0))
+          reject("链接需要提供 ZIP、Markdown 或纯文本，文本最大 200KB");
+        const text = bytes.toString("utf8").replace(/^\uFEFF/, "");
+        if (
+          /^\s*<(?:!doctype|html|head|body)\b/i.test(text) ||
+          /text\/html/i.test(response.headers.get("content-type") ?? "")
+        )
+          reject(
+            "这是网页链接，请改用 GitHub 仓库、ZIP 下载地址或 Markdown 原文链接",
+          );
+        const out = writer(root);
+        await out.put(/^---\r?\n/.test(text) ? "SKILL.md" : "README.md", bytes);
+        result = await inspectPackage(root, out.files, {
+          kind: "url",
+          label: originHost,
+          url: originUrl,
+          notes: [],
+        });
+      }
+      return {
+        ...result,
+        source: {
+          ...result.source,
+          kind: "url",
+          label: originHost,
+          url: originUrl,
+        },
+      };
+    }
+    return reject("链接下载未完成");
+  } catch (error) {
+    if (error instanceof SkillImportError) throw error;
+    throw new SkillImportError(
+      "链接导入未完成，请检查网络或下载后上传 ZIP",
+      502,
+    );
+  } finally {
+    clearTimeout(timer);
+  }
 }
 
 export async function prepareGithub(
@@ -454,7 +566,7 @@ function crc32(bytes: Buffer) {
   return (crc ^ -1) >>> 0;
 }
 
-async function inspectPackage(
+export async function inspectPackage(
   root: string,
   files: PackageFile[],
   origin: Pick<
@@ -473,7 +585,7 @@ async function inspectPackage(
   const paths = files.map((f) => f.path),
     entries = paths.includes("SKILL.md")
       ? ["SKILL.md"]
-      : paths.filter((p) => /(^|\/)SKILL\.md$/i.test(p));
+      : paths.filter((p) => /(^|\/)(?:CORPORATE-)?SKILL\.md$/i.test(p));
   for (const entry of entries.slice(0, 50)) {
     const content = await text(entry),
       match = /^---\r?\n([\s\S]*?)\r?\n---(?:\r?\n|$)/.exec(content);
@@ -538,8 +650,44 @@ async function inspectPackage(
     });
     origin.notes.push("MG 动效库已增加流程入口；原文件内容保持不变。");
   }
-  if (!candidates.length)
-    reject("未找到 SKILL.md；普通代码仓库需要先整理成技能包");
+  if (!candidates.length) {
+    const readme =
+      paths.find((p) =>
+        /^(?:README(?:[._-]zh(?:[._-]cn)?)?|说明)\.(?:md|txt)$/i.test(p),
+      ) ?? paths.find((p) => /(^|\/)README\.(?:md|txt)$/i.test(p));
+    if (!readme) reject("未找到 SKILL.md 或 README，请补充技能说明后重新上传");
+    const guide = await text(readme);
+    if (guide.trim().length < 10) reject("README 内容太少，请补充技能说明");
+    const name = (
+      origin.label
+        .replace(/\.zip$/i, "")
+        .split("/")
+        .pop() || "外部项目"
+    ).slice(0, 85);
+    const instructions = `使用此项目协助完成用户任务。先阅读 ${readme}，确认适用场景、输入参数和输出要求，再检查项目中实际提供的工具与依赖。根据用户目标选择必要的参考资料和脚本；缺少依赖或授权时说明情况，不声称已完成未执行的步骤。遵守当前工作区权限，不自动安装系统软件，不将用户资料发送到未授权的外部服务。\n\n请在发布前根据 README 补充具体步骤与质量检查。此草稿尚未试运行。`;
+    const content = Buffer.from(
+      `---\nname: ${JSON.stringify(name)}\ndescription: ${JSON.stringify(`基于 ${readme} 整理的项目技能草稿，需编辑并验证具体流程。`)}\nversion: 1.0.0\n---\n\n${instructions}\n`,
+    );
+    const entry = "SKILL.md";
+    if (paths.some((p) => p.toLowerCase() === entry.toLowerCase()))
+      reject("项目已有技能入口，请整理为有效的 SKILL.md 后上传");
+    await writeFile(join(root, entry), content, { flag: "wx", mode: 0o600 });
+    files.push({
+      path: entry,
+      size: content.length,
+      sha256: createHash("sha256").update(content).digest("hex"),
+    });
+    candidates.push({
+      entry,
+      name,
+      description: `基于 ${readme} 整理的项目技能草稿，需编辑并验证具体流程。`,
+      version: "1.0.0",
+      instructions,
+    });
+    origin.notes.push(
+      "原项目没有 SKILL.md，已生成待编辑、待试运行的技能入口，原始 README 与配套文件保留。",
+    );
+  }
   const licenseFiles = paths.filter((p) =>
     /(^|\/)(?:REPOSITORY-)?(?:LICENSE|LICENCE|COPYING|NOTICE)(?:[.-][^/]*)?$/i.test(
       p,

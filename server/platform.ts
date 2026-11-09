@@ -63,6 +63,7 @@ import {
   type SkillResources,
 } from "./skill-library";
 import { SkillImportError } from "./skill-import";
+import { hasPrivateSkillContent } from "./skill-package";
 import { AUTOMATIC_ROUTER_INSTRUCTION, parseAutomaticPlan } from "./automatic";
 import {
   skillIdsSchema,
@@ -767,13 +768,7 @@ export function createPlatform(
   app.post("/api/skills", (req, res) => {
     const actor = getActor(req);
     const data = packageSchema.parse(req.body);
-    const prohibited =
-      /(?:[A-Z]:[\\/](?:Users|Open_Source_Project)|\/(?:Users|home)\/[^\s/]+|sk-[A-Za-z0-9_-]{16,}|(?:api[_-]?key|password|token)\s*[:=]\s*["']?[^\s"']{8,})/i;
-    if (
-      prohibited.test(
-        [data.instructions, data.examples, data.testSummary].join("\n"),
-      )
-    )
+    if (hasPrivateSkillContent(data))
       fail(400, "提交内容疑似包含个人路径或凭据，请检查后再提交");
     const targets =
       data.audience === "department"

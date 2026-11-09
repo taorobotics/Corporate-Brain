@@ -11,6 +11,12 @@ import {
 } from "node:fs/promises";
 import { join, resolve } from "node:path";
 import { z } from "zod";
+import { zipSync } from "fflate";
+import {
+  skillDraftSchema,
+  skillMarkdown,
+  hasPrivateSkillContent,
+} from "./skill-package";
 import type { Store } from "./database";
 import type { Skill, User } from "../shared/types";
 import type {
@@ -21,6 +27,8 @@ import {
   MAX_ZIP,
   prepareGithub,
   prepareZip,
+  prepareUrl,
+  inspectPackage,
   safePackagePath,
   SkillImportError,
   type PreparedImport,
@@ -141,6 +149,13 @@ export function mountSkillLibrary(
       await preview(req, (dir) => prepareGithub(url, dir, options.fetch)),
     );
   });
+  app.post("/api/skill-imports/url", async (req, res) => {
+    const { url } = z
+      .object({ url: z.string().trim().min(1).max(1000) })
+      .strict()
+      .parse(req.body);
+    res.json(await preview(req, (dir) => prepareUrl(url, dir, options.fetch)));
+  });
   app.post(
     "/api/skill-imports/zip",
     express.raw({ type: "application/zip", limit: MAX_ZIP }),
@@ -166,6 +181,105 @@ export function mountSkillLibrary(
       path = z.string().max(420).parse(req.query.path);
     res.json(await readText(p.dir, p.data.files, path));
   });
+  const editSchema = z
+    .object({ entry: z.string().max(420), edits: skillDraftSchema.optional() })
+    .strict();
+  function validatedEdits(edits: z.infer<typeof skillDraftSchema> | undefined) {
+    if (edits && hasPrivateSkillContent(edits))
+      error("技能内容疑似包含个人路径或凭据，请检查后再打包");
+  }
+  async function revised(
+    p: ReturnType<typeof own>,
+    entry: string,
+    edits?: z.infer<typeof skillDraftSchema>,
+  ) {
+    if (!p.data.candidates.some((c) => c.entry === entry))
+      error("请选择有效的技能入口");
+    validatedEdits(edits);
+    if (!edits) return { dir: p.dir, data: p.data };
+    const dir = await mkdtemp(join(root, "staging", "edited-"));
+    try {
+      const files: PackageFile[] = [];
+      for (const file of p.data.files) {
+        const original = await verifiedFile(p.dir, file);
+        const bytes =
+          file.path === entry
+            ? Buffer.from(skillMarkdown(edits, original.toString("utf8")))
+            : original;
+        await mkdir(join(dir, file.path, ".."), {
+          recursive: true,
+          mode: 0o700,
+        });
+        await writeFile(join(dir, file.path), bytes, {
+          flag: "wx",
+          mode: 0o600,
+        });
+        files.push({
+          path: file.path,
+          size: bytes.length,
+          sha256: createHash("sha256").update(bytes).digest("hex"),
+        });
+      }
+      const data = await inspectPackage(dir, files, {
+        ...p.data.source,
+        notes: [
+          ...p.data.source.notes,
+          "技能入口由导入者编辑，配套资源和原许可保留。",
+        ],
+      });
+      return { dir, data };
+    } catch (e) {
+      await rm(dir, { recursive: true, force: true });
+      throw e;
+    }
+  }
+  async function zipped(dir: string, files: PackageFile[]) {
+    const contents: Record<string, Uint8Array> = Object.create(null);
+    for (const file of files)
+      contents[file.path] = await verifiedFile(dir, file);
+    const bytes = Buffer.from(zipSync(contents));
+    if (bytes.length > MAX_ZIP)
+      error("导出的 ZIP 超过 32MB，请精简项目资源后重试");
+    return bytes;
+  }
+  app.post("/api/skill-imports/:id/export", async (req, res) => {
+    const p = own(req);
+    if (p.busy) error("正在打包，请稍后重试", 409);
+    const { entry, edits } = editSchema.parse(req.body);
+    p.busy = true;
+    let value: Awaited<ReturnType<typeof revised>> | undefined;
+    let bytes: Buffer;
+    try {
+      value = await revised(p, entry, edits);
+      bytes = await zipped(value.dir, value.data.files);
+    } finally {
+      try {
+        if (value && value.dir !== p.dir)
+          await rm(value.dir, { recursive: true, force: true });
+      } finally {
+        p.busy = false;
+      }
+    }
+    res.type("application/zip").set("Cache-Control", "no-store").send(bytes);
+  });
+  app.post("/api/skill-packages/export", (req, res) => {
+    const actor = actorOf(req),
+      data = skillDraftSchema.parse(req.body);
+    validatedEdits(data);
+    res
+      .type("application/zip")
+      .set("Cache-Control", "no-store")
+      .send(
+        Buffer.from(
+          zipSync({
+            "SKILL.md": Buffer.from(skillMarkdown(data)),
+            "LICENSE.txt": Buffer.from(
+              `内部使用许可\n\n本技能由 ${actor.name} 创建，仅授权其所属公司内部使用。未经作者许可不得对外分发；第三方资料仍适用其原许可。\n`,
+            ),
+          }),
+        ),
+      );
+  });
   app.post("/api/skill-imports/:id/commit", async (req, res) => {
     const p = own(req),
       actor = actorOf(req);
@@ -177,6 +291,7 @@ export function mountSkillLibrary(
         targetDepartments: z.array(z.string().uuid()).max(100).default([]),
         publish: z.boolean().default(false),
         acknowledge: z.literal(true),
+        edits: skillDraftSchema.optional(),
       })
       .strict()
       .parse(req.body);
@@ -201,24 +316,32 @@ export function mountSkillLibrary(
           .get(id)
       )
         error("部门不存在或已停用");
-    const source: ImportedSkillSource = { ...p.data.source, entry: data.entry };
-    const existing = store.db
-      .prepare(
-        "SELECT id FROM skills WHERE owner_department_id=? AND json_extract(import_source,'$.digest')=? AND json_extract(import_source,'$.entry')=?",
-      )
-      .get(actor.departmentId, source.digest, source.entry);
-    if (existing) error("这个技能包已经导入，请在技能中心或审核列表查看", 409);
+    validatedEdits(data.edits);
     p.busy = true;
+    let compiled: Awaited<ReturnType<typeof revised>> | undefined;
     try {
+      compiled = await revised(p, data.entry, data.edits);
+      const packageData = compiled.data;
+      const source: ImportedSkillSource = {
+        ...packageData.source,
+        entry: data.entry,
+      };
+      const existing = store.db
+        .prepare(
+          "SELECT id FROM skills WHERE owner_department_id=? AND json_extract(import_source,'$.digest')=? AND json_extract(import_source,'$.entry')=?",
+        )
+        .get(actor.departmentId, source.digest, source.entry);
+      if (existing)
+        error("这个技能包已经导入，请在技能中心或审核列表查看", 409);
       await mkdir(join(root, "packages"), { recursive: true, mode: 0o700 });
       await writeFile(
-        join(p.dir, ".corporate-manifest.json"),
-        JSON.stringify(p.data.files),
+        join(compiled.dir, ".corporate-manifest.json"),
+        JSON.stringify(packageData.files),
         { flag: "wx", mode: 0o600 },
       );
       const dest = join(root, "packages", source.digest);
       try {
-        await rename(p.dir, dest);
+        await rename(compiled.dir, dest);
       } catch (e) {
         if (
           !["EEXIST", "ENOTEMPTY", "EPERM"].includes(
@@ -230,9 +353,9 @@ export function mountSkillLibrary(
           join(dest, ".corporate-manifest.json"),
           "utf8",
         );
-        if (stored !== JSON.stringify(p.data.files))
+        if (stored !== JSON.stringify(packageData.files))
           error("已存储的技能包校验不一致", 409);
-        await rm(p.dir, { recursive: true, force: true });
+        await rm(compiled.dir, { recursive: true, force: true });
       }
       const id = randomUUID(),
         status = data.publish ? "published" : "pending";
@@ -242,13 +365,14 @@ export function mountSkillLibrary(
         )
         .run(
           id,
-          candidate.name,
-          candidate.description,
-          candidate.version,
-          candidate.instructions,
-          "",
-          "导入已验证包结构、文件完整性与入口格式；脚本未执行，渲染依赖和最终作品效果尚未验收。",
-          "[]",
+          data.edits?.name ?? candidate.name,
+          data.edits?.description ?? candidate.description,
+          data.edits?.version ?? candidate.version,
+          data.edits?.instructions ?? candidate.instructions,
+          data.edits?.examples ?? "",
+          data.edits?.testSummary ||
+            "导入已验证包结构、文件完整性与入口格式；脚本未执行，渲染依赖和最终作品效果尚未验收。",
+          JSON.stringify(data.edits?.requiredTools ?? []),
           actor.id,
           actor.departmentId,
           data.audience,
@@ -264,8 +388,13 @@ export function mountSkillLibrary(
         id,
       );
       previews.delete(String(req.params.id));
+      if (compiled.dir !== p.dir)
+        await rm(p.dir, { recursive: true, force: true });
       res.status(201).json(skillById(id));
     } finally {
+      if (compiled && compiled.dir !== p.dir)
+        await rm(compiled.dir, { recursive: true, force: true });
+      else await rm(join(p.dir, ".corporate-manifest.json"), { force: true });
       p.busy = false;
     }
   });

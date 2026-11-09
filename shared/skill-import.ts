@@ -1,5 +1,5 @@
 export type ImportedSkillSource = {
-  kind: "github" | "zip";
+  kind: "github" | "zip" | "url";
   label: string;
   url?: string;
   commit?: string;

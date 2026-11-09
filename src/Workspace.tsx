@@ -1672,7 +1672,9 @@ export default function Workspace(props: WorkspaceProps) {
                           <small className="muted">
                             {skill.imported.kind === "github"
                               ? "GitHub 导入"
-                              : "ZIP 导入"}{" "}
+                              : skill.imported.kind === "url"
+                                ? "链接导入"
+                                : "ZIP 导入"}{" "}
                             ·{" "}
                             {skill.imported.hasScripts
                               ? "配套脚本已保存，运行依赖待核对"

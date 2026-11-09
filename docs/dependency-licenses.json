@@ -8028,7 +8028,7 @@
       "name": "undici",
       "version": "7.30.1",
       "license": "MIT",
-      "scope": "development",
+      "scope": "runtime",
       "path": "node_modules/undici"
     },
     {

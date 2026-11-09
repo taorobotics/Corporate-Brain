@@ -101,6 +101,10 @@ export type Draft = SkillPackage & {
   sourceIds: string[];
   audience: Audience;
   targetDepartments: string[];
+  externalSource?: {
+    preview: import("./skill-import").SkillImportPreview;
+    entry: string;
+  };
 };
 export type LocalState = {
   conversations: Conversation[];

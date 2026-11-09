@@ -156,4 +156,15 @@ module.exports = async ({
   checks.push(
     "GitHub and actual ZIP upload previews preserve references/license, require acknowledgement, publish or submit for review, install locally and fit a dark narrow window",
   );
+  await require("./verify-skill-creation.cjs")({
+    js,
+    click,
+    fill,
+    waitFor,
+    request,
+    capture,
+    checks,
+    win,
+    selectOption,
+  });
 };

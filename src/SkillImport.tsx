@@ -23,11 +23,15 @@ export default function SkillImport({
   departments,
   onImported,
   close,
+  onPrepared,
+  initialTab = "github",
 }: Pick<WorkspaceProps, "user" | "departments"> & {
-  onImported: (skill: Skill) => Promise<void>;
+  onImported?: (skill: Skill) => Promise<void>;
+  onPrepared?: (preview: SkillImportPreview, entry: string) => void;
+  initialTab?: "github" | "zip";
   close: () => void;
 }) {
-  const [tab, setTab] = useState<"github" | "zip">("github"),
+  const [tab, setTab] = useState<"github" | "zip">(initialTab),
     [url, setUrl] = useState("");
   const [file, setFile] = useState<File | null>(null),
     [preview, setPreview] = useState<SkillImportPreview | null>(null);
@@ -60,7 +64,7 @@ export default function SkillImport({
     try {
       let result: SkillImportPreview;
       if (tab === "github")
-        result = await api("/skill-imports/github", { url }, "POST", 260_000);
+        result = await api("/skill-imports/url", { url }, "POST", 260_000);
       else {
         if (!file || !/\.zip$/i.test(file.name) || file.size > 32 * 1024 * 1024)
           throw new Error("请选择 32MB 以内的 ZIP 技能包。");
@@ -101,7 +105,7 @@ export default function SkillImport({
       });
       // Once committed, refresh errors must not encourage submitting the same package twice.
       setPreview(null);
-      await onImported(skill);
+      await onImported?.(skill);
       close();
     } catch (e) {
       setError((e as Error).message);
@@ -126,11 +130,16 @@ export default function SkillImport({
     }
   }
   return (
-    <Modal wide title="导入技能" close={() => void cancel()}>
+    <Modal
+      wide
+      title={onPrepared ? "选择外部技能来源" : "导入技能"}
+      close={() => void cancel()}
+    >
       <div className="skill-import">
         <p className="muted">
-          从公开 GitHub 仓库或 ZIP
-          导入技能、引用资料与许可，确认后按公司权限发布。
+          从 GitHub 仓库、公开 ZIP／Markdown
+          链接或本地压缩包导入。保留配套资料与原许可；没有 SKILL.md 的项目会根据
+          README 创建待编辑草稿。
         </p>
         {!preview ? (
           <>
@@ -140,7 +149,7 @@ export default function SkillImport({
                 className={tab === "github" ? "active" : ""}
                 onClick={() => setTab("github")}
               >
-                <GithubLogo size={18} /> GitHub 链接
+                <GithubLogo size={18} /> GitHub / 其他链接
               </button>
               <button
                 disabled={busy}
@@ -152,10 +161,10 @@ export default function SkillImport({
             </div>
             {tab === "github" ? (
               <>
-                <Field label="GitHub 仓库或技能目录">
+                <Field label="GitHub 仓库、技能目录或公开文件链接">
                   <input
                     aria-label="GitHub 技能链接"
-                    placeholder="https://github.com/作者/仓库"
+                    placeholder="https://github.com/作者/仓库 或 HTTPS ZIP／Markdown 链接"
                     value={url}
                     disabled={busy}
                     onChange={(e) => setUrl(e.target.value)}
@@ -215,7 +224,9 @@ export default function SkillImport({
                   {(preview.source.bytes / 1024 / 1024).toFixed(1)} MB ·{" "}
                   {preview.source.kind === "github"
                     ? "GitHub 固定版本"
-                    : "本地压缩包"}
+                    : preview.source.kind === "url"
+                      ? "公开链接"
+                      : "本地压缩包"}
                 </p>
               </div>
             </div>
@@ -283,66 +294,72 @@ export default function SkillImport({
                 <pre className="skill-resource-preview">{resource.content}</pre>
               )}
             </details>
-            <Field label="发布范围">
-              <select
-                aria-label="导入技能发布范围"
-                value={audience}
-                disabled={busy}
-                onChange={(e) => setAudience(e.target.value as typeof audience)}
-              >
-                <option value="department">本部门</option>
-                <option value="departments">指定部门</option>
-                <option value="company">全公司</option>
-              </select>
-            </Field>
-            {audience === "departments" && (
-              <div className="skill-targets">
-                {departments
-                  .filter((d) => d.enabled)
-                  .map((d) => (
-                    <label key={d.id}>
-                      <input
-                        type="checkbox"
-                        disabled={busy}
-                        checked={targets.includes(d.id)}
-                        onChange={(e) =>
-                          setTargets(
-                            e.target.checked
-                              ? [...targets, d.id]
-                              : targets.filter((id) => id !== d.id),
-                          )
-                        }
-                      />
-                      {d.name}
-                    </label>
-                  ))}
-              </div>
-            )}
-            {user.role === "company_admin" && (
-              <label className="skill-import-consent">
-                <input
-                  type="checkbox"
-                  checked={publish}
-                  disabled={busy}
-                  onChange={(e) => setPublish(e.target.checked)}
-                />
-                确认后直接上架到选定范围
-              </label>
-            )}
-            <label className="skill-import-consent">
-              <input
-                type="checkbox"
-                aria-label="确认技能来源与授权"
-                checked={acknowledge}
-                disabled={busy}
-                onChange={(e) => setAcknowledge(e.target.checked)}
-              />
-              我已查看来源、许可及技能内容，确认有权在所选范围共享。脚本和渲染依赖仍需核对。
-            </label>
-            {!publish && (
-              <p className="muted">
-                导入后进入现有审核队列，批准后员工才能安装使用。
-              </p>
+            {!onPrepared && (
+              <>
+                <Field label="发布范围">
+                  <select
+                    aria-label="导入技能发布范围"
+                    value={audience}
+                    disabled={busy}
+                    onChange={(e) =>
+                      setAudience(e.target.value as typeof audience)
+                    }
+                  >
+                    <option value="department">本部门</option>
+                    <option value="departments">指定部门</option>
+                    <option value="company">全公司</option>
+                  </select>
+                </Field>
+                {audience === "departments" && (
+                  <div className="skill-targets">
+                    {departments
+                      .filter((d) => d.enabled)
+                      .map((d) => (
+                        <label key={d.id}>
+                          <input
+                            type="checkbox"
+                            disabled={busy}
+                            checked={targets.includes(d.id)}
+                            onChange={(e) =>
+                              setTargets(
+                                e.target.checked
+                                  ? [...targets, d.id]
+                                  : targets.filter((id) => id !== d.id),
+                              )
+                            }
+                          />
+                          {d.name}
+                        </label>
+                      ))}
+                  </div>
+                )}
+                {user.role === "company_admin" && (
+                  <label className="skill-import-consent">
+                    <input
+                      type="checkbox"
+                      checked={publish}
+                      disabled={busy}
+                      onChange={(e) => setPublish(e.target.checked)}
+                    />
+                    确认后直接上架到选定范围
+                  </label>
+                )}
+                <label className="skill-import-consent">
+                  <input
+                    type="checkbox"
+                    aria-label="确认技能来源与授权"
+                    checked={acknowledge}
+                    disabled={busy}
+                    onChange={(e) => setAcknowledge(e.target.checked)}
+                  />
+                  我已查看来源、许可及技能内容，确认有权在所选范围共享。脚本和渲染依赖仍需核对。
+                </label>
+                {!publish && (
+                  <p className="muted">
+                    导入后进入现有审核队列，批准后员工才能安装使用。
+                  </p>
+                )}
+              </>
             )}
           </>
         )}
@@ -385,18 +402,24 @@ export default function SkillImport({
             disabled={
               busy ||
               (preview
-                ? !acknowledge ||
-                  (audience === "departments" && !targets.length)
+                ? !onPrepared &&
+                  (!acknowledge ||
+                    (audience === "departments" && !targets.length))
                 : tab === "github"
                   ? !url.trim()
                   : !file)
             }
-            onClick={() => void (preview ? commit() : analyze())}
+            onClick={() => {
+              if (preview && onPrepared) onPrepared(preview, entry);
+              else void (preview ? commit() : analyze());
+            }}
           >
             {preview
-              ? publish
-                ? "导入并上架"
-                : "导入并提交审核"
+              ? onPrepared
+                ? "使用此来源制作技能"
+                : publish
+                  ? "导入并上架"
+                  : "导入并提交审核"
               : "解析并预览"}
           </Button>
         </footer>

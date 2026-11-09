@@ -6,12 +6,14 @@ import { join } from "node:path";
 import { createHash } from "node:crypto";
 import { createServer } from "node:http";
 import { once } from "node:events";
-import { zipSync, strToU8 } from "fflate";
+import { zipSync, unzipSync, strToU8 } from "fflate";
 import {
   prepareGithub,
   prepareZip,
   parseGithubUrl,
   safePackagePath,
+  prepareUrl,
+  publicSkillUrl,
 } from "./skill-import";
 import { createPlatform } from "./platform";
 import { materializeSkill } from "./skill-library";
@@ -112,6 +114,123 @@ test("ZIP skills preserve references and license, reject unsafe paths, duplicate
       ),
     /名称/,
   );
+});
+
+test("public skill links validate redirects, block private egress, bound downloads and support ZIP or Markdown", async (t) => {
+  const root = await mkdtemp(join(tmpdir(), "brain-link-"));
+  t.after(() => rm(root, { recursive: true, force: true }));
+  const stage = () => mkdtemp(join(root, "stage-"));
+  for (const url of [
+    "http://public.example/x.zip",
+    "https://127.0.0.1/x",
+    "https://192.168.20.21/x",
+    "https://[::1]/x",
+    "https://localhost/x",
+    "https://nas.local/x",
+    "https://user:pass@example.com/x",
+    "https://example.com/x?token=private",
+    "file:///x",
+    "https://example.com:8443/x",
+  ])
+    assert.throws(() => publicSkillUrl(url));
+  let calls = 0;
+  const result = await prepareUrl(
+    "https://skills.example/pack.zip",
+    await stage(),
+    async (input, init) => {
+      assert.equal(init?.redirect, "manual");
+      assert.ok((init as any).dispatcher, "socket uses public-DNS guard");
+      calls++;
+      if (calls === 1)
+        return new Response(null, {
+          status: 302,
+          headers: {
+            location: "https://cdn.example/pack.zip?signature=transient",
+          },
+        });
+      assert.match(String(input), /signature=/);
+      return new Response(Uint8Array.from(archive()));
+    },
+  );
+  assert.equal(result.source.kind, "url");
+  assert.equal(
+    result.source.url,
+    "https://skills.example/pack.zip",
+    "redirect credentials are not stored",
+  );
+  assert.equal(result.files.length, 3);
+  await assert.rejects(
+    () =>
+      stage().then((dir) =>
+        prepareUrl(
+          "https://skills.example/pack.zip",
+          dir,
+          async () =>
+            new Response(null, {
+              status: 302,
+              headers: { location: "https://127.0.0.1/secret" },
+            }),
+        ),
+      ),
+    /公网|公开/,
+  );
+  const md = await prepareUrl(
+    "https://skills.example/SKILL.md",
+    await stage(),
+    async () => new Response(skill),
+  );
+  assert.equal(md.candidates[0].name, "import-fixture");
+  assert.equal(md.source.licenseFiles.length, 0);
+  for (const response of [
+    new Response("<html>Login</html>", {
+      headers: { "Content-Type": "text/html" },
+    }),
+    new Response("x", {
+      headers: { "Content-Length": String(33 * 1024 * 1024) },
+    }),
+    new Response("not found", { status: 404 }),
+  ])
+    await assert.rejects(() =>
+      stage().then((dir) =>
+        prepareUrl("https://skills.example/file", dir, async () => response),
+      ),
+    );
+  await assert.rejects(
+    () =>
+      stage().then((dir) =>
+        prepareUrl(
+          "https://skills.example/loop",
+          dir,
+          async () =>
+            new Response(null, { status: 302, headers: { location: "/loop" } }),
+        ),
+      ),
+    /重定向/,
+  );
+});
+
+test("ordinary projects produce an untested editable skill scaffold and preserve README, code and license", async (t) => {
+  const root = await mkdtemp(join(tmpdir(), "brain-project-skill-"));
+  t.after(() => rm(root, { recursive: true, force: true }));
+  const bytes = Buffer.from(
+    zipSync({
+      "demo/README.md": strToU8("# Demo\n\nRead assets and run the renderer."),
+      "demo/renderer.mjs": strToU8(
+        "throw Error('must not execute during import')",
+      ),
+      "demo/LICENSE": strToU8(license),
+    }),
+  );
+  const result = await prepareZip(bytes, root, "demo.zip");
+  assert.equal(result.candidates[0].entry, "SKILL.md");
+  assert.match(result.candidates[0].instructions, /README.md/);
+  assert.match(result.candidates[0].instructions, /尚未试运行/);
+  assert.equal(
+    await readFile(join(root, "renderer.mjs"), "utf8"),
+    "throw Error('must not execute during import')",
+  );
+  assert.equal(result.source.hasScripts, true);
+  assert.equal(result.source.fileCount, 4);
 });
 
 test("GitHub imports pin commits, verify blobs, restrict URLs and preserve directory licenses", async (t) => {
@@ -233,7 +352,9 @@ test("visual import API enforces authentication, preview ownership, review scope
     });
     return {
       status: response.status,
-      data: await response.json(),
+      data: response.headers.get("content-type")?.includes("application/zip")
+        ? Buffer.from(await response.arrayBuffer())
+        : await response.json(),
       cookie: response.headers.get("set-cookie")?.split(";")[0] ?? "",
     };
   };
@@ -320,6 +441,85 @@ test("visual import API enforces authentication, preview ownership, review scope
     publish: true,
     acknowledge: true,
   };
+  const edits = {
+    name: "Edited import fixture",
+    description: "Edited description",
+    version: "2.0.0",
+    instructions:
+      "Read references/guide.md, then explain the verified steps to the user.",
+    examples: "A deliberately selected example.",
+    testSummary: "API fixture validation only; no rendering performed.",
+    requiredTools: ["node"],
+  };
+  assert.equal(
+    (
+      await request(
+        `/skill-imports/${id}/export`,
+        { entry: "SKILL.md", edits },
+        employee,
+      )
+    ).status,
+    403,
+  );
+  assert.equal(
+    (
+      await request(
+        `/skill-imports/${id}/export`,
+        { entry: "../secret", edits },
+        admin,
+      )
+    ).status,
+    400,
+  );
+  assert.equal(
+    (
+      await request(
+        `/skill-imports/${id}/export`,
+        {
+          entry: "SKILL.md",
+          edits: {
+            ...edits,
+            instructions: "api_key=private-value-should-not-export",
+          },
+        },
+        admin,
+      )
+    ).status,
+    400,
+  );
+  const exported = await request(
+    `/skill-imports/${id}/export`,
+    { entry: "SKILL.md", edits },
+    admin,
+  );
+  assert.equal(exported.status, 200);
+  const packed = unzipSync(exported.data);
+  assert.equal(Buffer.from(packed.LICENSE).toString(), license);
+  assert.equal(
+    Buffer.from(packed["references/guide.md"]).toString(),
+    "Useful guide, preserved verbatim.",
+  );
+  assert.match(
+    Buffer.from(packed["SKILL.md"]).toString(),
+    /Edited import fixture/,
+  );
+  assert.match(
+    Buffer.from(packed["SKILL.md"]).toString(),
+    /A deliberately selected example/,
+  );
+  assert.equal(Object.keys(packed).length, 3);
+  assert.equal(
+    (await request(`/skill-imports/${id}/file?path=SKILL.md`, undefined, admin))
+      .data.content,
+    skill,
+    "export leaves original preview intact",
+  );
+  const manual = await request("/skill-packages/export", edits, employee);
+  assert.equal(manual.status, 200);
+  const manualZip = unzipSync(manual.data);
+  assert.ok(manualZip["LICENSE.txt"]);
+  assert.ok(manualZip["SKILL.md"]);
+  assert.equal((await request("/skill-packages/export", edits)).status, 401);
   assert.equal(
     (
       await request(
@@ -380,11 +580,27 @@ test("visual import API enforces authentication, preview ownership, review scope
   );
   const submitted = await request(
     `/skill-imports/${empPreview.data.id}/commit`,
-    { ...selection, publish: false },
+    { ...selection, publish: false, edits },
     employee,
   );
   assert.equal(submitted.status, 201);
   assert.equal(submitted.data.status, "pending");
+  assert.equal(submitted.data.name, edits.name);
+  assert.equal(submitted.data.version, edits.version);
+  assert.equal(submitted.data.testSummary, edits.testSummary);
+  assert.equal(submitted.data.imported.fileCount, 3);
+  const editedResources = await platform.library.resources(
+    submitted.data.imported,
+  );
+  const editedManifest = await readFile(
+    join(editedResources.root, "SKILL.md"),
+    "utf8",
+  );
+  assert.match(editedManifest, /version: 2.0.0/);
+  assert.equal(
+    await readFile(join(editedResources.root, "LICENSE"), "utf8"),
+    license,
+  );
   assert.equal(
     (
       await request(
