@@ -5,7 +5,12 @@ import { fileURLToPath } from "node:url";
 import { z } from "zod";
 import { tokenHash, type Store } from "./database";
 import type { User } from "../shared/types";
-import type { NasAdminSource, NasEntry, NasSource } from "../shared/nas";
+import type {
+  NasAdminSource,
+  NasEntry,
+  NasSource,
+  NasListing,
+} from "../shared/nas";
 
 export const nasSegment = z
   .string()
@@ -232,12 +237,12 @@ export function mountNas(
   const allowed = (s: Row, actor: User) =>
     !!s.enabled &&
     (JSON.parse(s.department_ids) as string[]).includes(actor.departmentId);
+  const sources = (actor: User) =>
+    rows()
+      .filter((s) => allowed(s, actor))
+      .map(view);
   app.get("/api/knowledge/sources", (req, res) =>
-    res.json(
-      rows()
-        .filter((s) => allowed(s, actorOf(req)))
-        .map(view),
-    ),
+    res.json(sources(actorOf(req))),
   );
   app.get("/api/admin/knowledge", (req, res) => {
     admin(req);
@@ -298,13 +303,34 @@ export function mountNas(
     activeSources = new Set<string>(),
     limits = new Map<string, { n: number; until: number }>(),
     cooldown = new Map<string, number>();
-  async function browse(
+  function assertCurrent(req: Request) {
+    const actor = actorOf(req);
+    const current = db
+      .prepare(
+        `SELECT u.id FROM users u JOIN departments d ON u.department_id=d.id JOIN sessions s ON s.user_id=u.id
+      WHERE u.id=? AND u.enabled=1 AND d.enabled=1 AND u.department_id=? AND u.role=?
+      AND s.auth_version=u.auth_version AND s.token_hash=? AND s.expires_at>?`,
+      )
+      .get(
+        actor.id,
+        actor.departmentId,
+        actor.role,
+        tokenHash(req.cookies?.brain_session ?? ""),
+        Date.now(),
+      );
+    if (!current) fail(403, "账号权限已变化，请重新登录");
+  }
+  async function readDirectory(
     req: Request,
-    res: import("express").Response,
-    test: boolean,
-  ) {
+    sourceId: string,
+    input: { path?: string; search?: string },
+    signal: AbortSignal,
+    test = false,
+  ): Promise<NasListing> {
     const actor = test ? admin(req) : actorOf(req),
-      s = row(z.string().uuid().parse(req.params.id));
+      s = row(z.string().uuid().parse(sourceId));
+    assertCurrent(req);
+    signal.throwIfAborted();
     if (!s || (!test && !allowed(s, actor)))
       fail(404, "资料源不存在或无权访问");
     const query = z
@@ -320,7 +346,7 @@ export function mountNas(
           .default(""),
       })
       .strict()
-      .parse(req.query);
+      .parse(input);
     if (test && (query.path || query.search))
       fail(400, "连接检查只验证资料源根目录");
     const now = Date.now();
@@ -345,9 +371,6 @@ export function mountNas(
     if (!Number.isSafeInteger(startAuth)) fail(401, "请重新登录");
     activeActors.add(actor.id);
     activeSources.add(s.id);
-    const controller = new AbortController(),
-      abort = () => controller.abort();
-    res.once("close", abort);
     try {
       const result = await (options.list ?? listNas)(
         {
@@ -360,8 +383,9 @@ export function mountNas(
         },
         query.path,
         query.search,
-        controller.signal,
+        signal,
       );
+      signal.throwIfAborted();
       const current = row(s.id);
       const stillLoggedIn = db
         .prepare(
@@ -389,14 +413,10 @@ export function mountNas(
       ).run(new Date().toISOString(), s.id, s.revision);
       if (test) {
         store.audit(actor.id, "nas.connection_checked", s.id);
-        res.json({
-          ok: true,
-          entryCount: result.entries.length,
-          truncated: result.truncated,
-        });
+        return { path: query.path, ...result };
       } else {
         store.audit(actor.id, "nas.directory_listed", s.id);
-        res.json({ path: query.path, ...result });
+        return { path: query.path, ...result };
       }
     } catch (error) {
       if (error instanceof NasError) {
@@ -417,6 +437,36 @@ export function mountNas(
     } finally {
       activeActors.delete(actor.id);
       activeSources.delete(s.id);
+    }
+  }
+  async function browse(
+    req: Request,
+    res: import("express").Response,
+    test: boolean,
+  ) {
+    const controller = new AbortController();
+    const abort = () => {
+      if (!res.writableEnded) controller.abort();
+    };
+    res.once("close", abort);
+    try {
+      const result = await readDirectory(
+        req,
+        String(req.params.id),
+        req.query,
+        controller.signal,
+        test,
+      );
+      res.json(
+        test
+          ? {
+              ok: true,
+              entryCount: result.entries.length,
+              truncated: result.truncated,
+            }
+          : result,
+      );
+    } finally {
       res.off("close", abort);
     }
   }
@@ -426,4 +476,5 @@ export function mountNas(
   app.post("/api/admin/knowledge/:id/test", (req, res) =>
     browse(req, res, true),
   );
+  return { sources, readDirectory, assertCurrent };
 }

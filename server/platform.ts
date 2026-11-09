@@ -65,6 +65,7 @@ import {
 import { SkillImportError } from "./skill-import";
 import { hasPrivateSkillContent } from "./skill-package";
 import { AUTOMATIC_ROUTER_INSTRUCTION, parseAutomaticPlan } from "./automatic";
+import { companyLookupSchema, companyContext } from "./company-context";
 import {
   isCasualMessage,
   CASUAL_REPLY_INSTRUCTION,
@@ -437,7 +438,7 @@ export function createPlatform(
   );
   mountUpdates(app, options.updates);
   mountFeedback(app, store, getActor, fail);
-  mountNas(app, store, getActor, fail, options.nas);
+  const nas = mountNas(app, store, getActor, fail, options.nas);
   mountDocuments(app, store, getActor, fail);
   app.post("/api/auth/logout", (req, res) => {
     db.prepare("DELETE FROM sessions WHERE token_hash=?").run(
@@ -746,6 +747,10 @@ export function createPlatform(
       (await skillReferences(await resourcesFor(skills), limit - text.length))
     );
   }
+  const catalogFor = (actor: User) =>
+    [...allSkills(), ...imageSkills(store, actor)].filter(
+      (skill) => skill.status === "published" && visible(skill, actor),
+    );
   app.get("/api/skills", (req, res) => {
     const actor = getActor(req);
     const mine = req.query.mine === "1";
@@ -1097,6 +1102,7 @@ export function createPlatform(
           )
           .min(1)
           .max(40),
+        previousCompanyLookup: companyLookupSchema.optional(),
         project: z
           .object({ name: z.string().max(100), hasFolder: z.boolean() })
           .strict()
@@ -1176,6 +1182,10 @@ export function createPlatform(
                   })),
                   attachments: data.attachments,
                   project: data.project,
+                  previousCompanyLookup: data.previousCompanyLookup,
+                  companySources: nas
+                    .sources(actor)
+                    .map((s) => ({ id: s.id, name: s.name })),
                   skillMode: data.skillMode,
                   explicitSkillIds:
                     data.skillMode === "manual"
@@ -1218,8 +1228,20 @@ export function createPlatform(
           403,
           "当前工作区为仅可查看，生成图片、代码或视频前请切换到工作区内修改",
         );
-      const skillIds =
-        data.skillMode === "manual"
+      if (
+        plan.companyLookup?.directories?.some(
+          (q) => !nas.sources(actor).some((s) => s.id === q.sourceId),
+        )
+      )
+        fail(502, "智能调度选择了未授权的公司资料源，请重试");
+      const catalogOnly =
+        plan.kind === "chat" &&
+        plan.execution === "answer" &&
+        (plan.companyLookup?.skills || plan.companyLookup?.knowledge) &&
+        !plan.skillIds?.length;
+      const skillIds = catalogOnly
+        ? []
+        : data.skillMode === "manual"
           ? candidates.map((skill) => skill.id)
           : pickRoutedSkills(plan.skillIds, candidates);
       if (
@@ -1311,10 +1333,18 @@ export function createPlatform(
           .default("standard"),
         workspaceAccess: z.enum(["view", "edit", "full"]).default("edit"),
         execution: z.enum(["answer", "agent"]).default("agent"),
+        companyLookup: companyLookupSchema.optional(),
+        installedSkillIds: z.array(id).max(128).default([]),
       })
       .strict()
       .parse(req.body);
     const row = getConnection(data.connectionId, actor, "chat");
+    if (
+      data.companyLookup?.directories?.some(
+        (q) => !nas.sources(actor).some((s) => s.id === q.sourceId),
+      )
+    )
+      fail(404, "资料源不存在或无权访问");
     const casual =
       isCasualMessage(
         data.messages.findLast((m) => m.role === "user")?.content ?? "",
@@ -1323,7 +1353,8 @@ export function createPlatform(
       !data.messages.some((m) => m.role === "system") &&
       !data.skillId &&
       !data.skillIds.length &&
-      !data.imageSkillId;
+      !data.imageSkillId &&
+      !data.companyLookup;
     try {
       validateAttachmentBudget(data.attachments);
     } catch (error) {
@@ -1413,6 +1444,27 @@ export function createPlatform(
         }, 15_000)
       : undefined;
     try {
+      if (data.companyLookup) {
+        const sources = nas.sources(actor);
+        const signature = (values: typeof sources) =>
+          JSON.stringify(values.map((s) => [s.id, s.revision]));
+        const context = await companyContext({
+          lookup: data.companyLookup,
+          skills: catalogFor(actor),
+          installedSkillIds: data.installedSkillIds,
+          sources,
+          signal,
+          progress: emit,
+          browse: (sourceId, path, search) =>
+            nas.readDirectory(req, sourceId, { path, search }, signal),
+          validate: () => {
+            nas.assertCurrent(req);
+            if (signature(nas.sources(actor)) !== signature(sources))
+              fail(409, "资料源权限已变化，请刷新后重试");
+          },
+        });
+        data.messages.unshift({ role: "system", content: context });
+      }
       let content: string | undefined;
       let productionTaskId: string | undefined;
       let usage:

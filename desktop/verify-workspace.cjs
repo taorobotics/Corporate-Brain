@@ -403,4 +403,15 @@ module.exports = async ({
     checks,
     dir,
   });
+  await require("./verify-company-context.cjs")({
+    js,
+    click,
+    fill,
+    waitFor,
+    request,
+    capture,
+    checks,
+    dir,
+    win,
+  });
 };

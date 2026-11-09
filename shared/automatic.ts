@@ -10,4 +10,5 @@ export type AutomaticPlan = {
   execution?: "answer" | "agent";
   workspaceContext?: boolean;
   usePreviousAttachments?: boolean;
+  companyLookup?: import("./company-context").CompanyLookup;
 };

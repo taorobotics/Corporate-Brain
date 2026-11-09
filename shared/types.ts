@@ -87,6 +87,7 @@ export type Message = {
   feedback?: import("./feedback").FeedbackReceipt;
   attachments?: import("./attachments").Attachment[];
   trace?: import("./chat-progress").ChatTrace;
+  companyLookup?: import("./company-context").CompanyLookup;
   at: string;
 };
 export type Conversation = {

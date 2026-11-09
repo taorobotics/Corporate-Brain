@@ -522,6 +522,7 @@ export default function Workspace(props: WorkspaceProps) {
       partial = "";
     let responseModel = model,
       productionTaskId: string | undefined;
+    let companyLookup: AutomaticPlan["companyLookup"];
     let progressTimer: ReturnType<typeof setTimeout> | undefined;
     const saveReply = (
       content: string,
@@ -538,6 +539,7 @@ export default function Workspace(props: WorkspaceProps) {
         connectionId: responseModel.id,
         modelName: responseModel.name,
         productionTaskId,
+        companyLookup,
         usage,
         at: new Date().toISOString(),
         trace: {
@@ -623,6 +625,9 @@ export default function Workspace(props: WorkspaceProps) {
                 name,
                 source: attachments.length ? "current" : "history",
               })),
+              previousCompanyLookup: conversation?.messages.findLast(
+                (m) => m.role === "assistant" && m.companyLookup,
+              )?.companyLookup,
               project: {
                 name: workspace?.name ?? "",
                 hasFolder: !!workspace?.folder,
@@ -639,6 +644,7 @@ export default function Workspace(props: WorkspaceProps) {
             50000,
             controller.signal,
           );
+      companyLookup = plan.companyLookup;
       const turnAttachments =
         !attachments.length && plan.usePreviousAttachments === false
           ? []
@@ -840,6 +846,8 @@ export default function Workspace(props: WorkspaceProps) {
           attachments: modelAttachments,
           mode: plan.mode,
           execution: plan.execution ?? "agent",
+          companyLookup: plan.companyLookup,
+          installedSkillIds: installedSkills.map((skill) => skill.id),
           workspaceAccess: workspace?.access ?? "edit",
         },
         controller.signal,

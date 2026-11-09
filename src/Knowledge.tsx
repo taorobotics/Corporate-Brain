@@ -102,7 +102,8 @@ export default function Knowledge({
       <div className="knowledge-scope">
         <ShieldCheck size={18} />
         <span>
-          只显示你所在部门获准的资料。当前开放目录浏览，文件内容不会发送给 AI。
+          只显示你所在部门获准的资料。可在 AI
+          对话中查询目录或按名称查找文件；文件正文不会自动读取。
         </span>
       </div>
       <div className="knowledge-toolbar">
