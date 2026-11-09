@@ -1336,7 +1336,8 @@ async function waitFor(test, label, timeout = 12000) {
   await waitFor(() => has("使用说明.txt"), "NAS child directory");
   await click("使用说明.txt");
   await waitFor(() => has("文件信息"), "NAS metadata dialog");
-  assert.ok(await has("尚未开放内容预览"));
+  assert.ok(await has("读取正文"));
+  assert.ok(await has("选定正文会提供给当前模型"));
   await click("关闭");
   await click("上一级");
   await waitFor(() => has("部门说明.txt"), "NAS parent navigation");
