@@ -1,0 +1,323 @@
+{
+  "version": "0.32.0",
+  "sourceCommit": "c38ba96256dae98e08b4869924bcc6e7128d603a",
+  "result": "passed",
+  "verifiedAt": "2026-11-09T08:53:44.407Z",
+  "features": {
+    "chatReadsActualAuthorizedSkillCatalog": true,
+    "installedAndAvailableSkillsDistinguished": true,
+    "inventoryQueriesDoNotExecuteSkillWorkflows": true,
+    "nasUsesSameServiceAsCompanyKnowledgePage": true,
+    "nasDirectoryRequestsDoNotReadLocalProjects": true,
+    "authorizedRootsAndSubdirectoriesSupported": true,
+    "currentDirectoryNameFilterSupported": true,
+    "followupSourceAndPathPersistLocallyThroughReload": true,
+    "companyQueryProgressVisibleInConversation": true,
+    "departmentBoundaryAndRevocationRechecked": true,
+    "administratorRoleDoesNotGrantImplicitNasDocumentAccess": true,
+    "nasSecretsStayOutOfModelAndClient": true,
+    "failedQueriesDoNotPretendToBeEmptyDirectories": true,
+    "companyReferenceDataIsUntrusted": true,
+    "largeCatalogAndDirectoryExcerptsAreBoundedAndMarkedTruncated": true,
+    "automaticNasFileBodyRead": false,
+    "recursiveNasContentSearch": false
+  },
+  "localChecks": {
+    "nodeTestsWindows": 181,
+    "nodeTestsMac": 181,
+    "nasWorkerTestsEach": 5,
+    "windowsBuild": "passed",
+    "windowsNativeProjectChecks": [
+      "Independent projects: folder creation, cancel, reused folders create unique identities without overwriting originals; legacy cards migrate, sidebar and overview match, conversation ownership and reopening persist, new-chat-only picker and dark 700px layout; synthetic files only",
+      "Multi-megabyte directory: real native read, bounded prioritized excerpts, actual router/chat HTTP, model receipt, successful reply and visible read-scope progress; no company models called",
+      "Standalone greetings use one actual streamed model request, no router, project scan, installed skill or export task; acknowledgements do not reuse prior attachments or video prompts",
+      "Semantic conversation routing preserves chat history for new questions, excludes unrelated historic materials and project scans, and retains explicit project-read requests and agent capabilities",
+      "Company-linked chat queries real authorized skill inventory with installed/available status without executing workflows; NAS root, child-directory and name search use the same protected NAS service; follow-up source/path persists through reload, zero local project scans, real HTTP streams, synthetic data only"
+    ],
+    "windowsNativeProductionAndConcurrencyChecks": 12,
+    "macNativeProductionAndConcurrencyChecks": 13,
+    "macDesktopChecks": 52,
+    "macStartupChecks": 9,
+    "macPipeline": [
+      {
+        "name": "tests",
+        "exitCode": 0
+      },
+      {
+        "name": "build",
+        "exitCode": 0
+      },
+      {
+        "name": "desktop",
+        "exitCode": 0
+      },
+      {
+        "name": "production",
+        "exitCode": 0
+      }
+    ],
+    "windowsFullDesktopSuite": "passed in CI; local focused project and production suites passed; full local suite not rerun due pre-existing clipboard limitation",
+    "employeeLocalFilesReadByNasQuery": false,
+    "paidCompanyModelsCalled": true,
+    "realModelProbe": {
+      "model": "deepseek-flash",
+      "totalCalls": 7,
+      "semanticCases": 7,
+      "mismatches": 0
+    },
+    "liveCompanyIntegration": {
+      "version": "0.32.0",
+      "result": "passed",
+      "model": "deepseek-flash",
+      "realCompanyModelCalls": 4,
+      "temporaryEmployee": true,
+      "departmentAuthorizationVerified": true,
+      "credentialsExposed": false,
+      "privateNamesOrRepliesPublished": false,
+      "results": [
+        {
+          "case": "skills",
+          "result": "passed",
+          "elapsedMs": 7001,
+          "lookup": "skill-catalog",
+          "completedQueryCount": 1,
+          "actualRegistryOrNasNamesPresent": true,
+          "authorizedSkillCount": 7,
+          "replyCharacters": 1088,
+          "replySha256": "e28946723a03aae721c01386e244a48bd6bb4f46e03ebcf4f615f189140be792",
+          "privateResponseSaved": false
+        },
+        {
+          "case": "nas",
+          "result": "passed",
+          "elapsedMs": 5298,
+          "lookup": "authorized-nas-directories",
+          "completedQueryCount": 1,
+          "actualRegistryOrNasNamesPresent": true,
+          "nasEntriesConfirmed": 9,
+          "replyCharacters": 490,
+          "replySha256": "25b5f06e4bdf2d7ecf91e1be2dc79f2db745ca3f34829aabc3c663c4e8d52cb6",
+          "privateResponseSaved": false
+        }
+      ],
+      "checkedAt": "2026-11-09T08:39:20.704Z"
+    },
+    "nasDirectoryNamesSentToConfiguredCompanyModel": true,
+    "nasFileContentsRead": false,
+    "privateDirectoryNamesOrRepliesPublished": false
+  },
+  "release": {
+    "status": "passed",
+    "runId": 42586232287,
+    "runUrl": "https://github.com/taorobotics/Corporate-Brain/actions/runs/42586232287",
+    "releaseId": 438884113,
+    "tag": "v0.32.0",
+    "url": "https://github.com/taorobotics/Corporate-Brain/releases/tag/v0.32.0",
+    "draft": false,
+    "publicLatest": "v0.32.0",
+    "productCommit": "c38ba96256dae98e08b4869924bcc6e7128d603a",
+    "verificationToolsCommit": "c38ba96256dae98e08b4869924bcc6e7128d603a",
+    "sourceAndTagPushed": true,
+    "assetsVerified": [
+      {
+        "name": "Corporate-Brain-0.32.0-macOS-arm64.dmg",
+        "bytes": 139864338,
+        "digest": "sha256:973c11b32cfccce1b2eb0fb3e32998af7db80ef897d333c69db10d90ce1844de"
+      },
+      {
+        "name": "Corporate-Brain-0.32.0-macOS-x64.dmg",
+        "bytes": 145381078,
+        "digest": "sha256:0584dfb60f69187f7f5f8299b300be10b9edaa831af6d180027bfbed45153b97"
+      },
+      {
+        "name": "Corporate-Brain-Server-0.32.0.zip",
+        "bytes": 22645597,
+        "digest": "sha256:9469e1e3b6fc44ebbb585b1494017c22f4b9219f9be06faaa4ac7128b7bff8d8"
+      },
+      {
+        "name": "Corporate-Brain-Setup-0.32.0-x64.exe",
+        "bytes": 120005105,
+        "digest": "sha256:184d62954044904a1c52a794a076a0e2bc465c3de8f744f0226cd63757e341f3"
+      },
+      {
+        "name": "macos-verification-arm64.json",
+        "bytes": 11277,
+        "digest": "sha256:7d84d367dfd421f05443174ad0dd77b0ce853048381122d44da49ffcec3c5c7d"
+      },
+      {
+        "name": "macos-verification-x64.json",
+        "bytes": 11273,
+        "digest": "sha256:ba27e465cd7b79b049bac54d8c1728809b8589b8870c22d8e0667ee3fda7c68d"
+      },
+      {
+        "name": "server-verification.json",
+        "bytes": 17436,
+        "digest": "sha256:f80d1a221566ea8be65eb52dd12cbb25c4d863cdf26459eee588f5e05b175990"
+      },
+      {
+        "name": "SHA256SUMS-macOS-arm64.txt",
+        "bytes": 105,
+        "digest": "sha256:d2b5e49cbc7a5203f002b13924e84a6d4a04f9751428c956dbb3c9cbaf3d18fa"
+      },
+      {
+        "name": "SHA256SUMS-macOS-x64.txt",
+        "bytes": 103,
+        "digest": "sha256:13d2096673ca60689157b942dbce096c3eb151aacee4d2916bbea67e34b14766"
+      },
+      {
+        "name": "SHA256SUMS-Server.txt",
+        "bytes": 100,
+        "digest": "sha256:c1663fb9a43a94a9c67782ea89f95e1fdef841eccaec0463b3851cf7c301bf80"
+      },
+      {
+        "name": "SHA256SUMS-Windows-x64.txt",
+        "bytes": 103,
+        "digest": "sha256:93956e339f6aa321f18d9113a0f6ebd7a847fb6f208326bf1a62b3807fe72d00"
+      },
+      {
+        "name": "SHA256SUMS.txt",
+        "bytes": 411,
+        "digest": "sha256:8b632e2f9856768daaa47a556747eaa822887b4b813ada891eb4c9745395827e"
+      },
+      {
+        "name": "windows-verification-x64.json",
+        "bytes": 14063,
+        "digest": "sha256:b3454cc7fddad980037221768707859905a100e83b7ce67a6c371a1641ad2216"
+      }
+    ],
+    "installersAndServer": [
+      {
+        "name": "Corporate-Brain-Setup-0.32.0-x64.exe",
+        "bytes": 120005105,
+        "sha256": "184d62954044904a1c52a794a076a0e2bc465c3de8f744f0226cd63757e341f3"
+      },
+      {
+        "name": "Corporate-Brain-0.32.0-macOS-arm64.dmg",
+        "bytes": 139864338,
+        "sha256": "973c11b32cfccce1b2eb0fb3e32998af7db80ef897d333c69db10d90ce1844de"
+      },
+      {
+        "name": "Corporate-Brain-0.32.0-macOS-x64.dmg",
+        "bytes": 145381078,
+        "sha256": "0584dfb60f69187f7f5f8299b300be10b9edaa831af6d180027bfbed45153b97"
+      },
+      {
+        "name": "Corporate-Brain-Server-0.32.0.zip",
+        "bytes": 22645597,
+        "sha256": "9469e1e3b6fc44ebbb585b1494017c22f4b9219f9be06faaa4ac7128b7bff8d8"
+      }
+    ],
+    "windows": {
+      "realInstallUpgradeUninstall": true,
+      "lifecycleChecks": 17,
+      "handoffChecks": 5,
+      "signature": "NotSigned",
+      "physicalEmployeeDeviceTested": false
+    },
+    "macPlatforms": [
+      {
+        "architecture": "arm64",
+        "packageMountAndLaunch": "passed",
+        "desktopChecks": 52,
+        "signing": "ad-hoc",
+        "notarized": false
+      },
+      {
+        "architecture": "x64",
+        "packageMountAndLaunch": "passed",
+        "desktopChecks": 52,
+        "signing": "ad-hoc",
+        "notarized": false
+      }
+    ],
+    "distribution": {
+      "status": "completed",
+      "conclusion": "success",
+      "url": "https://github.com/taorobotics/Corporate-Brain/actions/runs/42586232287/job/129060511667"
+    },
+    "checkedAt": "2026-11-09T08:53:04.989Z"
+  },
+  "macMini": {
+    "businessVersion": "0.32.0",
+    "tlsVerified": true,
+    "servedAssetsMatchVerifiedRelease": true,
+    "consistentBackupCreated": true,
+    "companyDataPreserved": true,
+    "counts": {
+      "users": 224,
+      "departments": 13,
+      "nas_sources": 14,
+      "skills": 3
+    },
+    "avatarsVerified": 100,
+    "modelSettingsPreserved": true,
+    "modelCredentialsPreserved": true,
+    "installerVersion": "0.32.0",
+    "installerHashesMatchGitHub": true,
+    "oldClientUpdateChecks": [
+      {
+        "target": "win32-x64",
+        "version": "0.32.0",
+        "bytes": 120005105,
+        "sha256": "184d62954044904a1c52a794a076a0e2bc465c3de8f744f0226cd63757e341f3",
+        "oldClientVersion": "0.31.0",
+        "state": "ready",
+        "installerExecuted": false
+      },
+      {
+        "target": "darwin-arm64",
+        "version": "0.32.0",
+        "bytes": 139864338,
+        "sha256": "973c11b32cfccce1b2eb0fb3e32998af7db80ef897d333c69db10d90ce1844de",
+        "oldClientVersion": "0.31.0",
+        "state": "ready",
+        "installerExecuted": false
+      },
+      {
+        "target": "darwin-x64",
+        "version": "0.32.0",
+        "bytes": 145381078,
+        "sha256": "0584dfb60f69187f7f5f8299b300be10b9edaa831af6d180027bfbed45153b97",
+        "oldClientVersion": "0.31.0",
+        "state": "ready",
+        "installerExecuted": false
+      }
+    ],
+    "employeeDevicesForciblyInstalled": false,
+    "employeeLocalProjectMigrationRunsOnNextClientRead": true
+  },
+  "cloud": {
+    "installerVersion": "0.32.0",
+    "assets": [
+      {
+        "target": "win32-x64",
+        "name": "Corporate-Brain-Setup-0.32.0-x64.exe",
+        "bytes": 120005105,
+        "sha256": "184d62954044904a1c52a794a076a0e2bc465c3de8f744f0226cd63757e341f3"
+      },
+      {
+        "target": "darwin-arm64",
+        "name": "Corporate-Brain-0.32.0-macOS-arm64.dmg",
+        "bytes": 139864338,
+        "sha256": "973c11b32cfccce1b2eb0fb3e32998af7db80ef897d333c69db10d90ce1844de"
+      },
+      {
+        "target": "darwin-x64",
+        "name": "Corporate-Brain-0.32.0-macOS-x64.dmg",
+        "bytes": 145381078,
+        "sha256": "0584dfb60f69187f7f5f8299b300be10b9edaa831af6d180027bfbed45153b97"
+      }
+    ],
+    "businessVersion": "0.11.6",
+    "businessHealthy": true,
+    "businessServiceUnchanged": true
+  },
+  "safety": {
+    "stagedAndFullReachableHistorySecretScans": "passed",
+    "privateCompanyDataPublished": false,
+    "publishedTagsAndAssetsOverwritten": false,
+    "windowsTrustedSignature": false,
+    "macAdHocSigned": true,
+    "macNotarized": false
+  }
+}
