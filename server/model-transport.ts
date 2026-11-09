@@ -155,7 +155,8 @@ function refreshDohHosts() {
   for (const host of value
     .split(",")
     .map((h) => h.trim().toLowerCase())
-    .filter(Boolean)) dohHosts.add(host);
+    .filter(Boolean))
+    dohHosts.add(host);
   configuredDohHosts = value;
 }
 const companyLookup = scopedModelLookup(dohHosts);
@@ -170,8 +171,16 @@ export function modelUsesCustomDns(value: string) {
     return false;
   }
 }
-const companyAgent = new Agent({ connect: { lookup: companyLookup } });
+// Callers own cancellation and inactivity; a slow image response must not hit
+// Undici's separate five-minute headers/body deadline.
+const companyAgent = new Agent({
+  headersTimeout: 0,
+  bodyTimeout: 0,
+  connect: { lookup: companyLookup },
+});
 const publicAgent = new Agent({
+  headersTimeout: 0,
+  bodyTimeout: 0,
   connect: {
     lookup: ((host: any, options: any, callback: any) =>
       publicModelLookup(host, options, callback, companyLookup)) as any,
@@ -185,7 +194,7 @@ export type ModelTransport = (
 export const modelFetch: ModelTransport = async (row, url, init) => {
   refreshDohHosts();
   if (!row.owner_user_id || row.source_service_id)
-    return modelUsesCustomDns(url)
+    return row.kind === "image" || modelUsesCustomDns(url)
       ? fetch(url, {
           ...init,
           dispatcher: companyAgent,

@@ -2,6 +2,24 @@ import assert from "node:assert/strict";
 import { test } from "node:test";
 import { createChatDeadline, ChatTimeoutError } from "./chat-deadline";
 
+test("the default chat policy has no total cutoff while real work continues for hours", (t) => {
+  t.mock.timers.enable({ apis: ["setTimeout"] });
+  const deadline = createChatDeadline();
+  t.after(deadline.dispose);
+  for (let i = 0; i < 180; i++) {
+    t.mock.timers.tick(60_000);
+    deadline.observe({
+      type: "reasoning",
+      id: "long",
+      text: "next",
+      append: true,
+    });
+    assert.equal(deadline.signal.aborted, false, `minute ${i + 1}`);
+  }
+  t.mock.timers.tick(180_000);
+  assert.equal(deadline.signal.reason.kind, "idle");
+});
+
 test("production may use an idle-only deadline while real output continues", (t) => {
   t.mock.timers.enable({ apis: ["setTimeout"] });
   const deadline = createChatDeadline({ idleMs: 100, maxMs: null });
@@ -40,7 +58,7 @@ test("active image reasoning and tool work continue beyond the old three-minute 
   assert.equal(deadline.signal.reason.kind, "idle");
 });
 
-test("empty events cannot keep a stalled provider alive, and active work still has a hard maximum", (t) => {
+test("empty events cannot keep a stalled provider alive, and an explicitly requested maximum is honored", (t) => {
   t.mock.timers.enable({ apis: ["setTimeout"] });
   const stalled = createChatDeadline({ idleMs: 100, maxMs: 500 });
   t.mock.timers.tick(80);

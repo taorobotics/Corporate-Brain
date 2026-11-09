@@ -1,7 +1,6 @@
 import type { ChatProgress } from "../shared/chat-progress";
 
 export const CHAT_IDLE_TIMEOUT_MS = 180_000;
-export const CHAT_MAX_DURATION_MS = 15 * 60_000;
 
 export class ChatTimeoutError extends Error {
   constructor(public readonly kind: "idle" | "duration") {
@@ -18,7 +17,7 @@ export class ChatTimeoutError extends Error {
 export function createChatDeadline({
   parent,
   idleMs = CHAT_IDLE_TIMEOUT_MS,
-  maxMs = CHAT_MAX_DURATION_MS,
+  maxMs = null,
 }: {
   parent?: AbortSignal;
   idleMs?: number;

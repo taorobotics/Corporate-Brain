@@ -968,7 +968,7 @@ export function createPlatform(
     row: Row,
     endpoint: string,
     payload: unknown,
-    signal?: AbortSignal,
+    signal: AbortSignal,
   ) {
     let response: globalThis.Response;
     try {
@@ -979,9 +979,7 @@ export function createPlatform(
           Authorization: `Bearer ${store.decrypt(row.secret)}`,
         },
         body: JSON.stringify(payload),
-        signal: signal
-          ? AbortSignal.any([signal, AbortSignal.timeout(120_000)])
-          : AbortSignal.timeout(120_000),
+        signal,
         redirect: "error",
       });
     } catch {
@@ -1521,6 +1519,9 @@ export function createPlatform(
           ]
             .join("\n\n")
             .slice(0, 12000);
+          // Image APIs can stay silent until the completed image. The employee's
+          // cancellation/disconnect signal still owns this stage.
+          deadline.dispose();
           const result = await invoke(
             imageRow,
             "/images/generations",

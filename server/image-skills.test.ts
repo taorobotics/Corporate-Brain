@@ -12,6 +12,7 @@ import {
 } from "./image-models";
 import type { Skill } from "../shared/types";
 import { streamChat } from "../src/chat-stream";
+import { modelFetch } from "./model-transport";
 
 const png =
   "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+/l9sAAAAASUVORK5CYII=";
@@ -33,6 +34,9 @@ test("image APIs are company skills; chat and image execute in one authorized re
   let holdImage = false,
     onImage: (() => void) | undefined,
     onImageClosed: (() => void) | undefined;
+  let completeImage: (() => void) | undefined;
+  let chatSignal: AbortSignal | null | undefined,
+    imageSignal: AbortSignal | null | undefined;
   const upstream = createServer(async (req, res) => {
     let raw = "";
     for await (const chunk of req) raw += chunk;
@@ -46,6 +50,8 @@ test("image APIs are company skills; chat and image execute in one authorized re
       assert.equal(req.headers.authorization, "Bearer synthetic-image-api-key");
       assert.ok(body.prompt.includes("Synthetic written answer"));
       if (holdImage) {
+        completeImage = () =>
+          res.end(JSON.stringify({ data: [{ b64_json: png }] }));
         res.once("close", () => onImageClosed?.());
         onImage?.();
         return;
@@ -88,7 +94,14 @@ test("image APIs are company skills; chat and image execute in one authorized re
   });
   upstream.listen(0, "127.0.0.1");
   await once(upstream, "listening");
-  const platform = createPlatform({ database: ":memory:" });
+  const platform = createPlatform({
+    database: ":memory:",
+    modelTransport: (row, url, init) => {
+      if (url.endsWith("/images/generations")) imageSignal = init.signal;
+      else if (url.endsWith("/chat/completions")) chatSignal = init.signal;
+      return modelFetch(row, url, init);
+    },
+  });
   const server = createServer(platform.app);
   server.listen(0, "127.0.0.1");
   await once(server, "listening");
@@ -424,6 +437,37 @@ test("image APIs are company skills; chat and image execute in one authorized re
         false,
       );
       imageStatus = 200;
+    },
+  );
+  await t.test(
+    "silent image generation survives hours of virtual time without a hidden image or chat cutoff",
+    async (t) => {
+      holdImage = true;
+      const started = new Promise<void>((resolve) => {
+        onImage = resolve;
+      });
+      t.mock.timers.enable({ apis: ["setTimeout"] });
+      try {
+        const pending = req("/generate/chat", body, employee, "POST", true);
+        await started;
+        assert.ok(imageSignal);
+        assert.equal(
+          imageSignal,
+          chatSignal,
+          "image uses the same cancellation signal without a separate deadline",
+        );
+        t.mock.timers.tick(3 * 60 * 60_000);
+        assert.equal(imageSignal?.aborted, false);
+        completeImage!();
+        const result = await pending;
+        assert.equal(result.data.at(-1).type, "done");
+        assert.equal(result.data.at(-1).image, "data:image/png;base64," + png);
+      } finally {
+        t.mock.timers.reset();
+        holdImage = false;
+        onImage = undefined;
+        completeImage = undefined;
+      }
     },
   );
   await t.test(

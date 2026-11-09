@@ -23,6 +23,8 @@ test("model DNS configuration loaded after imports applies to transport and can 
   }) as typeof fetch;
   try {
     delete process.env.BRAIN_MODEL_DOH_HOSTS;
+    await modelFetch({ kind: "image" }, "https://model.example/v1", {});
+    assert.ok(requests.at(-1).dispatcher);
     assert.equal(modelUsesCustomDns("https://model.example/v1"), false);
     process.env.BRAIN_MODEL_DOH_HOSTS = " MODEL.EXAMPLE , other.example ";
     assert.equal(modelUsesCustomDns("https://model.example/v1"), true);
