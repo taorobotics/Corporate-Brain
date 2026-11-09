@@ -28,3 +28,19 @@ export type NasListing = {
   entries: NasEntry[];
   truncated: boolean;
 };
+export type NasDocument = {
+  path: string;
+  name: string;
+  content: string;
+  summary: string;
+  warnings: string[];
+  offset: number;
+  nextOffset: number | null;
+  totalCharacters: number;
+  bytes: number;
+  modified: string | null;
+  sha256: string;
+  readable: boolean;
+};
+export const NAS_DOCUMENT_EXTENSIONS =
+  /\.(?:docx?|pdf|xlsx|pptx|txt|md|csv|json|log|srt|vtt|js|ts|py|html|css)$/i;

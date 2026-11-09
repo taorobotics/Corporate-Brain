@@ -9,6 +9,7 @@ export async function streamChat(
   image?: string;
   usage?: ChatUsage;
   productionTaskId?: string;
+  companyLookup?: import("../shared/company-context").CompanyLookup;
 }> {
   const encoded = JSON.stringify(body);
   if (new TextEncoder().encode(encoded).length > 15 * 1024 * 1024)
@@ -43,6 +44,7 @@ export async function streamChat(
           image?: string;
           usage?: ChatUsage;
           productionTaskId?: string;
+          companyLookup?: import("../shared/company-context").CompanyLookup;
         }
       | undefined;
   const consume = (line: string) => {
@@ -56,6 +58,7 @@ export async function streamChat(
         image: event.image,
         usage: event.usage,
         productionTaskId: event.productionTaskId,
+        companyLookup: event.companyLookup,
       };
   };
   try {

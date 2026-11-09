@@ -225,3 +225,21 @@
     transform: none;
   }
 }
+
+.knowledge-document {
+  text-align: left;
+  min-width: 0;
+  max-width: 100%;
+}
+.knowledge-document pre {
+  max-height: 360px;
+  overflow: auto;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  font: inherit;
+  line-height: 1.7;
+  padding: 16px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+}

@@ -3,6 +3,7 @@ import type { DatabaseSync } from "node:sqlite";
 import { randomUUID, randomBytes, createHash } from "node:crypto";
 import {
   mkdir,
+  mkdtemp,
   readFile,
   writeFile,
   rename,
@@ -33,6 +34,7 @@ import type {
   ProductionManifest,
   ProductionStep,
 } from "../shared/production";
+import { draftDocx } from "./document-draft";
 import { productionSteps } from "../shared/production";
 import { renderCanvasVideo, RenderFailure } from "./render-video";
 import {
@@ -228,16 +230,72 @@ export class ProductionQueue {
         .all(owner) as unknown as Job[]
     ).map((j) => this.view(j));
   }
+  async acceptDocumentDraft(
+    owner: string,
+    connectionId: string,
+    deviceId: string,
+    content: string,
+    sourceNote: string,
+    partial = false,
+    validate?: () => void,
+  ) {
+    await this.initialized;
+    const root = await realpath(this.root),
+      stage = await realpath(await mkdtemp(join(root, "document-draft-")));
+    if (dirname(stage) !== root) fail(500, "修改稿临时目录无效");
+    const title = partial ? "节选或未完成修改稿" : "修改稿";
+    const body =
+      (partial
+        ? "> 当前稿仅覆盖已读范围，或模型输出未完成。请核对来源说明后继续完善。\n\n"
+        : "") + content;
+    try {
+      await writeFile(join(stage, title + ".md"), body, {
+        flag: "wx",
+        mode: 0o600,
+      });
+      await writeFile(join(stage, title + ".docx"), draftDocx(body), {
+        flag: "wx",
+        mode: 0o600,
+      });
+      await writeFile(
+        join(stage, "来源说明.txt"),
+        "NAS 原件未写入、未覆盖。本稿为正文的新副本，不保留原文件版式、嵌入图片、批注、公式或签名。\n\n" +
+          sourceNote,
+        { flag: "wx", mode: 0o600 },
+      );
+      return await this.acceptFiles(
+        owner,
+        connectionId,
+        deviceId,
+        {
+          directory: stage,
+          files: [title + ".md", title + ".docx", "来源说明.txt"],
+        },
+        validate,
+      );
+    } finally {
+      const info = await lstat(stage).catch(() => undefined);
+      if (
+        info?.isDirectory() &&
+        !info.isSymbolicLink() &&
+        (await realpath(stage)) === stage &&
+        dirname(stage) === root
+      )
+        await rm(stage, { recursive: true, force: true });
+    }
+  }
   /** Host-only handoff from one completed DSH turn, never a client filesystem path. */
   async acceptFiles(
     owner: string,
     connectionId: string,
     deviceId: string,
     output: { directory: string; files: string[] },
+    validate?: () => void,
   ) {
     await this.initialized;
     uuid.parse(owner);
     uuid.parse(deviceId);
+    validate?.();
     this.options.authorize(owner, connectionId);
     const source = resolve(output.directory);
     if (
@@ -332,6 +390,7 @@ export class ProductionQueue {
           await handle.close();
         }
       }
+      validate?.();
       this.options.authorize(owner, connectionId);
       this.db
         .prepare(

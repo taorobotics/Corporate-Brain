@@ -18,8 +18,9 @@ module.exports = async ({
     saved = await js(
       `window.brainDesktop.readState(${JSON.stringify(actor.id)})`,
     );
-  const folder = join(dir, "company-linked-project");
-  await fs.mkdir(folder);
+  const requestedFolder = join(dir, "company-linked-project");
+  await fs.mkdir(requestedFolder);
+  const folder = await fs.realpath(requestedFolder);
   await fs.writeFile(join(folder, "README.md"), "LOCAL_PROJECT_IS_NOT_NAS");
   const canonical = await fs.realpath(folder);
   const calls = [];
@@ -36,21 +37,28 @@ module.exports = async ({
     if (body.messages[0]?.content.includes("You route tasks")) {
       const context = JSON.parse(body.messages[1].content),
         latest = context.messages.at(-1).content;
-      const lookup = latest.includes("技能")
-        ? { skills: true }
-        : {
-            knowledge: "browse",
-            directories: [
-              {
-                sourceId: source.id,
-                path:
-                  latest.includes("打开") || latest.includes("在里面")
-                    ? "项目手册"
-                    : "",
-                search: latest.includes("找") ? "说明" : "",
-              },
+      const lookup = latest.includes("正文")
+        ? {
+            knowledge: "read",
+            documents: [
+              { sourceId: source.id, path: "部门说明.txt", offset: 0 },
             ],
-          };
+          }
+        : latest.includes("技能")
+          ? { skills: true }
+          : {
+              knowledge: "browse",
+              directories: [
+                {
+                  sourceId: source.id,
+                  path:
+                    latest.includes("打开") || latest.includes("在里面")
+                      ? "项目手册"
+                      : "",
+                  search: latest.includes("找") ? "说明" : "",
+                },
+              ],
+            };
       res.setHeader("Content-Type", "application/json");
       res.end(
         JSON.stringify({
@@ -77,16 +85,20 @@ module.exports = async ({
     );
     assert.ok(system, "real company context supplied");
     const result = JSON.parse(system.content.split("\n")[1]);
-    const content = result.skills
-      ? "技能中心查询：" +
-        result.skills.entries
-          .filter((s) => s.name.includes("联动验收"))
-          .map((s) => s.name + (s.installed ? "（已安装）" : "（可安装）"))
-          .join("、")
-      : "公司知识实际目录：" +
-        result.directories
-          .flatMap((d) => d.entries?.map((e) => e.name) || [])
-          .join("、");
+    const content = result.documents?.some((d) => d.content)
+      ? result.edit
+        ? "# 规范流程修改稿\n\n明确登记需求、分配负责人、验收交付。"
+        : "NAS 正文分析：" + result.documents.map((d) => d.content).join("\n")
+      : result.skills
+        ? "技能中心查询：" +
+          result.skills.entries
+            .filter((s) => s.name.includes("联动验收"))
+            .map((s) => s.name + (s.installed ? "（已安装）" : "（可安装）"))
+            .join("、")
+        : "公司知识实际目录：" +
+          result.directories
+            .flatMap((d) => d.entries?.map((e) => e.name) || [])
+            .join("、");
     res.setHeader("Content-Type", "text/event-stream");
     res.end(
       `data: ${JSON.stringify({ choices: [{ delta: { content } }] })}\n\ndata: [DONE]\n\n`,
@@ -225,6 +237,97 @@ module.exports = async ({
             i.name.startsWith("查询公司知识") &&
             i.status === "done",
         ),
+    );
+    await send(
+      "读取 NAS 部门说明.txt 的正文并分析总结",
+      "NAS 正文分析：原始部门流程",
+    );
+    assert.equal(reads, 0, "NAS body comes from NAS, not the local project");
+    assert.equal(calls.length, 10);
+    await capture("nas-document-analysis-chat.png");
+    fs.readFile = originalRead;
+    await js("location.hash='knowledge'");
+    await waitFor(
+      () =>
+        js(
+          `document.body.innerText.includes('对话联动验收资料')&&!document.querySelector('.knowledge-loading')`,
+        ),
+      "NAS source for body preview",
+    );
+    await js(
+      `[...document.querySelectorAll('.knowledge-source')].find(e=>e.textContent.includes('对话联动验收资料')).click()`,
+    );
+    await waitFor(
+      () =>
+        js(
+          `document.body.innerText.includes('部门说明.txt')&&!document.querySelector('.knowledge-loading')`,
+        ),
+      "NAS root for document preview",
+    );
+    await js(
+      `[...document.querySelectorAll('.knowledge-entry')].find(e=>e.textContent.includes('部门说明.txt')).click()`,
+    );
+    await click("读取正文");
+    await waitFor(
+      () =>
+        js(
+          `document.querySelector('.knowledge-document pre')?.textContent.includes('原始部门流程')`,
+        ),
+      "NAS actual body preview",
+    );
+    await capture("nas-document-preview-light.png");
+    const beforeBody = await request(
+      "/knowledge/sources/" + source.id + "/document",
+      { path: "部门说明.txt" },
+    );
+    await click("生成修改稿");
+    await waitFor(
+      () =>
+        js(
+          `document.querySelector('[aria-label="任务输入"]')?.value.includes('修改稿')&&document.querySelector('.attachment-chip')?.textContent.includes('部门说明.txt')`,
+        ),
+      "NAS selection reference in new chat",
+    );
+    await click("发送任务");
+    await waitFor(
+      () =>
+        js(
+          `document.querySelector('.chat-production')?.dataset.status==='saved'`,
+        ),
+      "NAS draft saved to employee workspace",
+    );
+    const local = await js(
+      `window.brainDesktop.production.state(${JSON.stringify(actor.id)})`,
+    );
+    const receipt = local.receipts.find((r) =>
+      r.files.some((f) => f.path.endsWith("修改稿.docx")),
+    );
+    assert.ok(receipt);
+    assert.equal(require("node:path").dirname(receipt.directory), folder);
+    for (const file of receipt.files)
+      assert.equal(
+        require("node:crypto")
+          .createHash("sha256")
+          .update(await fs.readFile(join(receipt.directory, file.path)))
+          .digest("hex"),
+        file.sha256,
+      );
+    assert.match(
+      await fs.readFile(join(receipt.directory, "files", "修改稿.md"), "utf8"),
+      /明确登记需求/,
+    );
+    assert.equal(
+      (await request("/production")).find((t) => t.id === receipt.id).status,
+      "saved",
+    );
+    const afterBody = await request(
+      "/knowledge/sources/" + source.id + "/document",
+      { path: "部门说明.txt" },
+    );
+    assert.equal(afterBody.sha256, beforeBody.sha256);
+    await capture("nas-document-draft-saved.png");
+    checks.push(
+      "NAS body preview, actual streamed analysis, selected-file reference and editable Word/Markdown/provenance drafts: native automatic transfer to the employee project, all receipt hashes match, queue cleaned after acknowledgement and source document hash unchanged; only synthetic NAS and model fixtures",
     );
     checks.push(
       "Company-linked chat queries real authorized skill inventory with installed/available status without executing workflows; NAS root, child-directory and name search use the same protected NAS service; follow-up source/path persists through reload, zero local project scans, real HTTP streams, synthetic data only",

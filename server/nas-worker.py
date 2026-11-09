@@ -1,9 +1,10 @@
-"""Read-only SMB directory worker. Credentials arrive on stdin, never argv/logs.
+"""Read-only SMB directory and document worker. Credentials arrive on stdin, never argv/logs.
 
 Uses low-level SMB opens: no DFS referral or symbolic-link auto-following, no
-file reads/writes. Directory handles stay open without share-delete/write while
+no file writes. Directory handles stay open without share-delete/write while
 descending, so a parent cannot be replaced between validation and enumeration.
 """
+import base64
 import ipaddress
 import json
 import logging
@@ -50,7 +51,17 @@ def run(data):
                for n in ("10.0.0.0/8", "172.16.0.0/12", "192.168.0.0/16")):
         raise ValueError("not a LAN address")
     share = segment(data["share"])
-    path_parts = parts(data.get("basePath", "")) + parts(data.get("path", ""))
+    operation = data.get("operation", "list")
+    if operation not in ("list", "read"):
+        raise ValueError("invalid operation")
+    relative_parts = parts(data.get("path", ""))
+    path_parts = parts(data.get("basePath", "")) + relative_parts
+    if operation == "read":
+        if not relative_parts or relative_parts[-1].rsplit(".", 1)[-1].lower() not in (
+                "txt", "md", "csv", "json", "log", "srt", "vtt", "js", "ts", "py", "html", "css",
+                "doc", "docx", "xlsx", "pptx", "pdf"):
+            return {"error": "UNSUPPORTED_DOCUMENT"}
+    directory_parts = path_parts[:-1] if operation == "read" else path_parts
     query = data.get("search", "")
     if query:
         segment(query)
@@ -70,8 +81,8 @@ def run(data):
         tree.connect()
         if tree.is_dfs_share:
             return {"error": "LINK_BLOCKED"}
-        for depth in range(len(path_parts) + 1):
-            directory = Open(tree, "\\".join(path_parts[:depth]))
+        for depth in range(len(directory_parts) + 1):
+            directory = Open(tree, "\\".join(directory_parts[:depth]))
             directory.create(
                 ImpersonationLevel.Impersonation,
                 DirectoryAccessMask.FILE_LIST_DIRECTORY | DirectoryAccessMask.FILE_READ_ATTRIBUTES,
@@ -83,6 +94,33 @@ def run(data):
             handles.append(directory)
             if directory.file_attributes & FileAttributes.FILE_ATTRIBUTE_REPARSE_POINT:
                 return {"error": "LINK_BLOCKED"}
+        if operation == "read":
+            from smbprotocol.open import FilePipePrinterAccessMask
+            document = Open(tree, "\\".join(path_parts))
+            document.create(
+                ImpersonationLevel.Impersonation,
+                FilePipePrinterAccessMask.FILE_READ_DATA | FilePipePrinterAccessMask.FILE_READ_ATTRIBUTES,
+                FileAttributes.FILE_ATTRIBUTE_NORMAL,
+                ShareAccess.FILE_SHARE_READ,
+                CreateDisposition.FILE_OPEN,
+                CreateOptions.FILE_NON_DIRECTORY_FILE | CreateOptions.FILE_OPEN_REPARSE_POINT,
+            )
+            handles.append(document)
+            if document.file_attributes & FileAttributes.FILE_ATTRIBUTE_REPARSE_POINT:
+                return {"error": "LINK_BLOCKED"}
+            size = document.end_of_file
+            if not isinstance(size, int) or size < 0 or size > 10 * 1024 * 1024:
+                return {"error": "DOCUMENT_TOO_LARGE"}
+            chunks, offset = [], 0
+            while offset < size:
+                chunk = document.read(offset, min(65536, size - offset))
+                if not chunk or len(chunk) > size - offset:
+                    return {"error": "DOCUMENT_CHANGED"}
+                chunks.append(chunk)
+                offset += len(chunk)
+            return {"data": base64.b64encode(b"".join(chunks)).decode("ascii"),
+                    "bytes": size,
+                    "modified": document.last_write_time.isoformat() if document.last_write_time else None}
         entries, truncated = [], False
         flags = QueryDirectoryFlags.SMB2_RESTART_SCANS
         while True:

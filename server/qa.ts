@@ -74,6 +74,15 @@ const { app, library, production } = createPlatform({
         )
       : modelFetch(row, url, init),
   nas: {
+    read: async (_source, path, signal) => {
+      signal.throwIfAborted();
+      return {
+        data: Buffer.from(
+          "原始部门流程：接收需求、分配负责人、验收交付。仅为合成 NAS 正文验收资料。",
+        ),
+        modified: "2026-11-09T00:00:00Z",
+      };
+    },
     list: async (_source, path, search) => ({
       entries: (path
         ? [

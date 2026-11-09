@@ -3,6 +3,8 @@ import { randomUUID } from "node:crypto";
 import { spawn } from "node:child_process";
 import { fileURLToPath } from "node:url";
 import { z } from "zod";
+import { parseNasDocument } from "./nas-documents";
+import { NAS_DOCUMENT_EXTENSIONS } from "../shared/nas";
 import { tokenHash, type Store } from "./database";
 import type { User } from "../shared/types";
 import type {
@@ -10,6 +12,7 @@ import type {
   NasEntry,
   NasSource,
   NasListing,
+  NasDocument,
 } from "../shared/nas";
 
 export const nasSegment = z
@@ -78,7 +81,13 @@ export type NasConnection = {
   password: string;
 };
 type WorkerResult = { entries: NasEntry[]; truncated: boolean };
+type NasRawDocument = { data: Buffer; modified: string | null };
 export type NasOptions = {
+  read?: (
+    source: NasConnection,
+    path: string,
+    signal: AbortSignal,
+  ) => Promise<NasRawDocument>;
   list?: (
     source: NasConnection,
     path: string,
@@ -87,15 +96,18 @@ export type NasOptions = {
   ) => Promise<WorkerResult>;
 };
 const errors: Record<string, string> = {
+  UNSUPPORTED_DOCUMENT: "这个文件格式暂不支持正文读取",
+  DOCUMENT_TOO_LARGE: "NAS 文档请小于 10MB，请拆分后再读取",
+  DOCUMENT_CHANGED: "文档在读取时发生变化，请刷新后重试",
   RUNTIME_MISSING: "NAS 连接组件尚未安装，请联系管理员",
   AUTH_FAILED: "NAS 账号或密码未通过验证，请联系管理员核对",
-  ACCESS_DENIED: "NAS 账号无权浏览这个目录",
+  ACCESS_DENIED: "NAS 账号无权访问这个目录或文件",
   SHARE_MISSING: "NAS 上未找到配置的共享目录，请联系管理员核对",
-  PATH_MISSING: "目录不存在或已移动，请返回上一级刷新",
+  PATH_MISSING: "文件或目录不存在或已移动，请返回上一级刷新",
   LINK_BLOCKED: "此目录是链接或转向其他位置，暂不支持浏览",
   CONNECTION_FAILED: "NAS 连接失败，请确认内网连接、账号和 SMB 加密支持",
   TIMEOUT: "NAS 响应超时，请稍后重试",
-  CANCELLED: "目录请求已取消",
+  CANCELLED: "NAS 请求已取消",
   INVALID_REQUEST: "目录请求无效",
 };
 export class NasError extends Error {
@@ -121,12 +133,13 @@ const workerSchema = z
     truncated: z.boolean(),
   })
   .strict();
-export function listNas(
+function nasWorker(
   source: NasConnection,
   path: string,
   search: string,
   signal: AbortSignal,
-): Promise<WorkerResult> {
+  operation: "list" | "read",
+): Promise<WorkerResult | NasRawDocument> {
   return new Promise((resolve, reject) => {
     if (signal.aborted) return reject(new NasError("CANCELLED"));
     const child = spawn(
@@ -146,7 +159,7 @@ export function listNas(
     let output = "",
       size = 0,
       finished = false;
-    const done = (error?: Error, value?: WorkerResult) => {
+    const done = (error?: Error, value?: WorkerResult | NasRawDocument) => {
       if (finished) return;
       finished = true;
       clearTimeout(timer);
@@ -156,13 +169,17 @@ export function listNas(
       else resolve(value!);
     };
     const abort = () => done(new NasError("CANCELLED"));
-    const timer = setTimeout(() => done(new NasError("TIMEOUT")), 18000);
+    const timer = setTimeout(
+      () => done(new NasError("TIMEOUT")),
+      operation === "read" ? 30000 : 18000,
+    );
     signal.addEventListener("abort", abort, { once: true });
     child.on("error", () => done(new NasError("RUNTIME_MISSING")));
     child.stdin.on("error", () => done(new NasError("CONNECTION_FAILED")));
     child.stdout.on("data", (buffer: Buffer) => {
       size += buffer.length;
-      if (size > 1024 * 1024) done(new NasError("CONNECTION_FAILED"));
+      if (size > (operation === "read" ? 14500000 : 1024 * 1024))
+        done(new NasError("CONNECTION_FAILED"));
       else output += buffer.toString("utf8");
     });
     child.on("close", (code) => {
@@ -176,6 +193,28 @@ export function listNas(
               ? value.error
               : "CONNECTION_FAILED",
           );
+        if (operation === "read") {
+          const parsed = z
+            .object({
+              data: z
+                .string()
+                .max(14000000)
+                .regex(/^[A-Za-z0-9+/]*={0,2}$/),
+              bytes: z
+                .number()
+                .int()
+                .min(0)
+                .max(10 * 1024 * 1024),
+              modified: z.string().max(60).nullable(),
+            })
+            .strict()
+            .parse(value);
+          const data = Buffer.from(parsed.data, "base64");
+          if (data.length !== parsed.bytes)
+            throw new NasError("CONNECTION_FAILED");
+          done(undefined, { data, modified: parsed.modified });
+          return;
+        }
         const parsed = workerSchema.parse(value);
         for (const entry of parsed.entries)
           if (!nasSegment.safeParse(entry.name).success) entry.blocked = true;
@@ -186,8 +225,30 @@ export function listNas(
         );
       }
     });
-    child.stdin.end(JSON.stringify({ ...source, path, search }));
+    child.stdin.end(JSON.stringify({ ...source, path, search, operation }));
   });
+}
+
+export async function listNas(
+  source: NasConnection,
+  path: string,
+  search: string,
+  signal: AbortSignal,
+): Promise<WorkerResult> {
+  return (await nasWorker(
+    source,
+    path,
+    search,
+    signal,
+    "list",
+  )) as WorkerResult;
+}
+export async function readNas(
+  source: NasConnection,
+  path: string,
+  signal: AbortSignal,
+): Promise<NasRawDocument> {
+  return (await nasWorker(source, path, "", signal, "read")) as NasRawDocument;
 }
 
 export function mountNas(
@@ -320,13 +381,14 @@ export function mountNas(
       );
     if (!current) fail(403, "账号权限已变化，请重新登录");
   }
-  async function readDirectory(
+  async function access(
     req: Request,
     sourceId: string,
     input: { path?: string; search?: string },
     signal: AbortSignal,
     test = false,
-  ): Promise<NasListing> {
+    documentOffset?: number,
+  ): Promise<NasListing | NasDocument> {
     const actor = test ? admin(req) : actorOf(req),
       s = row(z.string().uuid().parse(sourceId));
     assertCurrent(req);
@@ -372,19 +434,40 @@ export function mountNas(
     activeActors.add(actor.id);
     activeSources.add(s.id);
     try {
-      const result = await (options.list ?? listNas)(
-        {
-          host: s.host,
-          share: s.share,
-          basePath: s.base_path,
-          username: s.username,
-          domain: s.domain,
-          password: store.decrypt(s.secret),
-        },
-        query.path,
-        query.search,
-        signal,
-      );
+      const connection = {
+        host: s.host,
+        share: s.share,
+        basePath: s.base_path,
+        username: s.username,
+        domain: s.domain,
+        password: store.decrypt(s.secret),
+      };
+      let result: NasListing | NasDocument | WorkerResult;
+      if (documentOffset !== undefined) {
+        const raw = await (options.read ?? readNas)(
+          connection,
+          query.path,
+          signal,
+        );
+        try {
+          result = await parseNasDocument(
+            query.path,
+            raw.data,
+            raw.modified,
+            documentOffset,
+            signal,
+          );
+        } catch (error) {
+          signal.throwIfAborted();
+          fail(422, (error as Error).message);
+        }
+      } else
+        result = await (options.list ?? listNas)(
+          connection,
+          query.path,
+          query.search,
+          signal,
+        );
       signal.throwIfAborted();
       const current = row(s.id);
       const stillLoggedIn = db
@@ -415,21 +498,40 @@ export function mountNas(
         store.audit(actor.id, "nas.connection_checked", s.id);
         return { path: query.path, ...result };
       } else {
-        store.audit(actor.id, "nas.directory_listed", s.id);
+        store.audit(
+          actor.id,
+          documentOffset === undefined
+            ? "nas.directory_listed"
+            : "nas.document_read",
+          s.id,
+        );
         return { path: query.path, ...result };
       }
     } catch (error) {
       if (error instanceof NasError) {
         if (error.code === "AUTH_FAILED")
           cooldown.set(s.id, Date.now() + 60000);
-        if (error.code !== "CANCELLED")
+        if (
+          ![
+            "CANCELLED",
+            "UNSUPPORTED_DOCUMENT",
+            "DOCUMENT_TOO_LARGE",
+            "DOCUMENT_CHANGED",
+          ].includes(error.code)
+        )
           db.prepare(
             "UPDATE nas_sources SET status='error',status_message=?,last_checked=? WHERE id=? AND revision=?",
           ).run(error.message, new Date().toISOString(), s.id, s.revision);
         fail(
           error.code === "ACCESS_DENIED" || error.code === "LINK_BLOCKED"
             ? 403
-            : 502,
+            : error.code === "DOCUMENT_TOO_LARGE"
+              ? 413
+              : error.code === "UNSUPPORTED_DOCUMENT"
+                ? 415
+                : error.code === "DOCUMENT_CHANGED"
+                  ? 409
+                  : 502,
           error.message,
         );
       }
@@ -439,6 +541,59 @@ export function mountNas(
       activeSources.delete(s.id);
     }
   }
+  async function readDirectory(
+    req: Request,
+    sourceId: string,
+    input: { path?: string; search?: string },
+    signal: AbortSignal,
+    test = false,
+  ): Promise<NasListing> {
+    return (await access(req, sourceId, input, signal, test)) as NasListing;
+  }
+  async function readDocument(
+    req: Request,
+    sourceId: string,
+    input: { path: string; offset?: number },
+    signal: AbortSignal,
+  ): Promise<NasDocument> {
+    const data = z
+      .object({
+        path: nasPath.refine(
+          (p) => !!p && NAS_DOCUMENT_EXTENSIONS.test(p),
+          "请选择支持的 Word、PDF、表格或文本文件",
+        ),
+        offset: z.number().int().min(0).max(120000).default(0),
+      })
+      .strict()
+      .parse(input);
+    return (await access(
+      req,
+      sourceId,
+      { path: data.path },
+      signal,
+      false,
+      data.offset,
+    )) as NasDocument;
+  }
+  app.post("/api/knowledge/sources/:id/document", async (req, res) => {
+    const controller = new AbortController(),
+      close = () => {
+        if (!res.writableEnded) controller.abort();
+      };
+    res.once("close", close);
+    try {
+      res.json(
+        await readDocument(
+          req,
+          String(req.params.id),
+          req.body,
+          controller.signal,
+        ),
+      );
+    } finally {
+      res.off("close", close);
+    }
+  });
   async function browse(
     req: Request,
     res: import("express").Response,
@@ -476,5 +631,5 @@ export function mountNas(
   app.post("/api/admin/knowledge/:id/test", (req, res) =>
     browse(req, res, true),
   );
-  return { sources, readDirectory, assertCurrent };
+  return { sources, readDirectory, readDocument, assertCurrent };
 }

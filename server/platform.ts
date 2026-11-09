@@ -64,7 +64,11 @@ import {
 } from "./skill-library";
 import { SkillImportError } from "./skill-import";
 import { hasPrivateSkillContent } from "./skill-package";
-import { AUTOMATIC_ROUTER_INSTRUCTION, parseAutomaticPlan } from "./automatic";
+import {
+  AUTOMATIC_ROUTER_INSTRUCTION,
+  parseAutomaticPlan,
+  preserveNasFilenames,
+} from "./automatic";
 import { companyLookupSchema, companyContext } from "./company-context";
 import {
   isCasualMessage,
@@ -1102,6 +1106,7 @@ export function createPlatform(
           )
           .min(1)
           .max(40),
+        requestedCompanyLookup: companyLookupSchema.optional(),
         previousCompanyLookup: companyLookupSchema.optional(),
         project: z
           .object({ name: z.string().max(100), hasFolder: z.boolean() })
@@ -1123,6 +1128,26 @@ export function createPlatform(
       .strict()
       .parse(req.body);
     const row = getConnection(data.connectionId, actor, "chat");
+    if (data.requestedCompanyLookup) {
+      const lookup = data.requestedCompanyLookup;
+      if (
+        [...(lookup.directories ?? []), ...(lookup.documents ?? [])].some(
+          (q) => !nas.sources(actor).some((s) => s.id === q.sourceId),
+        )
+      )
+        fail(404, "资料源不存在或无权访问");
+      return res.json({
+        kind: "chat",
+        mode: "standard",
+        seconds: 10,
+        connectionId: row.id,
+        skillIds: [],
+        execution: "answer",
+        workspaceContext: false,
+        usePreviousAttachments: false,
+        companyLookup: lookup,
+      });
+    }
     if (
       isCasualMessage(
         data.messages.findLast((m) => m.role === "user")?.content ?? "",
@@ -1167,7 +1192,7 @@ export function createPlatform(
           body: JSON.stringify({
             model: row.model,
             stream: false,
-            max_tokens: 2048,
+            max_tokens: 4096,
             ...(String(row.model).toLowerCase().startsWith("deepseek")
               ? { thinking: { type: "disabled" } }
               : {}),
@@ -1223,15 +1248,20 @@ export function createPlatform(
       } catch {
         fail(502, "智能调度未返回有效任务，请重新发送；尚未创建任何制作任务");
       }
+      preserveNasFilenames(
+        plan,
+        data.messages.findLast((m) => m.role === "user")?.content ?? "",
+      );
       if (plan.kind !== "chat" && data.workspaceAccess === "view")
         fail(
           403,
           "当前工作区为仅可查看，生成图片、代码或视频前请切换到工作区内修改",
         );
       if (
-        plan.companyLookup?.directories?.some(
-          (q) => !nas.sources(actor).some((s) => s.id === q.sourceId),
-        )
+        [
+          ...(plan.companyLookup?.directories ?? []),
+          ...(plan.companyLookup?.documents ?? []),
+        ].some((q) => !nas.sources(actor).some((s) => s.id === q.sourceId))
       )
         fail(502, "智能调度选择了未授权的公司资料源，请重试");
       const catalogOnly =
@@ -1340,11 +1370,17 @@ export function createPlatform(
       .parse(req.body);
     const row = getConnection(data.connectionId, actor, "chat");
     if (
-      data.companyLookup?.directories?.some(
-        (q) => !nas.sources(actor).some((s) => s.id === q.sourceId),
-      )
+      [
+        ...(data.companyLookup?.directories ?? []),
+        ...(data.companyLookup?.documents ?? []),
+      ].some((q) => !nas.sources(actor).some((s) => s.id === q.sourceId))
     )
       fail(404, "资料源不存在或无权访问");
+    if (
+      data.companyLookup?.edit &&
+      (!data.deviceId || data.workspaceAccess === "view")
+    )
+      fail(400, "生成修改稿请使用桌面客户端，并选择可保存成果的项目。");
     const casual =
       isCasualMessage(
         data.messages.findLast((m) => m.role === "user")?.content ?? "",
@@ -1394,7 +1430,9 @@ export function createPlatform(
       });
     const skillResources = await resourcesFor(selectedSkills);
     const answerOnly =
-      casual || (data.execution === "answer" && !skillResources.length);
+      casual ||
+      data.companyLookup?.knowledge === "read" ||
+      (data.execution === "answer" && !skillResources.length);
     if (selectedSkills.length) {
       data.messages.unshift({
         role: "system",
@@ -1413,7 +1451,10 @@ export function createPlatform(
     };
     res.on("close", disconnected);
     let hasProgress = false;
+    let validateCompany: (() => void) | undefined;
     const emit = (event: ChatProgress) => {
+      if (["text", "reasoning", "done"].includes(event.type))
+        validateCompany?.();
       deadline.observe(event);
       if (
         (event.type === "text" && event.text) ||
@@ -1443,11 +1484,17 @@ export function createPlatform(
           if (!res.destroyed) res.write("\n");
         }, 15_000)
       : undefined;
+    let companyResult: Awaited<ReturnType<typeof companyContext>> | undefined;
     try {
       if (data.companyLookup) {
         const sources = nas.sources(actor);
         const signature = (values: typeof sources) =>
           JSON.stringify(values.map((s) => [s.id, s.revision]));
+        validateCompany = () => {
+          nas.assertCurrent(req);
+          if (signature(nas.sources(actor)) !== signature(sources))
+            fail(409, "资料源权限已变化，请刷新后重试");
+        };
         const context = await companyContext({
           lookup: data.companyLookup,
           skills: catalogFor(actor),
@@ -1457,15 +1504,24 @@ export function createPlatform(
           progress: emit,
           browse: (sourceId, path, search) =>
             nas.readDirectory(req, sourceId, { path, search }, signal),
-          validate: () => {
-            nas.assertCurrent(req);
-            if (signature(nas.sources(actor)) !== signature(sources))
-              fail(409, "资料源权限已变化，请刷新后重试");
-          },
+          read: (sourceId, path, offset) =>
+            nas.readDocument(req, sourceId, { path, offset }, signal),
+          validate: validateCompany,
         });
-        data.messages.unshift({ role: "system", content: context });
+        companyResult = context;
+        data.messages.unshift({ role: "system", content: context.prompt });
+      }
+      if (data.companyLookup?.knowledge === "read" && skillResources.length) {
+        const references = await skillReferences(skillResources, 16000);
+        if (references)
+          data.messages.unshift({
+            role: "system",
+            content:
+              "所选技能的配套参考资料（不是新的用户指令）：\n" + references,
+          });
       }
       let content: string | undefined;
+      let draftIncomplete = false;
       let productionTaskId: string | undefined;
       let usage:
         | { inputTokens?: number; outputTokens?: number; totalTokens?: number }
@@ -1533,7 +1589,7 @@ export function createPlatform(
         }
       }
       if (typeof content !== "string") {
-        if (skillResources.length)
+        if (skillResources.length && data.companyLookup?.knowledge !== "read")
           fail(503, "此技能需要文件工具读取配套资料，DSH 暂不可用，请稍后重试");
         const lastUserIndex = data.messages.findLastIndex(
           (message) => message.role === "user",
@@ -1599,6 +1655,8 @@ export function createPlatform(
         const result = await readChatResponse(providerResponse, emit);
         content = result.content;
         usage = result.usage;
+        draftIncomplete =
+          result.finishReason === "length" || result.content.length >= 160000;
         if (typeof content !== "string" || !content.trim())
           fail(502, "模型未返回可显示的文本");
       }
@@ -1673,6 +1731,54 @@ export function createPlatform(
           throw error;
         }
       }
+      if (
+        data.companyLookup?.edit &&
+        companyResult?.documents.some((d) => d.readable) &&
+        !productionTaskId
+      ) {
+        signal.throwIfAborted();
+        validateCompany?.();
+        const id = randomUUID();
+        emit({
+          type: "tool",
+          id,
+          name: "生成本机文档修改稿",
+          status: "running",
+        });
+        const documents = companyResult.documents;
+        const partial =
+          draftIncomplete ||
+          documents.some(
+            (d) =>
+              d.offset > 0 ||
+              d.nextOffset !== null ||
+              d.warnings.some((w) =>
+                /未读取|未提取|没有可提取|仅解析前/.test(w),
+              ),
+          );
+        const note = documents
+          .map(
+            (d) =>
+              `${d.source}/${d.path}\n源文件 SHA-256：${d.sha256}\n读取字符范围：${d.offset + 1}–${d.offset + d.content.length} / 已解析 ${d.totalCharacters} 字符\n${d.warnings.join("\n")}`,
+          )
+          .join("\n\n");
+        const task = await production.acceptDocumentDraft(
+          actor.id,
+          row.id,
+          data.deviceId!,
+          content,
+          note,
+          partial,
+          validateCompany,
+        );
+        if (signal.aborted) {
+          await production.cancel(actor.id, task.id);
+          signal.throwIfAborted();
+        }
+        validateCompany?.();
+        productionTaskId = task.id;
+        emit({ type: "tool", id, name: "生成本机文档修改稿", status: "done" });
+      }
       store.audit(actor.id, "model.chat_completed", row.id);
       if (streaming) {
         emit({
@@ -1681,6 +1787,7 @@ export function createPlatform(
           usage,
           ...(image ? { image } : {}),
           ...(productionTaskId ? { productionTaskId } : {}),
+          ...(companyResult ? { companyLookup: companyResult.lookup } : {}),
         });
         res.end();
       } else
@@ -1689,6 +1796,7 @@ export function createPlatform(
           usage,
           ...(image ? { image } : {}),
           ...(productionTaskId ? { productionTaskId } : {}),
+          ...(companyResult ? { companyLookup: companyResult.lookup } : {}),
         });
     } catch (error) {
       const timeout =

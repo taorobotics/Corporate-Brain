@@ -29,6 +29,7 @@ export type ChatProgress =
       image?: string;
       usage?: ChatUsage;
       productionTaskId?: string;
+      companyLookup?: import("./company-context").CompanyLookup;
     }
   | { type: "error"; message: string };
 

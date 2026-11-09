@@ -101,6 +101,7 @@ type ComposerDraft = {
   text: string;
   attachments: Attachment[];
   reading: { name: string; status: string } | null;
+  companyLookup?: AutomaticPlan["companyLookup"];
 };
 const emptyDraft: ComposerDraft = { text: "", attachments: [], reading: null };
 type ChatRun = {
@@ -132,7 +133,12 @@ export default function Workspace(props: WorkspaceProps) {
     ) ?? state.workspaces[0];
   const draftKey = conversationId ?? `new:${workspace?.id ?? "default"}`;
   const [drafts, setDrafts] = useState<Record<string, ComposerDraft>>({});
-  const { text, attachments, reading } = drafts[draftKey] ?? emptyDraft;
+  const {
+    text,
+    attachments,
+    reading,
+    companyLookup: requestedCompanyLookup,
+  } = drafts[draftKey] ?? emptyDraft;
   const patchDraft = (value: Partial<ComposerDraft>) =>
     setDrafts((all) => ({
       ...all,
@@ -426,7 +432,10 @@ export default function Workspace(props: WorkspaceProps) {
       return;
     const requestText =
       text.trim() || "请分析这些附件，说明主要内容和需要注意的问题。";
-    const casual = isCasualMessage(requestText, attachments.length);
+    const casual = isCasualMessage(
+      requestText,
+      attachments.length + (requestedCompanyLookup ? 1 : 0),
+    );
     const currentAttachments = casual
       ? []
       : attachments.length
@@ -501,6 +510,7 @@ export default function Workspace(props: WorkspaceProps) {
     }));
     setText("");
     setAttachments([]);
+    patchDraft({ companyLookup: undefined });
     if (!model) {
       setTaskError(
         "尚未配置可用模型。这条需求已保存在本机，请在模型与服务中配置后继续。",
@@ -625,6 +635,7 @@ export default function Workspace(props: WorkspaceProps) {
                 name,
                 source: attachments.length ? "current" : "history",
               })),
+              requestedCompanyLookup,
               previousCompanyLookup: conversation?.messages.findLast(
                 (m) => m.role === "assistant" && m.companyLookup,
               )?.companyLookup,
@@ -801,7 +812,7 @@ export default function Workspace(props: WorkspaceProps) {
       }
       const outputDevice =
         !casual &&
-        plan.execution !== "answer" &&
+        (plan.execution !== "answer" || plan.companyLookup?.edit) &&
         window.brainDesktop?.production
           ? await window.brainDesktop.production.state(user.id)
           : undefined;
@@ -855,6 +866,7 @@ export default function Workspace(props: WorkspaceProps) {
       );
       controller.signal.throwIfAborted();
       productionTaskId = response.productionTaskId;
+      companyLookup = response.companyLookup ?? companyLookup;
       if (productionTaskId) await props.production.refresh();
       saveReply(
         response.content ?? "图片已生成，可以继续保存。",
@@ -1211,8 +1223,35 @@ export default function Workspace(props: WorkspaceProps) {
                   }
                 }}
               >
-                {(attachments.length > 0 || selectedSkills.length > 0) && (
+                {(attachments.length > 0 ||
+                  selectedSkills.length > 0 ||
+                  requestedCompanyLookup) && (
                   <div className="attachment-row">
+                    {requestedCompanyLookup?.documents?.map((d) => (
+                      <span
+                        className="chip attachment-chip"
+                        key={d.sourceId + d.path}
+                      >
+                        <BookOpen size={16} />
+                        <span>
+                          {d.path.split("/").at(-1)}
+                          <small>
+                            公司知识 ·{" "}
+                            {requestedCompanyLookup.edit
+                              ? "生成本机修改稿"
+                              : "分析正文"}
+                          </small>
+                        </span>
+                        <IconButton
+                          label="移除公司文档"
+                          onClick={() =>
+                            patchDraft({ companyLookup: undefined })
+                          }
+                        >
+                          <X size={12} />
+                        </IconButton>
+                      </span>
+                    ))}
                     {attachments.map((a, index) => (
                       <span className="chip attachment-chip" key={index}>
                         <button
@@ -1567,6 +1606,22 @@ export default function Workspace(props: WorkspaceProps) {
           <Knowledge
             admin={user.role === "company_admin"}
             navigate={navigate}
+
+            analyze={(lookup, label) => {
+              const key = `new:${workspace?.id ?? "default"}`;
+              setDrafts((all) => ({
+                ...all,
+                [key]: {
+                  ...emptyDraft,
+                  text: lookup.edit
+                    ? "请根据这份公司文档生成一份更清晰、规范的修改稿，保存到我的电脑，并保留 NAS 原件。"
+                    : "请分析并总结这份公司文档，列出要点、结论和需要注意的问题，注明来源及实际读取范围。",
+                  companyLookup: lookup,
+                },
+              }));
+              setConversationId(null);
+              navigate("chat");
+            }}
           />
         </div>
       )}

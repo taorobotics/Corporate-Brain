@@ -14,7 +14,10 @@ import type {
   NasEntry,
   NasListing,
   NasSource,
+  NasDocument,
 } from "../shared/nas";
+import { NAS_DOCUMENT_EXTENSIONS } from "../shared/nas";
+import type { CompanyLookup } from "../shared/company-context";
 import { api } from "./api";
 import { Button, Busy, Empty, Field, Modal, Search } from "./components";
 import "./knowledge.css";
@@ -34,7 +37,9 @@ const dateText = (value: string | null) =>
 export default function Knowledge({
   admin,
   navigate,
+  analyze,
 }: {
+  analyze?: (lookup: CompanyLookup, label: string) => void;
   admin: boolean;
   navigate: (page: string) => void;
 }) {
@@ -46,6 +51,40 @@ export default function Knowledge({
   const [busy, setBusy] = useState(true),
     [error, setError] = useState(""),
     [detail, setDetail] = useState<NasEntry | null>(null);
+  const [document, setDocument] = useState<NasDocument | null>(null),
+    [documentError, setDocumentError] = useState(""),
+    [documentBusy, setDocumentBusy] = useState(false);
+  const documentRequest = useRef<AbortController | null>(null);
+  useEffect(() => {
+    documentRequest.current?.abort();
+    setDocument(null);
+    setDocumentError("");
+    setDocumentBusy(false);
+    return () => documentRequest.current?.abort();
+  }, [detail?.name, source?.id, path]);
+  async function readDocument(offset = 0) {
+    if (!source || !detail) return;
+    documentRequest.current?.abort();
+    const controller = new AbortController();
+    documentRequest.current = controller;
+    setDocumentBusy(true);
+    setDocumentError("");
+    try {
+      const result = await api<NasDocument>(
+        `/knowledge/sources/${source.id}/document`,
+        { path: [path, detail.name].filter(Boolean).join("/"), offset },
+        "POST",
+        60000,
+        controller.signal,
+      );
+      if (!controller.signal.aborted) setDocument(result);
+    } catch (error) {
+      if (!controller.signal.aborted)
+        setDocumentError((error as Error).message);
+    } finally {
+      if (!controller.signal.aborted) setDocumentBusy(false);
+    }
+  }
   const sequence = useRef(0);
   useEffect(() => {
     void loadSources();
@@ -309,11 +348,92 @@ export default function Knowledge({
             <p>大小：{sizeText(detail.bytes)}</p>
             <p>修改时间：{dateText(detail.modified)}</p>
             <p className="muted">
-              当前开放目录和文件信息浏览，尚未开放内容预览、下载或 AI 读取。
+              Word、PDF、表格与文本可按权限读取。点击 AI
+              分析或生成修改稿后，选定正文会提供给当前模型；不执行宏、公式或文档中的指令。
             </p>
+            {documentBusy && <p role="status">正在读取正文…</p>}
+            {documentError && (
+              <p className="notice error" role="alert">
+                {documentError}
+              </p>
+            )}
+            {document && (
+              <div className="knowledge-document">
+                <p>
+                  {document.summary} · 字符 {document.offset + 1}–
+                  {document.offset + document.content.length} / 已解析{" "}
+                  {document.totalCharacters}
+                </p>
+                {document.warnings.map((w, i) => (
+                  <p className="muted" key={i}>
+                    {w}
+                  </p>
+                ))}
+                <pre>{document.content || "没有可提取的正文"}</pre>
+              </div>
+            )}
           </div>
           <footer>
             <Button onClick={() => setDetail(null)}>关闭</Button>
+            {NAS_DOCUMENT_EXTENSIONS.test(detail.name) && (
+              <Button
+                disabled={documentBusy}
+                onClick={() => void readDocument(document?.nextOffset ?? 0)}
+              >
+                {document?.nextOffset
+                  ? "读取后续正文"
+                  : document
+                    ? "重新读取"
+                    : "读取正文"}
+              </Button>
+            )}
+            {NAS_DOCUMENT_EXTENSIONS.test(detail.name) && analyze && (
+              <>
+                <Button
+                  disabled={documentBusy}
+                  onClick={() => {
+                    analyze(
+                      {
+                        knowledge: "read",
+                        documents: [
+                          {
+                            sourceId: source!.id,
+                            path: [path, detail.name].filter(Boolean).join("/"),
+                            offset: document?.offset ?? 0,
+                          },
+                        ],
+                      },
+                      detail.name,
+                    );
+                    setDetail(null);
+                  }}
+                >
+                  AI 分析总结
+                </Button>
+                <Button
+                  disabled={documentBusy}
+                  onClick={() => {
+                    analyze(
+                      {
+                        knowledge: "read",
+                        edit: true,
+                        documents: [
+                          {
+                            sourceId: source!.id,
+                            path: [path, detail.name].filter(Boolean).join("/"),
+                            offset: document?.offset ?? 0,
+                          },
+                        ],
+                      },
+                      detail.name,
+                    );
+                    setDetail(null);
+                  }}
+                >
+                  生成修改稿
+                </Button>
+              </>
+            )}
           </footer>
         </Modal>
       )}
