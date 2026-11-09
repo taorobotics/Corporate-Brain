@@ -66,6 +66,11 @@ import { SkillImportError } from "./skill-import";
 import { hasPrivateSkillContent } from "./skill-package";
 import { AUTOMATIC_ROUTER_INSTRUCTION, parseAutomaticPlan } from "./automatic";
 import {
+  isCasualMessage,
+  CASUAL_REPLY_INSTRUCTION,
+  ANSWER_INSTRUCTION,
+} from "../shared/conversation-request";
+import {
   skillIdsSchema,
   resolveSkillList,
   pickRoutedSkills,
@@ -1092,8 +1097,19 @@ export function createPlatform(
           )
           .min(1)
           .max(40),
+        project: z
+          .object({ name: z.string().max(100), hasFolder: z.boolean() })
+          .strict()
+          .optional(),
         attachments: z
-          .array(z.object({ name: z.string().max(200) }).strict())
+          .array(
+            z
+              .object({
+                name: z.string().max(200),
+                source: z.enum(["current", "history"]).optional(),
+              })
+              .strict(),
+          )
           .max(8)
           .default([]),
         workspaceAccess: z.enum(["view", "edit", "full"]).default("edit"),
@@ -1101,6 +1117,22 @@ export function createPlatform(
       .strict()
       .parse(req.body);
     const row = getConnection(data.connectionId, actor, "chat");
+    if (
+      isCasualMessage(
+        data.messages.findLast((m) => m.role === "user")?.content ?? "",
+        data.attachments.length,
+      )
+    )
+      return res.json({
+        kind: "chat",
+        mode: "standard",
+        seconds: 10,
+        connectionId: row.id,
+        skillIds: [],
+        execution: "answer",
+        workspaceContext: false,
+        usePreviousAttachments: false,
+      });
     const candidates = checkedSkills(
       actor,
       data.skillIds,
@@ -1143,6 +1175,7 @@ export function createPlatform(
                     content: message.content.slice(-12000),
                   })),
                   attachments: data.attachments,
+                  project: data.project,
                   skillMode: data.skillMode,
                   explicitSkillIds:
                     data.skillMode === "manual"
@@ -1189,6 +1222,16 @@ export function createPlatform(
         data.skillMode === "manual"
           ? candidates.map((skill) => skill.id)
           : pickRoutedSkills(plan.skillIds, candidates);
+      if (
+        plan.execution === "answer" &&
+        (plan.kind === "code" ||
+          plan.kind === "video" ||
+          plan.mode !== "standard" ||
+          candidates.some(
+            (skill) => skillIds.includes(skill.id) && skill.imported,
+          ))
+      )
+        plan.execution = "agent";
       let connectionId = row.id;
       if (plan.kind === "image" && data.imageSkills) {
         const image = chooseImageSkill(candidates, skillIds);
@@ -1267,10 +1310,20 @@ export function createPlatform(
           .enum(["standard", "ptc", "minimal", "creative"])
           .default("standard"),
         workspaceAccess: z.enum(["view", "edit", "full"]).default("edit"),
+        execution: z.enum(["answer", "agent"]).default("agent"),
       })
       .strict()
       .parse(req.body);
     const row = getConnection(data.connectionId, actor, "chat");
+    const casual =
+      isCasualMessage(
+        data.messages.findLast((m) => m.role === "user")?.content ?? "",
+        data.attachments.length,
+      ) &&
+      !data.messages.some((m) => m.role === "system") &&
+      !data.skillId &&
+      !data.skillIds.length &&
+      !data.imageSkillId;
     try {
       validateAttachmentBudget(data.attachments);
     } catch (error) {
@@ -1309,6 +1362,8 @@ export function createPlatform(
           "本轮已安排公司图片生成技能。请完成用户要求的完整文字部分；图片调用将在文字输出后由服务执行并附于同一回复。当前尚未生成成功，不要宣称图片已完成，不要编造图片链接或占位图。",
       });
     const skillResources = await resourcesFor(selectedSkills);
+    const answerOnly =
+      casual || (data.execution === "answer" && !skillResources.length);
     if (selectedSkills.length) {
       data.messages.unshift({
         role: "system",
@@ -1364,64 +1419,66 @@ export function createPlatform(
         | { inputTokens?: number; outputTokens?: number; totalTokens?: number }
         | undefined;
       const hasImageAttachment = visuals.length > 0;
-      try {
-        if (!dsh) throw new DshUnavailableError("DSH 已由管理员停用");
-        const proxy =
-          (row.owner_user_id && !row.source_service_id) ||
-          modelUsesCustomDns(row.base_url)
-            ? await privateModelProxy(
-                row,
-                store.decrypt(row.secret),
-                fetchModel,
-              )
-            : undefined;
+      if (!answerOnly) {
         try {
-          const result = await dsh.runDetailed({
-            connectionId: row.id,
-            baseUrl: proxy?.url ?? row.base_url,
-            model: row.model,
-            apiKey: proxy?.key ?? store.decrypt(row.secret),
-            userId: actor.id,
-            sessionId: data.sessionId ?? randomUUID(),
-            messages: data.messages,
-            attachments: data.attachments,
-            mode: data.mode,
-            workspaceAccess: data.workspaceAccess,
-            skillResources,
-            deliverFiles:
-              Boolean(data.deviceId) && data.workspaceAccess !== "view",
-            signal,
-            onProgress: emit,
-          });
-          content = result.content;
-          usage = result.usage;
-          if (result.output && data.deviceId) {
-            if (data.workspaceAccess === "view")
-              fail(403, "当前工作区为仅可查看，不能交付新成果");
-            const task = await production.acceptFiles(
-              actor.id,
-              row.id,
-              data.deviceId,
-              result.output,
-            );
-            productionTaskId = task.id;
+          if (!dsh) throw new DshUnavailableError("DSH 已由管理员停用");
+          const proxy =
+            (row.owner_user_id && !row.source_service_id) ||
+            modelUsesCustomDns(row.base_url)
+              ? await privateModelProxy(
+                  row,
+                  store.decrypt(row.secret),
+                  fetchModel,
+                )
+              : undefined;
+          try {
+            const result = await dsh.runDetailed({
+              connectionId: row.id,
+              baseUrl: proxy?.url ?? row.base_url,
+              model: row.model,
+              apiKey: proxy?.key ?? store.decrypt(row.secret),
+              userId: actor.id,
+              sessionId: data.sessionId ?? randomUUID(),
+              messages: data.messages,
+              attachments: data.attachments,
+              mode: data.mode,
+              workspaceAccess: data.workspaceAccess,
+              skillResources,
+              deliverFiles:
+                Boolean(data.deviceId) && data.workspaceAccess !== "view",
+              signal,
+              onProgress: emit,
+            });
+            content = result.content;
+            usage = result.usage;
+            if (result.output && data.deviceId) {
+              if (data.workspaceAccess === "view")
+                fail(403, "当前工作区为仅可查看，不能交付新成果");
+              const task = await production.acceptFiles(
+                actor.id,
+                row.id,
+                data.deviceId,
+                result.output,
+              );
+              productionTaskId = task.id;
+            }
+          } finally {
+            await proxy?.close();
           }
-        } finally {
-          await proxy?.close();
+        } catch (error) {
+          signal.throwIfAborted();
+          if (error instanceof ApiError || error instanceof ProductionError)
+            throw error;
+          if (error instanceof DshLoopError) fail(502, error.message);
+          // Visual requests can be accepted by the OpenAI-compatible provider even
+          // when a DSH preset rejects the image block. Retry those requests through
+          // the direct chat endpoint so an uploaded image is still sent to the model.
+          if (
+            hasProgress ||
+            (!(error instanceof DshUnavailableError) && !hasImageAttachment)
+          )
+            fail(502, "模型处理未完成，已保留收到的内容，请稍后重试");
         }
-      } catch (error) {
-        signal.throwIfAborted();
-        if (error instanceof ApiError || error instanceof ProductionError)
-          throw error;
-        if (error instanceof DshLoopError) fail(502, error.message);
-        // Visual requests can be accepted by the OpenAI-compatible provider even
-        // when a DSH preset rejects the image block. Retry those requests through
-        // the direct chat endpoint so an uploaded image is still sent to the model.
-        if (
-          hasProgress ||
-          (!(error instanceof DshUnavailableError) && !hasImageAttachment)
-        )
-          fail(502, "模型处理未完成，已保留收到的内容，请稍后重试");
       }
       if (typeof content !== "string") {
         if (skillResources.length)
@@ -1461,7 +1518,21 @@ export function createPlatform(
             },
             body: JSON.stringify({
               model: row.model,
-              messages: directMessages,
+              messages: casual
+                ? [
+                    { role: "system", content: CASUAL_REPLY_INSTRUCTION },
+                    directMessages[lastUserIndex],
+                  ]
+                : answerOnly
+                  ? [
+                      { role: "system", content: ANSWER_INSTRUCTION },
+                      ...directMessages,
+                    ]
+                  : directMessages,
+              ...(casual &&
+              String(row.model).toLowerCase().startsWith("deepseek")
+                ? { thinking: { type: "disabled" } }
+                : {}),
               stream: Boolean(streaming),
             }),
             signal,

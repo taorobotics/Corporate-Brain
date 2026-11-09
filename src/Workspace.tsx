@@ -48,6 +48,7 @@ import {
 import { submitAutomaticProduction } from "./automatic";
 import { productionReply } from "../shared/production-reply";
 import type { AutomaticPlan } from "../shared/automatic";
+import { isCasualMessage } from "../shared/conversation-request";
 import type { WorkspaceProps } from "./App";
 import type {
   Draft,
@@ -425,14 +426,14 @@ export default function Workspace(props: WorkspaceProps) {
       return;
     const requestText =
       text.trim() || "请分析这些附件，说明主要内容和需要注意的问题。";
-    const currentAttachments = attachments.length
-      ? attachments
-      : (conversation?.messages.findLast(
-          (m) => m.role === "user" && m.attachments?.length,
-        )?.attachments ?? []);
-    const materialFiles = currentAttachments.map((attachment) =>
-      filesFor(draftKey).get(attachment.name),
-    );
+    const casual = isCasualMessage(requestText, attachments.length);
+    const currentAttachments = casual
+      ? []
+      : attachments.length
+        ? attachments
+        : (conversation?.messages.findLast(
+            (m) => m.role === "user" && m.attachments?.length,
+          )?.attachments ?? []);
     if (
       currentView.current.page === "chat" &&
       currentView.current.draftKey === draftKey
@@ -595,36 +596,63 @@ export default function Workspace(props: WorkspaceProps) {
               );
           }, 50);
       };
-      progress({
-        type: "tool",
-        id: routingId,
-        name: "识别需求并选择能力",
-        status: "running",
-      });
-      const plan = await api<AutomaticPlan>(
-        "/generate/plan",
-        {
-          connectionId: model.id,
-          messages: history,
-          attachments: currentAttachments.map(({ name }) => ({ name })),
-          workspaceAccess: workspace?.access ?? "edit",
-          skillMode,
-          imageSkills: true,
-          skillIds:
-            skillMode === "auto"
-              ? installedSkills.map((skill) => skill.id)
-              : selectedSkillIds,
-        },
-        "POST",
-        50000,
-        controller.signal,
+      if (!casual)
+        progress({
+          type: "tool",
+          id: routingId,
+          name: "识别需求并选择能力",
+          status: "running",
+        });
+      const plan: AutomaticPlan = casual
+        ? {
+            kind: "chat",
+            mode: "standard",
+            seconds: 10,
+            connectionId: model.id,
+            skillIds: [],
+            execution: "answer",
+            workspaceContext: false,
+            usePreviousAttachments: false,
+          }
+        : await api<AutomaticPlan>(
+            "/generate/plan",
+            {
+              connectionId: model.id,
+              messages: history,
+              attachments: currentAttachments.map(({ name }) => ({
+                name,
+                source: attachments.length ? "current" : "history",
+              })),
+              project: {
+                name: workspace?.name ?? "",
+                hasFolder: !!workspace?.folder,
+              },
+              workspaceAccess: workspace?.access ?? "edit",
+              skillMode,
+              imageSkills: true,
+              skillIds:
+                skillMode === "auto"
+                  ? installedSkills.map((skill) => skill.id)
+                  : selectedSkillIds,
+            },
+            "POST",
+            50000,
+            controller.signal,
+          );
+      const turnAttachments =
+        !attachments.length && plan.usePreviousAttachments === false
+          ? []
+          : currentAttachments;
+      const materialFiles = turnAttachments.map((attachment) =>
+        filesFor(updated.id).get(attachment.name),
       );
-      progress({
-        type: "tool",
-        id: routingId,
-        name: "识别需求并选择能力",
-        status: "done",
-      });
+      if (!casual)
+        progress({
+          type: "tool",
+          id: routingId,
+          name: "识别需求并选择能力",
+          status: "done",
+        });
       if (plan.skillIds?.length)
         progress({
           type: "tool",
@@ -644,8 +672,11 @@ export default function Workspace(props: WorkspaceProps) {
         connections.find((connection) => connection.id === plan.connectionId) ??
         model;
       const workspaceAttachments =
-        plan.kind !== "image" && currentAttachments.length < 8
-          ? await readWorkspaceContext(requestText, currentAttachments)
+        !casual &&
+        plan.workspaceContext !== false &&
+        plan.kind !== "image" &&
+        turnAttachments.length < 8
+          ? await readWorkspaceContext(requestText, turnAttachments)
           : [];
       controller.signal.throwIfAborted();
       if (workspaceAttachments.length)
@@ -739,10 +770,10 @@ export default function Workspace(props: WorkspaceProps) {
         return;
       }
       const modelAttachments = toModelAttachments([
-        ...currentAttachments,
+        ...turnAttachments,
         ...workspaceAttachments.slice(
           0,
-          Math.max(0, 8 - currentAttachments.length),
+          Math.max(0, 8 - turnAttachments.length),
         ),
       ]);
       validateAttachmentBudget(modelAttachments);
@@ -762,9 +793,12 @@ export default function Workspace(props: WorkspaceProps) {
           );
         responseModel = vision;
       }
-      const outputDevice = window.brainDesktop?.production
-        ? await window.brainDesktop.production.state(user.id)
-        : undefined;
+      const outputDevice =
+        !casual &&
+        plan.execution !== "answer" &&
+        window.brainDesktop?.production
+          ? await window.brainDesktop.production.state(user.id)
+          : undefined;
       setPendingReply((current) =>
         current
           ? { ...current, phase: "waiting", modelName: responseModel.name }
@@ -778,29 +812,34 @@ export default function Workspace(props: WorkspaceProps) {
           ...(plan.imageSkillId ? { imageSkillId: plan.imageSkillId } : {}),
           skillIds: plan.skillIds ?? [],
           sessionId: updated.id,
-          messages: [
-            ...updated.messages
-              .slice(-40)
-              .filter((m) => m.content.trim())
-              .map((m) => ({
-                role: m.role,
-                content:
-                  m.id === message.id
-                    ? requestText
-                    : (
-                        m.content +
-                        (m.role === "user" && m.attachments?.length
-                          ? "\n\n此前附件文字：\n" +
-                            m.attachments
-                              .map((a) => `${a.name}\n${a.content}`)
-                              .join("\n")
-                              .slice(0, 40000)
-                          : "")
-                      ).slice(0, 80000),
-              })),
-          ],
+          messages: casual
+            ? [{ role: "user", content: requestText }]
+            : [
+                ...updated.messages
+                  .slice(-40)
+                  .filter((m) => m.content.trim())
+                  .map((m) => ({
+                    role: m.role,
+                    content:
+                      m.id === message.id
+                        ? requestText
+                        : (
+                            m.content +
+                            (plan.usePreviousAttachments !== false &&
+                            m.role === "user" &&
+                            m.attachments?.length
+                              ? "\n\n此前附件文字：\n" +
+                                m.attachments
+                                  .map((a) => `${a.name}\n${a.content}`)
+                                  .join("\n")
+                                  .slice(0, 40000)
+                              : "")
+                          ).slice(0, 80000),
+                  })),
+              ],
           attachments: modelAttachments,
           mode: plan.mode,
+          execution: plan.execution ?? "agent",
           workspaceAccess: workspace?.access ?? "edit",
         },
         controller.signal,

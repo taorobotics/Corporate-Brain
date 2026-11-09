@@ -7,4 +7,7 @@ export type AutomaticPlan = {
   connectionId: string;
   skillIds?: string[];
   imageSkillId?: string;
+  execution?: "answer" | "agent";
+  workspaceContext?: boolean;
+  usePreviousAttachments?: boolean;
 };

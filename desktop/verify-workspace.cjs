@@ -393,4 +393,14 @@ module.exports = async ({
     "restore ordinary QA model",
   );
   await click("新建任务");
+  await require("./verify-casual-chat.cjs")({
+    js,
+    click,
+    fill,
+    waitFor,
+    request,
+    capture,
+    checks,
+    dir,
+  });
 };
