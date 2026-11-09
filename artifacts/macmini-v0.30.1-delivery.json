@@ -1,0 +1,308 @@
+{
+  "version": "0.30.1",
+  "sourceCommit": "cb666d0e13da0204dbffd43a1a5fdde2089a0859",
+  "result": "passed",
+  "verifiedAt": "2026-11-09T04:29:45.857Z",
+  "features": {
+    "creationSources": [
+      "local-conversations-or-manual",
+      "public-github-repository-directory-or-file",
+      "local-zip",
+      "public-https-zip-markdown-or-text"
+    ],
+    "editableExternalSkills": true,
+    "nativeZipExport": true,
+    "sourceReferencesAndOriginalLicensesPreserved": true,
+    "ordinaryReadmeProjectCreatesExplicitlyUntestedScaffold": true,
+    "originalReviewPermissionsRetained": true,
+    "scriptsNotExecutedDuringImport": true,
+    "publicSocketAddressesAndRedirectsVerified": true,
+    "privateProxyDnsIndependentlyResolved": true,
+    "externalPreviewMinutes": 30,
+    "expiredResourcesRequireReimport": true,
+    "fullConversationAndSourceIndexesNotExported": true
+  },
+  "localChecks": {
+    "nodeTestsWindows": 172,
+    "nodeTestsMac": 172,
+    "nasWorkerTestsEach": 5,
+    "windowsProductionBuild": "passed",
+    "windowsNativeSkillFlows": [
+      "GitHub and actual ZIP upload previews preserve references/license, require acknowledgement, publish or submit for review, install locally and fit a dark narrow window",
+      "Skill creation imports GitHub into an editable draft, saves and restores provenance, exports a real local ZIP with references/license, and requires authorization before submitting edited content for review",
+      "Ordinary project ZIP creates an explicitly untested editable skill scaffold without executing scripts; saved resources restore in a dark narrow editor without overflow"
+    ],
+    "macDesktopChecks": 49,
+    "macStartupChecks": 9,
+    "windowsFullDesktopSuite": "passed in CI; local targeted native skill verification passed; full local suite not rerun due pre-existing clipboard limitation",
+    "macLocalPipeline": [
+      {
+        "name": "tests",
+        "exitCode": 0
+      },
+      {
+        "name": "build",
+        "exitCode": 0
+      },
+      {
+        "name": "desktop",
+        "exitCode": 0
+      },
+      {
+        "name": "production",
+        "exitCode": 0
+      }
+    ],
+    "paidProductionModelsCalled": false,
+    "realEmployeeDataUsedForTests": false
+  },
+  "actualPublicNetwork": {
+    "windows": [
+      {
+        "url": "https://raw.githubusercontent.com/anthropics/skills/main/skills/algorithmic-art/SKILL.md",
+        "kind": "url",
+        "fileCount": 1
+      },
+      {
+        "url": "https://github.com/anthropics/skills/tree/main/skills/algorithmic-art",
+        "kind": "github",
+        "fileCount": 4
+      }
+    ],
+    "mac": [
+      {
+        "url": "https://codeload.github.com/octocat/Spoon-Knife/zip/refs/heads/main",
+        "kind": "url",
+        "fileCount": 4
+      },
+      {
+        "url": "https://raw.githubusercontent.com/anthropics/skills/main/skills/algorithmic-art/SKILL.md",
+        "kind": "url",
+        "fileCount": 1
+      },
+      {
+        "url": "https://github.com/anthropics/skills/tree/main/skills/algorithmic-art",
+        "kind": "github",
+        "fileCount": 4
+      }
+    ],
+    "contentDownloadedIntoTemporaryDirectoriesAndRemoved": true,
+    "thirdPartyContentNotPublishedToCompanySkills": true
+  },
+  "release": {
+    "status": "passed",
+    "runId": 42559866837,
+    "runUrl": "https://github.com/taorobotics/Corporate-Brain/actions/runs/42559866837",
+    "releaseId": 438731678,
+    "tag": "v0.30.1",
+    "url": "https://github.com/taorobotics/Corporate-Brain/releases/tag/v0.30.1",
+    "draft": false,
+    "publicLatest": "v0.30.1",
+    "productCommit": "cb666d0e13da0204dbffd43a1a5fdde2089a0859",
+    "verificationToolsCommit": "cb666d0e13da0204dbffd43a1a5fdde2089a0859",
+    "sourceAndTagPushed": true,
+    "assetsVerified": [
+      {
+        "name": "Corporate-Brain-0.30.1-macOS-arm64.dmg",
+        "bytes": 139864254,
+        "digest": "sha256:ac3e07a325d1499429b44b4d01a7f1095bae425da51ca10a863908d6b46c36f3"
+      },
+      {
+        "name": "Corporate-Brain-0.30.1-macOS-x64.dmg",
+        "bytes": 145381202,
+        "digest": "sha256:883911704a878c9d674dddea8e359ae0882412c1d244c0f841768ec6a40d1c16"
+      },
+      {
+        "name": "Corporate-Brain-Server-0.30.1.zip",
+        "bytes": 22637547,
+        "digest": "sha256:6fc3116cb3a6a1d07ead8991dfbba56c2a00a61cbee5c44689d1990317503f47"
+      },
+      {
+        "name": "Corporate-Brain-Setup-0.30.1-x64.exe",
+        "bytes": 120005208,
+        "digest": "sha256:b5e89e645a7b8391ab04ab7896607b33665fdbb2363d361d9dc2e5e113dec465"
+      },
+      {
+        "name": "macos-verification-arm64.json",
+        "bytes": 10483,
+        "digest": "sha256:06255b38563a2cb8e10f8435c8ec4d26027d4238ed20771aa47dc0645a173d43"
+      },
+      {
+        "name": "macos-verification-x64.json",
+        "bytes": 10479,
+        "digest": "sha256:835e758623e74979c9f5d51397e0413fb18dc67ec0296251cd715df4ddf7378e"
+      },
+      {
+        "name": "server-verification.json",
+        "bytes": 17332,
+        "digest": "sha256:332c947c57ca60671ee313c1968e07b55f2b71efa31449ce8444feace65714a5"
+      },
+      {
+        "name": "SHA256SUMS-macOS-arm64.txt",
+        "bytes": 105,
+        "digest": "sha256:538cdb905bd203f58ab9f680a680c05858837526a439765edd07afbb85db125f"
+      },
+      {
+        "name": "SHA256SUMS-macOS-x64.txt",
+        "bytes": 103,
+        "digest": "sha256:a4049fc6cafd9fc80ecf03669d1546d325ca1be05fe855f015bfd345fb61e749"
+      },
+      {
+        "name": "SHA256SUMS-Server.txt",
+        "bytes": 100,
+        "digest": "sha256:a4722c410b124f3b6ed78dba4d3d2aeb943d2195b313fdc657e555001b33cf47"
+      },
+      {
+        "name": "SHA256SUMS-Windows-x64.txt",
+        "bytes": 103,
+        "digest": "sha256:2cf0fc955fca1ec47c731bc55c5316e97edb07bf85859f7f2600e9661a62f055"
+      },
+      {
+        "name": "SHA256SUMS.txt",
+        "bytes": 411,
+        "digest": "sha256:0386854da4849eeb468d55deec4121074455aa747f2230dcd1ff8579225eb1ff"
+      },
+      {
+        "name": "windows-verification-x64.json",
+        "bytes": 13269,
+        "digest": "sha256:af4b16c11a210462bb8a59d9bf97e063d9824f507d914c27109ecf66a6addc2c"
+      }
+    ],
+    "installersAndServer": [
+      {
+        "name": "Corporate-Brain-Setup-0.30.1-x64.exe",
+        "bytes": 120005208,
+        "sha256": "b5e89e645a7b8391ab04ab7896607b33665fdbb2363d361d9dc2e5e113dec465"
+      },
+      {
+        "name": "Corporate-Brain-0.30.1-macOS-arm64.dmg",
+        "bytes": 139864254,
+        "sha256": "ac3e07a325d1499429b44b4d01a7f1095bae425da51ca10a863908d6b46c36f3"
+      },
+      {
+        "name": "Corporate-Brain-0.30.1-macOS-x64.dmg",
+        "bytes": 145381202,
+        "sha256": "883911704a878c9d674dddea8e359ae0882412c1d244c0f841768ec6a40d1c16"
+      },
+      {
+        "name": "Corporate-Brain-Server-0.30.1.zip",
+        "bytes": 22637547,
+        "sha256": "6fc3116cb3a6a1d07ead8991dfbba56c2a00a61cbee5c44689d1990317503f47"
+      }
+    ],
+    "windows": {
+      "realInstallUpgradeUninstall": true,
+      "lifecycleChecks": 17,
+      "handoffChecks": 5,
+      "signature": "NotSigned",
+      "physicalEmployeeDeviceTested": false
+    },
+    "macPlatforms": [
+      {
+        "architecture": "arm64",
+        "packageMountAndLaunch": "passed",
+        "desktopChecks": 49,
+        "signing": "ad-hoc",
+        "notarized": false
+      },
+      {
+        "architecture": "x64",
+        "packageMountAndLaunch": "passed",
+        "desktopChecks": 49,
+        "signing": "ad-hoc",
+        "notarized": false
+      }
+    ],
+    "distribution": {
+      "status": "completed",
+      "conclusion": "success",
+      "url": "https://github.com/taorobotics/Corporate-Brain/actions/runs/42559866837/job/128976759340"
+    },
+    "checkedAt": "2026-11-09T04:28:55.124Z"
+  },
+  "macMini": {
+    "serviceVersion": "0.30.1",
+    "httpsVersion": "0.30.1",
+    "tlsVerified": true,
+    "servedAssetsMatchVerifiedRelease": true,
+    "consistentBackupCreated": true,
+    "dataPreserved": true,
+    "counts": {
+      "users": 224,
+      "departments": 13,
+      "nas_sources": 14,
+      "skills": 3
+    },
+    "avatarAssetsVerified": 100,
+    "modelSettingsPreserved": true,
+    "modelCredentialsPreserved": true,
+    "projectOnlyWriteBoundary": true,
+    "installerVersion": "0.30.1",
+    "installersMatchGitHub": true,
+    "oldClientUpdateChecks": [
+      {
+        "target": "win32-x64",
+        "version": "0.30.1",
+        "bytes": 120005208,
+        "sha256": "b5e89e645a7b8391ab04ab7896607b33665fdbb2363d361d9dc2e5e113dec465",
+        "oldClientVersion": "0.29.1",
+        "state": "ready",
+        "installerExecuted": false
+      },
+      {
+        "target": "darwin-arm64",
+        "version": "0.30.1",
+        "bytes": 139864254,
+        "sha256": "ac3e07a325d1499429b44b4d01a7f1095bae425da51ca10a863908d6b46c36f3",
+        "oldClientVersion": "0.29.1",
+        "state": "ready",
+        "installerExecuted": false
+      },
+      {
+        "target": "darwin-x64",
+        "version": "0.30.1",
+        "bytes": 145381202,
+        "sha256": "883911704a878c9d674dddea8e359ae0882412c1d244c0f841768ec6a40d1c16",
+        "oldClientVersion": "0.29.1",
+        "state": "ready",
+        "installerExecuted": false
+      }
+    ],
+    "physicalEmployeeInstallersExecuted": false
+  },
+  "cloud": {
+    "installerVersion": "0.30.1",
+    "assets": [
+      {
+        "target": "win32-x64",
+        "name": "Corporate-Brain-Setup-0.30.1-x64.exe",
+        "bytes": 120005208,
+        "sha256": "b5e89e645a7b8391ab04ab7896607b33665fdbb2363d361d9dc2e5e113dec465"
+      },
+      {
+        "target": "darwin-arm64",
+        "name": "Corporate-Brain-0.30.1-macOS-arm64.dmg",
+        "bytes": 139864254,
+        "sha256": "ac3e07a325d1499429b44b4d01a7f1095bae425da51ca10a863908d6b46c36f3"
+      },
+      {
+        "target": "darwin-x64",
+        "name": "Corporate-Brain-0.30.1-macOS-x64.dmg",
+        "bytes": 145381202,
+        "sha256": "883911704a878c9d674dddea8e359ae0882412c1d244c0f841768ec6a40d1c16"
+      }
+    ],
+    "businessVersion": "0.11.6",
+    "businessHealthy": true,
+    "businessServiceUnchanged": true
+  },
+  "safety": {
+    "stagedAndFullReachableHistorySecretScans": "passed",
+    "privateDataOrCredentialsPublished": false,
+    "windowsTrustedSignature": false,
+    "macAdHocSigned": true,
+    "macNotarized": false,
+    "publishedTagsOrAssetsOverwritten": false,
+    "supersededPreparationTag": "v0.30.0 retained; draft not published"
+  }
+}
