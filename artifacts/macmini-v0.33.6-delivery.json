@@ -1,0 +1,327 @@
+{
+  "version": "0.33.6",
+  "sourceCommit": "36124e2d6ca10af339eb988b3396929c6333a470",
+  "result": "passed",
+  "verifiedAt": "2026-11-10T09:23:02.578Z",
+  "changes": {
+    "sharedSettingsNavigation": true,
+    "accountModelSkinRoutes": true,
+    "settingsRailHighlight": true,
+    "stickyMenuAndNarrowLayout": true,
+    "actualSettingsContainerScrollReset": true,
+    "nonemptyConversationDraftPreservedAcrossPageSwitches": true,
+    "nativeExportVerified": true,
+    "historyAndDirectReloadVerified": true,
+    "serverUiRefreshRequired": true,
+    "nativeClientReinstallRequiredForMenuFix": false
+  },
+  "localChecks": {
+    "windowsNodeTests": 195,
+    "macNodeTests": 195,
+    "nasProtocolTestsEach": 8,
+    "windowsFocusedNativeChecks": [
+      "Native page zoom (login): actual Control/Command + Plus, Equal, Minus, keypad add/subtract/zero and reset; page pixel ratio/viewport scale, exactly one step per key, focused input preserved, AltGr excluded",
+      "Native page zoom (conversation): actual Control/Command + Plus, Equal, Minus, keypad add/subtract/zero and reset; page pixel ratio/viewport scale, exactly one step per key, focused input preserved, AltGr excluded",
+      "Resizable conversation sidebar: real captured pointer drags beyond handle, min/max limits, Escape rollback, double-click reset, keyboard and single-click menu alternatives, input draft preserved, native per-account preference survives reload, narrow window clamps without overwriting wide preference",
+      "Shared settings navigation: account/model/skin routes retain the same visible menu and active state; rail highlights all settings routes, long catalog keeps menu visible, history and direct reload work, nonempty conversation draft survives page switches, real native export produces a valid backup, dark 700px layouts fit; disposable fixtures only",
+      "Approved collaboration layout: Cloud palette, full Noto/Inter fonts, separate activity rail, additive project navigation, compact composer, hidden redundant automatic label, borderless chat heading and real narrow window/rail collapse",
+      "Independent projects: folder creation, cancel, reused folders create unique identities without overwriting originals; legacy cards migrate, sidebar and overview match, conversation ownership and reopening persist, new-chat-only picker and dark 700px layout; synthetic files only",
+      "Multi-megabyte directory: real native read, bounded prioritized excerpts, actual router/chat HTTP, model receipt, successful reply and visible read-scope progress; no company models called",
+      "Standalone greetings use one actual streamed model request, no router, project scan, installed skill or export task; acknowledgements do not reuse prior attachments or video prompts",
+      "Semantic conversation routing preserves chat history for new questions, excludes unrelated historic materials and project scans, and retains explicit project-read requests and agent capabilities",
+      "Selected-model questions and repeated version follow-ups return actual current configuration with zero upstream calls; malformed router JSON still permits a real streamed answer without project scans or workflow execution",
+      "NAS body preview, actual streamed analysis, selected-file reference and editable Word/Markdown/provenance drafts: native automatic transfer to the employee project, all receipt hashes match, queue cleaned after acknowledgement and source document hash unchanged; only synthetic NAS and model fixtures",
+      "Company-linked chat queries real authorized skill inventory with installed/available status without executing workflows; NAS root, child-directory and name search use the same protected NAS service; follow-up source/path persists through reload, zero local project scans, real HTTP streams, synthetic data only",
+      "Synthetic conversation: consistent sans-serif reading type, 16px reading type, cloud surface, native light/dark screenshots and no narrow document overflow"
+    ],
+    "macDesktopChecks": 59,
+    "macStartupChecks": 9,
+    "macProfileChecks": 7,
+    "macProductionChecks": 13,
+    "macPipeline": [
+      {
+        "name": "tests",
+        "exitCode": 0
+      },
+      {
+        "name": "build",
+        "exitCode": 0
+      },
+      {
+        "name": "desktop",
+        "exitCode": 0
+      },
+      {
+        "name": "profile",
+        "exitCode": 0
+      },
+      {
+        "name": "production",
+        "exitCode": 0
+      }
+    ],
+    "sourceArchiveSha256": "c3c4a7e7e1ea2e86bc7b841420389f6d670a5edbfdbf21d7848079e825893dcc",
+    "fullWindowsDesktop": "Complete tagged CI verification passed, including clipboard; full local suite not rerun due previously confirmed host clipboard access failure",
+    "windowsFormalDesktopChecks": 61,
+    "disposableFixturesOnly": true,
+    "newRealCompanyModelCalls": 0
+  },
+  "release": {
+    "status": "passed",
+    "runId": 42783288541,
+    "runUrl": "https://github.com/taorobotics/Corporate-Brain/actions/runs/42783288541",
+    "releaseId": 440108432,
+    "tag": "v0.33.6",
+    "url": "https://github.com/taorobotics/Corporate-Brain/releases/tag/v0.33.6",
+    "draft": false,
+    "publicLatest": "v0.33.6",
+    "productCommit": "36124e2d6ca10af339eb988b3396929c6333a470",
+    "verificationToolsCommit": "36124e2d6ca10af339eb988b3396929c6333a470",
+    "sourceAndTagPushed": true,
+    "assetsVerified": [
+      {
+        "name": "Corporate-Brain-0.33.6-macOS-arm64.dmg",
+        "bytes": 139921546,
+        "digest": "sha256:b7b7d04e4a56467ab361916ce9e72529ddf1c5a22569d24289527dd3287f27af"
+      },
+      {
+        "name": "Corporate-Brain-0.33.6-macOS-x64.dmg",
+        "bytes": 145434133,
+        "digest": "sha256:4db07a2803e7fc5c474d6f72efd8bafff5ecea0953dccd9a397c29ae417f9e8a"
+      },
+      {
+        "name": "Corporate-Brain-Server-0.33.6.zip",
+        "bytes": 22767070,
+        "digest": "sha256:ad32a055cce30c46c5bec56501501cda8f6ab34f5e2a43ff939faf8139d0c877"
+      },
+      {
+        "name": "Corporate-Brain-Setup-0.33.6-x64.exe",
+        "bytes": 120059074,
+        "digest": "sha256:3fd747c049ba0e1b34a3c3bd561db337e64df85d46cb734ba656c2f0e241c662"
+      },
+      {
+        "name": "macos-verification-arm64.json",
+        "bytes": 13282,
+        "digest": "sha256:624aa8ba4f3c19ff2d0274b275fbf2b70568700d35b3209b5702f0ee5e3286b9"
+      },
+      {
+        "name": "macos-verification-x64.json",
+        "bytes": 13278,
+        "digest": "sha256:662fec358a7e33ba4a3caa3ec2abf4d33f1342d9ddd943ce68b4afc4967ea0af"
+      },
+      {
+        "name": "server-verification.json",
+        "bytes": 17681,
+        "digest": "sha256:6bac7409b0d5a576ccdb560f75d8cf0b539a99c4b26cb2fe71036b3513fe6d1d"
+      },
+      {
+        "name": "SHA256SUMS-macOS-arm64.txt",
+        "bytes": 105,
+        "digest": "sha256:624b5ed15a4346fe66ef5d4ced9226633546bb5873de306e12b24cecb90e49e7"
+      },
+      {
+        "name": "SHA256SUMS-macOS-x64.txt",
+        "bytes": 103,
+        "digest": "sha256:211f12a6ff400444450c1189d09349ca7973ff4eeff69d6927a156fa63d49d41"
+      },
+      {
+        "name": "SHA256SUMS-Server.txt",
+        "bytes": 100,
+        "digest": "sha256:d931608efe34a798b2000cb0da6e178deed836d18c6239680cbb6b08c0bb48c8"
+      },
+      {
+        "name": "SHA256SUMS-Windows-x64.txt",
+        "bytes": 103,
+        "digest": "sha256:97a5ddaf3d544439dbc4239ed61d7993d8bc6beaa50730dba650cf8a51a6e2d8"
+      },
+      {
+        "name": "SHA256SUMS.txt",
+        "bytes": 411,
+        "digest": "sha256:d9179a2bf600f931bdc2ad686d598e7d8158a0a040d4b90e5a3c37a807453c97"
+      },
+      {
+        "name": "windows-verification-x64.json",
+        "bytes": 16061,
+        "digest": "sha256:f650e0a762d62f3cae8b8f87d28e5b9e3a48397b779890f99968df4e8342cbcb"
+      }
+    ],
+    "installersAndServer": [
+      {
+        "name": "Corporate-Brain-Setup-0.33.6-x64.exe",
+        "bytes": 120059074,
+        "sha256": "3fd747c049ba0e1b34a3c3bd561db337e64df85d46cb734ba656c2f0e241c662"
+      },
+      {
+        "name": "Corporate-Brain-0.33.6-macOS-arm64.dmg",
+        "bytes": 139921546,
+        "sha256": "b7b7d04e4a56467ab361916ce9e72529ddf1c5a22569d24289527dd3287f27af"
+      },
+      {
+        "name": "Corporate-Brain-0.33.6-macOS-x64.dmg",
+        "bytes": 145434133,
+        "sha256": "4db07a2803e7fc5c474d6f72efd8bafff5ecea0953dccd9a397c29ae417f9e8a"
+      },
+      {
+        "name": "Corporate-Brain-Server-0.33.6.zip",
+        "bytes": 22767070,
+        "sha256": "ad32a055cce30c46c5bec56501501cda8f6ab34f5e2a43ff939faf8139d0c877"
+      }
+    ],
+    "windows": {
+      "realInstallUpgradeUninstall": true,
+      "lifecycleChecks": 17,
+      "handoffChecks": 5,
+      "signature": "NotSigned",
+      "physicalEmployeeDeviceTested": false
+    },
+    "macPlatforms": [
+      {
+        "architecture": "arm64",
+        "packageMountAndLaunch": "passed",
+        "desktopChecks": 59,
+        "signing": "ad-hoc",
+        "notarized": false
+      },
+      {
+        "architecture": "x64",
+        "packageMountAndLaunch": "passed",
+        "desktopChecks": 59,
+        "signing": "ad-hoc",
+        "notarized": false
+      }
+    ],
+    "distribution": {
+      "status": "completed",
+      "conclusion": "success",
+      "url": "https://github.com/taorobotics/Corporate-Brain/actions/runs/42783288541/job/129735165607"
+    },
+    "checkedAt": "2026-11-10T09:22:22.061Z"
+  },
+  "ciRecovery": {
+    "firstIntelAttempt": {
+      "completed_at": "2026-11-10T08:56:52Z",
+      "conclusion": "cancelled",
+      "id": 129718312760,
+      "name": "macOS x64",
+      "started_at": "2026-11-10T08:31:32Z",
+      "status": "completed"
+    },
+    "firstAttemptStage": "Startup screen verification stalled and reached the job time limit before the shared settings navigation test",
+    "sameTaggedSourceRetested": true,
+    "requiredChecksSkipped": false
+  },
+  "macMini": {
+    "businessVersion": "0.33.6",
+    "tlsVerified": true,
+    "servedUiAndFontsMatchRelease": [
+      {
+        "path": "/assets/index-BES5-OOi.js",
+        "bytes": 1037308,
+        "sha256": "73b279ec22d3054ee9d55d1349254c6ecd01581792dc153c6ff1ff827d14031d"
+      },
+      {
+        "path": "/assets/index-ybHMh9iJ.css",
+        "bytes": 124784,
+        "sha256": "b011424a4c7d35674ba830f44e6396e504328235120a08a2ce46a484c2f96a66"
+      },
+      {
+        "path": "/fonts.css",
+        "bytes": 585,
+        "sha256": "ca683d0d0448b2d4a3770ba7d2cd45503371039c96e5294d8a1576fd8fe07031"
+      },
+      {
+        "path": "/fonts/Inter-VF.woff2",
+        "bytes": 48256,
+        "sha256": "3100e775e8616cd2611beecfa23a4263d7037586789b43f035236a2e6fbd4c62"
+      },
+      {
+        "path": "/fonts/NotoSansSC-VF.woff2",
+        "bytes": 7782216,
+        "sha256": "61cf476545f4adf3a41955c69e90d29016acd0107c22bca418e1eb957d30b85e"
+      }
+    ],
+    "consistentBackupCreated": true,
+    "companyDataPreserved": true,
+    "counts": {
+      "users": 224,
+      "departments": 13,
+      "nas_sources": 14,
+      "skills": 3
+    },
+    "avatarAssetsVerified": 100,
+    "modelSettingsPreserved": true,
+    "modelCredentialsPreserved": true,
+    "loginServicesVerified": true,
+    "installerVersion": "0.33.6",
+    "installerHashesMatchGitHub": true,
+    "oldClientVersion": "0.33.5",
+    "priorUpdaterMatchesTag": true,
+    "oldClientUpdateChecks": [
+      {
+        "target": "win32-x64",
+        "version": "0.33.6",
+        "bytes": 120059074,
+        "sha256": "3fd747c049ba0e1b34a3c3bd561db337e64df85d46cb734ba656c2f0e241c662",
+        "oldClientVersion": "0.33.5",
+        "state": "ready",
+        "installerExecuted": false
+      },
+      {
+        "target": "darwin-arm64",
+        "version": "0.33.6",
+        "bytes": 139921546,
+        "sha256": "b7b7d04e4a56467ab361916ce9e72529ddf1c5a22569d24289527dd3287f27af",
+        "oldClientVersion": "0.33.5",
+        "state": "ready",
+        "installerExecuted": false
+      },
+      {
+        "target": "darwin-x64",
+        "version": "0.33.6",
+        "bytes": 145434133,
+        "sha256": "4db07a2803e7fc5c474d6f72efd8bafff5ecea0953dccd9a397c29ae417f9e8a",
+        "oldClientVersion": "0.33.5",
+        "state": "ready",
+        "installerExecuted": false
+      }
+    ],
+    "employeeDevicesForciblyInstalled": false
+  },
+  "cloud": {
+    "installerVersion": "0.33.6",
+    "assets": [
+      {
+        "target": "win32-x64",
+        "name": "Corporate-Brain-Setup-0.33.6-x64.exe",
+        "bytes": 120059074,
+        "sha256": "3fd747c049ba0e1b34a3c3bd561db337e64df85d46cb734ba656c2f0e241c662"
+      },
+      {
+        "target": "darwin-arm64",
+        "name": "Corporate-Brain-0.33.6-macOS-arm64.dmg",
+        "bytes": 139921546,
+        "sha256": "b7b7d04e4a56467ab361916ce9e72529ddf1c5a22569d24289527dd3287f27af"
+      },
+      {
+        "target": "darwin-x64",
+        "name": "Corporate-Brain-0.33.6-macOS-x64.dmg",
+        "bytes": 145434133,
+        "sha256": "4db07a2803e7fc5c474d6f72efd8bafff5ecea0953dccd9a397c29ae417f9e8a"
+      }
+    ],
+    "businessVersion": "0.11.6",
+    "businessHealthy": true,
+    "businessServiceUnchanged": true
+  },
+  "safety": {
+    "stagedAndReachableHistorySecretScans": "passed",
+    "privateCompanyDataPublished": false,
+    "publishedTagsAndAssetsOverwritten": false,
+    "originalLicense": "MIT",
+    "thirdPartyLicensesRetained": true,
+    "privacyNoticeIncluded": true,
+    "windowsTrustedSignature": false,
+    "macAdHocSigned": true,
+    "macNotarized": false
+  }
+}
