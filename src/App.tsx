@@ -59,6 +59,7 @@ import { Avatar } from "./Profile";
 import { useProduction, type ProductionController } from "./Production";
 import { addLocalProject } from "../shared/workspaces";
 import ResizableSidebar from "./ResizableSidebar";
+import { isSettingsPage } from "./SettingsLayout";
 
 const navigation = [
   { id: "chat", label: "对话", icon: ChatCircle },
@@ -87,6 +88,7 @@ export type WorkspaceProps = {
   openPassword: () => void;
   exportRecords: () => void;
   importRecords: () => void;
+  skins: React.ReactNode;
 };
 export default function App() {
   const [loading, setLoading] = useState(true),
@@ -504,6 +506,14 @@ export default function App() {
     openPassword: () => setPasswordOpen(true),
     exportRecords,
     importRecords: () => importRef.current?.click(),
+    skins: (
+      <SkinCenter
+        current={savedSkin}
+        onApply={applySkin}
+        onPreview={(value) => setSkinPreview({ ...value, owner: user.id })}
+        back={() => navigate("settings")}
+      />
+    ),
   };
   return (
     <>
@@ -658,7 +668,8 @@ export default function App() {
                 </button>
               ))}
               <button
-                className={`rail-settings ${page === "settings" ? "active" : ""}`}
+                className={`rail-settings ${isSettingsPage(page) ? "active" : ""}`}
+                aria-current={isSettingsPage(page) ? "page" : undefined}
                 aria-label="打开个人设置"
                 onClick={() => navigate("settings")}
               >
@@ -988,16 +999,7 @@ export default function App() {
             </ResizableSidebar>
           )}
           <main className="main-content">
-            {page === "skins" ? (
-              <SkinCenter
-                current={savedSkin}
-                onApply={applySkin}
-                onPreview={(value) =>
-                  setSkinPreview({ ...value, owner: user.id })
-                }
-                back={() => navigate("settings")}
-              />
-            ) : isAdmin ? (
+            {isAdmin ? (
               <Admin {...workspaceProps} />
             ) : (
               <Workspace {...workspaceProps} />

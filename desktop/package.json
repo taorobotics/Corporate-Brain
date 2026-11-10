@@ -1,6 +1,6 @@
 {
   "name": "corporate-brain-desktop",
-  "version": "0.33.5",
+  "version": "0.33.6",
   "private": true,
   "license": "MIT",
   "main": "main.cjs",

@@ -2139,8 +2139,13 @@ code {
 .settings-page {
   display: flex;
   min-height: 100%;
+  min-width: 0;
 }
 .settings-page > .settings-nav {
+  position: sticky;
+  top: 0;
+  align-self: flex-start;
+  min-height: calc(100dvh - 36px);
   width: 235px;
   flex-shrink: 0;
   padding: 29px 16px;
@@ -2165,7 +2170,7 @@ code {
   font-size: 14px;
 }
 .settings-nav button.active {
-  background: #f3e7de;
+  background: var(--active);
   color: var(--accent);
 }
 .settings-page > .settings-content {
@@ -2173,6 +2178,11 @@ code {
   min-width: 0;
   max-width: 960px;
   padding: 30px 30px 45px;
+}
+.settings-content > .skin-center {
+  height: auto;
+  overflow: visible;
+  padding: 0;
 }
 .settings-page .page-header {
   margin-bottom: 25px;
@@ -2232,6 +2242,8 @@ code {
   }
   .settings-page > .settings-nav {
     width: 100%;
+    min-height: 0;
+    z-index: 3;
     flex-direction: row;
     flex-wrap: wrap;
     border-right: 0;

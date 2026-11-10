@@ -42,6 +42,14 @@ module.exports = async ({ js, click, waitFor, capture, win, checks }) => {
     win,
     checks,
   });
+  await require("./verify-settings-navigation.cjs")({
+    js,
+    click,
+    waitFor,
+    capture,
+    win,
+    checks,
+  });
   try {
     await click("项目");
     await waitFor(

@@ -23,9 +23,7 @@ import {
   DownloadSimple,
   FileText,
   CircleNotch,
-  UserCircle,
   GearSix,
-  HardDrives,
   Trash,
   ArrowRight,
   Plug,
@@ -85,6 +83,7 @@ import MessageActions from "./MessageActions";
 import { DEFAULT_SKIN, SKINS, getSkin } from "../shared/skins";
 import { useChatScroll } from "./useChatScroll";
 import Knowledge from "./Knowledge";
+import SettingsLayout, { isSettingsPage } from "./SettingsLayout";
 import { readAttachment } from "./attachments";
 import { workspaceAttachments as prepareWorkspaceAttachments } from "../shared/workspace-context";
 import {
@@ -1871,229 +1870,222 @@ export default function Workspace(props: WorkspaceProps) {
           )}
         </div>
       )}
-      {page === "settings" && (
-        <div className="settings-page">
-          <nav className="settings-nav">
-            <h2>设置</h2>
-            <button className="active">
-              <UserCircle size={18} />
-              账号与偏好
-            </button>
-            <button onClick={() => navigate("models")}>
-              <GearSix size={18} />
-              模型与服务
-            </button>
-            <button onClick={() => navigate("skins")}>
-              <Images size={18} />
-              皮肤中心
-            </button>
-            <button onClick={props.exportRecords}>
-              <HardDrives size={18} />
-              导出本地记录
-            </button>
-          </nav>
-          <section className="settings-content">
-            <PageHeader />
-            <h2>账号信息</h2>
-            <Profile
-              user={user}
-              onSaved={props.updateUser}
-              openPassword={props.openPassword}
-              notify={notify}
-            />
-            <div className="setting-row">
-              <span>登录账号</span>
-              <span>{user.username}</span>
-            </div>
-            <h2>工作偏好</h2>
-            <ProductionLocation controller={props.production} />
-            <div className="setting-row">
-              <div>
-                <span>界面皮肤 · {getSkin(state.settings.skin).name}</span>
-                <small>
-                  {SKINS.length} 款可选，默认{getSkin(DEFAULT_SKIN).name}，按账号保存在本机
-                </small>
-              </div>
-              <Button onClick={() => navigate("skins")}>选择皮肤</Button>
-            </div>
-            <div className="setting-row">
-              <div>
-                <span>外观</span>
-                <small>默认使用浅色；深色同时应用于下次启动动画</small>
-              </div>
-              <SelectField
-                label="外观"
-                value={state.settings.theme}
-                onValueChange={(value) => patchSettings({ theme: value })}
-                options={[
-                  {
-                    value: "default",
-                    label: "默认（浅色）",
-                    description: "始终使用浅色，不跟随系统切换",
-                    icon: <Sun size={18} />,
-                  },
-                  {
-                    value: "light",
-                    label: "浅色",
-                    description: "明亮、温和的工作空间",
-                    icon: <Sun size={18} />,
-                  },
-                  {
-                    value: "dark",
-                    label: "深色",
-                    description: "适合低光环境的深色界面",
-                    icon: <Moon size={18} />,
-                  },
-                ]}
+      {isSettingsPage(page) && (
+        <SettingsLayout
+          page={page}
+          navigate={navigate}
+          exportRecords={props.exportRecords}
+        >
+          {page === "settings" && (
+            <>
+              <PageHeader />
+              <h2>账号信息</h2>
+              <Profile
+                user={user}
+                onSaved={props.updateUser}
+                openPassword={props.openPassword}
+                notify={notify}
               />
-            </div>
-            {window.brainDesktop?.previewStartup && (
+              <div className="setting-row">
+                <span>登录账号</span>
+                <span>{user.username}</span>
+              </div>
+              <h2>工作偏好</h2>
+              <ProductionLocation controller={props.production} />
               <div className="setting-row">
                 <div>
-                  <span>启动动画</span>
-                  <small>DSH 技术档案风格 · 跟随外观设置 · 可随时跳过</small>
+                  <span>界面皮肤 · {getSkin(state.settings.skin).name}</span>
+                  <small>
+                    {SKINS.length} 款可选，默认{getSkin(DEFAULT_SKIN).name}
+                    ，按账号保存在本机
+                  </small>
+                </div>
+                <Button onClick={() => navigate("skins")}>选择皮肤</Button>
+              </div>
+              <div className="setting-row">
+                <div>
+                  <span>外观</span>
+                  <small>默认使用浅色；深色同时应用于下次启动动画</small>
+                </div>
+                <SelectField
+                  label="外观"
+                  value={state.settings.theme}
+                  onValueChange={(value) => patchSettings({ theme: value })}
+                  options={[
+                    {
+                      value: "default",
+                      label: "默认（浅色）",
+                      description: "始终使用浅色，不跟随系统切换",
+                      icon: <Sun size={18} />,
+                    },
+                    {
+                      value: "light",
+                      label: "浅色",
+                      description: "明亮、温和的工作空间",
+                      icon: <Sun size={18} />,
+                    },
+                    {
+                      value: "dark",
+                      label: "深色",
+                      description: "适合低光环境的深色界面",
+                      icon: <Moon size={18} />,
+                    },
+                  ]}
+                />
+              </div>
+              {window.brainDesktop?.previewStartup && (
+                <div className="setting-row">
+                  <div>
+                    <span>启动动画</span>
+                    <small>DSH 技术档案风格 · 跟随外观设置 · 可随时跳过</small>
+                  </div>
+                  <Button
+                    onClick={() =>
+                      void window.brainDesktop
+                        ?.writeAppearance?.(state.settings.theme)
+                        .then(() => window.brainDesktop?.previewStartup?.())
+                        .catch(() =>
+                          notify("启动动画暂时无法预览，请稍后重试。"),
+                        )
+                    }
+                  >
+                    预览启动动画
+                  </Button>
+                </div>
+              )}
+              <div className="setting-row">
+                <div>
+                  <span>本地文件</span>
+                  <small>
+                    {window.brainDesktop
+                      ? "已接通系统文件选择与项目文件夹只读扫描"
+                      : "可上传选定文件，本地目录助手尚未接通"}
+                  </small>
                 </div>
                 <Button
-                  onClick={() =>
-                    void window.brainDesktop
-                      ?.writeAppearance?.(state.settings.theme)
-                      .then(() => window.brainDesktop?.previewStartup?.())
-                      .catch(() => notify("启动动画暂时无法预览，请稍后重试。"))
-                  }
+                  onClick={() => {
+                    if (window.brainDesktop) void chooseFiles();
+                    else filesRef.current?.click();
+                  }}
                 >
-                  预览启动动画
+                  选择文件
                 </Button>
               </div>
-            )}
-            <div className="setting-row">
-              <div>
-                <span>本地文件</span>
-                <small>
-                  {window.brainDesktop
-                    ? "已接通系统文件选择与项目文件夹只读扫描"
-                    : "可上传选定文件，本地目录助手尚未接通"}
-                </small>
-              </div>
-              <Button
-                onClick={() => {
-                  if (window.brainDesktop) void chooseFiles();
-                  else filesRef.current?.click();
-                }}
-              >
-                选择文件
-              </Button>
-            </div>
-            <h2>本地记录与备份</h2>
-            <p className="muted">
-              完整聊天和个人草稿保存在
-              {window.brainDesktop ? "此电脑的应用数据目录" : "此浏览器本地"}
-              ，按公司和员工账号隔离。换设备不自动同步。
-              {!window.brainDesktop &&
-                "清除站点数据或使用隐私模式可能丢失记录，请主动备份。"}
-            </p>
-            <div className="setting-row">
-              <span>
-                {state.conversations.length} 个对话 · {state.drafts.length}{" "}
-                个草稿
-              </span>
-              <div className="inline-actions">
-                <Button onClick={props.exportRecords}>导出备份</Button>
-                <Button onClick={props.importRecords}>导入记录</Button>
-              </div>
-            </div>
-            <small className="muted">
-              备份包含已保存的对话、文本附件与内嵌图片；不包含公司密钥或本地路径所指向的外部文件。导入后需重新安装公司技能以校验权限。
-            </small>
-          </section>
-        </div>
-      )}
-      {page === "models" && (
-        <div className="page">
-          <PageHeader
-            action={
-              user.role === "company_admin" ? (
-                <Button onClick={() => navigate("admin-models")}>
-                  管理公司连接
-                </Button>
-              ) : undefined
-            }
-          />
-          <EmployeeModelServices
-            refresh={props.refresh}
-            notify={notify}
-            revision={connections}
-          />
-          <div className="tabs">
-            <button className="active">公司提供</button>
-            <span className="tab-note">
-              对话模型与图片生成技能由公司统一提供
-            </span>
-          </div>
-          {!connections.filter((c) => !c.personal).length ? (
-            <Empty
-              icon={<Plug size={36} />}
-              title="还没有可用的模型连接"
-              detail="管理员可自定义服务地址、密钥和模型标识，并按部门授权使用。"
-              action={
-                user.role === "company_admin" ? (
-                  <Button primary onClick={() => navigate("admin-models")}>
-                    添加模型连接
-                  </Button>
-                ) : undefined
-              }
-            />
-          ) : (
-            <div className="connection-list">
-              {connections
-                .filter((c) => !c.personal)
-                .map((c) => (
-                  <div className="connection-card" key={c.id}>
-                    <span className="card-icon">
-                      <Plug size={24} />
-                    </span>
-                    <div>
-                      <h3>{c.name}</h3>
-                      <p>
-                        {c.model} ·{" "}
-                        {c.kind === "chat" ? "对话" : "图片生成技能"}
-                      </p>
-                      <small>{c.baseUrl}</small>
-                    </div>
-                    <span className="badge">公司连接</span>
-                    <Button
-                      onClick={() => {
-                        if (c.kind === "image") {
-                          patchSettings({
-                            skillMode: "manual",
-                            skillIds: [
-                              ...new Set([...selectedSkillIds, c.id]),
-                            ].slice(-16),
-                          });
-                          navigate("chat");
-                          notify("图片技能已就绪，直接在对话中提出配图需求。");
-                        } else {
-                          patchSettings({ model: c.id });
-                          notify("已设置为对话模型。");
-                        }
-                      }}
-                    >
-                      {c.kind === "image" ? "使用图片技能" : "选用"}
-                    </Button>
-                  </div>
-                ))}
-            </div>
-          )}
-          <div className="notice">
-            <SlidersHorizontal size={20} />
-            <div>
-              <strong>对话与图片技能</strong>
-              <p>
-                对话模型用于聊天。图片服务自动成为公司技能，提出配图需求时由 AI
-                按权限调用，密钥只保存在公司服务器。
+              <h2>本地记录与备份</h2>
+              <p className="muted">
+                完整聊天和个人草稿保存在
+                {window.brainDesktop ? "此电脑的应用数据目录" : "此浏览器本地"}
+                ，按公司和员工账号隔离。换设备不自动同步。
+                {!window.brainDesktop &&
+                  "清除站点数据或使用隐私模式可能丢失记录，请主动备份。"}
               </p>
-            </div>
-          </div>
-        </div>
+              <div className="setting-row">
+                <span>
+                  {state.conversations.length} 个对话 · {state.drafts.length}{" "}
+                  个草稿
+                </span>
+                <div className="inline-actions">
+                  <Button onClick={props.exportRecords}>导出备份</Button>
+                  <Button onClick={props.importRecords}>导入记录</Button>
+                </div>
+              </div>
+              <small className="muted">
+                备份包含已保存的对话、文本附件与内嵌图片；不包含公司密钥或本地路径所指向的外部文件。导入后需重新安装公司技能以校验权限。
+              </small>
+            </>
+          )}
+          {page === "models" && (
+            <>
+              <PageHeader
+                action={
+                  user.role === "company_admin" ? (
+                    <Button onClick={() => navigate("admin-models")}>
+                      管理公司连接
+                    </Button>
+                  ) : undefined
+                }
+              />
+              <EmployeeModelServices
+                refresh={props.refresh}
+                notify={notify}
+                revision={connections}
+              />
+              <div className="tabs">
+                <button className="active">公司提供</button>
+                <span className="tab-note">
+                  对话模型与图片生成技能由公司统一提供
+                </span>
+              </div>
+              {!connections.filter((c) => !c.personal).length ? (
+                <Empty
+                  icon={<Plug size={36} />}
+                  title="还没有可用的模型连接"
+                  detail="管理员可自定义服务地址、密钥和模型标识，并按部门授权使用。"
+                  action={
+                    user.role === "company_admin" ? (
+                      <Button primary onClick={() => navigate("admin-models")}>
+                        添加模型连接
+                      </Button>
+                    ) : undefined
+                  }
+                />
+              ) : (
+                <div className="connection-list">
+                  {connections
+                    .filter((c) => !c.personal)
+                    .map((c) => (
+                      <div className="connection-card" key={c.id}>
+                        <span className="card-icon">
+                          <Plug size={24} />
+                        </span>
+                        <div>
+                          <h3>{c.name}</h3>
+                          <p>
+                            {c.model} ·{" "}
+                            {c.kind === "chat" ? "对话" : "图片生成技能"}
+                          </p>
+                          <small>{c.baseUrl}</small>
+                        </div>
+                        <span className="badge">公司连接</span>
+                        <Button
+                          onClick={() => {
+                            if (c.kind === "image") {
+                              patchSettings({
+                                skillMode: "manual",
+                                skillIds: [
+                                  ...new Set([...selectedSkillIds, c.id]),
+                                ].slice(-16),
+                              });
+                              navigate("chat");
+                              notify(
+                                "图片技能已就绪，直接在对话中提出配图需求。",
+                              );
+                            } else {
+                              patchSettings({ model: c.id });
+                              notify("已设置为对话模型。");
+                            }
+                          }}
+                        >
+                          {c.kind === "image" ? "使用图片技能" : "选用"}
+                        </Button>
+                      </div>
+                    ))}
+                </div>
+              )}
+              <div className="notice">
+                <SlidersHorizontal size={20} />
+                <div>
+                  <strong>对话与图片技能</strong>
+                  <p>
+                    对话模型用于聊天。图片服务自动成为公司技能，提出配图需求时由
+                    AI 按权限调用，密钥只保存在公司服务器。
+                  </p>
+                </div>
+              </div>
+            </>
+          )}
+          {page === "skins" && props.skins}
+        </SettingsLayout>
       )}
       <input
         hidden
