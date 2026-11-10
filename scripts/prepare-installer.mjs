@@ -17,7 +17,12 @@ export async function prepareInstaller() {
     return text.replace(from, to);
   };
   const primitives = await readFile('node_modules/app-builder-lib/templates/nsis/include/installer.nsh', 'utf8');
-  const script = replace(primitives, '  File "/oname=${UNINSTALL_FILENAME}" "${UNINSTALLER_OUT_FILE}"', '  WriteUninstaller "$OUTDIR\\${UNINSTALL_FILENAME}"');
+  let script = replace(primitives, '  File "/oname=${UNINSTALL_FILENAME}" "${UNINSTALLER_OUT_FILE}"', '  WriteUninstaller "$OUTDIR\\${UNINSTALL_FILENAME}"');
+  const extraction = await readFile('node_modules/app-builder-lib/templates/nsis/include/extractAppPackage.nsh', 'utf8');
+  const extractionMacro = extraction.match(/^!macro extractUsing7za FILE\r?\n[\s\S]*?^!macroend/gm);
+  assert.equal(extractionMacro?.length, 1, 'Upstream extraction integration changed');
+  await writeFile(resolve(target, 'extract-app-package.nsh'), extraction.replace(extractionMacro[0], '!include "${BUILD_RESOURCES_DIR}\\windows\\extract.nsh"'));
+  script = replace(script, '!include "extractAppPackage.nsh"', '!include "${BUILD_RESOURCES_DIR}\\windows\\generated\\extract-app-package.nsh"');
   await writeFile(resolve(target, 'installer-primitives.nsh'), script);
   const locator = resolve(process.env['ProgramFiles(x86)'] || 'C:/Program Files (x86)', 'Microsoft Visual Studio/Installer/vswhere.exe');
   const visualStudio = execFileSync(locator, ['-latest','-products','*','-requires','Microsoft.VisualStudio.Component.VC.Tools.x86.x64','-property','installationPath'], {encoding:'utf8',windowsHide:true}).trim();

@@ -2,12 +2,14 @@ param([switch]$FullLifecycle, [string]$PreviousInstaller)
 $ErrorActionPreference = 'Stop'
 [Console]::OutputEncoding = [Text.UTF8Encoding]::new($false)
 . "$PSScriptRoot/installer-ui.ps1"
+. "$PSScriptRoot/update-resource-checks.ps1"
 $workspacePath = (Resolve-Path "$PSScriptRoot/..").Path
 $version = (Get-Content -LiteralPath (Join-Path $workspacePath 'package.json') -Raw | ConvertFrom-Json).version
 $installerPath = Join-Path $workspacePath "release/Corporate-Brain-Setup-$version-x64.exe"
 $outputPath = Join-Path $workspacePath 'artifacts/screenshots'
 New-Item -ItemType Directory -Path $outputPath -Force | Out-Null
 $checks = [Collections.Generic.List[string]]::new()
+$scheduling = [Collections.Generic.List[object]]::new()
 $registryPath = 'HKCU:\Software\964c1ad8-59be-558a-b612-2665e53209b3'
 $qaRoot = Join-Path $workspacePath ('.cache/installer-qa/' + [Guid]::NewGuid().ToString('N'))
 $qaTarget = [IO.Path]::GetFullPath((Join-Path $qaRoot 'Corporate Brain'))
@@ -121,6 +123,8 @@ $process = $null
 try {
   $process = Start-Process -FilePath $installerPath -PassThru -WindowStyle Hidden
   $window = Wait-InstallerText $process.Id '完整对话与个人草稿保存在你的电脑'
+  [void](Assert-UpdateScheduling $process)
+  $checks.Add('Manual installer retains normal CPU and disk scheduling')
   $windowRect = [InstallerWindow+Rect]::new()
   [void][InstallerWindow]::GetWindowRect($window.Handle,[ref]$windowRect)
   $workArea = [InstallerWindow]::WorkArea($window.Handle)
@@ -221,6 +225,7 @@ try {
       if ($process.HasExited) { throw 'Automatic installer exited before the old client closed' }
       if (@([InstallerWindow]::Windows($process.Id) | Where-Object Visible).Count -ne 0) { throw 'Automatic update displayed an installer wizard' }
       if ((Get-FileHash -LiteralPath $appPath).Hash -ne $oldHash) { throw 'Installer changed the application before the old client exited' }
+      $background = Assert-UpdateScheduling $process -Background
       Close-ClientWindow $oldClient $appPath
       if (-not $process.WaitForExit(120000) -or $process.ExitCode -ne 0) { throw 'Background update failed or did not restart' }
       if ((Get-ItemProperty -LiteralPath $registryPath).InstallLocation -ne $qaTarget) { throw 'Automatic update changed the original directory' }
@@ -229,6 +234,9 @@ try {
       if ((Get-FileHash -LiteralPath $sentinel).Hash -ne $sentinelHash) { throw 'Automatic update changed personal records' }
       $restarted = Get-Process -Name '公司大脑' -ErrorAction SilentlyContinue | Where-Object { $_.Path -eq $appPath -and $_.MainWindowHandle -ne 0 } | Select-Object -First 1
       if (-not $restarted) { throw 'Updated client did not show its window' }
+      $foreground = Assert-UpdateScheduling $restarted
+      $scheduling.Add(@{legacy=[bool]$Legacy;installer=$background;restartedClient=$foreground})
+      $checks.Add('Packaged background update lowers CPU/I/O priority and restarts the client with normal scheduling')
       Close-ClientWindow $restarted $appPath
     }
     # Simulate a user who has removed the desktop link. The updater must not recreate it.
@@ -350,7 +358,7 @@ try {
     if ((Get-FileHash -LiteralPath $sentinel -Algorithm SHA256).Hash -ne $sentinelHash) { throw 'Final uninstall changed records' }
     $checks.Add('Silent uninstallation also preserves synthetic personal records')
   }
-  @{ version=$version; result='passed'; mode=$(if($FullLifecycle){'Disposable Windows CI lifecycle'}else{'UI-only'}); defaultPath=$defaultPath; checks=$checks; realInstallUpgradeUninstall=[bool]$FullLifecycle; physicalEmployeeDeviceTested=$false; nativeTestCompanyUrl=$(if($FullLifecycle){$env:BRAIN_APP_URL}else{$null}); sourceCommit=(git rev-parse HEAD); verificationSourceCommit=$env:BRAIN_VERIFICATION_COMMIT; sha256=(Get-FileHash -LiteralPath $installerPath -Algorithm SHA256).Hash.ToLowerInvariant() } |
+  @{ version=$version; result='passed'; mode=$(if($FullLifecycle){'Disposable Windows CI lifecycle'}else{'UI-only'}); defaultPath=$defaultPath; checks=$checks; scheduling=$scheduling; realInstallUpgradeUninstall=[bool]$FullLifecycle; physicalEmployeeDeviceTested=$false; nativeTestCompanyUrl=$(if($FullLifecycle){$env:BRAIN_APP_URL}else{$null}); sourceCommit=(git rev-parse HEAD); verificationSourceCommit=$env:BRAIN_VERIFICATION_COMMIT; sha256=(Get-FileHash -LiteralPath $installerPath -Algorithm SHA256).Hash.ToLowerInvariant() } |
     ConvertTo-Json -Depth 5 | Set-Content -LiteralPath (Join-Path $workspacePath 'artifacts/installer-verification.json') -Encoding utf8
   Write-Output "Installer UI passed: $($checks.Count) checks"
 } catch {

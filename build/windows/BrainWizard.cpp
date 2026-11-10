@@ -10,6 +10,8 @@ static const UINT_PTR timerId = 0xCB01;
 static volatile LONG installPhase, cancelDecision;
 static HWND stageText;
 static HWND launchAction;
+static bool backgroundUpdate;
+static DWORD updateOriginalPriority;
 static bool drawButton(DRAWITEMSTRUCT* item) {
   if(!item || !GetPropW(item->hwndItem,L"Brain.Button")) return false;
   const HWND button=item->hwndItem;
@@ -203,6 +205,31 @@ extern "C" void __cdecl Commit(HWND,int stringSize,wchar_t*,Stack** stack,void*)
 }
 extern "C" void __cdecl Complete(HWND,int,wchar_t*,Stack**,void*) {
   InterlockedExchange(&installPhase,0);
+}
+extern "C" void __cdecl Background(HWND,int stringSize,wchar_t*,Stack** stack,void*) {
+  const bool enable=popHandle(stack)!=0;
+  BOOL success=TRUE;
+  if(enable && !backgroundUpdate) {
+    updateOriginalPriority=GetPriorityClass(GetCurrentProcess());
+    // Set CPU priority explicitly; background mode also lowers disk/memory I/O.
+    success=updateOriginalPriority && SetPriorityClass(GetCurrentProcess(),PROCESS_MODE_BACKGROUND_BEGIN);
+    if(success) {
+      backgroundUpdate=true;
+      success=SetPriorityClass(GetCurrentProcess(),BELOW_NORMAL_PRIORITY_CLASS);
+      if(!success) {
+        if(SetPriorityClass(GetCurrentProcess(),PROCESS_MODE_BACKGROUND_END)) backgroundUpdate=false;
+        SetPriorityClass(GetCurrentProcess(),updateOriginalPriority);
+      }
+    }
+  } else if(!enable && backgroundUpdate) {
+    success=SetPriorityClass(GetCurrentProcess(),PROCESS_MODE_BACKGROUND_END);
+    if(success) {
+      backgroundUpdate=false;
+      success=SetPriorityClass(GetCurrentProcess(),updateOriginalPriority);
+    }
+  }
+  Stack* result=reinterpret_cast<Stack*>(GlobalAlloc(GPTR,sizeof(Stack)+stringSize*sizeof(wchar_t)));
+  if(result) {result->text[0]=success?L'1':L'0';result->next=*stack;*stack=result;}
 }
 extern "C" void __cdecl Refresh(HWND parent,int,wchar_t*,Stack**,void*) {
   HWND window=IsWindow(parent)?parent:host;

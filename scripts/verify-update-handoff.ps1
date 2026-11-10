@@ -2,6 +2,7 @@
 # No production registry key, installation, profile or updater cache is changed.
 $ErrorActionPreference = 'Stop'
 . "$PSScriptRoot/installer-ui.ps1"
+. "$PSScriptRoot/update-resource-checks.ps1"
 $workspace = (Resolve-Path "$PSScriptRoot/..").Path
 $probe = Join-Path $workspace ('.cache/update-handoff-probe/' + [Guid]::NewGuid().ToString('N'))
 $cache = Join-Path $probe 'updates'
@@ -11,6 +12,14 @@ $builderCache = if ($env:ELECTRON_BUILDER_CACHE) { $env:ELECTRON_BUILDER_CACHE }
 $compiler = Get-ChildItem -LiteralPath $builderCache -Recurse -Filter makensis.exe | Where-Object { $_.Directory.Name -ne 'Bin' } | Select-Object -First 1
 $plugins = Get-ChildItem -LiteralPath $builderCache -Recurse -Filter StdUtils.dll | Where-Object { $_.Directory.Name -eq 'x86-unicode' } | Select-Object -First 1
 if (-not $compiler -or -not $plugins) { throw 'Build the Windows installer before running the isolated handoff probe' }
+$extractor = Get-ChildItem -LiteralPath $builderCache -Recurse -Filter Nsis7z.dll | Where-Object { $_.Directory.Name -eq 'x86-unicode' } | Select-Object -First 1
+$archiver = Get-ChildItem -LiteralPath $builderCache -Recurse -Filter 7za.exe | Select-Object -First 1
+if (-not $extractor -or -not $archiver) { throw 'Native archive fixture tools are missing' }
+$payload = Join-Path $probe 'payload.bin'
+[IO.File]::WriteAllBytes($payload,[byte[]]::new(4MB))
+$payloadHash = (Get-FileHash -LiteralPath $payload -Algorithm SHA256).Hash
+& $archiver.FullName a -t7z -mx=1 (Join-Path $probe 'fixture.7z') $payload | Out-Null
+if ($LASTEXITCODE -ne 0) { throw 'Archive fixture creation failed' }
 $locator = Join-Path ${env:ProgramFiles(x86)} 'Microsoft Visual Studio/Installer/vswhere.exe'
 $vs = & $locator -latest -products '*' -requires Microsoft.VisualStudio.Component.VC.Tools.x86.x64 -property installationPath
 $setup = Join-Path $vs 'VC/Auxiliary/Build/vcvars32.bat'
@@ -45,7 +54,9 @@ OutFile "__PROBE__\probe.exe"
 !include WinMessages.nsh
 !include UAC.nsh
 !include StdUtils.nsh
+!include "__WORKSPACE__\build\windows\extract.nsh"
 !addplugindir /x86-unicode "__PLUGINS__"
+!addplugindir /x86-unicode "__EXTRACTOR__"
 !addplugindir /x86-unicode "__WORKSPACE__\build\windows\generated"
 Var appExe
 __VARIABLES__
@@ -69,13 +80,19 @@ Section
   StrCpy $appExe "$INSTDIR\${APP_EXECUTABLE_FILENAME}"
   Call BrainSignalUpdateReady
   !insertmacro customCheckAppRunning
+  SetOutPath "__PROBE__\prepared-app"
+  !insertmacro extractUsing7za "__PROBE__\fixture.7z"
+  ${If} ${FileExists} "$PLUGINSDIR\7z-out\*"
+    SetErrorLevel 3
+    Quit
+  ${EndIf}
   FileOpen $0 "__PROBE__\stage.txt" w
   FileWrite $0 "commit would begin here"
   FileClose $0
   Call BrainRestartAfterUpdate
 SectionEnd
 '@
-$nsi = $nsi.Replace('__PROBE__',$probe).Replace('__PLUGINS__',$plugins.Directory.FullName).Replace('__WORKSPACE__',$workspace).Replace('__INSTALLED__',$installed).Replace('__VARIABLES__',$variables).Replace('__FUNCTIONS__',($functions -join "`n")).Replace('__RUNNING__',$running)
+$nsi = $nsi.Replace('__PROBE__',$probe).Replace('__PLUGINS__',$plugins.Directory.FullName).Replace('__EXTRACTOR__',$extractor.Directory.FullName).Replace('__WORKSPACE__',$workspace).Replace('__INSTALLED__',$installed).Replace('__VARIABLES__',$variables).Replace('__FUNCTIONS__',($functions -join "`n")).Replace('__RUNNING__',$running)
 $script = Join-Path $probe 'probe.nsi'
 $nsi | Set-Content -LiteralPath $script -Encoding utf8
 & $compiler.FullName /V2 /INPUTCHARSET UTF8 $script
@@ -83,6 +100,7 @@ if ($LASTEXITCODE -ne 0) { throw 'NSIS probe compilation failed' }
 $exe = Join-Path $probe 'probe.exe'
 $stage = Join-Path $probe 'stage.txt'
 $checks = [Collections.Generic.List[string]]::new()
+$scheduling = [Collections.Generic.List[object]]::new()
 $owned = [Collections.Generic.List[Diagnostics.Process]]::new()
 function Start-Probe([string]$File, [string[]]$Arguments = @()) {
   $settings = @{ FilePath=$File; PassThru=$true; WindowStyle='Hidden' }
@@ -131,17 +149,23 @@ try {
     Start-Sleep -Milliseconds 400
     if ($installer.HasExited -or (Test-Path -LiteralPath $stage) -or $old.HasExited) { throw 'Installer failed to wait for the running application' }
     if (@([InstallerWindow]::Windows($installer.Id) | Where-Object Visible).Count) { throw 'Automatic mode displayed an installer window' }
+    $background = Assert-UpdateScheduling $installer -Background
     Close-ProbeWindow $old
     if (-not $installer.WaitForExit(30000) -or $installer.ExitCode -ne 0) { throw 'Silent handoff did not finish after the application closed' }
     Wait-ProbeFile $stage
     $restarted = Get-Process -Name BrainHandoffProbe | Where-Object Path -eq $stub | Select-Object -First 1
     if (-not $restarted -or -not ([InstallerWindow]::Windows($restarted.Id) | Where-Object Visible)) { throw 'Updated application window did not restart' }
     $owned.Add($restarted)
+    $foreground = Assert-UpdateScheduling $restarted
+    $scheduling.Add(@{legacy=$legacy;installer=$background;restartedClient=$foreground})
+    if ((Get-FileHash -LiteralPath (Join-Path $probe 'prepared-app/payload.bin') -Algorithm SHA256).Hash -ne $payloadHash) { throw 'Direct staged archive extraction changed the payload' }
+    $checks.Add('Background update uses low CPU/I/O priority and restores normal scheduling before restarting')
     Close-ProbeWindow $restarted
     Remove-Item -LiteralPath $stage
     $checks.Add($(if($legacy){'Legacy cache launch has no wizard, waits for the old process and restarts a real window'}else{'Native silent handoff waits for the old process and restarts a real window'}))
   }
-  @{result='passed';version=(Get-Content (Join-Path $workspace 'package.json') -Raw | ConvertFrom-Json).version;scope='Isolated real NSIS handoff functions with inert executable; no installation or production data';checks=$checks;fullInstallUpgradeUninstall=$false;sourceCommit=(git rev-parse HEAD)} | ConvertTo-Json -Depth 5 | Set-Content (Join-Path $workspace 'artifacts/update-handoff-verification.json') -Encoding utf8
+  $checks.Add('Real 7z archive extracts directly to staging with matching SHA-256 and no intermediate 7z-out copy')
+  @{result='passed';version=(Get-Content (Join-Path $workspace 'package.json') -Raw | ConvertFrom-Json).version;scope='Isolated real NSIS handoff functions with inert executable; no installation or production data';checks=$checks;scheduling=$scheduling;directExtractionVerified=$true;fullInstallUpgradeUninstall=$false;sourceCommit=(git rev-parse HEAD)} | ConvertTo-Json -Depth 5 | Set-Content (Join-Path $workspace 'artifacts/update-handoff-verification.json') -Encoding utf8
   Write-Output "Isolated native updater handoff passed: $($checks.Count) checks"
 } finally {
   foreach ($p in $owned) { if (-not $p.HasExited) { Stop-Process -Id $p.Id -ErrorAction SilentlyContinue } }

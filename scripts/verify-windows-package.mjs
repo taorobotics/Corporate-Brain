@@ -33,6 +33,16 @@ const handoffVerification = JSON.parse(await readFile('artifacts/update-handoff-
 assert.equal(handoffVerification.result, 'passed');
 assert.equal(handoffVerification.version, version);
 assert.equal(handoffVerification.sourceCommit, execFileSync('git', ['rev-parse', 'HEAD'], {encoding:'utf8'}).trim());
+assert.equal(handoffVerification.directExtractionVerified, true);
+for (const report of [handoffVerification, installerVerification]) {
+  assert.equal(report.scheduling.length, 2);
+  for (const sample of report.scheduling) {
+    assert.ok([0x40, 0x4000].includes(sample.installer.cpuClass));
+    assert.ok(sample.installer.ioPriority < 2);
+    assert.equal(sample.restartedClient.cpuClass, 0x20);
+    assert.equal(sample.restartedClient.ioPriority, 2);
+  }
+}
 assert.equal(installerVerification.version, version);
 assert.equal(installerVerification.sha256, createHash('sha256').update(bytes).digest('hex'));
 assert.equal(installerVerification.sourceCommit, execFileSync('git', ['rev-parse', 'HEAD'], {encoding:'utf8'}).trim());

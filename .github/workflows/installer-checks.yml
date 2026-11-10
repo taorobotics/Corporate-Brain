@@ -2,7 +2,7 @@ name: Windows installer lifecycle
 on:
   push:
     branches: [main]
-    paths: ['build/windows/**', 'scripts/*installer*', 'scripts/package-desktop.mjs', 'package.json', '.github/workflows/installer-checks.yml']
+    paths: ['build/windows/**', 'scripts/*installer*', 'scripts/update-resource-checks.ps1', 'scripts/verify-update-handoff.ps1', 'scripts/package-desktop.mjs', 'package.json', '.github/workflows/installer-checks.yml']
   workflow_dispatch:
 permissions:
   contents: read

@@ -389,6 +389,17 @@ Function BrainDetectUpdate
 FunctionEnd
 
 Function BrainSignalUpdateReady
+  ${If} $BrainAutoUpdate != 1
+    Return
+  ${EndIf}
+  ; Apply scheduling on the installation worker, after NSIS initializes it.
+  BrainWizard::Background /NOUNLOAD 1
+  Pop $0
+  ${If} $0 != 1
+    ; Stop before readiness/commit; the existing client remains available.
+    SetErrorLevel 2
+    Quit
+  ${EndIf}
   ${If} $BrainUpdateToken == ""
     Return
   ${EndIf}
@@ -416,6 +427,12 @@ Function BrainSignalUpdateReady
 FunctionEnd
 
 Function BrainRestartAfterUpdate
+  ; A restarted client must not inherit the installer's background priority.
+  BrainWizard::Background /NOUNLOAD 0
+  Pop $0
+  ${If} $0 != 1
+    Goto brain_restart_failed
+  ${EndIf}
   SetOutPath "$INSTDIR"
   ClearErrors
   ${If} ${UAC_IsAdmin}
