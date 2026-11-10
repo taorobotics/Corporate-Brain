@@ -670,7 +670,7 @@ const wait = async (fn, label, ms = 45000) => {
     await wait(
       () =>
         js(
-          `document.documentElement.dataset.theme==='dark'&&getComputedStyle(document.documentElement).getPropertyValue('--bg').trim()==='#181715'`,
+          `document.documentElement.dataset.theme==='dark'&&getComputedStyle(document.documentElement).getPropertyValue('--bg').trim()==='#20232b'`,
         ),
       "persisted dark colors",
     );

@@ -82,7 +82,7 @@ import {
 } from "../shared/chat-progress";
 import MessageContent from "./MessageContent";
 import MessageActions from "./MessageActions";
-import { getSkin } from "../shared/skins";
+import { DEFAULT_SKIN, SKINS, getSkin } from "../shared/skins";
 import { useChatScroll } from "./useChatScroll";
 import Knowledge from "./Knowledge";
 import { readAttachment } from "./attachments";
@@ -1910,14 +1910,16 @@ export default function Workspace(props: WorkspaceProps) {
             <div className="setting-row">
               <div>
                 <span>界面皮肤 · {getSkin(state.settings.skin).name}</span>
-                <small>62 款可选，默认 Claude，按账号保存在本机</small>
+                <small>
+                  {SKINS.length} 款可选，默认{getSkin(DEFAULT_SKIN).name}，按账号保存在本机
+                </small>
               </div>
               <Button onClick={() => navigate("skins")}>选择皮肤</Button>
             </div>
             <div className="setting-row">
               <div>
                 <span>外观</span>
-                <small>默认使用暖浅色；深色同时应用于下次启动动画</small>
+                <small>默认使用浅色；深色同时应用于下次启动动画</small>
               </div>
               <SelectField
                 label="外观"
@@ -1927,7 +1929,7 @@ export default function Workspace(props: WorkspaceProps) {
                   {
                     value: "default",
                     label: "默认（浅色）",
-                    description: "始终使用暖浅色，不跟随系统切换",
+                    description: "始终使用浅色，不跟随系统切换",
                     icon: <Sun size={18} />,
                   },
                   {
