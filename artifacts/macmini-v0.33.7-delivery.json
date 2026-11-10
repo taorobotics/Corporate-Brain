@@ -1,0 +1,322 @@
+{
+  "version": "0.33.7",
+  "sourceCommit": "c48123168d42a38eb9a4cd09d08b0b8fcf3b9fdf",
+  "result": "passed",
+  "verifiedAt": "2026-11-10T15:10:29.879Z",
+  "changes": {
+    "directExtractionToPrivateStaging": true,
+    "oldApplicationRemovedOnlyAfterStaging": true,
+    "fullPayloadCopiesRemoved": 1,
+    "backgroundCpuClass": "BELOW_NORMAL_PRIORITY_CLASS",
+    "backgroundIoPriority": "VeryLow",
+    "normalSchedulingBeforeRestart": true,
+    "nativeAndLegacyUpdatePathsVerified": true
+  },
+  "verification": {
+    "nodeTests": 195,
+    "nasProtocolTests": 8,
+    "productionBuild": "passed",
+    "localHandoffChecks": [
+      "A manually launched installer retains the normal install path",
+      "Non-hexadecimal/path-bearing update tokens are rejected",
+      "Real silent installer readiness times out without committing",
+      "Background update uses low CPU/I/O priority and restores normal scheduling before restarting",
+      "Native silent handoff waits for the old process and restarts a real window",
+      "Background update uses low CPU/I/O priority and restores normal scheduling before restarting",
+      "Legacy cache launch has no wizard, waits for the old process and restarts a real window",
+      "Real 7z archive extracts directly to staging with matching SHA-256 and no intermediate 7z-out copy"
+    ],
+    "localScheduling": [
+      {
+        "legacy": false,
+        "restartedClient": {
+          "cpuClass": 32,
+          "ioPriority": 2
+        },
+        "installer": {
+          "cpuClass": 16384,
+          "ioPriority": 0
+        }
+      },
+      {
+        "legacy": true,
+        "restartedClient": {
+          "cpuClass": 32,
+          "ioPriority": 2
+        },
+        "installer": {
+          "cpuClass": 16384,
+          "ioPriority": 0
+        }
+      }
+    ],
+    "localInstallerUiChecks": [
+      "Manual installer retains normal CPU and disk scheduling",
+      "Primary and secondary buttons visibly depress and recover without activating",
+      "Native welcome page, privacy and license links are visible",
+      "Native path page shows actual space, directory and shortcut selection",
+      "Cancellation requires confirmation and exits before installing"
+    ],
+    "windowsFormalDesktopChecks": 61,
+    "windowsLifecycleChecks": 20,
+    "windowsHandoffChecks": 8,
+    "windowsFormalScheduling": [
+      {
+        "legacy": false,
+        "restartedClient": {
+          "ioPriority": 2,
+          "cpuClass": 32
+        },
+        "installer": {
+          "ioPriority": 0,
+          "cpuClass": 16384
+        }
+      },
+      {
+        "legacy": true,
+        "restartedClient": {
+          "ioPriority": 2,
+          "cpuClass": 32
+        },
+        "installer": {
+          "ioPriority": 0,
+          "cpuClass": 16384
+        }
+      }
+    ],
+    "completeLocalWindowsDesktop": "Not repeated due previously confirmed host clipboard access issue; complete formal Windows CI suite passed including clipboard",
+    "realCompanyModelsCalled": 0,
+    "disposableFixturesOnly": true
+  },
+  "resourceImpact": {
+    "localUnpackedApplicationBytes": 394841099,
+    "approximateApplicationPayloadWritesBefore": 1184523297,
+    "approximateApplicationPayloadWritesAfter": 789682198,
+    "approximatePayloadBytesAvoided": 394841099,
+    "physicalIoOrSpeedupMeasured": false,
+    "limits": "Logical application payload writes only; excludes compressed archive copies, antivirus and other I/O. No claim of fixed elapsed time or elimination of all stalls."
+  },
+  "release": {
+    "status": "passed",
+    "runId": 42794416807,
+    "runUrl": "https://github.com/taorobotics/Corporate-Brain/actions/runs/42794416807",
+    "releaseId": 440173809,
+    "tag": "v0.33.7",
+    "url": "https://github.com/taorobotics/Corporate-Brain/releases/tag/v0.33.7",
+    "draft": false,
+    "publicLatest": "v0.33.7",
+    "productCommit": "c48123168d42a38eb9a4cd09d08b0b8fcf3b9fdf",
+    "verificationToolsCommit": "2c8ea652c77df305baed988fcac0461a39bd1fb4",
+    "sourceAndTagPushed": true,
+    "assetsVerified": [
+      {
+        "name": "Corporate-Brain-0.33.7-macOS-arm64.dmg",
+        "bytes": 139921263,
+        "digest": "sha256:618198e51ff58162c03cd7243eb21666bc2a6f3a683cd0cb0efa2f875ff6c4dc"
+      },
+      {
+        "name": "Corporate-Brain-0.33.7-macOS-x64.dmg",
+        "bytes": 145434002,
+        "digest": "sha256:ac58915d029cb1e1af82473edebfeb5c7b8ba1b989e3a2242b9c5e0f13727f7b"
+      },
+      {
+        "name": "Corporate-Brain-Server-0.33.7.zip",
+        "bytes": 22767238,
+        "digest": "sha256:f52aa000f2502872d7a1d9d9e62a1eaa8506c8e2f21e4520b3df09c8c4c4a19d"
+      },
+      {
+        "name": "Corporate-Brain-Setup-0.33.7-x64.exe",
+        "bytes": 120059260,
+        "digest": "sha256:1ef00ef0b3a2e9040f686dbe69d3f8acd88ebfdf2ce011f19758a13b53e60b2f"
+      },
+      {
+        "name": "macos-verification-arm64.json",
+        "bytes": 13282,
+        "digest": "sha256:67a8208a6d0159d0ab38e6c40fde3c9e3c3e1432b7249feca674a7dff5b5fae4"
+      },
+      {
+        "name": "macos-verification-x64.json",
+        "bytes": 13278,
+        "digest": "sha256:e8ed40b58ab0606b47c20ec913babe653eb33460d07eba94596ca55085f78a1b"
+      },
+      {
+        "name": "server-verification.json",
+        "bytes": 17681,
+        "digest": "sha256:ae506c03e845ad33d1fa19e0b82bc4a0d1c8c6bfcec628ef5dd29d546c650547"
+      },
+      {
+        "name": "SHA256SUMS-macOS-arm64.txt",
+        "bytes": 105,
+        "digest": "sha256:0edcb1ebc8a3c1ff98871c605ba2ad26afcbe219f0da558ac6f626f08975635e"
+      },
+      {
+        "name": "SHA256SUMS-macOS-x64.txt",
+        "bytes": 103,
+        "digest": "sha256:83812377eebad25ca80dd28db13bd858c933a847fbca8f25b4844338c715a399"
+      },
+      {
+        "name": "SHA256SUMS-Server.txt",
+        "bytes": 100,
+        "digest": "sha256:e34f8309ca1dcd2d94b3bae277cdfe88f7c8e0a2fc54b13a89c60916f6c4439d"
+      },
+      {
+        "name": "SHA256SUMS-Windows-x64.txt",
+        "bytes": 103,
+        "digest": "sha256:14b51c9815590af1fd93e763bd06ca194ae201ac349e1ab89648c9d26dd6980e"
+      },
+      {
+        "name": "SHA256SUMS.txt",
+        "bytes": 411,
+        "digest": "sha256:4229f2cee596f672aef1542892e16b35ddcce83f20121380f7a8097828e82a92"
+      },
+      {
+        "name": "windows-verification-x64.json",
+        "bytes": 17634,
+        "digest": "sha256:af601c09d530ee3642351fd89a6d5e6e70cf57e424e6160482f23add8aec14f7"
+      }
+    ],
+    "installersAndServer": [
+      {
+        "name": "Corporate-Brain-Setup-0.33.7-x64.exe",
+        "bytes": 120059260,
+        "sha256": "1ef00ef0b3a2e9040f686dbe69d3f8acd88ebfdf2ce011f19758a13b53e60b2f"
+      },
+      {
+        "name": "Corporate-Brain-0.33.7-macOS-arm64.dmg",
+        "bytes": 139921263,
+        "sha256": "618198e51ff58162c03cd7243eb21666bc2a6f3a683cd0cb0efa2f875ff6c4dc"
+      },
+      {
+        "name": "Corporate-Brain-0.33.7-macOS-x64.dmg",
+        "bytes": 145434002,
+        "sha256": "ac58915d029cb1e1af82473edebfeb5c7b8ba1b989e3a2242b9c5e0f13727f7b"
+      },
+      {
+        "name": "Corporate-Brain-Server-0.33.7.zip",
+        "bytes": 22767238,
+        "sha256": "f52aa000f2502872d7a1d9d9e62a1eaa8506c8e2f21e4520b3df09c8c4c4a19d"
+      }
+    ],
+    "windows": {
+      "realInstallUpgradeUninstall": true,
+      "lifecycleChecks": 20,
+      "handoffChecks": 8,
+      "signature": "NotSigned",
+      "physicalEmployeeDeviceTested": false
+    },
+    "macPlatforms": [
+      {
+        "architecture": "arm64",
+        "packageMountAndLaunch": "passed",
+        "desktopChecks": 59,
+        "signing": "ad-hoc",
+        "notarized": false
+      },
+      {
+        "architecture": "x64",
+        "packageMountAndLaunch": "passed",
+        "desktopChecks": 59,
+        "signing": "ad-hoc",
+        "notarized": false
+      }
+    ],
+    "distribution": {
+      "status": "completed",
+      "conclusion": "success",
+      "url": "https://github.com/taorobotics/Corporate-Brain/actions/runs/42794416807/job/129766976859"
+    },
+    "checkedAt": "2026-11-10T12:37:32.252Z"
+  },
+  "ciRecovery": {
+    "originalRun": 42792911415,
+    "originalFailure": "Windows test assumed fixed manual-installer startup priority; original installer/app source was unchanged",
+    "verificationToolsCommit": "2c8ea652c77df305baed988fcac0461a39bd1fb4",
+    "completeRerun": 42794416807,
+    "intelStalledStartupJobCancelled": 129755844508,
+    "intelSameSourceRerunPassed": true,
+    "productTagUnchanged": true,
+    "backgroundAndRestartSchedulingChecksRetained": true
+  },
+  "macMini": {
+    "businessVersion": "0.33.6",
+    "installerVersion": "0.33.7",
+    "businessProcessUnchanged": true,
+    "httpsVerified": true,
+    "counts": {
+      "users": 224,
+      "departments": 13,
+      "nas_sources": 14,
+      "skills": 3
+    },
+    "companyCountsPreserved": true,
+    "installerHashesMatchGitHub": true,
+    "oldClientVersion": "0.33.6",
+    "oldClientUpdateChecks": [
+      {
+        "target": "win32-x64",
+        "version": "0.33.7",
+        "bytes": 120059260,
+        "sha256": "1ef00ef0b3a2e9040f686dbe69d3f8acd88ebfdf2ce011f19758a13b53e60b2f",
+        "oldClientVersion": "0.33.6",
+        "state": "ready",
+        "installerExecuted": false
+      },
+      {
+        "target": "darwin-arm64",
+        "version": "0.33.7",
+        "bytes": 139921263,
+        "sha256": "618198e51ff58162c03cd7243eb21666bc2a6f3a683cd0cb0efa2f875ff6c4dc",
+        "oldClientVersion": "0.33.6",
+        "state": "ready",
+        "installerExecuted": false
+      },
+      {
+        "target": "darwin-x64",
+        "version": "0.33.7",
+        "bytes": 145434002,
+        "sha256": "ac58915d029cb1e1af82473edebfeb5c7b8ba1b989e3a2242b9c5e0f13727f7b",
+        "oldClientVersion": "0.33.6",
+        "state": "ready",
+        "installerExecuted": false
+      }
+    ],
+    "employeeDevicesForciblyInstalled": false
+  },
+  "cloud": {
+    "installerVersion": "0.33.7",
+    "assets": [
+      {
+        "target": "win32-x64",
+        "name": "Corporate-Brain-Setup-0.33.7-x64.exe",
+        "bytes": 120059260,
+        "sha256": "1ef00ef0b3a2e9040f686dbe69d3f8acd88ebfdf2ce011f19758a13b53e60b2f"
+      },
+      {
+        "target": "darwin-arm64",
+        "name": "Corporate-Brain-0.33.7-macOS-arm64.dmg",
+        "bytes": 139921263,
+        "sha256": "618198e51ff58162c03cd7243eb21666bc2a6f3a683cd0cb0efa2f875ff6c4dc"
+      },
+      {
+        "target": "darwin-x64",
+        "name": "Corporate-Brain-0.33.7-macOS-x64.dmg",
+        "bytes": 145434002,
+        "sha256": "ac58915d029cb1e1af82473edebfeb5c7b8ba1b989e3a2242b9c5e0f13727f7b"
+      }
+    ],
+    "businessVersion": "0.11.6",
+    "businessHealthy": true,
+    "businessServiceUnchanged": true
+  },
+  "safety": {
+    "stagedAndReachableHistorySecretScans": "passed",
+    "privateCompanyDataPublished": false,
+    "publishedTagsAndAssetsOverwritten": false,
+    "originalLicense": "MIT",
+    "thirdPartyLicensesRetained": true,
+    "privacyNoticeIncluded": true,
+    "windowsTrustedSignature": false,
+    "macAdHocSigned": true,
+    "macNotarized": false
+  }
+}
