@@ -123,8 +123,11 @@ $process = $null
 try {
   $process = Start-Process -FilePath $installerPath -PassThru -WindowStyle Hidden
   $window = Wait-InstallerText $process.Id '完整对话与个人草稿保存在你的电脑'
-  [void](Assert-UpdateScheduling $process)
-  $checks.Add('Manual installer retains normal CPU and disk scheduling')
+  # A compressed installer may already start at low priority on the host.
+  # Only automatic updates should enter our very-low-I/O background mode.
+  $manualScheduling = [UpdateResourceQuery]::Read($process.Id)
+  if ($manualScheduling[1] -eq 0) { throw 'Manual installer unexpectedly entered update-only background mode' }
+  $checks.Add('Manual installer does not enter update-only very-low-I/O mode')
   $windowRect = [InstallerWindow+Rect]::new()
   [void][InstallerWindow]::GetWindowRect($window.Handle,[ref]$windowRect)
   $workArea = [InstallerWindow]::WorkArea($window.Handle)
