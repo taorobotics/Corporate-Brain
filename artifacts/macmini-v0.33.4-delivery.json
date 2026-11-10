@@ -1,0 +1,317 @@
+{
+  "version": "0.33.4",
+  "sourceCommit": "860f240f42cc62d1e5c47f0088c9faa86484e0f6",
+  "result": "passed",
+  "verifiedAt": "2026-11-10T06:50:34.398Z",
+  "changes": {
+    "resizableConversationSidebar": true,
+    "capturedPointerOutsideHandle": true,
+    "widthBounds": [
+      170,
+      420
+    ],
+    "viewportAwareMaximum": true,
+    "doubleClickAndKeyboardReset": true,
+    "keyboardAndMenuAlternatives": true,
+    "escapeAndWindowBlurCancellation": true,
+    "liveWidthUpdatesBatchedWithAnimationFrames": true,
+    "persistOnlyAfterDrag": true,
+    "preferencePerAccountOnEmployeeDevice": true,
+    "narrowWindowPreservesWiderPreference": true,
+    "currentInputDraftPreserved": true,
+    "adminSidebarUnchanged": true
+  },
+  "localChecks": {
+    "windowsNodeTests": 195,
+    "macNodeTests": 195,
+    "nasProtocolTestsEach": 8,
+    "windowsFocusedNativeChecks": [
+      "Resizable conversation sidebar: real captured pointer drags beyond handle, min/max limits, Escape rollback, double-click reset, keyboard and single-click menu alternatives, input draft preserved, native per-account preference survives reload, narrow window clamps without overwriting wide preference",
+      "Approved collaboration layout: Cloud palette, full Noto/Inter fonts, separate activity rail, additive project navigation, compact composer, hidden redundant automatic label, borderless chat heading and real narrow window/rail collapse",
+      "Independent projects: folder creation, cancel, reused folders create unique identities without overwriting originals; legacy cards migrate, sidebar and overview match, conversation ownership and reopening persist, new-chat-only picker and dark 700px layout; synthetic files only",
+      "Multi-megabyte directory: real native read, bounded prioritized excerpts, actual router/chat HTTP, model receipt, successful reply and visible read-scope progress; no company models called",
+      "Standalone greetings use one actual streamed model request, no router, project scan, installed skill or export task; acknowledgements do not reuse prior attachments or video prompts",
+      "Semantic conversation routing preserves chat history for new questions, excludes unrelated historic materials and project scans, and retains explicit project-read requests and agent capabilities",
+      "Selected-model questions and repeated version follow-ups return actual current configuration with zero upstream calls; malformed router JSON still permits a real streamed answer without project scans or workflow execution",
+      "NAS body preview, actual streamed analysis, selected-file reference and editable Word/Markdown/provenance drafts: native automatic transfer to the employee project, all receipt hashes match, queue cleaned after acknowledgement and source document hash unchanged; only synthetic NAS and model fixtures",
+      "Company-linked chat queries real authorized skill inventory with installed/available status without executing workflows; NAS root, child-directory and name search use the same protected NAS service; follow-up source/path persists through reload, zero local project scans, real HTTP streams, synthetic data only",
+      "Synthetic conversation: consistent sans-serif reading type, 16px reading type, cloud surface, native light/dark screenshots and no narrow document overflow"
+    ],
+    "macDesktopChecks": 56,
+    "macStartupChecks": 9,
+    "macProfileChecks": 7,
+    "macProductionChecks": 13,
+    "macPipeline": [
+      {
+        "name": "tests",
+        "exitCode": 0
+      },
+      {
+        "name": "build",
+        "exitCode": 0
+      },
+      {
+        "name": "desktop",
+        "exitCode": 0
+      },
+      {
+        "name": "profile",
+        "exitCode": 0
+      },
+      {
+        "name": "production",
+        "exitCode": 0
+      }
+    ],
+    "sourceArchiveSha256": "40f926d02f873b0890ec3f16b46df60e08540dd1265483c6ec14b12b1f185fe7",
+    "fullWindowsDesktop": "Complete tagged CI verification passed, including clipboard; full local suite not rerun due previously confirmed host clipboard access failure",
+    "windowsFormalDesktopChecks": 58,
+    "disposableFixturesOnly": true,
+    "newRealCompanyModelCalls": 0
+  },
+  "release": {
+    "status": "passed",
+    "runId": 42768496453,
+    "runUrl": "https://github.com/taorobotics/Corporate-Brain/actions/runs/42768496453",
+    "releaseId": 440015051,
+    "tag": "v0.33.4",
+    "url": "https://github.com/taorobotics/Corporate-Brain/releases/tag/v0.33.4",
+    "draft": false,
+    "publicLatest": "v0.33.4",
+    "productCommit": "860f240f42cc62d1e5c47f0088c9faa86484e0f6",
+    "verificationToolsCommit": "860f240f42cc62d1e5c47f0088c9faa86484e0f6",
+    "sourceAndTagPushed": true,
+    "assetsVerified": [
+      {
+        "name": "Corporate-Brain-0.33.4-macOS-arm64.dmg",
+        "bytes": 139921082,
+        "digest": "sha256:3c3fdb8c48390b1da894e4150e86262b6414619db00fca721d29395514fee471"
+      },
+      {
+        "name": "Corporate-Brain-0.33.4-macOS-x64.dmg",
+        "bytes": 145433563,
+        "digest": "sha256:321bbb30592c84160a6e4568d3d4655478115ea1ecdbf68803957ef64c220266"
+      },
+      {
+        "name": "Corporate-Brain-Server-0.33.4.zip",
+        "bytes": 22766811,
+        "digest": "sha256:939df11cd3604449db4da20d20281f8be8ebfc3e9a97120128e7bc06242301f2"
+      },
+      {
+        "name": "Corporate-Brain-Setup-0.33.4-x64.exe",
+        "bytes": 120058552,
+        "digest": "sha256:4b36874a4cdbf60b3c7de27549276615e4e7511cf4424c601dc4a05d66b53a48"
+      },
+      {
+        "name": "macos-verification-arm64.json",
+        "bytes": 12488,
+        "digest": "sha256:9290941290478881419e64ebb9a78a2d66a275805ac906f5300b719f4b47ad02"
+      },
+      {
+        "name": "macos-verification-x64.json",
+        "bytes": 12484,
+        "digest": "sha256:9a1866dc603f6bedacdb75d381d58b97b8984fd5bf482abf7a6d608e31d79815"
+      },
+      {
+        "name": "server-verification.json",
+        "bytes": 17681,
+        "digest": "sha256:ee0b88b33e9fd46f9bda2139c3e9767dc6d8bf024f2324bd3de131f18722b584"
+      },
+      {
+        "name": "SHA256SUMS-macOS-arm64.txt",
+        "bytes": 105,
+        "digest": "sha256:fed28d5c9354c5d967f3e248c51b3262f4c241afad2c5f31a94e077b49079aaa"
+      },
+      {
+        "name": "SHA256SUMS-macOS-x64.txt",
+        "bytes": 103,
+        "digest": "sha256:de2b46094f9180248282635e6cb2d5b3f1407f3c49113d225168be5ca623cb99"
+      },
+      {
+        "name": "SHA256SUMS-Server.txt",
+        "bytes": 100,
+        "digest": "sha256:f524fb3c6dfd44fde7ae0b92ffa8eb700a1184b665bc5f6de12fb87ff609c93c"
+      },
+      {
+        "name": "SHA256SUMS-Windows-x64.txt",
+        "bytes": 103,
+        "digest": "sha256:18132e5686a6618720e79c3d82a16dd3b8f9291443cf7bde098c68cda1131f0d"
+      },
+      {
+        "name": "SHA256SUMS.txt",
+        "bytes": 411,
+        "digest": "sha256:fbc1257cb4853055610a7f6b8045ca6f620c1fcbe8709724a10656a363da5a0e"
+      },
+      {
+        "name": "windows-verification-x64.json",
+        "bytes": 15267,
+        "digest": "sha256:91be0e2010c34d114746dbd06b636fdb5d6cc43925c1cd276e3435ef0ae96f5f"
+      }
+    ],
+    "installersAndServer": [
+      {
+        "name": "Corporate-Brain-Setup-0.33.4-x64.exe",
+        "bytes": 120058552,
+        "sha256": "4b36874a4cdbf60b3c7de27549276615e4e7511cf4424c601dc4a05d66b53a48"
+      },
+      {
+        "name": "Corporate-Brain-0.33.4-macOS-arm64.dmg",
+        "bytes": 139921082,
+        "sha256": "3c3fdb8c48390b1da894e4150e86262b6414619db00fca721d29395514fee471"
+      },
+      {
+        "name": "Corporate-Brain-0.33.4-macOS-x64.dmg",
+        "bytes": 145433563,
+        "sha256": "321bbb30592c84160a6e4568d3d4655478115ea1ecdbf68803957ef64c220266"
+      },
+      {
+        "name": "Corporate-Brain-Server-0.33.4.zip",
+        "bytes": 22766811,
+        "sha256": "939df11cd3604449db4da20d20281f8be8ebfc3e9a97120128e7bc06242301f2"
+      }
+    ],
+    "windows": {
+      "realInstallUpgradeUninstall": true,
+      "lifecycleChecks": 17,
+      "handoffChecks": 5,
+      "signature": "NotSigned",
+      "physicalEmployeeDeviceTested": false
+    },
+    "macPlatforms": [
+      {
+        "architecture": "arm64",
+        "packageMountAndLaunch": "passed",
+        "desktopChecks": 56,
+        "signing": "ad-hoc",
+        "notarized": false
+      },
+      {
+        "architecture": "x64",
+        "packageMountAndLaunch": "passed",
+        "desktopChecks": 56,
+        "signing": "ad-hoc",
+        "notarized": false
+      }
+    ],
+    "distribution": {
+      "status": "completed",
+      "conclusion": "success",
+      "url": "https://github.com/taorobotics/Corporate-Brain/actions/runs/42768496453/job/129674081853"
+    },
+    "checkedAt": "2026-11-10T06:49:11.973Z"
+  },
+  "macMini": {
+    "businessVersion": "0.33.4",
+    "tlsVerified": true,
+    "servedUiAndFontsMatchRelease": [
+      {
+        "path": "/assets/index-DQEKSdWn.js",
+        "bytes": 1036937,
+        "sha256": "0ef8d2b4a0f93d78770435165bd454d659160b0a55f8c3a66b0161576d3a5bc5"
+      },
+      {
+        "path": "/assets/index-4OjwsIQt.css",
+        "bytes": 124598,
+        "sha256": "f2823869a400f73f41047b1d4acbb09344ae94db95e66b2e62ca7ce159747a10"
+      },
+      {
+        "path": "/fonts.css",
+        "bytes": 585,
+        "sha256": "ca683d0d0448b2d4a3770ba7d2cd45503371039c96e5294d8a1576fd8fe07031"
+      },
+      {
+        "path": "/fonts/Inter-VF.woff2",
+        "bytes": 48256,
+        "sha256": "3100e775e8616cd2611beecfa23a4263d7037586789b43f035236a2e6fbd4c62"
+      },
+      {
+        "path": "/fonts/NotoSansSC-VF.woff2",
+        "bytes": 7782216,
+        "sha256": "61cf476545f4adf3a41955c69e90d29016acd0107c22bca418e1eb957d30b85e"
+      }
+    ],
+    "consistentBackupCreated": true,
+    "companyDataPreserved": true,
+    "counts": {
+      "users": 224,
+      "departments": 13,
+      "nas_sources": 14,
+      "skills": 3
+    },
+    "avatarAssetsVerified": 100,
+    "modelSettingsPreserved": true,
+    "modelCredentialsPreserved": true,
+    "loginServicesVerified": true,
+    "installerVersion": "0.33.4",
+    "installerHashesMatchGitHub": true,
+    "oldClientVersion": "0.33.3",
+    "priorUpdaterMatchesTag": true,
+    "oldClientUpdateChecks": [
+      {
+        "target": "win32-x64",
+        "version": "0.33.4",
+        "bytes": 120058552,
+        "sha256": "4b36874a4cdbf60b3c7de27549276615e4e7511cf4424c601dc4a05d66b53a48",
+        "oldClientVersion": "0.33.3",
+        "state": "ready",
+        "installerExecuted": false
+      },
+      {
+        "target": "darwin-arm64",
+        "version": "0.33.4",
+        "bytes": 139921082,
+        "sha256": "3c3fdb8c48390b1da894e4150e86262b6414619db00fca721d29395514fee471",
+        "oldClientVersion": "0.33.3",
+        "state": "ready",
+        "installerExecuted": false
+      },
+      {
+        "target": "darwin-x64",
+        "version": "0.33.4",
+        "bytes": 145433563,
+        "sha256": "321bbb30592c84160a6e4568d3d4655478115ea1ecdbf68803957ef64c220266",
+        "oldClientVersion": "0.33.3",
+        "state": "ready",
+        "installerExecuted": false
+      }
+    ],
+    "employeeDevicesForciblyInstalled": false
+  },
+  "cloud": {
+    "installerVersion": "0.33.4",
+    "assets": [
+      {
+        "target": "win32-x64",
+        "name": "Corporate-Brain-Setup-0.33.4-x64.exe",
+        "bytes": 120058552,
+        "sha256": "4b36874a4cdbf60b3c7de27549276615e4e7511cf4424c601dc4a05d66b53a48"
+      },
+      {
+        "target": "darwin-arm64",
+        "name": "Corporate-Brain-0.33.4-macOS-arm64.dmg",
+        "bytes": 139921082,
+        "sha256": "3c3fdb8c48390b1da894e4150e86262b6414619db00fca721d29395514fee471"
+      },
+      {
+        "target": "darwin-x64",
+        "name": "Corporate-Brain-0.33.4-macOS-x64.dmg",
+        "bytes": 145433563,
+        "sha256": "321bbb30592c84160a6e4568d3d4655478115ea1ecdbf68803957ef64c220266"
+      }
+    ],
+    "businessVersion": "0.11.6",
+    "businessHealthy": true,
+    "businessServiceUnchanged": true
+  },
+  "safety": {
+    "stagedAndReachableHistorySecretScans": "passed",
+    "privateCompanyDataPublished": false,
+    "publishedTagsAndAssetsOverwritten": false,
+    "originalLicense": "MIT",
+    "thirdPartyLicensesRetained": true,
+    "privacyNoticeIncluded": true,
+    "windowsTrustedSignature": false,
+    "macAdHocSigned": true,
+    "macNotarized": false
+  }
+}
