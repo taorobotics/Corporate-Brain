@@ -166,6 +166,11 @@ export function normalizeLocalState(
           ? DEFAULT_SKIN
           : normalizeSkin(settings.skin),
       appearanceVersion: 1,
+      sidebarWidth:
+        typeof settings.sidebarWidth === "number" &&
+        Number.isFinite(settings.sidebarWidth)
+          ? Math.max(170, Math.min(420, Math.round(settings.sidebarWidth)))
+          : undefined,
       model: typeof settings.model === "string" ? settings.model : "",
       mode: normalizeMode(settings.mode),
       skillMode: settings.skillMode === "manual" ? "manual" : "auto",

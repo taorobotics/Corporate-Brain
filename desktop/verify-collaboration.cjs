@@ -34,6 +34,14 @@ module.exports = async ({ js, click, waitFor, capture, win, checks }) => {
   assert.equal(shape.automaticLabels, 0);
   assert.equal(shape.nav, 7);
   await capture("collaboration-cloud-home.png");
+  await require("./verify-sidebar-resize.cjs")({
+    js,
+    click,
+    waitFor,
+    capture,
+    win,
+    checks,
+  });
   try {
     await click("项目");
     await waitFor(

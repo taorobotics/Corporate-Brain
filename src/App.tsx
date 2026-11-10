@@ -58,6 +58,7 @@ import EntryExperience from "./EntryExperience";
 import { Avatar } from "./Profile";
 import { useProduction, type ProductionController } from "./Production";
 import { addLocalProject } from "../shared/workspaces";
+import ResizableSidebar from "./ResizableSidebar";
 
 const navigation = [
   { id: "chat", label: "对话", icon: ChatCircle },
@@ -385,7 +386,28 @@ export default function App() {
     } else if (action === "export") exportRecords();
     else if (action === "import") importRef.current?.click();
     else if (action === "sidebar") setSidebar((v) => !v);
-    else if (action.startsWith("edit:")) {
+    else if (action.startsWith("sidebar:")) {
+      const actual = document
+        .querySelector(".employee-app .sidebar")
+        ?.getBoundingClientRect().width;
+      setState((s) => ({
+        ...s,
+        settings: {
+          ...s.settings,
+          sidebarWidth:
+            action === "sidebar:reset"
+              ? undefined
+              : Math.max(
+                  170,
+                  Math.min(
+                    420,
+                    (actual ?? s.settings.sidebarWidth ?? 198) +
+                      (action === "sidebar:widen" ? 24 : -24),
+                  ),
+                ),
+        },
+      }));
+    } else if (action.startsWith("edit:")) {
       const command = action.slice(5);
       if (window.brainDesktop) window.brainDesktop.edit(command);
       else if (!document.execCommand(command))
@@ -533,6 +555,9 @@ export default function App() {
                     : label === "视图"
                       ? [
                           ["切换侧栏", "sidebar"],
+                          ["加宽对话侧栏", "sidebar:widen"],
+                          ["缩窄对话侧栏", "sidebar:narrow"],
+                          ["恢复侧栏默认宽度", "sidebar:reset"],
                           ["个人设置", "settings"],
                         ]
                       : label === "编辑"
@@ -643,7 +668,17 @@ export default function App() {
             </nav>
           )}
           {(sidebar || isAdmin) && (
-            <aside className="sidebar">
+            <ResizableSidebar
+              key={`${user.id}:${isAdmin}`}
+              enabled={!isAdmin}
+              width={state.settings.sidebarWidth}
+              onResize={(sidebarWidth) =>
+                setState((s) => ({
+                  ...s,
+                  settings: { ...s.settings, sidebarWidth },
+                }))
+              }
+            >
               {!isAdmin && (
                 <div className="sidebar-brand">
                   <strong>对话</strong>
@@ -950,7 +985,7 @@ export default function App() {
                   {isAdmin && <UpdateButton model={updates} />}
                 </div>
               </div>
-            </aside>
+            </ResizableSidebar>
           )}
           <main className="main-content">
             {page === "skins" ? (

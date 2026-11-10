@@ -68,9 +68,57 @@
   margin-top: auto;
 }
 .application.employee-app .sidebar {
-  width: 198px;
-  min-width: 0;
+  width: var(--sidebar-width, 198px);
+  min-width: 170px;
+  max-width: min(
+    420px,
+    calc(
+      100vw - var(--activity-rail-width, 62px) -
+        var(--sidebar-main-reserve, 360px)
+    )
+  );
   padding: 0 12px 12px;
+}
+.sidebar-resize-handle {
+  position: absolute;
+  inset: 0 -5px 0 auto;
+  width: 10px;
+  z-index: 5;
+  cursor: col-resize;
+  touch-action: none;
+  user-select: none;
+  -webkit-app-region: no-drag;
+}
+.sidebar-resize-handle::after {
+  content: "";
+  position: absolute;
+  inset: 0 auto 0 4px;
+  width: 2px;
+  border-radius: 2px;
+  background: var(--accent);
+  opacity: 0;
+  transition: opacity 120ms ease;
+}
+.sidebar-resize-handle:is(:hover, :focus-visible)::after,
+.sidebar[data-resizing] .sidebar-resize-handle::after {
+  opacity: 0.65;
+}
+.sidebar-resize-handle:focus-visible {
+  outline: none;
+}
+.sidebar-resize-handle:focus-visible::after {
+  opacity: 1;
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent) 16%, transparent);
+}
+html.sidebar-resizing,
+html.sidebar-resizing * {
+  cursor: col-resize !important;
+  user-select: none !important;
+}
+@media (prefers-reduced-motion: reduce) {
+  .sidebar-resize-handle::after {
+    transition: none;
+  }
 }
 .application.employee-app .sidebar-brand {
   height: 72px;
@@ -713,6 +761,9 @@
   }
 }
 @media (max-width: 850px) {
+  .application.employee-app {
+    --activity-rail-width: 54px;
+  }
   .application.employee-app .model-provider-badge {
     display: none;
   }
@@ -726,7 +777,7 @@
     font-size: 10px;
   }
   .application.employee-app .sidebar {
-    width: 170px;
+    width: var(--sidebar-width, 170px);
     padding-inline: 9px;
   }
   .application.employee-app .chat-header {
@@ -755,6 +806,9 @@
   }
 }
 @media (max-width: 650px) {
+  .application.employee-app {
+    --sidebar-main-reserve: 24px;
+  }
   .application.employee-app .app-caption {
     display: none;
   }
@@ -771,7 +825,7 @@
     top: 36px;
     bottom: 0;
     left: 54px;
-    width: 215px;
+    width: var(--sidebar-width, 215px);
     z-index: 20;
     box-shadow: 8px 0 24px color-mix(in srgb, var(--ink) 12%, transparent);
   }

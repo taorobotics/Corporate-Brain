@@ -173,6 +173,36 @@ test("token estimate is stable for empty and short text", () => {
   assert.equal(estimateTokens("12345"), 2);
 });
 
+test("sidebar widths survive profile restore while invalid imported widths use safe defaults", () => {
+  const settings = {
+    model: "existing-model",
+    theme: "dark",
+    mode: "standard" as const,
+  };
+  const state = normalizeLocalState({
+    settings: { ...settings, sidebarWidth: 320 },
+  });
+  assert.equal(normalizeLocalState(state).settings.sidebarWidth, 320);
+  assert.equal(state.settings.model, "existing-model");
+  assert.equal(state.settings.theme, "dark");
+  for (const value of [undefined, null, "320", NaN, Infinity])
+    assert.equal(
+      normalizeLocalState({ settings: { sidebarWidth: value } } as any).settings
+        .sidebarWidth,
+      undefined,
+    );
+  assert.equal(
+    normalizeLocalState({ settings: { ...settings, sidebarWidth: -100 } })
+      .settings.sidebarWidth,
+    170,
+  );
+  assert.equal(
+    normalizeLocalState({ settings: { ...settings, sidebarWidth: 9999 } })
+      .settings.sidebarWidth,
+    420,
+  );
+});
+
 test("installed skill preferences default to automatic and restore an explicit multi-selection per profile", () => {
   assert.equal(normalizeLocalState({}).settings.skillMode, "auto");
   const state = normalizeLocalState({

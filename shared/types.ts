@@ -119,6 +119,7 @@ export type LocalState = {
     theme: string;
     skin?: string;
     appearanceVersion?: number;
+    sidebarWidth?: number;
     model: string;
     mode: DshMode;
     skillMode?: "auto" | "manual";
