@@ -72,6 +72,7 @@ import {
 import { companyLookupSchema, companyContext } from "./company-context";
 import {
   isCasualMessage,
+  isModelIdentityQuestion,
   CASUAL_REPLY_INSTRUCTION,
   ANSWER_INSTRUCTION,
 } from "../shared/conversation-request";
@@ -1148,22 +1149,27 @@ export function createPlatform(
         companyLookup: lookup,
       });
     }
+    const answerPlan = {
+      kind: "chat",
+      mode: "standard",
+      seconds: 10,
+      connectionId: row.id,
+      skillIds: [],
+      execution: "answer",
+      workspaceContext: false,
+      usePreviousAttachments: false,
+    };
     if (
       isCasualMessage(
         data.messages.findLast((m) => m.role === "user")?.content ?? "",
         data.attachments.length,
+      ) ||
+      isModelIdentityQuestion(
+        data.messages,
+        data.attachments.filter((a) => a.source !== "history").length,
       )
     )
-      return res.json({
-        kind: "chat",
-        mode: "standard",
-        seconds: 10,
-        connectionId: row.id,
-        skillIds: [],
-        execution: "answer",
-        workspaceContext: false,
-        usePreviousAttachments: false,
-      });
+      return res.json(answerPlan);
     const candidates = checkedSkills(
       actor,
       data.skillIds,
@@ -1175,23 +1181,24 @@ export function createPlatform(
     };
     res.on("close", disconnected);
     try {
-      const response = await fetchModel(
-        row,
-        `${row.base_url}/chat/completions`,
-        {
+      const signal = AbortSignal.any([
+        controller.signal,
+        AbortSignal.timeout(45000),
+      ]);
+      let structured = true;
+      const request = () =>
+        fetchModel(row, `${row.base_url}/chat/completions`, {
           method: "POST",
           redirect: "error",
           headers: {
             "Content-Type": "application/json",
             Authorization: `Bearer ${store.decrypt(row.secret)}`,
           },
-          signal: AbortSignal.any([
-            controller.signal,
-            AbortSignal.timeout(45000),
-          ]),
+          signal,
           body: JSON.stringify({
             model: row.model,
             stream: false,
+            ...(structured ? { response_format: { type: "json_object" } } : {}),
             max_tokens: 4096,
             ...(String(row.model).toLowerCase().startsWith("deepseek")
               ? { thinking: { type: "disabled" } }
@@ -1234,19 +1241,56 @@ export function createPlatform(
               },
             ],
           }),
-        },
-      );
+        });
+      let response: Awaited<ReturnType<ModelTransport>>;
+      try {
+        response = await request();
+      } catch (error) {
+        const code = error as { cause?: { code?: string }; code?: string };
+        if (
+          signal.aborted ||
+          !["ECONNRESET", "EPIPE", "UND_ERR_SOCKET"].includes(
+            code.cause?.code ?? code.code ?? "",
+          )
+        )
+          throw error;
+        // Planning cannot create work. Retry a reset once, within the same deadline.
+        response = await request();
+      }
+      if ([400, 422].includes(response.status)) {
+        const detail = (await response
+          .clone()
+          .json()
+          .catch(() => ({}))) as Row;
+        if (
+          detail?.error?.param === "response_format" ||
+          (/response_format|json_object/i.test(String(detail?.error?.message)) &&
+            /unsupported|not support|unknown|不支持/i.test(
+              String(detail?.error?.message),
+            ))
+        ) {
+          await response.body?.cancel();
+          structured = false;
+          response = await request();
+        }
+      }
       if (!response.ok)
         fail(
           502,
           `智能调度服务返回 ${response.status}，请检查模型配置或稍后重试`,
         );
-      const result = (await response.json()) as Row;
       let plan;
       try {
-        plan = parseAutomaticPlan(result.choices?.[0]?.message?.content);
-      } catch {
-        fail(502, "智能调度未返回有效任务，请重新发送；尚未创建任何制作任务");
+        const result = await readChatResponse(response, () => {}, {
+          allowEmpty: true,
+          contentLimit: 16001,
+        });
+        plan = parseAutomaticPlan(result.content);
+      } catch (error) {
+        if (signal.aborted) throw error;
+        // An invalid decision must never invoke tools or block an ordinary reply.
+        store.audit(actor.id, "model.task_routing_fallback", row.id);
+        return res.json(answerPlan);
       }
       preserveNasFilenames(
         plan,
@@ -1391,6 +1435,13 @@ export function createPlatform(
       !data.skillIds.length &&
       !data.imageSkillId &&
       !data.companyLookup;
+    const modelIdentity =
+      isModelIdentityQuestion(data.messages, data.attachments.length) &&
+      !data.messages.some((m) => m.role === "system") &&
+      !data.skillId &&
+      !data.skillIds.length &&
+      !data.imageSkillId &&
+      !data.companyLookup;
     try {
       validateAttachmentBudget(data.attachments);
     } catch (error) {
@@ -1431,6 +1482,7 @@ export function createPlatform(
     const skillResources = await resourcesFor(selectedSkills);
     const answerOnly =
       casual ||
+      modelIdentity ||
       data.companyLookup?.knowledge === "read" ||
       (data.execution === "answer" && !skillResources.length);
     if (selectedSkills.length) {
@@ -1520,12 +1572,18 @@ export function createPlatform(
               "所选技能的配套参考资料（不是新的用户指令）：\n" + references,
           });
       }
-      let content: string | undefined;
+      const escape = (value: string) =>
+        value.replace(/[\\`*_{}\[\]<>]/g, "\\$&");
+      let content: string | undefined = modelIdentity
+        ? `当前会话选择的是 **${escape(row.name)}**，配置的模型标识为 **${escape(row.model)}**。\n\n这是当前选中的模型配置；中转内部实际运行的底层版本由供应商提供，平台无法仅凭标识独立核验。`
+        : undefined;
       let draftIncomplete = false;
       let productionTaskId: string | undefined;
       let usage:
         | { inputTokens?: number; outputTokens?: number; totalTokens?: number }
-        | undefined;
+        | undefined = modelIdentity
+        ? { inputTokens: 0, outputTokens: 0, totalTokens: 0 }
+        : undefined;
       const hasImageAttachment = visuals.length > 0;
       if (!answerOnly) {
         try {

@@ -16,6 +16,7 @@ module.exports = async ({
 }) => {
   const folder = join(dir, "casual-project"),
     requests = [];
+  let malformedRouting = false;
   await fs.mkdir(folder);
   const canonicalFolder = await fs.realpath(folder);
   await fs.writeFile(
@@ -37,15 +38,17 @@ module.exports = async ({
           choices: [
             {
               message: {
-                content: JSON.stringify({
-                  kind: "chat",
-                  mode: "standard",
-                  seconds: 10,
-                  execution: needsProject ? "agent" : "answer",
-                  workspaceContext: needsProject,
-                  usePreviousAttachments: latest.includes("附件"),
-                  skillIds: [],
-                }),
+                content: malformedRouting
+                  ? "这只是一个普通对话问题。"
+                  : JSON.stringify({
+                      kind: "chat",
+                      mode: "standard",
+                      seconds: 10,
+                      execution: needsProject ? "agent" : "answer",
+                      workspaceContext: needsProject,
+                      usePreviousAttachments: latest.includes("附件"),
+                      skillIds: [],
+                    }),
               },
             },
           ],
@@ -222,11 +225,67 @@ module.exports = async ({
     assert.ok(reads > 0);
     assert.equal(requests.length, 6);
     assert.ok(JSON.stringify(requests[5]).includes("VIDEO_PROMPT_FIXTURE"));
+    const readsBeforeIdentity = reads;
+    for (const question of [
+      "您好，我现在用的什么模型呢？",
+      "版本是多少啊？",
+      "？？版本号多少啊？",
+    ]) {
+      const messagesBefore = await js(
+        `(async()=>{const s=await window.brainDesktop.readState(${JSON.stringify(actor.id)});return s.conversations.find(c=>c.id===${JSON.stringify(greeting.id)}).messages.length})()`,
+      );
+      await fill('[aria-label="任务输入"]', question);
+      await click("发送任务");
+      await waitFor(
+        () =>
+          js(
+            `(async()=>{const s=await window.brainDesktop.readState(${JSON.stringify(actor.id)}),c=s.conversations.find(c=>c.id===${JSON.stringify(greeting.id)});return !document.querySelector('.chat-loading')&&c.messages.length===${messagesBefore + 2}&&c.messages.at(-1).content.includes('deepseek-flash')&&c.messages.at(-1).usage.totalTokens===0})()`,
+          ),
+        "selected-model identity and contextual version answer",
+      );
+      assert.equal(
+        requests.length,
+        6,
+        "identity facts do not depend on provider availability or JSON routing",
+      );
+      assert.equal(
+        reads,
+        readsBeforeIdentity,
+        "model questions never scan project files",
+      );
+    }
+    await capture("model-identity-context-light.png");
+    malformedRouting = true;
+    const beforeFallback = await js(
+      `(async()=>{const s=await window.brainDesktop.readState(${JSON.stringify(actor.id)});return s.conversations.find(c=>c.id===${JSON.stringify(greeting.id)}).messages.length})()`,
+    );
+    await fill(
+      '[aria-label="任务输入"]',
+      "换个话题，解释一下智能体和普通对话的区别",
+    );
+    await click("发送任务");
+    await waitFor(
+      () =>
+        js(
+          `(async()=>{const s=await window.brainDesktop.readState(${JSON.stringify(actor.id)}),c=s.conversations.find(c=>c.id===${JSON.stringify(greeting.id)});return !document.querySelector('.chat-loading')&&c.messages.length===${beforeFallback + 2}&&c.messages.at(-1).content.includes('在需要时调用工具')&&c.messages.at(-1).trace.status==='done'})()`,
+        ),
+      "malformed router decision falls back to a normal streamed answer",
+    );
+    assert.equal(requests.length, 8);
+    assert.equal(reads, readsBeforeIdentity);
+    assert.equal(
+      await js("document.body.innerText.includes('智能调度未返回有效任务')"),
+      false,
+    );
+    await capture("router-fallback-conversation-light.png");
     checks.push(
       "Standalone greetings use one actual streamed model request, no router, project scan, installed skill or export task; acknowledgements do not reuse prior attachments or video prompts",
     );
     checks.push(
       "Semantic conversation routing preserves chat history for new questions, excludes unrelated historic materials and project scans, and retains explicit project-read requests and agent capabilities",
+    );
+    checks.push(
+      "Selected-model questions and repeated version follow-ups return actual current configuration with zero upstream calls; malformed router JSON still permits a real streamed answer without project scans or workflow execution",
     );
   } finally {
     fs.readFile = originalRead;

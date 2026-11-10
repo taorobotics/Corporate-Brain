@@ -5,7 +5,10 @@ import { once } from "node:events";
 import { randomBytes } from "node:crypto";
 import { createPlatform } from "./platform";
 import { parseAutomaticPlan } from "./automatic";
-import { isCasualMessage } from "../shared/conversation-request";
+import {
+  isCasualMessage,
+  isModelIdentityQuestion,
+} from "../shared/conversation-request";
 
 test("casual-turn detection excludes substantive requests, approvals and attachments", () => {
   for (const text of [
@@ -30,6 +33,56 @@ test("casual-turn detection excludes substantive requests, approvals and attachm
   ])
     assert.equal(isCasualMessage(text), false, text);
   assert.equal(isCasualMessage("您好", 1), false);
+});
+
+test("model identity and version follow-ups use only relevant user context", () => {
+  const u = (content: string) => ({ role: "user", content });
+  for (const text of [
+    "您好，我现在用的什么模型呢？",
+    "你是什么模型？",
+    "当前模型版本是多少？",
+    "What model are you?",
+  ])
+    assert.equal(isModelIdentityQuestion([u(text)]), true, text);
+  const identity = [u("您好，我现在用的什么模型呢？")];
+  assert.equal(
+    isModelIdentityQuestion([...identity, u("版本是多少啊？")]),
+    true,
+  );
+  assert.equal(
+    isModelIdentityQuestion([
+      ...identity,
+      u("版本是多少啊？"),
+      u("？？版本号多少啊？"),
+    ]),
+    true,
+  );
+  for (const text of [
+    "版本号多少？",
+    "生成一个模型版本对比视频",
+    "你是什么模型？顺便生成图片",
+    "这个模型支持什么功能？",
+    "分析模型性能",
+    "读取项目中的模型配置",
+    "公司大脑客户端版本是多少？",
+  ])
+    assert.equal(isModelIdentityQuestion([u(text)]), false, text);
+  assert.equal(
+    isModelIdentityQuestion([
+      ...identity,
+      u("说明这个项目"),
+      u("版本号多少？"),
+    ]),
+    false,
+  );
+  assert.equal(isModelIdentityQuestion(identity, 1), false);
+  assert.equal(
+    isModelIdentityQuestion([
+      { role: "assistant", content: "当前模型是什么？" },
+      u("版本多少？"),
+    ]),
+    false,
+  );
 });
 
 test("greetings use one real provider reply without routing, coding-agent startup or output tasks", async (t) => {
@@ -122,6 +175,96 @@ test("greetings use one real provider reply without routing, coding-agent startu
     0,
     "greetings do not make a planning model call",
   );
+  const identityHistory = [
+    { role: "user", content: "您好，我现在用的什么模型呢？" },
+  ];
+  for (const content of [
+    "您好，我现在用的什么模型呢？",
+    "版本是多少啊？",
+    "？？版本号多少啊？",
+  ]) {
+    const messages =
+      content === identityHistory[0].content
+        ? identityHistory
+        : [...identityHistory, { role: "user", content }];
+    const identityPlan = await post(
+      "/generate/plan",
+      {
+        ...data,
+        messages,
+        project: { name: "Brain_Test", hasFolder: true },
+        attachments: [{ name: "old-project.txt", source: "history" }],
+        skillMode: "auto",
+      },
+      cookie,
+    );
+    assert.equal(identityPlan.status, 200);
+    assert.equal(identityPlan.data.execution, "answer");
+    assert.deepEqual(identityPlan.data.skillIds, []);
+    assert.equal(identityPlan.data.workspaceContext, false);
+    assert.equal(identityPlan.data.usePreviousAttachments, false);
+    const identityResponse = await fetch(base + "/generate/chat", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Cookie: cookie,
+        Accept: "application/x-ndjson",
+      },
+      body: JSON.stringify({
+        ...data,
+        messages,
+        execution: identityPlan.data.execution,
+      }),
+    });
+    assert.equal(identityResponse.status, 200);
+    const events = (await identityResponse.text())
+      .trim()
+      .split("\n")
+      .filter(Boolean)
+      .map((v) => JSON.parse(v));
+    const done = events.find((e) => e.type === "done");
+    assert.match(done.content, /Selected chat model/);
+    assert.match(done.content, /deepseek-v4-flash/);
+    assert.equal(done.usage.totalTokens, 0);
+    assert.equal(
+      events.some((e) => ["reasoning", "tool", "error"].includes(e.type)),
+      false,
+    );
+    assert.equal(
+      upstream.length,
+      0,
+      "configuration questions work while the provider is unavailable",
+    );
+    identityHistory.push({ role: "user", content });
+  }
+  platform.store.db
+    .prepare("UPDATE connections SET model='claude-sonnet-5-5' WHERE id=?")
+    .run(connection.id);
+  const switchedIdentity = await post(
+    "/generate/chat",
+    { ...data, messages: identityHistory },
+    cookie,
+  );
+  assert.match(switchedIdentity.data.content, /claude-sonnet-5-5/);
+  assert.doesNotMatch(switchedIdentity.data.content, /deepseek-v4-flash/);
+  platform.store.db
+    .prepare("UPDATE connections SET enabled=0 WHERE id=?")
+    .run(connection.id);
+  assert.equal(
+    (
+      await post(
+        "/generate/plan",
+        { ...data, messages: identityHistory },
+        cookie,
+      )
+    ).status,
+    403,
+  );
+  platform.store.db
+    .prepare(
+      "UPDATE connections SET enabled=1,model='deepseek-v4-flash' WHERE id=?",
+    )
+    .run(connection.id);
   const response = await post("/generate/chat", data, cookie);
   assert.equal(response.status, 200);
   assert.match(response.data.content, /您好/);
@@ -215,7 +358,10 @@ test("greetings use one real provider reply without routing, coding-agent startu
 
 test("automatic routing uses the selected authorized model, validates decisions and preserves department/write boundaries", async (t) => {
   let reply = JSON.stringify({ kind: "chat", mode: "ptc" }),
-    calls = 0;
+    calls = 0,
+    transportCalls = 0,
+    format = "json",
+    failure = "";
   const provider = createServer(async (req, res) => {
     let raw = "";
     for await (const chunk of req) raw += chunk;
@@ -226,12 +372,47 @@ test("automatic routing uses the selected authorized model, validates decisions 
       assert.deepEqual(payload.thinking, { type: "disabled" });
     assert.equal(payload.stream, false);
     assert.ok(payload.messages[0].content.includes("You route tasks"));
+    if (format === "unsupported" && payload.response_format) {
+      res.writeHead(400, { "Content-Type": "application/json" });
+      res.end(
+        JSON.stringify({
+          error: { param: "response_format", message: "unsupported parameter" },
+        }),
+      );
+      return;
+    }
+    if (format === "sse") {
+      res.writeHead(200, { "Content-Type": "text/event-stream" });
+      for (const content of [reply.slice(0, 10), reply.slice(10)])
+        res.write(
+          `data: ${JSON.stringify({ choices: [{ delta: { content } }] })}\n\n`,
+        );
+      res.end("data: [DONE]\n\n");
+      return;
+    }
     res.setHeader("Content-Type", "application/json");
     res.end(JSON.stringify({ choices: [{ message: { content: reply } }] }));
   });
   provider.listen(0, "127.0.0.1");
   await once(provider, "listening");
-  const platform = createPlatform({ database: ":memory:" });
+  const platform = createPlatform({
+    database: ":memory:",
+    modelTransport: async (_row, url, init) => {
+      transportCalls++;
+      if (failure.startsWith("reset")) {
+        if (failure === "reset-once") failure = "";
+        throw new TypeError("synthetic reset", {
+          cause: { code: "ECONNRESET" },
+        });
+      }
+      if (failure === "auth")
+        return Response.json(
+          { error: { message: "private provider detail" } },
+          { status: 401 },
+        );
+      return fetch(url, init);
+    },
+  });
   const server = createServer(platform.app);
   server.listen(0, "127.0.0.1");
   await once(server, "listening");
@@ -337,6 +518,41 @@ test("automatic routing uses the selected authorized model, validates decisions 
   assert.equal(chatPlan.data.kind, "chat");
   assert.equal(chatPlan.data.mode, "ptc");
   assert.equal(chatPlan.data.connectionId, chat.id);
+  format = "sse";
+  const streamedPlan = await post("/generate/plan", body, employee);
+  assert.equal(streamedPlan.status, 200);
+  assert.equal(streamedPlan.data.mode, "ptc");
+  format = "unsupported";
+  let before = transportCalls;
+  const compatibilityPlan = await post("/generate/plan", body, employee);
+  assert.equal(compatibilityPlan.status, 200);
+  assert.equal(compatibilityPlan.data.mode, "ptc");
+  assert.equal(
+    transportCalls - before,
+    2,
+    "unsupported JSON formatting negotiates once",
+  );
+  format = "json";
+  failure = "reset-once";
+  before = transportCalls;
+  assert.equal((await post("/generate/plan", body, employee)).status, 200);
+  assert.equal(transportCalls - before, 2);
+  failure = "reset-always";
+  before = transportCalls;
+  assert.equal((await post("/generate/plan", body, employee)).status, 502);
+  assert.equal(
+    transportCalls - before,
+    2,
+    "persistent resets cannot create a retry loop",
+  );
+  failure = "auth";
+  before = transportCalls;
+  const denied = await post("/generate/plan", body, employee);
+  assert.equal(denied.status, 502);
+  assert.match(denied.data.error, /401/);
+  assert.doesNotMatch(denied.data.error, /private provider detail/);
+  assert.equal(transportCalls - before, 1, "credential errors are not retried");
+  failure = "";
   reply = JSON.stringify({
     kind: "chat",
     execution: "answer",
@@ -391,8 +607,13 @@ test("automatic routing uses the selected authorized model, validates decisions 
   ]) {
     reply = invalid;
     const response = await post("/generate/plan", body, employee);
-    assert.equal(response.status, 502);
-    assert.match(response.data.error, /未返回有效任务/);
+    assert.equal(response.status, 200);
+    assert.equal(response.data.kind, "chat");
+    assert.equal(response.data.execution, "answer");
+    assert.equal(response.data.workspaceContext, false);
+    assert.equal(response.data.usePreviousAttachments, false);
+    assert.deepEqual(response.data.skillIds, []);
+    assert.equal(response.data.connectionId, chat.id);
   }
   assert.equal(
     (
