@@ -647,6 +647,28 @@ function createMainWindow() {
   });
   const owner = win,
     company = origin;
+  const changeZoom = (step) => {
+    if (owner.isDestroyed()) return;
+    const contents = owner.webContents;
+    const factor =
+      step === 0 ? 1 : Math.pow(1.2, contents.getZoomLevel() + step * 0.5);
+    contents.setZoomFactor(Math.max(0.25, Math.min(5, factor)));
+  };
+  // Handle both the printed + key (Shift+=) and the common Ctrl+= alias,
+  // including keypad keys. Prevent default so the menu cannot zoom twice.
+  owner.webContents.on("before-input-event", (event, input) => {
+    const modifier =
+      input.control || (process.platform === "darwin" && input.meta);
+    if (input.type !== "keyDown" || !modifier || input.alt || input.isComposing)
+      return;
+    let step;
+    if (["+", "="].includes(input.key) || input.code === "NumpadAdd") step = 1;
+    else if (input.key === "-" || input.code === "NumpadSubtract") step = -1;
+    else if (input.key === "0") step = 0;
+    else return;
+    event.preventDefault();
+    changeZoom(step);
+  });
   updater = new DesktopUpdates({
     version: require("./package.json").version,
     platform: process.platform,
@@ -739,9 +761,21 @@ function createMainWindow() {
           label: "切换侧栏",
           click: () => win.webContents.send("menu:action", "sidebar"),
         },
-        { role: "resetZoom" },
-        { role: "zoomIn" },
-        { role: "zoomOut" },
+        {
+          label: "恢复默认大小",
+          accelerator: "CmdOrCtrl+0",
+          click: () => changeZoom(0),
+        },
+        {
+          label: "放大",
+          accelerator: "CmdOrCtrl+Plus",
+          click: () => changeZoom(1),
+        },
+        {
+          label: "缩小",
+          accelerator: "CmdOrCtrl+-",
+          click: () => changeZoom(-1),
+        },
         { role: "togglefullscreen" },
       ],
     },

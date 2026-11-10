@@ -252,6 +252,14 @@ async function waitFor(test, label, timeout = 12000) {
     true,
   );
   await verifyWindowControls("Before login", true);
+  await require("./verify-zoom.cjs")({
+    js,
+    win,
+    waitFor,
+    checks,
+    selector: "input[name=username]",
+    context: "login",
+  });
   checks.push(
     "Pre-login window controls minimize, maximize, restore and request native close on Windows; macOS keeps native controls",
   );
@@ -281,7 +289,22 @@ async function waitFor(test, label, timeout = 12000) {
     "Shared cinematic startup, authentication, profile preparation and welcome reveal replace the old loading screen",
   );
   checks.push("First administrator setup and login through UI");
-  await require("./verify-collaboration.cjs")({ js, click, waitFor, capture, win, checks });
+  await require("./verify-collaboration.cjs")({
+    js,
+    click,
+    waitFor,
+    capture,
+    win,
+    checks,
+  });
+  await require("./verify-zoom.cjs")({
+    js,
+    win,
+    waitFor,
+    checks,
+    selector: '[aria-label="任务输入"]',
+    context: "conversation",
+  });
   const workspaceFixture = join(dir, "workspace-fixture");
   await fs.mkdir(join(workspaceFixture, "node_modules"), { recursive: true });
   await fs.writeFile(
@@ -481,10 +504,7 @@ async function waitFor(test, label, timeout = 12000) {
     "empty model configuration action",
   );
   await js(`location.hash='chat'`);
-  await waitFor(
-    () => has("让想法，往前一步"),
-    "return from model settings",
-  );
+  await waitFor(() => has("让想法，往前一步"), "return from model settings");
   checks.push(
     "Empty model picker explains configuration and opens the real model settings",
   );
