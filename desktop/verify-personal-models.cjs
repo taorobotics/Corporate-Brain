@@ -150,5 +150,5 @@ module.exports = async function ({
     () => js(`!!document.querySelector('[aria-label="任务输入"]')`),
     "personal model fixture cleanup",
   );
-  await click("新建任务");
+  await click("新建对话");
 };

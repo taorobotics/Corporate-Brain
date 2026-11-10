@@ -1,5 +1,12 @@
-/* Prefer installed CJK fonts so startup does not download the full Noto font.
-   Keep the self-hosted open font as a fallback for systems without CJK fonts. */
+/* Self-hosted, full fonts keep the approved typography consistent on each OS.
+   Swap keeps first paint independent of font loading. */
+@font-face {
+  font-family: "Inter";
+  src: url("./fonts/Inter-VF.woff2") format("woff2");
+  font-style: normal;
+  font-weight: 100 900;
+  font-display: swap;
+}
 @font-face {
   font-family: "Noto Sans SC";
   src: url("./fonts/NotoSansSC-VF.woff2") format("woff2");
@@ -9,5 +16,5 @@
 }
 
 :root {
-  --font-ui: "PingFang SC", "Microsoft YaHei", "Noto Sans SC", "Segoe UI", Arial, sans-serif;
+  --font-ui: "Inter", "Noto Sans SC", "PingFang SC", "Microsoft YaHei", "Segoe UI", Arial, sans-serif;
 }

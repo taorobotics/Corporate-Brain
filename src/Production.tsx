@@ -1,5 +1,10 @@
 import { useEffect, useRef, useState } from "react";
-import { FolderOpen, ArrowClockwise } from "@phosphor-icons/react";
+import {
+  FolderOpen,
+  ArrowClockwise,
+  FileText,
+  Eye,
+} from "@phosphor-icons/react";
 import type { User, Message, LocalState } from "../shared/types";
 import type {
   ProductionTask,
@@ -450,16 +455,50 @@ export function ChatProduction({
             )
             .slice(0, 6)
             .map((file) => (
-              <button
-                key={file.path}
-                type="button"
-                className="production-file-link"
-                title={`在文件夹中显示：${file.path}`}
-                onClick={() => void controller.reveal(id, file.path)}
-              >
-                <FolderOpen size={17} />
-                {file.path.split("/").at(-1)}
-              </button>
+              <div className="production-output-file" key={file.path}>
+                <button
+                  type="button"
+                  className="production-file-link"
+                  title={`在文件夹中显示：${file.path}`}
+                  onClick={() => void controller.reveal(id, file.path)}
+                >
+                  <FileText size={22} />
+                  <span className="production-file-copy">
+                    <strong>{file.path.split("/").at(-1)}</strong>
+                    <small>
+                      {file.path.split(".").at(-1)?.toUpperCase()} ·{" "}
+                      {Math.max(1, Math.ceil(file.size / 1024))} KB
+                    </small>
+                  </span>
+                </button>
+                <div className="production-file-quick-actions">
+                  {(file.path.startsWith("code/") ||
+                    file.path === "output/video.mp4" ||
+                    file.path === "plan.md" ||
+                    (file.path.startsWith("files/") &&
+                      /\.(?:mp4|webm|txt|md|json|csv|js|ts|tsx|jsx|py|html|css|svg)$/i.test(
+                        file.path,
+                      ))) && (
+                    <button
+                      type="button"
+                      disabled={previewBusy}
+                      onClick={() => void previewFile(file.path)}
+                      title={`预览：${file.path}`}
+                    >
+                      <Eye size={13} />
+                      预览
+                    </button>
+                  )}
+                  <button
+                    type="button"
+                    onClick={() => void controller.reveal(id, file.path)}
+                    title={`在文件夹中显示：${file.path}`}
+                  >
+                    <FolderOpen size={13} />
+                    打开文件夹
+                  </button>
+                </div>
+              </div>
             ))}
         </div>
       )}

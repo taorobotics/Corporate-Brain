@@ -1,0 +1,9 @@
+{
+  "family": "Inter",
+  "source": "public/skins/claude/assets/fonts/inter-normal.woff2",
+  "upstream": "Inter Project (SIL Open Font License 1.1)",
+  "sourceLicense": "src/vendor/dsh-skins.LICENSE",
+  "sha256": "3100e775e8616cd2611beecfa23a4263d7037586789b43f035236a2e6fbd4c62",
+  "bytes": 48256,
+  "conversion": "Unmodified bundled variable WOFF2; no glyph subsetting"
+}

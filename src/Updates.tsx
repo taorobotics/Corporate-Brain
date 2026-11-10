@@ -131,7 +131,9 @@ export function useDesktopUpdates(enabled: boolean) {
       if (!["checking", "downloading", "ready"].includes(state.status))
         void check();
     },
-    close: () => { if (!installPending.current) setOpen(false); },
+    close: () => {
+      if (!installPending.current) setOpen(false);
+    },
     act: async (
       action: "download" | "cancel" | "install",
       beforeInstall?: () => Promise<void>,
@@ -207,6 +209,20 @@ export function UpdateButton({ model }: { model: Controller }) {
       ) : (
         <ArrowCircleUp size={25} weight="bold" aria-hidden="true" />
       )}
+      <span className="sidebar-update-label">
+        {checking
+          ? "检查中…"
+          : downloading
+            ? `下载更新 ${percent}%`
+            : ready
+              ? "安装更新"
+              : available
+                ? "发现新版本"
+                : "检查更新"}
+      </span>
+      {available && (
+        <small className="sidebar-update-version">v{version}</small>
+      )}
       {downloading && (
         <svg
           className="update-progress-ring"
@@ -246,16 +262,16 @@ export function UpdateDialog({
   const subtitle = model.installing
     ? "正在保存本地记录并准备安装…"
     : downloading
-    ? percent === 100
-      ? "正在校验安装包…"
-      : "正在下载，可以继续工作"
-    : ready
-      ? "已下载，校验通过"
-      : latest
-        ? "让工作空间保持最新"
-        : state.status === "current"
-          ? "当前已经是最新版本"
-          : "客户端更新";
+      ? percent === 100
+        ? "正在校验安装包…"
+        : "正在下载，可以继续工作"
+      : ready
+        ? "已下载，校验通过"
+        : latest
+          ? "让工作空间保持最新"
+          : state.status === "current"
+            ? "当前已经是最新版本"
+            : "客户端更新";
   return (
     <Modal title="更新公司大脑" close={model.close}>
       <div className="update-dialog">
@@ -350,7 +366,8 @@ export function UpdateDialog({
             {ready &&
               state.target.startsWith("darwin") &&
               "打开 DMG 后，请退出应用并拖入 Applications 替换。"}
-            {ready && state.target.startsWith("win32") &&
+            {ready &&
+              state.target.startsWith("win32") &&
               "更新将沿用原安装位置，后台完成后自动打开公司大脑。"}
           </p>
         )}
@@ -372,8 +389,16 @@ export function UpdateDialog({
               disabled={busy}
               onClick={() => void model.act("install", beforeInstall)}
             >
-              {model.installing ? <CircleNotch size={16} className="spin" /> : <ArrowUpRight size={16} />}
-              {model.installing ? "正在准备安装…" : state.target.startsWith("darwin") ? "打开安装包" : "安装"}
+              {model.installing ? (
+                <CircleNotch size={16} className="spin" />
+              ) : (
+                <ArrowUpRight size={16} />
+              )}
+              {model.installing
+                ? "正在准备安装…"
+                : state.target.startsWith("darwin")
+                  ? "打开安装包"
+                  : "安装"}
             </Button>
           ) : release ? (
             <Button

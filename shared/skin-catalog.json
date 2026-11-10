@@ -1,5 +1,14 @@
 [
   {
+    "id": "cloud",
+    "name": "云雾蓝紫",
+    "author": "公司大脑",
+    "accent": "#595da6",
+    "category": "简约",
+    "variant": "soft",
+    "edition": "协作桌面 · 原创浅渐变"
+  },
+  {
     "id": "claude",
     "name": "Claude",
     "author": "aklnaaw",

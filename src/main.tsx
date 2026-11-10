@@ -4,6 +4,7 @@ import App from "./App";
 import "./style.css";
 import "./skins.css";
 import "./chat-appearance.css";
+import "./collaboration.css";
 createRoot(document.getElementById("root")!).render(
   <React.StrictMode>
     <App />

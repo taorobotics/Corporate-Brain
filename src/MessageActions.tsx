@@ -7,6 +7,7 @@ import {
   ShareNetwork,
   Database,
   DownloadSimple,
+  DotsThree,
 } from "@phosphor-icons/react";
 import type { Conversation, Message } from "../shared/types";
 import {
@@ -32,7 +33,9 @@ export default function MessageActions({
   save: (receipt: FeedbackReceipt) => void;
   notify: (text: string) => void;
 }) {
-  const [dialog, setDialog] = useState<"feedback" | "share" | null>(null);
+  const [dialog, setDialog] = useState<"feedback" | "share" | "details" | null>(
+    null,
+  );
   const [rating, setRating] = useState<FeedbackRating>(
     message.feedback?.rating ?? "issue",
   );
@@ -183,29 +186,12 @@ export default function MessageActions({
           undefined,
           !message.content,
         )}
-        <span
-          className="message-meta"
-          title={
-            message.usage
-              ? `输入 ${message.usage.inputTokens ?? "未返回"} / 输出 ${message.usage.outputTokens ?? "未返回"} tokens`
-              : "模型未返回本条回答的 Token 用量"
-          }
-        >
-          <Database size={14} />
-          {total === undefined
-            ? "用量未返回"
-            : `${total.toLocaleString()} tokens`}
-        </span>
-        {message.modelName && (
-          <span className="message-model" title={message.modelName}>
-            {message.modelName}
-          </span>
+        {action("回答详情", <DotsThree size={19} />, () =>
+          setDialog("details"),
         )}
         {!Number.isNaN(time.getTime()) && (
           <time dateTime={message.at} title={time.toLocaleString("zh-CN")}>
-            {time.toLocaleString("zh-CN", {
-              month: "2-digit",
-              day: "2-digit",
+            {time.toLocaleTimeString("zh-CN", {
               hour: "2-digit",
               minute: "2-digit",
               hour12: false,
@@ -213,6 +199,42 @@ export default function MessageActions({
           </time>
         )}
       </div>
+      {dialog === "details" && (
+        <Modal title="回答详情" close={() => setDialog(null)}>
+          <div className="answer-details">
+            {message.modelName && (
+              <div>
+                <span>模型</span>
+                <strong className="message-model">{message.modelName}</strong>
+              </div>
+            )}
+            <div>
+              <span>Token 用量</span>
+              <span
+                className="message-meta"
+                title={
+                  message.usage
+                    ? `输入 ${message.usage.inputTokens ?? "未返回"} / 输出 ${message.usage.outputTokens ?? "未返回"} tokens`
+                    : "模型未返回本条回答的 Token 用量"
+                }
+              >
+                <Database size={14} />
+                {total === undefined
+                  ? "用量未返回"
+                  : `${total.toLocaleString()} tokens`}
+              </span>
+            </div>
+            {!Number.isNaN(time.getTime()) && (
+              <div>
+                <span>时间</span>
+                <time dateTime={message.at}>
+                  {time.toLocaleString("zh-CN")}
+                </time>
+              </div>
+            )}
+          </div>
+        </Modal>
+      )}
       {dialog === "feedback" && (
         <Modal
           title="反馈这条回答"

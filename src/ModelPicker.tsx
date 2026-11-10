@@ -23,6 +23,9 @@ export default function ModelPicker({
 }) {
   const groups = modelGroups(connections);
   const current = connections.find((c) => c.id === value);
+  const provider = groups.find((group) =>
+    group.models.some((c) => c.id === value),
+  );
   const item = (connection: Connection, providerLabel?: string) => (
     <Menu.RadioItem
       key={connection.id}
@@ -62,9 +65,13 @@ export default function ModelPicker({
         title={current?.name ?? "未配置模型"}
         data-empty={!groups.length || undefined}
       >
-        <span className="select-trigger-icon">
-          <Plug size={18} />
-        </span>
+        {current && provider ? (
+          <small className="model-provider-badge">{provider.label}</small>
+        ) : (
+          <span className="select-trigger-icon">
+            <Plug size={18} />
+          </span>
+        )}
         <span className="select-value">
           {current
             ? current.serviceId

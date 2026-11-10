@@ -19,11 +19,11 @@
 
 ## 产品配置
 
-统一字体顺序：`PingFang SC, Noto Sans SC, Microsoft YaHei, Segoe UI, Arial, sans-serif`。
+自 0.33.3 起，按已确认的「协作桌面＋云雾蓝紫」统一字体顺序：`Inter, Noto Sans SC, PingFang SC, Microsoft YaHei, Segoe UI, Arial, sans-serif`。中文使用完整 Noto Sans SC，英文与数字使用 Inter，正文基准为 16px；代码区继续使用等宽字体。
 
 Windows 原生安装器不能直接使用网页 WOFF2 字体，因此不把字体安装到系统。安装器启动时优先检测系统已有的 HarmonyOS Sans SC；未检测到时使用 Microsoft YaHei UI，欢迎页、许可链接、路径输入和按钮都使用同一套运行时字体句柄。这样能保持鸿蒙字体的视觉风格，同时保证没有鸿蒙字体的 Windows 电脑仍能正常显示中文。
 
-Mac 可优先使用系统自带苹方；没有苹方的电脑由产品自身提供 Noto Sans SC。只引用本机苹方，不打包或分发苹果字体文件。界面既有字号和布局保留，正文、菜单和标题按已有字重显示；代码区继续使用等宽字体。
+Windows 与 Mac 优先使用产品提供的开放字体，减少系统字体差异；字体加载时通过 `font-display: swap` 保持界面可用。苹方等系统字体仅作后备，不打包或分发苹果字体文件。
 
 网页端、桌面远程工作区和后台使用 `public/fonts.css`，由本公司服务提供字体文件。桌面首次连接页使用 `desktop/fonts.css` 和安装包内的相同字体，因此无须先连接服务器才能显示字体。两份字体及 CSS 保持内容一致。
 
@@ -32,3 +32,5 @@ Mac 可优先使用系统自带苹方；没有苹方的电脑由产品自身提�
 Noto Sans SC 来自 [Google Fonts 官方仓库](https://github.com/google/fonts/tree/main/ofl/notosanssc)，原始文件为 `NotoSansSC[wght].ttf`。仅转为 WOFF2 以减少体积，保留字形、字符覆盖和 100–900 可变字重，未按本次界面文案裁剪字库。
 
 字体依 [OFL 1.1](https://github.com/google/fonts/blob/main/ofl/notosanssc/OFL.txt) 随软件提供；字体目录包含原版权声明和许可证。网站不会为字体向 Google 或腾讯发起请求。来源、转换工具和校验值见 `public/fonts/source.json`；桌面包包含相同记录。
+
+Inter 复用已获许可的 DSH Claude 皮肤原始可变 WOFF2，不裁剪、不改字形。其独立的 `Inter-OFL.txt`、`Inter-source.json` 及原第三方许可均随服务包和桌面包分发；来源、字节数和 SHA-256 可核对，不使用可视化预览中的字体子集替代员工实际输入所需字库。

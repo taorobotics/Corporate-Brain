@@ -57,7 +57,7 @@ module.exports = async function ({
       "appearance workspace revealed",
     );
     await js(
-      `document.documentElement.dataset.skin='claude';document.documentElement.dataset.theme='light'`,
+      `document.documentElement.dataset.skin='cloud';document.documentElement.dataset.theme='light'`,
     );
     win.setContentSize(1586, 1100);
     await js(`document.querySelector('.messages').scrollTop=0`);
@@ -66,9 +66,9 @@ module.exports = async function ({
       `(() => {const s=getComputedStyle(document.querySelector('.message.assistant .message-markdown'));return {font:s.fontFamily,size:parseFloat(s.fontSize),line:parseFloat(s.lineHeight),background:getComputedStyle(document.documentElement).backgroundColor}})()`,
     );
     assert.doesNotMatch(typography.font, /Newsreader|Songti|Noto Serif/i);
-    assert.equal(typography.size, 18);
-    assert.ok(typography.line >= 30);
-    assert.equal(typography.background, "rgb(250, 249, 245)");
+    assert.equal(typography.size, 16);
+    assert.ok(typography.line >= 29);
+    assert.equal(typography.background, "rgb(253, 253, 255)");
     await js(`location.hash='settings'`);
     await waitFor(
       () => js(`document.body.innerText.includes('本地记录与备份')`),
@@ -82,7 +82,7 @@ module.exports = async function ({
     );
     assert.equal(
       await js(`getComputedStyle(document.documentElement).backgroundColor`),
-      "rgb(24, 23, 21)",
+      "rgb(32, 35, 43)",
     );
     await js(`document.querySelector('.messages').scrollTop=0`);
     await capture("chat-appearance-dark.png");
@@ -112,7 +112,7 @@ module.exports = async function ({
       16,
     );
     checks.push(
-      "Synthetic conversation: consistent sans-serif reading type, 18px wide/16px narrow, ivory Claude surface, native light/dark screenshots and no narrow document overflow",
+      "Synthetic conversation: consistent sans-serif reading type, 16px reading type, cloud surface, native light/dark screenshots and no narrow document overflow",
     );
   } finally {
     await js(

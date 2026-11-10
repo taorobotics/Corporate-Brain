@@ -263,59 +263,12 @@
 :root[data-skin="claude"]:not([data-theme="dark"]) .composer {
   background: #fffefa;
 }
-.application:not(.admin-app) .sidebar {
-  width: 264px;
-  padding-inline: 16px;
-}
-.application:not(.admin-app) .sidebar-brand {
-  height: 88px;
-}
-.application:not(.admin-app) .main-nav {
-  gap: 5px;
-  margin-bottom: 24px;
-}
-.application:not(.admin-app) .main-nav > button {
-  min-height: 46px;
-  padding: 12px 14px;
-  font-size: 16px;
-  line-height: 1.4;
-  border-radius: 12px;
-}
-.application:not(.admin-app) .main-nav > button:first-child {
-  justify-content: center;
-  margin-bottom: 12px;
-  border: 1px solid var(--line);
-  background: var(--panel);
-  font-weight: 500;
-}
-.application:not(.admin-app) .main-nav > button:first-child:hover {
-  background: var(--active);
-}
-.application:not(.admin-app) .history {
-  border-color: var(--line);
-}
-.application:not(.admin-app) .history-search {
-  font-size: 13px;
-}
-.application:not(.admin-app) .history-list button {
-  font-size: 14px;
-  line-height: 1.5;
-  border-radius: 10px;
-}
 @media (min-width: 1440px) {
   .chat {
     --chat-text-size: 18px;
   }
 }
 @media (max-width: 1080px) {
-  .application:not(.admin-app) .sidebar {
-    width: 218px;
-    padding-inline: 12px;
-  }
-  .application:not(.admin-app) .main-nav > button {
-    font-size: 15px;
-    padding-inline: 10px;
-  }
   .messages {
     padding-inline: 22px;
   }
@@ -326,14 +279,6 @@
 @media (max-width: 780px) {
   .chat {
     --chat-text-size: 16px;
-  }
-  .application:not(.admin-app) .sidebar {
-    width: 180px;
-    padding-inline: 8px;
-  }
-  .application:not(.admin-app) .main-nav > button {
-    font-size: 13px;
-    gap: 8px;
   }
   .chat-header {
     padding-inline: 16px;

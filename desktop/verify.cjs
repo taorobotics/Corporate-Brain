@@ -275,12 +275,13 @@ async function waitFor(test, label, timeout = 12000) {
   const password = `QA-${randomBytes(18).toString("hex")}`;
   await fill("input[name=password]", password);
   await click("创建并进入");
-  await waitFor(() => has("今天，一起完成些什么"), "initialized workspace");
+  await waitFor(() => has("让想法，往前一步"), "initialized workspace");
   await revealed();
   checks.push(
     "Shared cinematic startup, authentication, profile preparation and welcome reveal replace the old loading screen",
   );
   checks.push("First administrator setup and login through UI");
+  await require("./verify-collaboration.cjs")({ js, click, waitFor, capture, win, checks });
   const workspaceFixture = join(dir, "workspace-fixture");
   await fs.mkdir(join(workspaceFixture, "node_modules"), { recursive: true });
   await fs.writeFile(
@@ -306,7 +307,7 @@ async function waitFor(test, label, timeout = 12000) {
   await waitFor(
     () =>
       js(
-        "!!document.querySelector('.account-area .sidebar-update.has-update[aria-label^=\"有可用更新\"]')",
+        "!!document.querySelector('.sidebar-footer .sidebar-update.has-update[aria-label^=\"有可用更新\"]')",
       ),
     "automatic update discovery in account footer",
   );
@@ -430,7 +431,7 @@ async function waitFor(test, label, timeout = 12000) {
   );
   assert.equal(
     await js(
-      `document.querySelector('.composer-automatic')?.textContent.includes('AI 自动')`,
+      `!!document.querySelector('.composer-skills') && !document.querySelector('.composer-automatic')`,
     ),
     true,
   );
@@ -481,7 +482,7 @@ async function waitFor(test, label, timeout = 12000) {
   );
   await js(`location.hash='chat'`);
   await waitFor(
-    () => has("今天，一起完成些什么"),
+    () => has("让想法，往前一步"),
     "return from model settings",
   );
   checks.push(
@@ -657,7 +658,7 @@ async function waitFor(test, label, timeout = 12000) {
     capture,
     checks,
   });
-  await click("新建任务");
+  await click("新建对话");
   await waitFor(
     () =>
       js(
@@ -827,7 +828,7 @@ async function waitFor(test, label, timeout = 12000) {
   );
   await js(`document.querySelector('.thinking-toggle').click()`);
   assert.equal(await has("找到 2 个来源"), true);
-  await click("新建任务");
+  await click("新建对话");
   await waitFor(
     () =>
       js(
@@ -940,7 +941,7 @@ async function waitFor(test, label, timeout = 12000) {
   );
   await js(`location.hash='chat'`);
   await waitFor(
-    () => has("今天，一起完成些什么"),
+    () => has("让想法，往前一步"),
     "return from keyboard menu action",
   );
   checks.push(
@@ -1166,7 +1167,7 @@ async function waitFor(test, label, timeout = 12000) {
     "Provider presets recommend LinoRoute first; native multi-model discovery, selection, save, retained IDs, key-free refresh, search and dark narrow layout passed using an isolated local upstream; no real model generation",
   );
   await click("查看员工端");
-  await waitFor(() => has("今天，一起完成些什么"), "employee workbench");
+  await waitFor(() => has("让想法，往前一步"), "employee workbench");
   await fill('textarea[aria-label="任务输入"]', "只在本机保存的集成验收记录");
   await js(`document.querySelector('[aria-label="发送任务"]').click()`);
   await waitFor(() => has("尚未配置可用模型"), "unconfigured model state");
@@ -1406,10 +1407,10 @@ async function waitFor(test, label, timeout = 12000) {
   checks.push(
     "Theme dropdown updates local preferences and renders readable dark menu states",
   );
-  assert.equal(await js(`document.documentElement.dataset.skin`), "claude");
+  assert.equal(await js(`document.documentElement.dataset.skin`), "cloud");
   await click("选择皮肤");
   await waitFor(
-    () => js(`document.querySelectorAll('.skin-card').length === 62`),
+    () => js(`document.querySelectorAll('.skin-card').length === 63`),
     "complete skin catalog",
   );
   await capture("skin-center-claude.png");
@@ -1434,15 +1435,15 @@ async function waitFor(test, label, timeout = 12000) {
   assert.equal(
     (await js(`window.brainDesktop.readState(${JSON.stringify(actor.id)})`))
       .settings.skin,
-    "claude",
+    "cloud",
   );
   await click("取消预览");
-  assert.equal(await js(`document.documentElement.dataset.skin`), "claude");
+  assert.equal(await js(`document.documentElement.dataset.skin`), "cloud");
   await js(`document.querySelector('[data-skin-id="mint"]').click()`);
   await click("全窗预览");
   await key("Escape");
   await waitFor(
-    () => js(`document.documentElement.dataset.skin === 'claude'`),
+    () => js(`document.documentElement.dataset.skin === 'cloud'`),
     "Escape cancels preview",
   );
   await fill('input[aria-label="搜索皮肤"]', "云轨");
@@ -1451,7 +1452,7 @@ async function waitFor(test, label, timeout = 12000) {
     `document.querySelector('[role="dialog"] .skin-mode-switch button:last-child').click()`,
   );
   await click("全窗预览");
-  await click("新建任务");
+  await click("新建对话");
   await waitFor(
     () => js(`!!document.querySelector('.chat-welcome')`),
     "preview chat",
@@ -1475,12 +1476,12 @@ async function waitFor(test, label, timeout = 12000) {
   );
   await js(`location.hash = 'skins'`);
   await waitFor(
-    () => js(`document.querySelectorAll('.skin-card').length === 62`),
+    () => js(`document.querySelectorAll('.skin-card').length === 63`),
     "skin catalog after reload",
   );
-  await click("恢复默认 Claude");
+  await click("恢复默认 云雾蓝紫");
   await waitFor(
-    () => js(`document.documentElement.dataset.skin === 'claude'`),
+    () => js(`document.documentElement.dataset.skin === 'cloud'`),
     "reset default skin",
   );
   assert.equal(await js(`document.documentElement.dataset.theme`), "dark");
@@ -1492,7 +1493,7 @@ async function waitFor(test, label, timeout = 12000) {
   await waitFor(() => has("本地记录与备份"), "return from skin center");
   await selectOption("外观", "浅色");
   checks.push(
-    "62 skins: search, live preview without persistence, cancel, artwork, dark mode, native save/reload, restore Claude default",
+    "63 skins: search, live preview without persistence, cancel, artwork, dark mode, native save/reload, restore Cloud default",
   );
   if (!web.debugger.isAttached()) web.debugger.attach("1.3");
   await web.debugger.sendCommand("DOM.enable");
@@ -1583,8 +1584,8 @@ async function waitFor(test, label, timeout = 12000) {
   await fill("input[name=username]", employee.user.username);
   await fill("input[name=password]", newPassword);
   await click("登录");
-  await waitFor(() => has("今天，一起完成些什么"), "second employee");
-  assert.equal(await js(`document.documentElement.dataset.skin`), "claude");
+  await waitFor(() => has("让想法，往前一步"), "second employee");
+  assert.equal(await js(`document.documentElement.dataset.skin`), "cloud");
   checks.push(
     "Skin preferences are isolated per employee; new employee receives Claude default",
   );
@@ -1678,7 +1679,7 @@ async function waitFor(test, label, timeout = 12000) {
   checks.push("Non-conversation screens do not open the far-right preview");
   win.setContentSize(900, 720);
   await js(`location.hash='chat'`);
-  await waitFor(() => has("今天，一起完成些什么"), "narrow chat");
+  await waitFor(() => has("让想法，往前一步"), "narrow chat");
   await capture("employee-chat-narrow.png");
   assert.equal(
     await js(`document.documentElement.scrollWidth > innerWidth`),

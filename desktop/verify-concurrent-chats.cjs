@@ -123,7 +123,7 @@ async function verify({
     );
   };
   const start = async (label, attachment = false) => {
-    await click("新建任务");
+    await click("新建对话");
     await wait(
       () => js(`!document.querySelector('.entry-experience')`),
       "new chat reveal",
@@ -391,7 +391,7 @@ async function verify({
       ),
     "parallel login restored",
   );
-  await click("新建任务");
+  await click("新建对话");
   await fill(input, "重新登录后的草稿", "HTMLTextAreaElement");
   assert.equal(
     await js(

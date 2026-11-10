@@ -118,6 +118,7 @@ export type LocalState = {
   settings: {
     theme: string;
     skin?: string;
+    appearanceVersion?: number;
     model: string;
     mode: DshMode;
     skillMode?: "auto" | "manual";

@@ -35,6 +35,7 @@ import {
   Sun,
   Moon,
   Stop,
+  CaretRight,
 } from "@phosphor-icons/react";
 import { SelectField } from "./Dropdown";
 import SkillPicker from "./SkillPicker";
@@ -985,14 +986,18 @@ export default function Workspace(props: WorkspaceProps) {
         <div className={`chat-layout ${preview ? "has-preview" : ""}`}>
           <section className="chat">
             <header className="chat-header">
-              <strong>
-                {conversation?.title ?? workspace?.name ?? "新建任务"}
-              </strong>
+              <div className="chat-heading">
+                <span className="chat-project-name">
+                  <Folder size={14} />
+                  {workspace?.name ?? "项目"}
+                  <CaretRight size={12} />
+                </span>
+                <strong>{conversation?.title ?? "新建对话"}</strong>
+              </div>
               <span className="bar-spacer" />
-              <Button onClick={() => newDraft()}>
+              <IconButton label="制作成技能" onClick={() => newDraft()}>
                 <Sparkle size={18} />
-                制作成技能
-              </Button>
+              </IconButton>
               <IconButton
                 label="展开成果预览"
                 disabled={!conversation?.messages.some((m) => m.image)}
@@ -1018,23 +1023,48 @@ export default function Workspace(props: WorkspaceProps) {
                 {!conversation?.messages.length && (
                   <div className="chat-welcome">
                     <BrandMark className="welcome-brand-mark" />
-                    <h1>今天，一起完成些什么？</h1>
-                    <p>从一个想法开始，让公司的知识与技能帮你推进工作。</p>
+                    <span className="welcome-greeting">
+                      {new Date().getHours() < 12
+                        ? "上午好"
+                        : new Date().getHours() < 18
+                          ? "下午好"
+                          : "晚上好"}
+                      ，{user.name}
+                    </span>
+                    <h1>让想法，往前一步。</h1>
+                    <p>聊一个问题，读一份资料，或一起完成一个项目。</p>
                     <div className="suggestions">
                       {[
-                        { text: "制作一张产品海报", icon: Images },
-                        { text: "整理视频脚本和分镜", icon: FileText },
-                        { text: "把成功经验整理成技能", icon: Sparkle },
-                      ].map(({ text: suggestion, icon: Icon }) => (
-                        <button
-                          key={suggestion}
-                          onClick={() => setText(suggestion)}
-                        >
-                          <Icon size={19} />
-                          {suggestion}
-                          <ArrowRight size={16} />
-                        </button>
-                      ))}
+                        {
+                          text: "整理一份周报",
+                          detail: "从资料里提炼重点",
+                          prompt: "帮我整理本周的工作，做成一份周报。",
+                          icon: FileText,
+                        },
+                        {
+                          text: "查找公司资料",
+                          detail: "结合上下文一起分析",
+                          prompt: "帮我查找公司知识中与当前项目有关的资料。",
+                          icon: BookOpen,
+                        },
+                        {
+                          text: "把创意做出来",
+                          detail: "图片、代码和视频",
+                          prompt: "我有一个创作想法，帮我一起完善。",
+                          icon: Images,
+                        },
+                      ].map(
+                        ({ text: suggestion, detail, prompt, icon: Icon }) => (
+                          <button
+                            key={suggestion}
+                            onClick={() => setText(prompt)}
+                          >
+                            <Icon size={19} />
+                            <span>{suggestion}</span>
+                            <small>{detail}</small>
+                          </button>
+                        ),
+                      )}
                     </div>
                   </div>
                 )}
@@ -1325,7 +1355,7 @@ export default function Workspace(props: WorkspaceProps) {
                   placeholder={
                     currentBusy
                       ? "补充要求，发送后将中止当前执行并继续"
-                      : "直接描述需求，AI 会自动选择所需能力"
+                      : "说说你的想法，或把文件拖到这里…"
                   }
                   disabled={stopping || !!followUp}
                   value={text}
@@ -1365,13 +1395,6 @@ export default function Workspace(props: WorkspaceProps) {
                     }
                     manage={() => navigate("skills")}
                   />
-                  <span
-                    className="composer-automatic"
-                    title="按需求自动调用对话、图片、视频和代码能力"
-                  >
-                    <Sparkle size={18} />
-                    AI 自动
-                  </span>
                   <span className="bar-spacer" />
                   <ModelPicker
                     connections={taskModels}
@@ -1379,22 +1402,24 @@ export default function Workspace(props: WorkspaceProps) {
                     change={(value) => patchSettings({ model: value })}
                     manage={() => navigate("models")}
                   />
-                  <SelectField
-                    label="项目权限"
-                    variant="quiet"
-                    side="top"
-                    align="end"
-                    value={workspace?.access ?? "edit"}
-                    onValueChange={(value) =>
-                      patchWorkspace({ access: value as WorkspaceAccess })
-                    }
-                    options={WORKSPACE_ACCESS_OPTIONS.map((option) => ({
-                      value: option.value,
-                      label: option.label,
-                      description: option.description,
-                      icon: <ShieldCheck size={18} />,
-                    }))}
-                  />
+                  <div className="composer-access">
+                    <SelectField
+                      label="项目权限"
+                      variant="quiet"
+                      side="top"
+                      align="end"
+                      value={workspace?.access ?? "edit"}
+                      onValueChange={(value) =>
+                        patchWorkspace({ access: value as WorkspaceAccess })
+                      }
+                      options={WORKSPACE_ACCESS_OPTIONS.map((option) => ({
+                        value: option.value,
+                        label: option.label,
+                        description: option.description,
+                        icon: <ShieldCheck size={18} />,
+                      }))}
+                    />
+                  </div>
                   <div className="composer-actions">
                     {currentBusy && (
                       <button
@@ -1440,10 +1465,7 @@ export default function Workspace(props: WorkspaceProps) {
                   </div>
                 </div>
               </div>
-              <div className="composer-note">
-                <HardDrives size={12} />
-                支持 Word、PDF、表格、图片与短视频 · Office 由公司服务临时解析
-              </div>
+              <div className="composer-note">AI 生成内容，请核对重要信息</div>
             </div>
           </section>
           {preview && (

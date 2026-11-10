@@ -367,5 +367,5 @@ module.exports = async ({
       ),
     "ordinary QA restored",
   );
-  await click("新建任务");
+  await click("新建对话");
 };

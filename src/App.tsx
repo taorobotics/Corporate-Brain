@@ -26,6 +26,7 @@ import {
   ClipboardText,
   SelectionAll,
   Plus,
+  ChatCircle,
 } from "@phosphor-icons/react";
 import { ActionMenu } from "./Dropdown";
 import type {
@@ -37,7 +38,14 @@ import type {
 } from "../shared/types";
 import { api, download } from "./api";
 import { emptyState, readLocal, writeLocal, validateImport } from "./local";
-import { Brand, Button, IconButton, Modal, Field } from "./components";
+import {
+  Brand,
+  BrandMark,
+  Button,
+  IconButton,
+  Modal,
+  Field,
+} from "./components";
 import Auth from "./Auth";
 import { WindowControls, WindowTitleBar } from "./WindowControls";
 import Workspace from "./Workspace";
@@ -52,7 +60,7 @@ import { useProduction, type ProductionController } from "./Production";
 import { addLocalProject } from "../shared/workspaces";
 
 const navigation = [
-  { id: "chat", label: "新建任务", icon: NotePencil },
+  { id: "chat", label: "对话", icon: ChatCircle },
   { id: "projects", label: "项目", icon: Folder },
   { id: "knowledge", label: "公司知识", icon: BookOpen },
   { id: "skills", label: "技能中心", icon: Sparkle },
@@ -486,11 +494,12 @@ export default function App() {
         />
       )}
       <div
-        className={`application ${isAdmin ? "admin-app" : ""}`}
+        className={`application ${isAdmin ? "admin-app" : "employee-app"}`}
         inert={enteredUser !== user.id}
       >
         {!isAdmin && (
           <div className="desktop-bar">
+            <span className="window-caption app-caption">公司大脑</span>
             <IconButton label="后退" onClick={() => history.back()}>
               <ArrowLeft size={21} />
             </IconButton>
@@ -514,7 +523,7 @@ export default function App() {
                   trigger={<button className="menu-label">{label}</button>}
                   items={(label === "文件"
                     ? [
-                        ["新建任务", "new"],
+                        ["新建对话", "new"],
                         ["导出本地记录", "export"],
                         ["导入本地记录", "import"],
                         ...(window.brainDesktop?.canChangeServer
@@ -599,11 +608,45 @@ export default function App() {
           </header>
         )}
         <div className="app-body">
+          {!isAdmin && (
+            <nav className="activity-rail main-nav" aria-label="主导航">
+              <button
+                className="rail-brand"
+                aria-label="公司大脑首页"
+                onClick={() => {
+                  setConversationId(null);
+                  navigate("chat");
+                }}
+              >
+                <BrandMark />
+              </button>
+              {navigation.map(({ id, label, icon: Icon }) => (
+                <button
+                  key={id}
+                  aria-label={label}
+                  className={page === id ? "active" : ""}
+                  aria-current={page === id ? "page" : undefined}
+                  onClick={() => navigate(id)}
+                >
+                  <Icon size={20} />
+                  <span>{label}</span>
+                </button>
+              ))}
+              <button
+                className={`rail-settings ${page === "settings" ? "active" : ""}`}
+                aria-label="打开个人设置"
+                onClick={() => navigate("settings")}
+              >
+                <GearSix size={20} />
+                <span>设置</span>
+              </button>
+            </nav>
+          )}
           {(sidebar || isAdmin) && (
             <aside className="sidebar">
               {!isAdmin && (
                 <div className="sidebar-brand">
-                  <Brand />
+                  <strong>对话</strong>
                   <IconButton
                     label="搜索本地对话"
                     onClick={() => {
@@ -655,21 +698,17 @@ export default function App() {
                 </nav>
               ) : (
                 <>
-                  <nav className="main-nav">
-                    {navigation.map(({ id, label, icon: Icon }) => (
-                      <button
-                        key={id}
-                        className={page === id && id !== "chat" ? "active" : ""}
-                        onClick={() => {
-                          if (id === "chat") setConversationId(null);
-                          navigate(id);
-                        }}
-                      >
-                        <Icon size={22} />
-                        {label}
-                      </button>
-                    ))}
-                  </nav>
+                  <button
+                    className="new-conversation"
+                    aria-label="新建对话"
+                    onClick={() => {
+                      setConversationId(null);
+                      navigate("chat");
+                    }}
+                  >
+                    <NotePencil size={18} />
+                    <span>新建对话</span>
+                  </button>
                   <div className="history">
                     <div className="section-label">
                       项目
@@ -813,6 +852,7 @@ export default function App() {
                 </>
               )}
               <div className="sidebar-footer">
+                {!isAdmin && <UpdateButton model={updates} />}
                 <div className="account-area">
                   <ActionMenu
                     open={accountOpen}
@@ -895,7 +935,7 @@ export default function App() {
                         className="account-trigger"
                         aria-label="打开账号菜单"
                       >
-                        <Avatar user={user} size={36} />
+                        <Avatar user={user} size={isAdmin ? 36 : 32} />
                         <span>
                           <strong>{user.name}</strong>
                           <small>{user.departmentName}</small>
@@ -907,7 +947,7 @@ export default function App() {
                   <IconButton label="设置" onClick={() => navigate("settings")}>
                     <GearSix size={21} />
                   </IconButton>
-                  <UpdateButton model={updates} />
+                  {isAdmin && <UpdateButton model={updates} />}
                 </div>
               </div>
             </aside>

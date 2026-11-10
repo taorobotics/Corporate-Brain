@@ -116,7 +116,7 @@ export default function SkinCenter({
         <Button
           onClick={() => onApply({ skin: DEFAULT_SKIN, theme: current.theme })}
         >
-          恢复默认 Claude
+          恢复默认 {getSkin(DEFAULT_SKIN).name}
         </Button>
       </header>
       <div className="skin-current">

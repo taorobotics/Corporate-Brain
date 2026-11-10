@@ -69,6 +69,7 @@ export function ThinkingProcess({
   return (
     <section className="thinking-process" data-status={status}>
       <div className="thinking-heading">
+        <span className="thinking-assistant">公司大脑</span>
         <span
           className={
             status === "running" ? "thinking-title is-active" : "thinking-title"

@@ -1,0 +1,830 @@
+/* Collaboration layout; semantic colors retain every employee's chosen skin. */
+.application.employee-app .desktop-bar {
+  height: 36px;
+  min-height: 36px;
+  gap: 4px;
+  padding-inline: 12px;
+}
+.application.employee-app .desktop-bar .menu-label {
+  font-size: 12px;
+  padding: 5px 8px;
+}
+.application.employee-app .desktop-bar > .icon-button {
+  width: 26px;
+  height: 27px;
+}
+.application.employee-app .desktop-bar > .icon-button svg {
+  width: 17px;
+  height: 17px;
+}
+.application.employee-app .app-caption {
+  font-size: 11px;
+  margin-right: 12px;
+}
+.application.employee-app .activity-rail {
+  width: 62px;
+  min-width: 62px;
+  margin: 0;
+  padding: 18px 5px 12px;
+  gap: 6px;
+  border-right: 1px solid var(--line);
+  background: var(--side);
+  align-items: center;
+}
+.application.employee-app .activity-rail > button {
+  width: 50px;
+  min-height: 54px;
+  padding: 8px 2px;
+  gap: 5px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  text-align: center;
+  border-radius: 11px;
+  color: var(--muted);
+  font-size: 10px;
+  white-space: nowrap;
+}
+.application.employee-app .activity-rail > button.active {
+  color: var(--accent-text);
+  background: var(--active);
+}
+.application.employee-app .activity-rail > button svg {
+  width: 19px;
+  height: 19px;
+  flex-shrink: 0;
+}
+.application.employee-app .activity-rail .rail-brand {
+  min-height: 36px;
+  margin-bottom: 14px;
+  padding: 0;
+  background: transparent;
+}
+.application.employee-app .rail-brand .brand-mark {
+  width: 30px;
+  height: 34px;
+}
+.application.employee-app .activity-rail .rail-settings {
+  margin-top: auto;
+}
+.application.employee-app .sidebar {
+  width: 198px;
+  min-width: 0;
+  padding: 0 12px 12px;
+}
+.application.employee-app .sidebar-brand {
+  height: 72px;
+  min-height: 72px;
+  padding: 0 5px;
+}
+.application.employee-app .sidebar-brand > strong {
+  font-size: 16px;
+  font-weight: 600;
+}
+.application.employee-app .sidebar-brand > .icon-button {
+  display: flex;
+  width: 28px;
+  height: 28px;
+  color: var(--muted);
+}
+.application.employee-app .new-conversation {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 9px;
+  width: 100%;
+  min-height: 40px;
+  padding: 10px 11px;
+  border-radius: 10px;
+  background: var(--active);
+  color: var(--ink);
+  font-size: 13px;
+  text-align: left;
+}
+.application.employee-app .history {
+  border: 0;
+  padding: 23px 0 10px;
+  gap: 5px;
+}
+.application.employee-app .section-label {
+  padding: 0 5px;
+  color: var(--muted);
+  font-size: 11px;
+}
+.application.employee-app .section-label > span {
+  font-size: 9px;
+  color: var(--muted);
+}
+.application.employee-app .history-search {
+  margin: 2px 0 7px;
+  padding: 6px;
+  font-size: 11px;
+  min-height: 27px;
+}
+.application.employee-app .history-search::placeholder {
+  color: var(--muted);
+}
+.application.employee-app .workspace-group {
+  margin-bottom: 10px;
+}
+.application.employee-app .history-list .workspace-heading button {
+  padding: 7px 2px;
+}
+.application.employee-app .history-list .workspace-collapse {
+  width: 17px;
+}
+.application.employee-app .history-list .workspace-new-chat {
+  width: 21px;
+}
+.application.employee-app .history-list .workspace-select {
+  gap: 6px;
+  font-size: 12px;
+}
+.application.employee-app .workspace-select.active {
+  color: var(--ink);
+}
+.application.employee-app .workspace-conversations {
+  margin: 2px 0 7px 9px;
+  padding-left: 10px;
+  border-left: 1px solid var(--line);
+}
+.application.employee-app .history-list .workspace-conversations button {
+  min-height: 34px;
+  padding: 8px 9px;
+  font-size: 12px;
+  margin-bottom: 3px;
+}
+.application.employee-app .history-list button.selected {
+  color: var(--accent-text);
+  background: var(--active);
+  font-weight: 500;
+}
+.application.employee-app .history-list {
+  scrollbar-width: thin;
+  scrollbar-color: color-mix(in srgb, var(--accent) 18%, transparent)
+    transparent;
+}
+.application.employee-app .sidebar-footer {
+  margin-top: auto;
+  padding-top: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+}
+.application.employee-app .sidebar-update {
+  position: relative;
+  width: 100%;
+  min-width: 0;
+  height: 31px;
+  display: flex;
+  justify-content: flex-start;
+  align-items: center;
+  gap: 7px;
+  border-radius: 8px;
+  padding: 6px;
+  color: var(--muted);
+}
+.application.employee-app .sidebar-update > svg {
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
+}
+.sidebar-update-label,
+.sidebar-update-version {
+  display: none;
+}
+.application.employee-app .sidebar-update-label {
+  display: inline;
+  font-size: 10px;
+  white-space: nowrap;
+}
+.application.employee-app .sidebar-update-version {
+  display: inline;
+  font-size: 9px;
+  margin-left: auto;
+}
+.application.employee-app .sidebar-update.has-update {
+  color: var(--accent-text);
+  background: var(--active);
+}
+.application.employee-app .sidebar-update .update-progress-ring {
+  inset: auto;
+  top: 2px;
+  left: 2px;
+  width: 25px;
+  height: 25px;
+}
+.application.employee-app .account-area {
+  border-top: 1px solid var(--line);
+  padding-top: 12px;
+  gap: 3px;
+}
+.application.employee-app .account-trigger {
+  padding: 0;
+  gap: 8px;
+  min-width: 0;
+  flex: 1;
+}
+.application.employee-app .account-trigger > span:nth-child(2) {
+  min-width: 0;
+}
+.application.employee-app .account-trigger strong {
+  font-size: 12px;
+}
+.application.employee-app .account-trigger small {
+  font-size: 10px;
+  margin-top: 2px;
+  color: var(--muted);
+}
+.application.employee-app .account-trigger > svg {
+  display: none;
+}
+.application.employee-app .account-area > .icon-button {
+  width: 25px;
+  height: 28px;
+  color: var(--muted);
+}
+.application.employee-app .account-area > .icon-button svg {
+  width: 17px;
+  height: 17px;
+}
+.application.employee-app .main-content {
+  overflow: hidden;
+}
+.application.employee-app
+  .main-content
+  > :is(.page, .settings-page, .skin-center) {
+  height: 100%;
+  overflow: auto;
+}
+.application.employee-app .chat {
+  --chat-width: 760px;
+  --chat-text-size: 16px;
+}
+.application.employee-app .chat-header {
+  height: 64px;
+  min-height: 64px;
+  padding-inline: 30px;
+  border-bottom: 0;
+  gap: 9px;
+}
+.application.employee-app .chat-heading {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+.application.employee-app .chat-heading strong {
+  font-size: 14px;
+  font-weight: 500;
+  text-overflow: ellipsis;
+  overflow: hidden;
+  white-space: nowrap;
+}
+.application.employee-app .chat-project-name {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--muted);
+  font-size: 11px;
+  white-space: nowrap;
+  max-width: 190px;
+}
+.application.employee-app .chat-project-name svg {
+  flex-shrink: 0;
+}
+.application.employee-app .chat-header > .icon-button {
+  width: 30px;
+  height: 30px;
+  color: var(--muted);
+}
+.application.employee-app .messages {
+  padding: 18px max(28px, calc((100% - var(--chat-width)) / 2)) 20px;
+}
+.application.employee-app .message {
+  gap: 12px;
+  margin-bottom: 24px;
+  font-size: var(--chat-text-size);
+}
+.application.employee-app .message-avatar {
+  width: 25px;
+  padding-top: 3px;
+}
+.application.employee-app .message-avatar .grok-ball-host {
+  width: 25px !important;
+  height: 25px !important;
+}
+.application.employee-app .message.user {
+  margin-bottom: 20px;
+  gap: 5px;
+}
+.application.employee-app .message.user .message-body {
+  max-width: 89%;
+  padding: 11px 17px;
+  border-radius: 16px 16px 5px 16px;
+  font-size: 14px;
+}
+.application.employee-app .question-time {
+  margin: 5px auto 14px;
+  font-size: 11px;
+}
+.application.employee-app .message-markdown {
+  line-height: 1.85;
+  letter-spacing: 0;
+}
+.application.employee-app .message-markdown :is(h1, h2, h3, h4) {
+  font-weight: 600;
+  letter-spacing: -0.025em;
+}
+.application.employee-app .message-markdown h2 {
+  font-size: 1.25em;
+}
+.application.employee-app .message-table {
+  font-size: 12px;
+  line-height: 1.75;
+}
+.application.employee-app .message-table :is(th, td) {
+  padding: 9px 12px;
+}
+.application.employee-app .message-actions {
+  gap: 4px;
+  margin-top: 11px;
+}
+.application.employee-app .message-action {
+  width: 28px;
+  height: 28px;
+}
+.application.employee-app .message-actions time {
+  margin-left: auto;
+  font-size: 10px;
+  color: var(--muted);
+}
+.answer-details {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+.answer-details > div {
+  display: flex;
+  justify-content: space-between;
+  gap: 20px;
+  padding: 14px 0;
+  border-bottom: 1px solid var(--line);
+  font-size: 13px;
+}
+.answer-details > div > span:first-child {
+  color: var(--muted);
+  flex-shrink: 0;
+}
+.answer-details .message-model {
+  max-width: none;
+  white-space: normal;
+  overflow-wrap: anywhere;
+  margin: 0;
+  text-align: right;
+  font-weight: 500;
+}
+.answer-details .message-meta {
+  margin: 0;
+}
+.application.employee-app .chat .thinking-process {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  column-gap: 8px;
+  row-gap: 3px;
+  border-bottom: 0;
+  padding-bottom: 0;
+  margin: 0 0 12px;
+}
+.application.employee-app .thinking-heading {
+  min-height: 25px;
+  gap: 8px;
+  font-size: 11px;
+}
+.application.employee-app .thinking-assistant {
+  color: var(--ink);
+  font-size: 12px;
+  font-weight: 500;
+}
+.application.employee-app .thinking-elapsed {
+  font-size: 11px;
+}
+.application.employee-app .thinking-toggle {
+  margin: 0;
+  padding: 3px 0;
+  min-height: 25px;
+  font-size: 11px;
+}
+.application.employee-app .thinking-toggle > span {
+  display: none;
+}
+.application.employee-app .thinking-toggle > svg {
+  width: 13px;
+  height: 13px;
+}
+.application.employee-app .thinking-details {
+  flex-basis: 100%;
+}
+.application.employee-app .chat .reasoning-entry {
+  font-size: 14px;
+  line-height: 1.85;
+}
+.application.employee-app .chat-loading-model {
+  font-size: 11px;
+}
+.application.employee-app .composer-wrap {
+  padding: 12px 28px;
+  max-width: calc(var(--chat-width) + 56px);
+  background: transparent;
+}
+.application.employee-app .composer {
+  padding: 14px 16px 11px;
+  border-radius: 17px;
+  background: var(--panel);
+  box-shadow: 0 4px 20px color-mix(in srgb, var(--accent) 5%, transparent);
+}
+.application.employee-app .composer > textarea {
+  font-size: 14px;
+  line-height: 1.75;
+  min-height: 48px;
+  padding: 0 2px 4px;
+}
+.application.employee-app .composer-tools {
+  gap: 6px;
+  flex-wrap: nowrap;
+  margin-top: 9px;
+}
+.application.employee-app .composer-tools :is(.select-trigger, .icon-button) {
+  min-height: 28px;
+  font-size: 11px;
+}
+.application.employee-app .composer-tools > .icon-button {
+  width: 28px;
+  height: 28px;
+}
+.application.employee-app .composer-tools > .icon-button svg {
+  width: 19px;
+  height: 19px;
+}
+.application.employee-app .composer-tools .bar-spacer {
+  min-width: 0;
+}
+.application.employee-app .model-picker-trigger {
+  gap: 6px;
+  max-width: 260px;
+  min-width: 0;
+}
+.model-provider-badge {
+  color: var(--muted);
+  background: var(--active);
+  padding: 3px 5px;
+  border-radius: 5px;
+  font-size: 10px;
+  font-weight: 500;
+  flex-shrink: 0;
+  max-width: 85px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.application.employee-app .model-picker-trigger .select-value {
+  max-width: 175px;
+}
+.application.employee-app .composer-access {
+  flex-shrink: 0;
+  display: inline-flex;
+}
+.application.employee-app .composer-access .select-trigger {
+  padding: 5px;
+}
+.application.employee-app .composer-access :is(.select-value, .select-caret) {
+  display: none;
+}
+.application.employee-app .composer-access .select-trigger-icon {
+  margin: 0;
+}
+.application.employee-app .send {
+  width: 34px;
+  height: 34px;
+}
+.application.employee-app .send > svg {
+  width: 19px;
+  height: 19px;
+}
+.application.employee-app .composer-actions {
+  gap: 5px;
+  margin-left: 0;
+}
+.application.employee-app .composer-note {
+  font-size: 10px;
+  margin-top: 9px;
+}
+.application.employee-app .workspace-start-controls {
+  max-width: var(--chat-width);
+  margin: 0 auto 9px;
+  font-size: 11px;
+}
+.application.employee-app .workspace-start-controls .select-trigger {
+  font-size: 11px;
+}
+.application.employee-app .chat-welcome {
+  max-width: 650px;
+  margin: clamp(40px, 11dvh, 120px) auto 35px;
+}
+.application.employee-app .chat-welcome .welcome-brand-mark {
+  width: 43px;
+  height: 47px;
+  margin: 0 auto 20px;
+}
+.welcome-greeting {
+  display: block;
+  color: var(--muted);
+  font-size: 12px;
+  margin-bottom: 10px;
+}
+.application.employee-app .chat-welcome h1 {
+  font-size: 30px;
+  font-weight: 500;
+  letter-spacing: -0.04em;
+  margin: 0 0 12px;
+}
+.application.employee-app .chat-welcome p {
+  font-size: 13px;
+  line-height: 1.8;
+}
+.application.employee-app .suggestions {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  max-width: none;
+  gap: 11px;
+  margin: 30px auto 0;
+}
+.application.employee-app .suggestions > button {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: flex-start;
+  gap: 11px;
+  padding: 17px 15px;
+  min-height: 112px;
+  border-radius: 13px;
+  font-size: 12px;
+}
+.application.employee-app .suggestions > button > svg {
+  color: var(--accent-text);
+  margin: 0;
+}
+.application.employee-app .suggestions > button > small {
+  color: var(--muted);
+  font-size: 10px;
+}
+.application.employee-app .production-file-shortcuts {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(260px, 100%), 1fr));
+  gap: 10px;
+  margin-block: 13px;
+}
+.production-output-file {
+  min-width: 0;
+  padding: 12px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--panel);
+}
+.production-output-file > .production-file-link {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  max-width: none;
+  border: 0;
+  background: transparent;
+  padding: 0;
+  color: var(--ink);
+  text-align: left;
+}
+.production-output-file > .production-file-link > svg {
+  color: var(--accent-text);
+  flex-shrink: 0;
+  width: 30px;
+  height: 33px;
+  padding: 6px;
+  border-radius: 8px;
+  background: var(--active);
+}
+.production-file-copy {
+  min-width: 0;
+}
+.production-file-copy strong {
+  display: block;
+  font-size: 12px;
+  font-weight: 500;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.production-file-copy small {
+  display: block;
+  margin-top: 3px;
+  font-size: 10px;
+  color: var(--muted);
+}
+.production-file-quick-actions {
+  display: flex;
+  gap: 14px;
+  margin-top: 8px;
+  padding-left: 40px;
+}
+.production-file-quick-actions > button {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 11px;
+  color: var(--muted);
+  padding: 3px 0;
+}
+.production-file-quick-actions > button:hover {
+  color: var(--accent-text);
+}
+.production-file-quick-actions svg {
+  width: 13px;
+  height: 13px;
+}
+:root[data-skin="cloud"] .application {
+  background: linear-gradient(
+    125deg,
+    color-mix(in srgb, var(--cloud-blue) 55%, var(--bg)),
+    color-mix(in srgb, var(--cloud-violet) 20%, var(--bg)) 48%,
+    var(--bg) 88%
+  );
+}
+:root[data-skin="cloud"] .desktop-bar {
+  background: transparent;
+}
+:root[data-skin="cloud"] .activity-rail {
+  background: linear-gradient(
+    160deg,
+    color-mix(in srgb, var(--cloud-blue) 70%, var(--bg)),
+    color-mix(in srgb, var(--cloud-violet) 70%, var(--bg)) 72%,
+    var(--bg)
+  );
+}
+:root[data-skin="cloud"] .application.employee-app .sidebar {
+  background: linear-gradient(
+    165deg,
+    color-mix(in srgb, var(--cloud-blue) 32%, var(--bg)),
+    color-mix(in srgb, var(--cloud-violet) 24%, var(--bg)) 62%,
+    var(--bg)
+  );
+}
+:root[data-skin="cloud"] .application.employee-app .main-content {
+  background: linear-gradient(
+    145deg,
+    color-mix(in srgb, var(--cloud-blue) 15%, var(--bg)),
+    var(--bg) 55%
+  );
+}
+:root[data-skin="cloud"] .application.employee-app .message.user .message-body {
+  background: linear-gradient(
+    110deg,
+    color-mix(in srgb, var(--cloud-blue) 48%, var(--panel)),
+    color-mix(in srgb, var(--cloud-violet) 40%, var(--panel))
+  );
+}
+:root[data-skin="cloud"] .application.employee-app .new-conversation {
+  background: linear-gradient(
+    115deg,
+    color-mix(in srgb, var(--cloud-blue) 60%, var(--panel)),
+    color-mix(in srgb, var(--cloud-violet) 50%, var(--panel))
+  );
+}
+:root[data-skin="cloud"] .application.employee-app .send:not(.stop) {
+  background: linear-gradient(135deg, var(--accent), var(--cloud-accent-end));
+  color: var(--accent-ink);
+}
+@media (max-width: 1100px) {
+  .application.employee-app .sidebar {
+    padding-inline: 10px;
+  }
+  .application.employee-app .chat-project-name {
+    max-width: 140px;
+    overflow: hidden;
+  }
+}
+@media (max-width: 850px) {
+  .application.employee-app .model-provider-badge {
+    display: none;
+  }
+  .application.employee-app .activity-rail {
+    width: 54px;
+    min-width: 54px;
+    padding-inline: 3px;
+  }
+  .application.employee-app .activity-rail > button {
+    width: 46px;
+    font-size: 10px;
+  }
+  .application.employee-app .sidebar {
+    width: 170px;
+    padding-inline: 9px;
+  }
+  .application.employee-app .chat-header {
+    padding-inline: 20px;
+  }
+  .application.employee-app .chat-project-name {
+    display: none;
+  }
+  .application.employee-app .messages {
+    padding-inline: 20px;
+  }
+  .application.employee-app .composer-wrap {
+    padding-inline: 18px;
+  }
+  .application.employee-app .model-picker-trigger {
+    max-width: 180px;
+  }
+  .application.employee-app .composer-tools {
+    gap: 3px;
+  }
+  .application.employee-app .suggestions {
+    gap: 8px;
+  }
+  .application.employee-app .suggestions > button {
+    padding: 13px 11px;
+  }
+}
+@media (max-width: 650px) {
+  .application.employee-app .app-caption {
+    display: none;
+  }
+  .application.employee-app .desktop-bar {
+    gap: 1px;
+    padding-inline: 6px;
+  }
+  .application.employee-app .desktop-bar .menu-label {
+    font-size: 11px;
+    padding-inline: 5px;
+  }
+  .application.employee-app .sidebar {
+    position: absolute;
+    top: 36px;
+    bottom: 0;
+    left: 54px;
+    width: 215px;
+    z-index: 20;
+    box-shadow: 8px 0 24px color-mix(in srgb, var(--ink) 12%, transparent);
+  }
+  .application.employee-app .chat-header {
+    padding-inline: 13px;
+  }
+  .application.employee-app .chat-heading strong {
+    font-size: 13px;
+  }
+  .application.employee-app .messages {
+    padding-inline: 14px;
+  }
+  .application.employee-app .message {
+    gap: 8px;
+  }
+  .application.employee-app .message-avatar {
+    width: 20px;
+  }
+  .application.employee-app .message-avatar .grok-ball-host {
+    width: 20px !important;
+    height: 20px !important;
+  }
+  .application.employee-app .message.user .message-body {
+    font-size: 13px;
+  }
+  .application.employee-app .composer-wrap {
+    padding-inline: 11px;
+  }
+  .application.employee-app .composer {
+    padding: 12px;
+  }
+  .application.employee-app .composer > textarea {
+    font-size: 16px;
+  }
+  .application.employee-app .model-picker-trigger {
+    max-width: 140px;
+  }
+  .application.employee-app .composer-tools {
+    flex-wrap: wrap;
+  }
+  .application.employee-app .chat-welcome h1 {
+    font-size: 26px;
+  }
+  .application.employee-app .suggestions {
+    grid-template-columns: 1fr;
+  }
+  .application.employee-app .suggestions > button {
+    min-height: 76px;
+    display: grid;
+    grid-template-columns: 20px minmax(0, 1fr);
+    gap: 6px 11px;
+  }
+  .application.employee-app .suggestions > button > small {
+    grid-column: 2;
+  }
+}

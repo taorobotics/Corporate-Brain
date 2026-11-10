@@ -84,7 +84,7 @@ async function verify({
       () => js(`!document.querySelector('.entry-experience')`),
       "startup reveal before controls",
     );
-    await click("新建任务");
+    await click("新建对话");
     await fill(input, text, "HTMLTextAreaElement");
     await click("发送任务");
   };
@@ -230,7 +230,7 @@ async function verify({
   const original = await js(
     `document.querySelector('.chat-header strong').textContent`,
   );
-  await click("新建任务");
+  await click("新建对话");
   assert.equal(await js(`!!document.querySelector('.composer .stop')`), false);
   await click(original);
   await wait(

@@ -278,7 +278,7 @@ const wait = async (fn, label, ms = 45000) => {
     await wait(
       () =>
         js(
-          `document.querySelector('[aria-label="项目"]')?.textContent.includes('workspace-project')`,
+          `document.querySelector('.workspace-start-controls [aria-label="项目"]')?.textContent.includes('workspace-project')`,
         ),
       "project workspace selected",
     );
@@ -450,7 +450,7 @@ const wait = async (fn, label, ms = 45000) => {
     checks.push(
       "Settings keep output directory; My Works and original conversation share the same result, actual model reply and reasoning persist on the employee device and survive reload",
     );
-    await click("新建任务");
+    await click("新建对话");
     await fill(
       '[aria-label="任务输入"]',
       "合成失败验收：根据 Synthetic project brief 生成源代码文件",
@@ -500,7 +500,7 @@ const wait = async (fn, label, ms = 45000) => {
       "Malformed model output triggers one automatic correction, fails at the actual generation step, then inline retry finishes in the same chat",
     );
     if (process.platform === "darwin") {
-      await click("新建任务");
+      await click("新建对话");
       await fill(
         '[aria-label="任务输入"]',
         "合成视频验收：制作一个两秒动画视频，附源码",
@@ -557,14 +557,14 @@ const wait = async (fn, label, ms = 45000) => {
         "Real Canvas/FFmpeg video renders from chat, all files save and clear on server, local inline video preview decodes at 1280x720 and 2 seconds",
       );
     }
-    await click("新建任务");
+    await click("新建对话");
     workspaceOutput = join(dir, "workspace-gif");
     await fs.mkdir(workspaceOutput);
     await click("新建项目");
     await wait(
       () =>
         js(
-          `document.querySelector('[aria-label="项目"]')?.textContent.includes('workspace-gif')`,
+          `document.querySelector('.workspace-start-controls [aria-label="项目"]')?.textContent.includes('workspace-gif')`,
         ),
       "second workspace selected",
     );

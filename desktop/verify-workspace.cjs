@@ -234,7 +234,7 @@ module.exports = async ({
     await waitFor(
       () =>
         js(
-          `document.querySelector('[aria-label="项目"]')?.textContent.includes(${JSON.stringify(created.name)})&&!document.querySelector('.entry-experience')`,
+          `document.querySelector('.workspace-start-controls [aria-label="项目"]')?.textContent.includes(${JSON.stringify(created.name)})&&!document.querySelector('.entry-experience')`,
         ),
       "workspace restored on reload",
     );
@@ -356,7 +356,7 @@ module.exports = async ({
       owned.title,
     );
     assert.equal(
-      await js(`document.querySelector('.chat-header strong').textContent`),
+      await js(`document.querySelector('.chat-project-name').textContent`),
       created.name,
     );
     await capture("projects-independent-sidebar-light.png");
@@ -392,7 +392,7 @@ module.exports = async ({
       ),
     "restore ordinary QA model",
   );
-  await click("新建任务");
+  await click("新建对话");
   await require("./verify-casual-chat.cjs")({
     js,
     click,

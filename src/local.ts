@@ -8,7 +8,13 @@ export const emptyState = (): LocalState => ({
   projects: [],
   workspaces: [defaultWorkspace()],
   activeWorkspaceId: defaultWorkspace().id,
-  settings: { theme: "default", skin: DEFAULT_SKIN, model: "", mode: "standard" },
+  settings: {
+    theme: "default",
+    skin: DEFAULT_SKIN,
+    appearanceVersion: 1,
+    model: "",
+    mode: "standard",
+  },
 });
 export const localKey = (userId: string) => `${location.origin}:${userId}`;
 let database: Promise<IDBDatabase> | undefined;
@@ -41,10 +47,7 @@ export async function readLocal(userId: string): Promise<LocalState> {
         "本机记录读取超时，请检查网络后重试。",
       ),
     );
-  const db = await withTimeout(
-    open(),
-    "本机存储打开超时，请刷新页面后重试。",
-  );
+  const db = await withTimeout(open(), "本机存储打开超时，请刷新页面后重试。");
   return withTimeout(
     new Promise((resolve, reject) => {
       const request = db

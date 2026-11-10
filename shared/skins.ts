@@ -12,7 +12,7 @@ export type Skin = {
   background?: { light: string; dark: string };
 };
 export const SKINS: readonly Skin[] = catalog;
-export const DEFAULT_SKIN = "claude";
+export const DEFAULT_SKIN = "cloud";
 export function getSkin(id?: string): Skin {
   return SKINS.find((skin) => skin.id === id) ?? SKINS[0];
 }
@@ -69,6 +69,31 @@ export function skinTokens(skin: Skin, mode: SkinMode): Record<string, string> {
     accent: dark ? mix(accent, "#ffffff", 0.28) : accent,
     active: mix(panel, accent, dark ? 0.16 : 0.1),
   };
+  if (skin.id === "cloud")
+    Object.assign(
+      tokens,
+      dark
+        ? {
+            bg: "#20232b",
+            side: "#202536",
+            panel: "#2b2f3a",
+            line: "#3d4558",
+            ink: "#e9edf7",
+            muted: "#b2bdd1",
+            accent: "#b9bdec",
+            active: "#343b59",
+          }
+        : {
+            bg: "#fdfdff",
+            side: "#eef0fc",
+            panel: "#ffffff",
+            line: "#e3e6f0",
+            ink: "#25283b",
+            muted: "#61677c",
+            accent: "#595da6",
+            active: "#e8eafa",
+          },
+    );
   if (skin.id === "claude")
     Object.assign(
       tokens,
@@ -170,5 +195,9 @@ export function skinTokens(skin: Skin, mode: SkinMode): Record<string, string> {
   variables["--shadow"] = dark
     ? "0 8px 30px #00000028"
     : "0 8px 30px #27231c0a";
+  variables["--cloud-blue"] = dark ? "#28334e" : "#dfe9ff";
+  variables["--cloud-violet"] = dark ? "#352b4d" : "#ece3ff";
+  variables["--cloud-edge"] = dark ? "#27394a" : "#edf7ff";
+  variables["--cloud-accent-end"] = dark ? "#c3a9e5" : "#7960a5";
   return variables;
 }

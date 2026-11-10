@@ -4,7 +4,7 @@ import type {
   LocalWorkspace,
   WorkspaceAccess,
 } from "./types";
-import { normalizeSkin } from "./skins";
+import { DEFAULT_SKIN, normalizeSkin } from "./skins";
 import { normalizeTrace } from "./chat-progress";
 
 export const DSH_MODE_OPTIONS: ReadonlyArray<{
@@ -161,7 +161,11 @@ export function normalizeLocalState(
           : settings.theme === "light"
             ? "light"
             : "default",
-      skin: normalizeSkin(settings.skin),
+      skin:
+        !settings.appearanceVersion && settings.skin === "claude"
+          ? DEFAULT_SKIN
+          : normalizeSkin(settings.skin),
+      appearanceVersion: 1,
       model: typeof settings.model === "string" ? settings.model : "",
       mode: normalizeMode(settings.mode),
       skillMode: settings.skillMode === "manual" ? "manual" : "auto",

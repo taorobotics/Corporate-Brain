@@ -306,5 +306,5 @@ module.exports = async ({
       ),
     "ordinary model restored",
   );
-  await click("新建任务");
+  await click("新建对话");
 };
