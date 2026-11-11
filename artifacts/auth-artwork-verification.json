@@ -1,6 +1,6 @@
 {
   "result": "passed",
-  "version": "0.34.1",
+  "version": "0.34.2",
   "runtime": "Real Electron + production bundle + disposable company API",
   "capability": "webgl",
   "checks": [

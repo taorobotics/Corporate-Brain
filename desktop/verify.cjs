@@ -8,6 +8,8 @@ const { randomBytes } = require("node:crypto");
 const assert = require("node:assert/strict");
 process.env.BRAIN_VERIFY = "1";
 app.disableHardwareAcceleration();
+// Exercise static fallback here; the dedicated artwork suite verifies 3D.
+app.commandLine.appendSwitch("disable-webgl");
 const errors = [],
   checks = [];
 let server;

@@ -68,6 +68,13 @@ async function waitFor(test, label, timeout = 15000) {
   const web = win.webContents;
   web.setBackgroundThrottling(false);
   web.debugger.attach("1.3");
+  // Test motion independently from the runner's accessibility defaults.
+  await web.debugger.sendCommand("Emulation.setFocusEmulationEnabled", {
+    enabled: true,
+  });
+  await web.debugger.sendCommand("Emulation.setEmulatedMedia", {
+    features: [{ name: "prefers-reduced-motion", value: "no-preference" }],
+  });
   web.on("console-message", (event) => {
     if (
       event.level === "error" &&
@@ -143,20 +150,17 @@ async function waitFor(test, label, timeout = 15000) {
   );
   if (capability === "webgl") {
     const first = await state();
-    await delay(700);
-    assert.ok(
-      (await state()).frames > first.frames,
-      "Actual 3D frames advance",
+    await waitFor(
+      async () => (await state()).frames > first.frames,
+      "actual 3D frames advance",
     );
     await js(
       `document.querySelector('.login-artwork-host').dispatchEvent(new PointerEvent('pointermove',{clientX:500,clientY:350}))`,
     );
-    await delay(500);
-    const pointer = (await state()).pointer;
-    assert.ok(
-      Math.abs(pointer.x) + Math.abs(pointer.y) > 0.01,
-      "Pointer changes actual scene pose",
-    );
+    await waitFor(async () => {
+      const pointer = (await state()).pointer;
+      return Math.abs(pointer.x) + Math.abs(pointer.y) > 0.01;
+    }, "pointer changes actual scene pose");
     await click(".motion-toggle");
     await delay(250);
     const paused = await state();
@@ -179,7 +183,10 @@ async function waitFor(test, label, timeout = 15000) {
       true,
     );
     await web.debugger.sendCommand("Emulation.setEmulatedMedia", {
-      features: [],
+      features: [{ name: "prefers-reduced-motion", value: "no-preference" }],
+    });
+    await web.debugger.sendCommand("Emulation.setFocusEmulationEnabled", {
+      enabled: false,
     });
     web.setBackgroundThrottling(true);
     win.hide();
@@ -193,6 +200,9 @@ async function waitFor(test, label, timeout = 15000) {
     );
     win.showInactive();
     web.setBackgroundThrottling(false);
+    await web.debugger.sendCommand("Emulation.setFocusEmulationEnabled", {
+      enabled: true,
+    });
     checks.push(
       "Real WebGL frames, pointer follow, manual pause, system reduced motion and hidden-window pause verified",
     );
