@@ -102,6 +102,7 @@ notices += `\n\n========== DeepSeek Harness chat indicator (@deepseek-ai/dsh-cli
 // Normalize formatting only; retain all upstream copyright and license wording.
 notices += `\n\n========== IPAS profile avatars ==========\n${await readFile("src/vendor/ipas-avatars.NOTICE", "utf8")}\n`;
 notices += `\n\n========== Server-only video rendering ==========\n${await readFile("src/vendor/canvas-rendering.NOTICE", "utf8")}\n`;
+notices += `\n\n========== Company community plugin adapters (server-only) ==========\nomdsh-dev/dsh-tool-calculator; source commit b2007a13f06bcf75bf07b9d277ee8d434a316490; evaluator preserved, runtime adapter by Corporate Brain.\n${await readFile("server/vendor/calculator.LICENSE", "utf8")}\nuckkk/dsh-pace-calc@0.1.1; company adapter validates distance/time and formats pace.\n${await readFile("server/vendor/pace-calc.LICENSE", "utf8")}\n`;
 notices += `\n\n========== parse-cache-control 1.0.1 (server downloader, BSD-3-Clause) ==========\n${legacyLicense}\n`;
 await writeFile(
   "THIRD_PARTY_NOTICES.txt",

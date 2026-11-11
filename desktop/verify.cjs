@@ -1722,6 +1722,7 @@ async function waitFor(test, label, timeout = 12000) {
     checks,
     win,
   });
+  await require("./verify-community.cjs")({ js, click, fill, waitFor, request, capture, checks, win });
   for (const [page, label] of [
     ["projects", "项目"],
     ["knowledge", "公司知识"],

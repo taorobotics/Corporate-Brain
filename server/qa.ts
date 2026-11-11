@@ -29,6 +29,7 @@ const fixtureFiles: Record<string, string> = {
   "references/guide.md": "这是随技能一起导入的参考资料，不包含员工数据。",
 };
 const { app, library, production } = createPlatform({
+  communityFetch: async () => Response.json({ categories: { ui: { zh: "界面增强" } }, plugins: [{ name: "社区界面示例", owner: "community-qa", url: "https://github.com/corporate-qa/community-ui", category: ["ui"], description: { zh: "合成社区目录条目，尚未适配，不执行外部代码。" }, version: "1.0.0" }] }),
   database: ":memory:",
   origins,
   ...(process.env.BRAIN_QA_EXPORT_ROOT

@@ -11,6 +11,7 @@ import { createChatDeadline, ChatTimeoutError } from "./chat-deadline";
 import { materializeSkill, type SkillResources } from "./skill-library";
 import { visualInputs } from "../shared/attachments";
 import { dshOutputFiles, dshRunGuard, DshLoopError } from "./dsh-output";
+import { COMMUNITY_ADAPTERS } from "../shared/community-plugins";
 
 export type DshAttachment = {
   name: string;
@@ -38,6 +39,7 @@ export type DshRunOptions = {
   signal?: AbortSignal;
   onProgress?: (event: ChatProgress) => void;
   skillResources?: SkillResources | SkillResources[];
+  communityPlugins?: string[];
   deliverFiles?: boolean;
 };
 
@@ -160,6 +162,9 @@ export class DshManager {
       `${await readFile(patch, "utf8")}- insert:\n    - id: corporate-progress\n      name: ${yamlString(new URL("./dsh-progress-plugin.mjs", import.meta.url).href)}\n    - id: agent-preset-registry\n      name: '@deepseek-ai/dsh-agent-preset-registry'\n      config:\n        default: ${yamlString(dshPresetForMode(options.mode))}\n`,
       "utf8",
     );
+    const plugins = [...new Set(options.communityPlugins ?? [])].sort();
+    if (plugins.some(id => !COMMUNITY_ADAPTERS.some(p => p.id === id))) throw new Error("未知的公司插件适配器");
+    if (plugins.length) await writeFile(patch, `${await readFile(patch, "utf8")}- insert:\n    - id: corporate-community-plugins\n      name: ${yamlString(new URL("./community-plugin-runtime.mjs", import.meta.url).href)}\n      config:\n        plugins: ${JSON.stringify(plugins)}\n`, "utf8");
     const harness = new DeepSeekHarness({
       profile: "sdk",
       patches: [preset, patch],
@@ -254,7 +259,7 @@ export class DshManager {
     if (outputDirectory)
       await mkdir(outputDirectory, { recursive: true, mode: 0o700 });
     const key = this.key(options);
-    const fingerprint = `${options.baseUrl}\0${options.model}\0${options.apiKey}\0${options.mode ?? "standard"}\0${options.workspaceAccess ?? "edit"}`;
+    const fingerprint = `${options.baseUrl}\0${options.model}\0${options.apiKey}\0${options.mode ?? "standard"}\0${options.workspaceAccess ?? "edit"}\0${[...new Set(options.communityPlugins ?? [])].sort().join(",")}`;
     let entry = this.entries.get(key);
     if (entry && entry.fingerprint !== fingerprint) {
       await entry.harness.close().catch(() => {});

@@ -1,0 +1,210 @@
+.community-plugins {
+  max-width: 1140px;
+  margin: 0 auto;
+}
+.community-plugins .page-header {
+  align-items: flex-start;
+}
+.community-eyebrow {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  color: var(--muted);
+  font-size: 12px;
+  margin-bottom: 12px;
+}
+.community-toolbar,
+.community-search,
+.community-pagination {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+  margin: 24px 0;
+}
+.community-tabs {
+  display: flex;
+  gap: 4px;
+  padding: 4px;
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--ink) 5%, transparent);
+}
+.community-tabs button {
+  padding: 8px 15px;
+  border-radius: 9px;
+  color: var(--muted);
+  border: 0;
+  background: transparent;
+}
+.community-tabs button[aria-pressed="true"] {
+  color: var(--ink);
+  background: var(--panel);
+  box-shadow: 0 2px 8px #00000008;
+}
+.community-search {
+  flex-wrap: nowrap;
+}
+.community-search .search {
+  flex: 1;
+  min-width: 0;
+}
+.community-search .select-trigger {
+  min-width: 145px;
+}
+.community-source {
+  font-size: 12px;
+  color: var(--muted);
+  line-height: 1.8;
+  margin: 12px 0 22px;
+}
+.community-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+}
+.community-card {
+  background: color-mix(in srgb, var(--panel) 88%, transparent);
+  border: 1px solid color-mix(in srgb, var(--ink) 9%, transparent);
+  border-radius: 18px;
+  padding: 22px;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+.community-card-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 18px;
+}
+.community-plugin-icon {
+  width: 44px;
+  height: 44px;
+  border-radius: 13px;
+  display: grid;
+  place-items: center;
+  background: color-mix(in srgb, var(--accent) 10%, transparent);
+  color: var(--accent);
+}
+.community-status {
+  padding: 5px 9px;
+  border-radius: 7px;
+  font-size: 11px;
+  color: var(--muted);
+  background: color-mix(in srgb, var(--ink) 5%, transparent);
+}
+.community-status.verified {
+  color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 9%, transparent);
+}
+.community-title {
+  border: 0;
+  background: transparent;
+  color: var(--ink);
+  text-align: left;
+  padding: 0;
+  font: inherit;
+  font-weight: 650;
+  font-size: 16px;
+  overflow-wrap: anywhere;
+}
+.community-title:hover {
+  color: var(--accent);
+}
+.community-author {
+  font-size: 12px;
+  color: var(--muted);
+  margin-top: 7px;
+  overflow-wrap: anywhere;
+}
+.community-description {
+  font-size: 13px;
+  line-height: 1.9;
+  color: var(--muted);
+  margin: 16px 0 22px;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+  overflow: hidden;
+}
+.community-card footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  margin-top: auto;
+  font-size: 12px;
+}
+.community-card footer .inline-actions {
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+.community-empty {
+  padding: 60px 20px;
+  text-align: center;
+  color: var(--muted);
+}
+.community-pagination {
+  font-size: 12px;
+}
+.community-detail {
+  line-height: 1.9;
+}
+.community-detail-status {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  color: var(--accent);
+  margin: 20px 0;
+}
+.community-detail dl {
+  display: grid;
+  grid-template-columns: 100px minmax(0, 1fr);
+  gap: 12px;
+  margin: 24px 0;
+  font-size: 13px;
+}
+.community-detail dt {
+  color: var(--muted);
+}
+.community-detail dd {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+.community-detail a {
+  display: inline-flex;
+  gap: 6px;
+  align-items: center;
+  color: var(--accent);
+}
+.community-detail footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  margin-top: 24px;
+}
+@media (max-width: 1050px) {
+  .community-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+@media (max-width: 620px) {
+  .community-toolbar,
+  .community-search {
+    gap: 10px;
+  }
+  .community-search {
+    flex-wrap: wrap;
+  }
+  .community-search .search {
+    flex-basis: 100%;
+  }
+  .community-card {
+    padding: 17px;
+  }
+  .community-pagination {
+    align-items: flex-start;
+  }
+}

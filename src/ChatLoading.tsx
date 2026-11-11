@@ -195,6 +195,8 @@ export function ThinkingProcess({
 }
 
 function toolLabel(name: string) {
+  if (name === "calculator") return "数学计算器";
+  if (name === "pace_calc") return "跑步配速计算";
   if (/search/i.test(name)) return "搜索网页";
   if (/fetch|browse/i.test(name)) return "读取网页";
   if (/read.*file|file.*read/i.test(name)) return "读取文件";

@@ -1,10 +1,11 @@
 import { useLayoutEffect, useRef, type ReactNode } from "react";
-import { UserCircle, GearSix, Images, HardDrives } from "@phosphor-icons/react";
+import { UserCircle, GearSix, Images, HardDrives, Plug } from "@phosphor-icons/react";
 
 const sections = [
   { id: "settings", label: "账号与偏好", icon: UserCircle },
   { id: "models", label: "模型与服务", icon: GearSix },
   { id: "skins", label: "皮肤中心", icon: Images },
+  { id: "community-plugins", label: "开源社区插件", icon: Plug },
 ];
 export const isSettingsPage = (page: string) =>
   sections.some((section) => section.id === page);

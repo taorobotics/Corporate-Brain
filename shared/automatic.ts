@@ -1,6 +1,7 @@
 import type { DshMode } from "./types";
 
 export type AutomaticPlan = {
+  pluginIds?: string[];
   kind: "chat" | "image" | "video" | "code";
   mode: DshMode;
   seconds: number;

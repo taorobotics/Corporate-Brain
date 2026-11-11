@@ -53,6 +53,7 @@ export function createStore(file: string) {
     );
     CREATE INDEX IF NOT EXISTS feedback_status_created ON feedback(status,created_at DESC);
     CREATE INDEX IF NOT EXISTS feedback_created ON feedback(created_at DESC);
+    CREATE TABLE IF NOT EXISTS community_plugins(user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE, plugin_id TEXT NOT NULL, enabled INTEGER NOT NULL DEFAULT 1 CHECK(enabled IN (0,1)), installed_at TEXT NOT NULL, PRIMARY KEY(user_id,plugin_id));
   `);
   if (
     !(db.prepare("PRAGMA table_info(users)").all() as { name: string }[]).some(

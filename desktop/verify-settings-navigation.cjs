@@ -37,7 +37,7 @@ module.exports = async ({ js, click, waitFor, capture, win, checks }) => {
     );
     assert.equal(
       await js(`document.querySelectorAll('.settings-nav button').length`),
-      4,
+      5,
     );
     assert.equal(
       await js(

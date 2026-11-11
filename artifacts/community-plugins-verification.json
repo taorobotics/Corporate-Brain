@@ -1,0 +1,26 @@
+{
+  "version": "0.34.0",
+  "result": "passed",
+  "nodeTests": 206,
+  "nasTests": 8,
+  "desktopChecks": 68,
+  "productionModelsCalled": false,
+  "employeeRecordsAccessed": false,
+  "checks": [
+    "Company-branded settings entry and adapted, community and installed lists",
+    "Fixed-source public metadata reader with bounded download, caching, fallback, concurrent reads and stale-result disclosure",
+    "Per-employee install, enable, disable and uninstall with authentication, CSRF and input validation",
+    "Unadapted community metadata cannot execute code or install a package",
+    "Only installed and enabled verified adapters are offered to the conversation router",
+    "Real DSH calculator tool execution returns a result through the agent loop",
+    "Changing selected plugins in the same conversation rebuilds the runtime and removes the old tool",
+    "Company font and theme, source attribution and dark narrow layout"
+  ],
+  "verifiedAdapters": ["calculator", "pace-calc"],
+  "limits": [
+    "Other catalog entries await individual adaptation and cannot currently be installed",
+    "No arbitrary third-party Host code, build scripts or native UI is loaded",
+    "Calculator uses floating-point numbers rather than exact financial arithmetic",
+    "Disabling a plugin applies to later requests; existing requests are not interrupted"
+  ]
+}

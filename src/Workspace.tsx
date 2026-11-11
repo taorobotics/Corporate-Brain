@@ -89,6 +89,7 @@ import {
 } from "../shared/attachments";
 import "./attachments.css";
 import Profile, { Avatar } from "./Profile";
+import CommunityPlugins from "./CommunityPlugins";
 
 type ComposerDraft = {
   text: string;
@@ -853,6 +854,7 @@ export default function Workspace(props: WorkspaceProps) {
           attachments: modelAttachments,
           mode: plan.mode,
           execution: plan.execution ?? "agent",
+          pluginIds: plan.pluginIds ?? [],
           companyLookup: plan.companyLookup,
           installedSkillIds: installedSkills.map((skill) => skill.id),
           workspaceAccess: workspace?.access ?? "edit",
@@ -2088,6 +2090,7 @@ export default function Workspace(props: WorkspaceProps) {
             </>
           )}
           {page === "skins" && props.skins}
+          {page === "community-plugins" && <CommunityPlugins notify={notify} navigate={navigate} />}
         </SettingsLayout>
       )}
       <input

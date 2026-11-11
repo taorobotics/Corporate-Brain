@@ -65,6 +65,7 @@ import {
   type SkillResources,
 } from "./skill-library";
 import { SkillImportError } from "./skill-import";
+import { mountCommunityPlugins } from "./community-plugins";
 import { hasPrivateSkillContent } from "./skill-package";
 import {
   AUTOMATIC_ROUTER_INSTRUCTION,
@@ -244,6 +245,7 @@ export function createPlatform(
     skillLibrary?: SkillLibraryOptions;
     nas?: NasOptions;
     dsh?: Pick<DshManager, "runDetailed" | "close">;
+    communityFetch?: typeof fetch;
   } = {},
 ) {
   const store = createStore(options.database ?? ".data/platform.sqlite");
@@ -446,6 +448,7 @@ export function createPlatform(
   );
   mountUpdates(app, options.updates);
   mountFeedback(app, store, getActor, fail);
+  const communityPlugins = mountCommunityPlugins(app, store, getActor, fail, options.communityFetch);
   const nas = mountNas(app, store, getActor, fail, options.nas);
   mountDocuments(app, store, getActor, fail);
   app.post("/api/auth/logout", (req, res) => {
@@ -1228,6 +1231,7 @@ export function createPlatform(
                     data.skillMode === "manual"
                       ? candidates.map((skill) => skill.id)
                       : [],
+                  availablePlugins: communityPlugins.active(actor.id).map(p => ({ id: p.id, name: p.name, description: p.description })),
                   availableSkills: candidates.map((skill) => ({
                     id: skill.id,
                     name: skill.name,
@@ -1325,6 +1329,9 @@ export function createPlatform(
       )
         plan.execution = "agent";
       let connectionId = row.id;
+      const pluginIds = communityPlugins.resolve(actor.id, plan.kind === "chat" ? plan.pluginIds ?? [] : []);
+      if (plan.kind !== "chat") delete plan.pluginIds;
+      if (pluginIds.length) { plan.execution = "agent"; plan.pluginIds = pluginIds; }
       if (plan.kind === "image" && data.imageSkills) {
         const image = chooseImageSkill(candidates, skillIds);
         if (!image)
@@ -1407,6 +1414,7 @@ export function createPlatform(
           .default("standard"),
         workspaceAccess: z.enum(["view", "edit", "full"]).default("edit"),
         execution: z.enum(["answer", "agent"]).default("agent"),
+        pluginIds: z.array(z.string().max(80)).max(8).default([]),
         companyLookup: companyLookupSchema.optional(),
         installedSkillIds: z.array(id).max(128).default([]),
       })
@@ -1433,6 +1441,7 @@ export function createPlatform(
       !data.messages.some((m) => m.role === "system") &&
       !data.skillId &&
       !data.skillIds.length &&
+      !data.pluginIds.length &&
       !data.imageSkillId &&
       !data.companyLookup;
     const modelIdentity =
@@ -1440,6 +1449,7 @@ export function createPlatform(
       !data.messages.some((m) => m.role === "system") &&
       !data.skillId &&
       !data.skillIds.length &&
+      !data.pluginIds.length &&
       !data.imageSkillId &&
       !data.companyLookup;
     try {
@@ -1480,11 +1490,12 @@ export function createPlatform(
           "本轮已安排公司图片生成技能。请完成用户要求的完整文字部分；图片调用将在文字输出后由服务执行并附于同一回复。当前尚未生成成功，不要宣称图片已完成，不要编造图片链接或占位图。",
       });
     const skillResources = await resourcesFor(selectedSkills);
+    const pluginIds = communityPlugins.resolve(actor.id, data.pluginIds);
     const answerOnly =
       casual ||
       modelIdentity ||
-      data.companyLookup?.knowledge === "read" ||
-      (data.execution === "answer" && !skillResources.length);
+      ((data.companyLookup?.knowledge === "read" || data.execution === "answer") && !skillResources.length && !pluginIds.length);
+    if (pluginIds.length) data.messages.unshift({ role: "system", content: "本轮可按需使用已安装的公司大脑开源社区插件：" + communityPlugins.active(actor.id).filter(p => pluginIds.includes(p.id)).map(p => p.name).join("、") + "。根据用户问题调用实际工具；未执行时不要声称已经执行。" });
     if (selectedSkills.length) {
       data.messages.unshift({
         role: "system",
@@ -1610,6 +1621,7 @@ export function createPlatform(
               mode: data.mode,
               workspaceAccess: data.workspaceAccess,
               skillResources,
+              communityPlugins: pluginIds,
               deliverFiles:
                 Boolean(data.deviceId) && data.workspaceAccess !== "view",
               signal,
@@ -1647,6 +1659,7 @@ export function createPlatform(
         }
       }
       if (typeof content !== "string") {
+        if (pluginIds.length) fail(503, "已选择的社区插件需要工具运行服务，请稍后重试；本次未执行插件。");
         if (skillResources.length && data.companyLookup?.knowledge !== "read")
           fail(503, "此技能需要文件工具读取配套资料，DSH 暂不可用，请稍后重试");
         const lastUserIndex = data.messages.findLastIndex(
