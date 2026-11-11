@@ -60,15 +60,7 @@ import type {
 } from "../shared/types";
 import { WORKSPACE_ACCESS_OPTIONS } from "../shared/workspaces";
 import { api, download } from "./api";
-import {
-  Brand,
-  BrandMark,
-  Button,
-  IconButton,
-  Modal,
-  Empty,
-  Search,
-} from "./components";
+import { Brand, Button, IconButton, Modal, Empty, Search } from "./components";
 import SkillEditor from "./SkillEditor";
 import SkillImport, { SkillSourceDetails } from "./SkillImport";
 import ChatLoading, { ThinkingProcess, type PendingReply } from "./ChatLoading";
@@ -175,6 +167,7 @@ export default function Workspace(props: WorkspaceProps) {
   const pendingReply = pendingReplies[conversationId ?? ""];
   const taskError = taskErrors[conversationId ?? ""];
   const busy = !!pendingReply;
+  const emptyChat = !conversation?.messages.length && !busy;
   const originalFiles = useRef(new Map<string, Map<string, File>>());
   function filesFor(key: string) {
     if (!originalFiles.current.has(key))
@@ -986,7 +979,7 @@ export default function Workspace(props: WorkspaceProps) {
     <>
       {page === "chat" && (
         <div className={`chat-layout ${preview ? "has-preview" : ""}`}>
-          <section className="chat">
+          <section className={`chat ${emptyChat ? "is-empty" : ""}`}>
             <header className="chat-header">
               <div className="chat-heading">
                 <span className="chat-project-name">
@@ -1022,52 +1015,9 @@ export default function Workspace(props: WorkspaceProps) {
               aria-label="对话内容"
             >
               <div className="messages-content" ref={contentRef}>
-                {!conversation?.messages.length && (
+                {emptyChat && (
                   <div className="chat-welcome">
-                    <BrandMark className="welcome-brand-mark" />
-                    <span className="welcome-greeting">
-                      {new Date().getHours() < 12
-                        ? "上午好"
-                        : new Date().getHours() < 18
-                          ? "下午好"
-                          : "晚上好"}
-                      ，{user.name}
-                    </span>
-                    <h1>让想法，往前一步。</h1>
-                    <p>聊一个问题，读一份资料，或一起完成一个项目。</p>
-                    <div className="suggestions">
-                      {[
-                        {
-                          text: "整理一份周报",
-                          detail: "从资料里提炼重点",
-                          prompt: "帮我整理本周的工作，做成一份周报。",
-                          icon: FileText,
-                        },
-                        {
-                          text: "查找公司资料",
-                          detail: "结合上下文一起分析",
-                          prompt: "帮我查找公司知识中与当前项目有关的资料。",
-                          icon: BookOpen,
-                        },
-                        {
-                          text: "把创意做出来",
-                          detail: "图片、代码和视频",
-                          prompt: "我有一个创作想法，帮我一起完善。",
-                          icon: Images,
-                        },
-                      ].map(
-                        ({ text: suggestion, detail, prompt, icon: Icon }) => (
-                          <button
-                            key={suggestion}
-                            onClick={() => setText(prompt)}
-                          >
-                            <Icon size={19} />
-                            <span>{suggestion}</span>
-                            <small>{detail}</small>
-                          </button>
-                        ),
-                      )}
-                    </div>
+                    <h1 data-chat-headline>{props.chatHeadline}</h1>
                   </div>
                 )}
                 {conversation?.messages.map((message) => (
@@ -1218,29 +1168,6 @@ export default function Workspace(props: WorkspaceProps) {
                   <ArrowDown size={16} />
                   回到最新内容
                 </button>
-              )}
-              {!conversation?.messages.length && (
-                <div className="workspace-start-controls">
-                  <SelectField
-                    label="项目"
-                    variant="quiet"
-                    side="top"
-                    value={workspace?.id ?? null}
-                    disabled={busy}
-                    onValueChange={(value) =>
-                      setState((s) => ({ ...s, activeWorkspaceId: value }))
-                    }
-                    icon={<Folder size={17} />}
-                    options={state.workspaces.map((w) => ({
-                      value: w.id,
-                      label: w.name,
-                    }))}
-                    action={{
-                      label: "新建项目…",
-                      onClick: () => void props.createProject(),
-                    }}
-                  />
-                </div>
               )}
               <div
                 className="composer"
@@ -1467,7 +1394,32 @@ export default function Workspace(props: WorkspaceProps) {
                   </div>
                 </div>
               </div>
-              <div className="composer-note">AI 生成内容，请核对重要信息</div>
+              {emptyChat && (
+                <div className="workspace-start-controls">
+                  <SelectField
+                    label="项目"
+                    variant="quiet"
+                    side="top"
+                    value={workspace?.id ?? null}
+                    disabled={busy}
+                    onValueChange={(value) =>
+                      setState((s) => ({ ...s, activeWorkspaceId: value }))
+                    }
+                    icon={<Folder size={17} />}
+                    options={state.workspaces.map((w) => ({
+                      value: w.id,
+                      label: w.name,
+                    }))}
+                    action={{
+                      label: "新建项目…",
+                      onClick: () => void props.createProject(),
+                    }}
+                  />
+                </div>
+              )}
+              {!emptyChat && (
+                <div className="composer-note">AI 生成内容，请核对重要信息</div>
+              )}
             </div>
           </section>
           {preview && (
@@ -1643,8 +1595,7 @@ export default function Workspace(props: WorkspaceProps) {
                   companyLookup: lookup,
                 },
               }));
-              setConversationId(null);
-              navigate("chat");
+              props.newConversation();
             }}
           />
         </div>
@@ -1788,8 +1739,7 @@ export default function Workspace(props: WorkspaceProps) {
                                   skillMode: "manual",
                                   skillIds: [skill.id],
                                 });
-                                setConversationId(null);
-                                navigate("chat");
+                                props.newConversation();
                               }}
                             >
                               使用 <ArrowRight size={15} />

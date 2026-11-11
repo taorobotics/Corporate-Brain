@@ -576,28 +576,33 @@ html.sidebar-resizing * {
 }
 .application.employee-app .chat-welcome {
   max-width: 650px;
-  margin: clamp(40px, 11dvh, 120px) auto 35px;
-}
-.application.employee-app .chat-welcome .welcome-brand-mark {
-  width: 43px;
-  height: 47px;
-  margin: 0 auto 20px;
-}
-.welcome-greeting {
-  display: block;
-  color: var(--muted);
-  font-size: 12px;
-  margin-bottom: 10px;
+  margin: 0 auto;
 }
 .application.employee-app .chat-welcome h1 {
-  font-size: 30px;
+  font-size: clamp(24px, 2.2vw, 32px);
+  line-height: 1.4;
   font-weight: 500;
-  letter-spacing: -0.04em;
-  margin: 0 0 12px;
+  letter-spacing: -0.025em;
+  text-wrap: balance;
+  margin: 0;
 }
-.application.employee-app .chat-welcome p {
-  font-size: 13px;
-  line-height: 1.8;
+.application.employee-app .chat.is-empty .messages {
+  padding-block: 0;
+}
+.application.employee-app .chat.is-empty .composer-wrap {
+  margin-top: 26px;
+  padding-block: 0;
+}
+.application.employee-app .chat.is-empty .composer {
+  border-radius: 23px;
+  padding: 17px 17px 11px;
+}
+.application.employee-app .chat.is-empty .composer > textarea {
+  min-height: 80px;
+  font-size: 15px;
+}
+.application.employee-app .chat.is-empty .workspace-start-controls {
+  margin: 9px 0 0 5px;
 }
 .application.employee-app .suggestions {
   display: grid;

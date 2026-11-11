@@ -98,6 +98,8 @@ async function waitFor(test, label, timeout = 12000) {
         js(`!document.querySelector('.entry-experience[data-phase="ready"]')`),
       "workspace reveal finished",
     );
+  const welcome = () =>
+    js(`!!document.querySelector(".chat.is-empty [data-chat-headline]")`);
   const has = (text) =>
     js(`document.body.innerText.includes(${JSON.stringify(text)})`);
   const click = (text) =>
@@ -283,7 +285,7 @@ async function waitFor(test, label, timeout = 12000) {
   const password = `QA-${randomBytes(18).toString("hex")}`;
   await fill("input[name=password]", password);
   await click("创建并进入");
-  await waitFor(() => has("让想法，往前一步"), "initialized workspace");
+  await waitFor(welcome, "initialized workspace");
   await revealed();
   checks.push(
     "Shared cinematic startup, authentication, profile preparation and welcome reveal replace the old loading screen",
@@ -297,6 +299,7 @@ async function waitFor(test, label, timeout = 12000) {
     win,
     checks,
   });
+
   await require("./verify-zoom.cjs")({
     js,
     win,
@@ -504,7 +507,7 @@ async function waitFor(test, label, timeout = 12000) {
     "empty model configuration action",
   );
   await js(`location.hash='chat'`);
-  await waitFor(() => has("让想法，往前一步"), "return from model settings");
+  await waitFor(welcome, "return from model settings");
   checks.push(
     "Empty model picker explains configuration and opens the real model settings",
   );
@@ -567,6 +570,16 @@ async function waitFor(test, label, timeout = 12000) {
     checks,
     win,
     selectOption,
+  });
+  await require("./verify-new-chat.cjs")({
+    js,
+    click,
+    fill,
+    waitFor,
+    request,
+    capture,
+    win,
+    checks,
   });
   // This disposable client receives explicit fixtures, never invented production activity.
   await js(`(() => {
@@ -981,10 +994,7 @@ async function waitFor(test, label, timeout = 12000) {
     "account menu keyboard navigation",
   );
   await js(`location.hash='chat'`);
-  await waitFor(
-    () => has("让想法，往前一步"),
-    "return from keyboard menu action",
-  );
+  await waitFor(welcome, "return from keyboard menu action");
   checks.push(
     "Top edit menu restores the original input target and invokes its native action; account menu supports keyboard navigation",
   );
@@ -1210,7 +1220,7 @@ async function waitFor(test, label, timeout = 12000) {
     "Provider presets recommend LinoRoute first; native multi-model discovery, selection, save, retained IDs, key-free refresh, search and dark narrow layout passed using an isolated local upstream; no real model generation",
   );
   await click("查看员工端");
-  await waitFor(() => has("让想法，往前一步"), "employee workbench");
+  await waitFor(welcome, "employee workbench");
   await fill('textarea[aria-label="任务输入"]', "只在本机保存的集成验收记录");
   await js(`document.querySelector('[aria-label="发送任务"]').click()`);
   await waitFor(() => has("尚未配置可用模型"), "unconfigured model state");
@@ -1630,7 +1640,7 @@ async function waitFor(test, label, timeout = 12000) {
   await fill("input[name=username]", employee.user.username);
   await fill("input[name=password]", newPassword);
   await click("登录");
-  await waitFor(() => has("让想法，往前一步"), "second employee");
+  await waitFor(welcome, "second employee");
   assert.equal(await js(`document.documentElement.dataset.skin`), "cloud");
   checks.push(
     "Skin preferences are isolated per employee; new employee receives Claude default",
@@ -1725,7 +1735,7 @@ async function waitFor(test, label, timeout = 12000) {
   checks.push("Non-conversation screens do not open the far-right preview");
   win.setContentSize(900, 720);
   await js(`location.hash='chat'`);
-  await waitFor(() => has("让想法，往前一步"), "narrow chat");
+  await waitFor(welcome, "narrow chat");
   await capture("employee-chat-narrow.png");
   assert.equal(
     await js(`document.documentElement.scrollWidth > innerWidth`),

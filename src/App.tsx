@@ -62,6 +62,9 @@ import { useProduction, type ProductionController } from "./Production";
 import { addLocalProject, recentConversations } from "../shared/workspaces";
 import ResizableSidebar from "./ResizableSidebar";
 import { isSettingsPage } from "./SettingsLayout";
+import { pickChatHeadline } from "../shared/chat-headlines";
+
+const lastHeadlineKey = "corporate-brain:last-chat-headline";
 
 const navigation = [
   { id: "chat", label: "对话", icon: ChatCircle },
@@ -79,6 +82,8 @@ export type WorkspaceProps = {
   page: string;
   navigate: (page: string) => void;
   conversationId: string | null;
+  chatHeadline: string;
+  newConversation: () => void;
   createProject: () => Promise<void>;
   openProject: (id: string) => void;
   setConversationId: (id: string | null) => void;
@@ -114,6 +119,23 @@ export default function App() {
     [passwordOpen, setPasswordOpen] = useState(false),
     [feedbackOpen, setFeedbackOpen] = useState(false);
   const [historySearch, setHistorySearch] = useState("");
+  const [chatHeadline, setChatHeadline] = useState(() => {
+    let previous: string | null = null;
+    try {
+      previous = localStorage.getItem(lastHeadlineKey);
+    } catch {}
+    return pickChatHeadline(previous);
+  });
+  useEffect(() => {
+    try {
+      localStorage.setItem(lastHeadlineKey, chatHeadline);
+    } catch {}
+  }, [chatHeadline]);
+  function newConversation() {
+    setChatHeadline((previous) => pickChatHeadline(previous));
+    setConversationId(null);
+    navigate("chat");
+  }
   const [collapsedWorkspaces, setCollapsedWorkspaces] = useState<string[]>([]);
   const creatingWorkspace = useRef(false);
   const [departments, setDepartments] = useState<Department[]>([]),
@@ -148,8 +170,7 @@ export default function App() {
       const id = crypto.randomUUID();
       setState((s) => addLocalProject(s, folder, id));
       setCollapsedWorkspaces((ids) => ids.filter((item) => item !== id));
-      setConversationId(null);
-      navigate("chat");
+      newConversation();
       setHistorySearch("");
     } catch (e) {
       notify((e as Error).message);
@@ -163,8 +184,7 @@ export default function App() {
         ? { ...s, activeWorkspaceId: id }
         : s,
     );
-    setConversationId(null);
-    navigate("chat");
+    newConversation();
     setCollapsedWorkspaces((ids) => ids.filter((item) => item !== id));
     setHistorySearch("");
   }
@@ -396,8 +416,7 @@ export default function App() {
   function handleMenu(action: string) {
     setMenu("");
     if (action === "new") {
-      setConversationId(null);
-      navigate("chat");
+      newConversation();
     } else if (action === "export") exportRecords();
     else if (action === "import") importRef.current?.click();
     else if (action === "sidebar") setSidebar((v) => !v);
@@ -564,6 +583,8 @@ export default function App() {
     page,
     navigate,
     conversationId,
+    chatHeadline,
+    newConversation,
     createProject,
     openProject,
     setConversationId,
@@ -717,10 +738,7 @@ export default function App() {
               <button
                 className="rail-brand"
                 aria-label="公司大脑首页"
-                onClick={() => {
-                  setConversationId(null);
-                  navigate("chat");
-                }}
+                onClick={newConversation}
               >
                 <BrandMark />
               </button>
@@ -811,10 +829,7 @@ export default function App() {
                   <button
                     className="new-conversation"
                     aria-label="新建对话"
-                    onClick={() => {
-                      setConversationId(null);
-                      navigate("chat");
-                    }}
+                    onClick={newConversation}
                   >
                     <NotePencil size={18} />
                     <span>新建对话</span>

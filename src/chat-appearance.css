@@ -3,6 +3,26 @@
   --chat-width: 960px;
   --chat-text-size: 17px;
 }
+.chat.is-empty {
+  display: grid;
+  grid-template-rows: auto minmax(24px, 1fr) auto auto minmax(64px, 1fr);
+  overflow: auto;
+}
+.chat.is-empty .chat-header {
+  grid-row: 1;
+}
+.chat.is-empty .messages {
+  grid-row: 3;
+  flex: 0 0 auto;
+  overflow: visible;
+  padding-block: 0;
+}
+.chat.is-empty .composer-wrap {
+  grid-row: 4;
+  flex-shrink: 0;
+  margin-block: 26px 0;
+  padding-block: 0;
+}
 .chat-header {
   min-height: 70px;
   height: 70px;
