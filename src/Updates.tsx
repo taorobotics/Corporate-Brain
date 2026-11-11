@@ -168,6 +168,7 @@ export function UpdateButton({ model }: { model: Controller }) {
   if (!model.desktop) return null;
   const { state, bridge, legacy } = model;
   const available = !!state.release || (!bridge && !!legacy?.release);
+  if (!available) return null;
   const downloading = state.status === "downloading";
   const ready = state.status === "ready";
   const checking = state.status === "checking";

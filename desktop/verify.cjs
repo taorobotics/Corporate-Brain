@@ -330,7 +330,7 @@ async function waitFor(test, label, timeout = 12000) {
   await waitFor(
     () =>
       js(
-        "!!document.querySelector('.sidebar-footer .sidebar-update.has-update[aria-label^=\"有可用更新\"]')",
+        "!!document.querySelector('.rail-account .sidebar-update.has-update[aria-label^=\"有可用更新\"]')",
       ),
     "automatic update discovery in account footer",
   );
@@ -725,6 +725,16 @@ async function waitFor(test, label, timeout = 12000) {
     capture,
     checks,
   });
+  await require("./verify-account-navigation.cjs")({
+    js,
+    click,
+    waitFor,
+    capture,
+    win,
+    checks,
+    request,
+    selectOption,
+  });
   await js(`document.querySelector('.thinking-toggle').click()`);
   assert.equal(await has("找到 2 个来源"), true);
   await fill('textarea[aria-label="任务输入"]', "加载项验收：失败清理");
@@ -968,8 +978,10 @@ async function waitFor(test, label, timeout = 12000) {
     "Top edit menu restores the original input target and invokes its native action; account menu supports keyboard navigation",
   );
   await js(`document.querySelector('[aria-label="打开账号菜单"]').click()`);
-  await waitFor(() => has("管理后台"), "account menu");
+  await waitFor(() => has("反馈"), "account menu");
   await capture("employee-account-menu.png");
+  await click("设置");
+  await waitFor(() => has("管理后台"), "management access in settings");
   await click("管理后台");
   await waitFor(() => has("添加员工"), "admin users");
   const design = await request("/departments", { name: "设计部" }),
@@ -1289,6 +1301,8 @@ async function waitFor(test, label, timeout = 12000) {
     "UI source selection, local draft and package preview submit workflow",
   );
   await js(`document.querySelector('[aria-label="打开账号菜单"]').click()`);
+  await click("设置");
+  await waitFor(() => has("管理后台"), "management access in settings");
   await click("管理后台");
   await click("技能发布");
   await waitFor(() => has("团队文案流程"), "review queue");
@@ -1403,7 +1417,8 @@ async function waitFor(test, label, timeout = 12000) {
     win,
     selectOption,
   });
-  await js(`document.querySelector('[aria-label="设置"]').click()`);
+  await click("打开账号菜单");
+  await click("设置");
   await waitFor(() => has("本地记录与备份"), "settings");
   await capture("employee-settings.png");
   await selectOption("外观", "深色");

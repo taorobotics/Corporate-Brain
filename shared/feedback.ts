@@ -8,6 +8,8 @@ export const feedbackCategories = {
   incomplete: "内容不完整",
   relevance: "答非所问",
   format: "格式或显示问题",
+  ui: "界面与操作",
+  chat: "对话与任务",
   other: "其他问题",
 };
 export const feedbackStatuses = {
@@ -27,6 +29,7 @@ export type FeedbackReceipt = {
   hasContext: boolean;
 };
 export type FeedbackRow = FeedbackReceipt & {
+  source: "answer" | "general";
   userName: string;
   username: string;
   departmentName: string;

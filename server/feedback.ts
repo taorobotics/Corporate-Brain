@@ -1,8 +1,9 @@
-import type { Express, Request } from "express";
+import type { Express, Request, Response } from "express";
 import { randomUUID } from "node:crypto";
 import { z } from "zod";
 import type { Store } from "./database";
 import type { User } from "../shared/types";
+import type { FeedbackCategory } from "../shared/feedback";
 
 // Mounted after the platform's session, password-change and origin checks.
 export function mountFeedback(
@@ -54,6 +55,7 @@ export function mountFeedback(
   });
   const view = (row: any) => ({
     ...receipt(row),
+    source: row.source,
     userName: row.user_name,
     username: row.username,
     departmentName: row.department_name,
@@ -63,9 +65,15 @@ export function mountFeedback(
     updatedAt: row.updated_at,
   });
   const attempts = new Map<string, { count: number; until: number }>();
-  app.put("/api/feedback", (req, res) => {
+  function submit(
+    req: Request,
+    res: Response,
+    data: Omit<z.infer<typeof schema>, "category"> & {
+      category: FeedbackCategory;
+    },
+    source: "answer" | "general",
+  ) {
     const actor = actorOf(req),
-      data = schema.parse(req.body),
       now = Date.now();
     for (const [key, value] of attempts)
       if (value.until <= now) attempts.delete(key);
@@ -77,6 +85,8 @@ export function mountFeedback(
         "SELECT * FROM feedback WHERE user_id=? AND conversation_id=? AND message_id=?",
       )
       .get(actor.id, data.conversationId, data.messageId) as any;
+    if (existing && existing.source !== source)
+      fail(409, "反馈来源不一致，请重新打开反馈窗口");
     const context = data.includeContext ? JSON.stringify(data.context) : null;
     if (
       existing &&
@@ -88,7 +98,10 @@ export function mountFeedback(
       res.json(receipt(existing));
       return;
     }
-    let modelName = existing?.model_name ?? "历史回答（未记录模型）";
+    let modelName =
+      source === "general"
+        ? "整体使用反馈"
+        : (existing?.model_name ?? "历史回答（未记录模型）");
     if (data.connectionId) {
       const connection = db
         .prepare("SELECT name,departments FROM connections WHERE id=?")
@@ -117,8 +130,8 @@ export function mountFeedback(
     db.exec("BEGIN IMMEDIATE");
     try {
       db.prepare(
-        `INSERT INTO feedback(id,user_id,user_name,username,department_name,conversation_id,message_id,model_name,rating,category,description,context_json,created_at,updated_at)
-        VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?) ON CONFLICT(user_id,conversation_id,message_id) DO UPDATE SET
+        `INSERT INTO feedback(id,user_id,user_name,username,department_name,conversation_id,message_id,model_name,rating,category,description,context_json,created_at,updated_at,source)
+        VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?) ON CONFLICT(user_id,conversation_id,message_id) DO UPDATE SET
         rating=excluded.rating,category=excluded.category,description=excluded.description,context_json=excluded.context_json,
         updated_at=excluded.updated_at,status='pending',admin_note='',handled_by='',handled_at=NULL`,
       ).run(
@@ -136,6 +149,7 @@ export function mountFeedback(
         context,
         timestamp,
         timestamp,
+        source,
       );
       store.audit(
         actor.id,
@@ -154,6 +168,33 @@ export function mountFeedback(
           db.prepare("SELECT * FROM feedback WHERE id=?").get(feedbackId),
         ),
       );
+  }
+  app.put("/api/feedback", (req, res) => {
+    submit(req, res, schema.parse(req.body), "answer");
+  });
+  app.post("/api/feedback/general", (req, res) => {
+    const data = z
+      .object({
+        requestId: uuid,
+        category: z.enum(["ui", "chat", "other"]),
+        description: z.string().trim().min(1, "请填写反馈内容").max(2000),
+      })
+      .strict()
+      .parse(req.body);
+    submit(
+      req,
+      res,
+      {
+        conversationId: data.requestId,
+        messageId: data.requestId,
+        connectionId: null,
+        rating: "issue",
+        category: data.category,
+        description: data.description,
+        includeContext: false,
+      },
+      "general",
+    );
   });
   app.get("/api/admin/feedback", (req, res) => {
     admin(req);
@@ -164,6 +205,7 @@ export function mountFeedback(
           .enum(["pending", "processing", "resolved", "dismissed"])
           .optional(),
         rating: z.enum(["helpful", "unhelpful", "issue"]).optional(),
+        source: z.enum(["answer", "general"]).optional(),
         search: z.string().trim().max(100).default(""),
       })
       .strict()
@@ -177,6 +219,10 @@ export function mountFeedback(
     if (query.rating) {
       clauses.push("rating=?");
       values.push(query.rating);
+    }
+    if (query.source) {
+      clauses.push("source=?");
+      values.push(query.source);
     }
     if (query.search) {
       clauses.push(
@@ -192,7 +238,7 @@ export function mountFeedback(
       page = Math.min(query.page, Math.max(1, Math.ceil(total / pageSize)));
     const rows = db
       .prepare(
-        `SELECT id,rating,category,description,user_name,username,department_name,model_name,status,created_at,updated_at,context_json IS NOT NULL AS has_context FROM feedback ${where} ORDER BY created_at DESC,id DESC LIMIT ? OFFSET ?`,
+        `SELECT id,source,rating,category,description,user_name,username,department_name,model_name,status,created_at,updated_at,context_json IS NOT NULL AS has_context FROM feedback ${where} ORDER BY created_at DESC,id DESC LIMIT ? OFFSET ?`,
       )
       .all(...values, pageSize, (page - 1) * pageSize);
     res.json({ rows: rows.map(view), total, page, pageSize });

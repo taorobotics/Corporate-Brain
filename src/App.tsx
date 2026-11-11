@@ -27,6 +27,7 @@ import {
   SelectionAll,
   Plus,
   ChatCircle,
+  ChatTeardropText,
 } from "@phosphor-icons/react";
 import { ActionMenu } from "./Dropdown";
 import type {
@@ -56,6 +57,7 @@ import SkinCenter, { type SkinSelection } from "./Skins";
 import { getSkin, skinTokens } from "../shared/skins";
 import EntryExperience from "./EntryExperience";
 import { Avatar } from "./Profile";
+import GeneralFeedback from "./GeneralFeedback";
 import { useProduction, type ProductionController } from "./Production";
 import { addLocalProject } from "../shared/workspaces";
 import ResizableSidebar from "./ResizableSidebar";
@@ -109,7 +111,8 @@ export default function App() {
     [localError, setLocalError] = useState(""),
     [localLoadVersion, setLocalLoadVersion] = useState(0),
     [toast, setToast] = useState(""),
-    [passwordOpen, setPasswordOpen] = useState(false);
+    [passwordOpen, setPasswordOpen] = useState(false),
+    [feedbackOpen, setFeedbackOpen] = useState(false);
   const [historySearch, setHistorySearch] = useState("");
   const [collapsedWorkspaces, setCollapsedWorkspaces] = useState<string[]>([]);
   const creatingWorkspace = useRef(false);
@@ -486,6 +489,62 @@ export default function App() {
       </>
     );
   const isAdmin = page.startsWith("admin");
+  const accountMenu = (
+    <ActionMenu
+      open={accountOpen}
+      onOpenChange={setAccountOpen}
+      side="top"
+      className="account-menu-popup"
+      header={
+        <div className="account-summary">
+          <Avatar user={user} size={32} />
+          <div>
+            <strong>{user.name}</strong>
+            <small>
+              {user.departmentName} · {user.username}
+            </small>
+          </div>
+        </div>
+      }
+      items={[
+        {
+          label: "设置",
+          onSelect: () => navigate("settings"),
+          icon: <GearSix size={19} />,
+        },
+        {
+          label: "反馈",
+          onSelect: () => {
+            setAccountOpen(false);
+            setFeedbackOpen(true);
+          },
+          icon: <ChatTeardropText size={19} />,
+        },
+        {
+          label: "退出登录",
+          onSelect: () => void logout(),
+          icon: <SignOut size={19} />,
+          danger: true,
+          separatorBefore: true,
+        },
+      ]}
+      trigger={
+        <button
+          className={`account-trigger ${isSettingsPage(page) ? "active" : ""}`}
+          title={`${user.name} · 账号菜单`}
+          data-settings-active={isSettingsPage(page) ? "page" : undefined}
+          aria-label="打开账号菜单"
+        >
+          <Avatar user={user} size={isAdmin ? 36 : 32} />
+          <span>
+            <strong>{user.name}</strong>
+            <small>{user.departmentName}</small>
+          </span>
+          <CaretDown size={14} />
+        </button>
+      }
+    />
+  );
   const workspaceProps: WorkspaceProps = {
     production,
     user,
@@ -667,15 +726,10 @@ export default function App() {
                   <span>{label}</span>
                 </button>
               ))}
-              <button
-                className={`rail-settings ${isSettingsPage(page) ? "active" : ""}`}
-                aria-current={isSettingsPage(page) ? "page" : undefined}
-                aria-label="打开个人设置"
-                onClick={() => navigate("settings")}
-              >
-                <GearSix size={20} />
-                <span>设置</span>
-              </button>
+              <div className="rail-account">
+                <UpdateButton model={updates} />
+                {accountMenu}
+              </div>
             </nav>
           )}
           {(sidebar || isAdmin) && (
@@ -726,7 +780,7 @@ export default function App() {
                           {
                             id: "admin-feedback",
                             icon: NotePencil,
-                            label: "回答反馈",
+                            label: "用户反馈",
                           },
                         ]
                       : []),
@@ -897,105 +951,12 @@ export default function App() {
                   </div>
                 </>
               )}
-              <div className="sidebar-footer">
-                {!isAdmin && <UpdateButton model={updates} />}
-                <div className="account-area">
-                  <ActionMenu
-                    open={accountOpen}
-                    onOpenChange={setAccountOpen}
-                    side="top"
-                    className="account-menu-popup"
-                    header={
-                      <div className="account-summary">
-                        <Avatar user={user} size={32} />
-                        <div>
-                          <strong>{user.name}</strong>
-                          <small>
-                            {user.departmentName} · {user.username}
-                          </small>
-                        </div>
-                      </div>
-                    }
-                    items={[
-                      {
-                        label: "个人设置",
-                        onSelect: () => navigate("settings"),
-                        icon: <UserCircle size={19} />,
-                      },
-                      {
-                        label: "模型与服务",
-                        onSelect: () => navigate("models"),
-                        icon: <GearSix size={19} />,
-                      },
-                      ...([
-                        "company_admin",
-                        "department_admin",
-                        "department_reviewer",
-                        "company_reviewer",
-                      ].includes(user.role)
-                        ? [
-                            {
-                              label: "管理后台",
-                              icon: <ShieldCheck size={19} />,
-                              onSelect: () =>
-                                navigate(
-                                  [
-                                    "department_reviewer",
-                                    "company_reviewer",
-                                  ].includes(user.role)
-                                    ? "admin-skills"
-                                    : "admin-users",
-                                ),
-                            },
-                          ]
-                        : []),
-                      {
-                        label: "导出本地记录",
-                        onSelect: () => handleMenu("export"),
-                        icon: <DownloadSimple size={19} />,
-                      },
-                      {
-                        label: "帮助",
-                        onSelect: () => handleMenu("help"),
-                        icon: <Question size={19} />,
-                      },
-                      ...(window.brainDesktop
-                        ? [
-                            {
-                              label: "检查更新…",
-                              onSelect: () => updates.show(),
-                              icon: <DownloadSimple size={19} />,
-                            },
-                          ]
-                        : []),
-                      {
-                        label: "退出登录",
-                        onSelect: () => void logout(),
-                        icon: <SignOut size={19} />,
-                        danger: true,
-                        separatorBefore: true,
-                      },
-                    ]}
-                    trigger={
-                      <button
-                        className="account-trigger"
-                        aria-label="打开账号菜单"
-                      >
-                        <Avatar user={user} size={isAdmin ? 36 : 32} />
-                        <span>
-                          <strong>{user.name}</strong>
-                          <small>{user.departmentName}</small>
-                        </span>
-                        <CaretDown size={14} />
-                      </button>
-                    }
-                  />
-                  <IconButton label="设置" onClick={() => navigate("settings")}>
-                    <GearSix size={21} />
-                  </IconButton>
-                  {isAdmin && <UpdateButton model={updates} />}
+              {isAdmin && (
+                <div className="sidebar-footer account-area">
+                  <UpdateButton model={updates} />
+                  {accountMenu}
                 </div>
-              </div>
+              )}
             </ResizableSidebar>
           )}
           <main className="main-content">
@@ -1056,6 +1017,13 @@ export default function App() {
           }}
         />
         {legalOpen && <Legal close={() => setLegalOpen(false)} />}
+        {feedbackOpen && (
+          <GeneralFeedback
+            key={user.id}
+            close={() => setFeedbackOpen(false)}
+            notify={notify}
+          />
+        )}
         {passwordOpen && (
           <Modal
             title={user.mustChange ? "首次登录，请修改初始密码" : "修改密码"}

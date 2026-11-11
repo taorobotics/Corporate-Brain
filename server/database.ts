@@ -64,6 +64,14 @@ export function createStore(file: string) {
     );
   // No automatic chat history storage; feedback contains only explicitly submitted excerpts.
   if (
+    !(
+      db.prepare("PRAGMA table_info(feedback)").all() as { name: string }[]
+    ).some((column) => column.name === "source")
+  )
+    db.exec(
+      "ALTER TABLE feedback ADD COLUMN source TEXT NOT NULL DEFAULT 'answer'",
+    );
+  if (
     !(db.prepare("PRAGMA table_info(users)").all() as { name: string }[]).some(
       (column) => column.name === "avatar",
     )

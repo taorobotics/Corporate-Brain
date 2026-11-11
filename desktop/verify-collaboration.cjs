@@ -21,7 +21,7 @@ module.exports = async ({ js, click, waitFor, capture, win, checks }) => {
       composerWidth:app.querySelector('.composer').getBoundingClientRect().width,
       font:getComputedStyle(app).fontFamily,
       fonts:[...document.fonts].filter(f=>['Inter','Noto Sans SC'].includes(f.family)).map(f=>({family:f.family,status:f.status})),
-      nav:app.querySelectorAll('.activity-rail button').length,
+      nav:app.querySelectorAll('.activity-rail > button').length,
       automaticLabels:app.querySelectorAll('.composer-automatic').length};
   })()`);
   assert.equal(shape.rail, 62);
@@ -32,7 +32,7 @@ module.exports = async ({ js, click, waitFor, capture, win, checks }) => {
   assert.match(shape.font, /Inter.*Noto Sans SC/);
   assert.ok(shape.fonts.every((f) => f.status === "loaded"));
   assert.equal(shape.automaticLabels, 0);
-  assert.equal(shape.nav, 7);
+  assert.equal(shape.nav, 6);
   await capture("collaboration-cloud-home.png");
   await require("./verify-sidebar-resize.cjs")({
     js,

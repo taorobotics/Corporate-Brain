@@ -347,6 +347,124 @@ test("department accounts, review scopes, publication and local-history boundary
     },
   );
   await t.test(
+    "general UI/chat feedback joins the same admin queue without uploading chat context",
+    async () => {
+      const priorAnswers = (
+        await request("/admin/feedback?source=answer", undefined, adminCookie)
+      ).data.total;
+      const body = {
+        requestId: crypto.randomUUID(),
+        category: "ui",
+        description: "界面反馈 <img src=x onerror=alert(1)>",
+      };
+      assert.equal((await request("/feedback/general", body)).status, 401);
+      assert.equal(
+        (
+          await request(
+            "/feedback/general",
+            { ...body, description: "  " },
+            b.cookie,
+          )
+        ).status,
+        400,
+      );
+      assert.equal(
+        (
+          await request(
+            "/feedback/general",
+            { ...body, context: { answer: "private" } },
+            b.cookie,
+          )
+        ).status,
+        400,
+      );
+      const first = await request("/feedback/general", body, b.cookie);
+      assert.equal(first.status, 201);
+      assert.equal(
+        (await request("/feedback/general", body, b.cookie)).data.id,
+        first.data.id,
+      );
+      const list = (
+        await request("/admin/feedback?source=general", undefined, adminCookie)
+      ).data;
+      assert.equal(list.total, 1);
+      assert.equal(list.rows[0].source, "general");
+      assert.equal(list.rows[0].userName, b.name);
+      const detail = (
+        await request(
+          `/admin/feedback/${first.data.id}`,
+          undefined,
+          adminCookie,
+        )
+      ).data;
+      assert.equal(detail.context, null);
+      assert.equal(detail.hasContext, false);
+      assert.equal(detail.category, "ui");
+      assert.equal(detail.modelName, "整体使用反馈");
+      assert.equal(
+        (await request("/admin/feedback?source=general", undefined, b.cookie))
+          .status,
+        403,
+      );
+      assert.equal(
+        (
+          await request(
+            "/feedback",
+            {
+              conversationId: body.requestId,
+              messageId: body.requestId,
+              rating: "issue",
+            },
+            b.cookie,
+            "PUT",
+          )
+        ).status,
+        409,
+      );
+      assert.equal(
+        (
+          await request(
+            `/admin/feedback/${first.data.id}`,
+            {
+              status: "resolved",
+              adminNote: "已调整",
+              updatedAt: detail.updatedAt,
+            },
+            adminCookie,
+            "PATCH",
+          )
+        ).status,
+        200,
+      );
+      assert.equal(
+        (
+          await request(
+            "/feedback/general",
+            { ...body, category: "chat", description: "对话反馈" },
+            b.cookie,
+          )
+        ).status,
+        200,
+      );
+      const changed = (
+        await request(
+          `/admin/feedback/${first.data.id}`,
+          undefined,
+          adminCookie,
+        )
+      ).data;
+      assert.equal(changed.status, "pending");
+      assert.equal(changed.category, "chat");
+      assert.equal(changed.source, "general");
+      assert.equal(changed.context, null);
+      assert.equal(
+        (await request("/admin/feedback?source=answer", undefined, adminCookie))
+          .data.total,
+        priorAnswers,
+      );
+    },
+  );
+  await t.test(
     "initial credentials are ephemeral, expire, and are absent from API lists and audit",
     async () => {
       const listed = await request("/users", undefined, adminCookie);

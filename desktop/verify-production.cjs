@@ -220,7 +220,7 @@ const wait = async (fn, label, ms = 45000) => {
     };
     const click = (label) =>
       js(
-        `(()=>{const b=[...document.querySelectorAll('button')].find(x=>x.getAttribute('aria-label')===${JSON.stringify(label)}||x.textContent.trim()===${JSON.stringify(label)});if(!b)throw Error('Missing '+${JSON.stringify(label)});b.click();return true;})()`,
+        `(()=>{const b=[...document.querySelectorAll('button,[role="menuitem"]')].find(x=>x.getAttribute('aria-label')===${JSON.stringify(label)}||x.textContent.trim()===${JSON.stringify(label)});if(!b)throw Error('Missing '+${JSON.stringify(label)});b.click();return true;})()`,
       );
     const fill = (selector, value, type = "HTMLInputElement") =>
       js(
@@ -404,6 +404,7 @@ const wait = async (fn, label, ms = 45000) => {
     checks.push(
       "Source preview reads the saved local receipt through the restricted native bridge without executing code",
     );
+    await click("打开账号菜单");
     await click("设置");
     await wait(
       () => js(`!!document.querySelector('.production-location')`),

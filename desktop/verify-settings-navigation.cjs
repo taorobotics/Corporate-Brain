@@ -41,7 +41,7 @@ module.exports = async ({ js, click, waitFor, capture, win, checks }) => {
     );
     assert.equal(
       await js(
-        `document.querySelector('.rail-settings').getAttribute('aria-current')`,
+        `document.querySelector('.rail-account .account-trigger').getAttribute('data-settings-active')`,
       ),
       "page",
     );
@@ -84,7 +84,8 @@ module.exports = async ({ js, click, waitFor, capture, win, checks }) => {
   };
   try {
     await fillDraft("切换模型和皮肤时保留这段草稿");
-    await click("打开个人设置");
+    await click("打开账号菜单");
+    await click("设置");
     await waitFor(
       () => js(`!!document.querySelector('.settings-nav')`),
       "settings navigation",
@@ -129,7 +130,8 @@ module.exports = async ({ js, click, waitFor, capture, win, checks }) => {
       "切换模型和皮肤时保留这段草稿",
     );
     await fillDraft("");
-    await click("打开个人设置");
+    await click("打开账号菜单");
+    await click("设置");
     await waitFor(
       () => js(`!!document.querySelector('.settings-nav')`),
       "reopen settings",

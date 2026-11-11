@@ -1890,6 +1890,29 @@ export default function Workspace(props: WorkspaceProps) {
                 <span>登录账号</span>
                 <span>{user.username}</span>
               </div>
+              {[
+                "company_admin",
+                "department_admin",
+                "department_reviewer",
+                "company_reviewer",
+              ].includes(user.role) && (
+                <div className="setting-row">
+                  <span>公司管理</span>
+                  <Button
+                    onClick={() =>
+                      navigate(
+                        ["department_reviewer", "company_reviewer"].includes(
+                          user.role,
+                        )
+                          ? "admin-skills"
+                          : "admin-users",
+                      )
+                    }
+                  >
+                    管理后台
+                  </Button>
+                </div>
+              )}
               <h2>工作偏好</h2>
               <ProductionLocation controller={props.production} />
               <div className="setting-row">

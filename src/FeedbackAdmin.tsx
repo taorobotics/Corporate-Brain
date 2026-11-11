@@ -21,6 +21,7 @@ export default function FeedbackAdmin({
     search: "",
     status: "",
     rating: "",
+    source: "",
     page: 1,
   });
   const [data, setData] = useState<FeedbackList | null>(null),
@@ -43,6 +44,7 @@ export default function FeedbackAdmin({
         ...(query.search ? { search: query.search } : {}),
         ...(query.status ? { status: query.status } : {}),
         ...(query.rating ? { rating: query.rating } : {}),
+        ...(query.source ? { source: query.source } : {}),
       });
       void api<FeedbackList>(`/admin/feedback?${params}`)
         .then((value) => {
@@ -124,6 +126,18 @@ export default function FeedbackAdmin({
           ]}
         />
         <SelectField
+          label="反馈来源"
+          value={query.source}
+          onValueChange={(source) =>
+            setQuery((q) => ({ ...q, source, page: 1 }))
+          }
+          options={[
+            { value: "", label: "全部来源" },
+            { value: "general", label: "整体使用反馈" },
+            { value: "answer", label: "回答反馈" },
+          ]}
+        />
+        <SelectField
           label="反馈评价"
           value={query.rating}
           onValueChange={(rating) =>
@@ -152,7 +166,7 @@ export default function FeedbackAdmin({
           <thead>
             <tr>
               <th>提交人 / 部门</th>
-              <th>模型</th>
+              <th>来源 / 模型</th>
               <th>评价 / 类型</th>
               <th>反馈说明</th>
               <th>状态</th>
@@ -171,7 +185,10 @@ export default function FeedbackAdmin({
                       {row.username} · {row.departmentName}
                     </small>
                   </td>
-                  <td>{row.modelName}</td>
+                  <td>
+                    {row.source === "general" ? "整体使用反馈" : "回答反馈"}
+                    {row.source !== "general" && <small>{row.modelName}</small>}
+                  </td>
                   <td>
                     {feedbackRatings[row.rating]}
                     <small>
@@ -211,7 +228,7 @@ export default function FeedbackAdmin({
           <Empty
             icon={<ChatTeardropText size={30} />}
             title="暂无符合条件的反馈"
-            detail="员工对回答点赞或提交问题后，会显示在这里。"
+            detail="员工从头像菜单提交使用反馈，或对回答评价后，会显示在这里。"
           />
         ) : null}
       </div>

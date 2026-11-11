@@ -161,10 +161,7 @@ export default function Admin(props: WorkspaceProps) {
     "admin-knowledge": ["公司知识", "维护公司资料来源、NAS 接入与部门权限。"],
     "admin-skills": ["技能发布", "审核可复用流程，按部门或公司范围发布。"],
     "admin-audit": ["操作记录", "查看账号、部门与技能的操作元数据。"],
-    "admin-feedback": [
-      "回答反馈",
-      "汇总员工的回答评价与问题反馈，跟踪处理进展。",
-    ],
+    "admin-feedback": ["用户反馈", "汇总界面、对话与回答反馈，跟踪处理进展。"],
   };
   return (
     <div className="page admin-page">

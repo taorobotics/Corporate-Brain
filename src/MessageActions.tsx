@@ -265,9 +265,9 @@ export default function MessageActions({
                 onValueChange={(value) =>
                   setCategory(value as FeedbackCategory)
                 }
-                options={Object.entries(feedbackCategories).map(
-                  ([value, label]) => ({ value, label }),
-                )}
+                options={Object.entries(feedbackCategories)
+                  .filter(([value]) => !["ui", "chat"].includes(value))
+                  .map(([value, label]) => ({ value, label }))}
               />
             )}
             <Field label="补充说明（选填）">
