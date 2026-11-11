@@ -511,6 +511,16 @@ export default function App() {
               onLogin={setUser}
               onLegal={() => setLegalOpen(true)}
               onBusy={setAuthBusy}
+              theme={appearance.theme}
+              onTheme={() => {
+                const next = appearance.theme === "dark" ? "light" : "dark";
+                setLaunchTheme(next);
+                void window.brainDesktop
+                  ?.writeAppearance?.(next)
+                  .catch(() =>
+                    notify("启动外观未能保存，下次启动可能使用浅色。"),
+                  );
+              }}
             />
           )}
         </EntryExperience>

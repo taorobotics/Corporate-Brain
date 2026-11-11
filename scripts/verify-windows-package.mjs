@@ -22,6 +22,9 @@ assert.equal(JSON.parse(extractFile(asar, 'package.json').toString()).version, v
 assert.equal(JSON.parse(await readFile(resolve('release/win-unpacked/resources/company-server.json'), 'utf8')).url, process.env.BRAIN_APP_URL || '', 'Packaged company connection must match the configured release destination');
 for (const file of files) assert.deepEqual(extractFile(asar, file), await readFile(resolve('desktop', file)), `Packaged source differs: ${file}`);
 const desktopVerification = JSON.parse(await readFile('artifacts/desktop-verification.json', 'utf8'));
+const authArtworkVerification = JSON.parse(await readFile('artifacts/auth-artwork-verification.json', 'utf8'));
+assert.equal(authArtworkVerification.result, 'passed');
+assert.equal(authArtworkVerification.version, version);
 const startupVerification = JSON.parse(await readFile('artifacts/startup-verification.json', 'utf8'));
 assert.equal(startupVerification.result, 'passed');
 const installerVerification = JSON.parse(await readFile('artifacts/installer-verification.json', 'utf8'));
@@ -59,6 +62,7 @@ const report = { version, platform: process.platform, architecture: process.arch
 report.installerVerification = installerVerification;
 report.handoffVerification = handoffVerification;
 report.startupVerification = startupVerification;
+report.authArtworkVerification = authArtworkVerification;
 report.disposableWindowsLifecycleTested = true;
 report.checks.push('Real native wizard, staged cancellation, v0.9.0 upgrade, launch and uninstall on a disposable Windows runner');
 await writeFile('release/windows-verification-x64.json', JSON.stringify(report, null, 2) + '\n');

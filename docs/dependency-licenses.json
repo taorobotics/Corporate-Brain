@@ -7864,6 +7864,13 @@
       "path": "node_modules/thread-stream"
     },
     {
+      "name": "three",
+      "version": "0.187.0",
+      "license": "MIT",
+      "scope": "runtime",
+      "path": "node_modules/three"
+    },
+    {
       "name": "tiny-async-pool",
       "version": "1.3.0",
       "license": "MIT",

@@ -1,0 +1,16 @@
+{
+  "result": "passed",
+  "version": "0.34.1",
+  "runtime": "Real Electron + production bundle + disposable company API",
+  "capability": "webgl",
+  "checks": [
+    "Approved production artwork contains no logo, lettering or demo account; initialized company exposes login only",
+    "Real WebGL frames, pointer follow, manual pause, system reduced motion and hidden-window pause verified",
+    "Real API rejects incorrect password without entering workspace; visibility toggle and administrator reset guidance work",
+    "Light/dark themes and 390px layout keep the real form accessible without horizontal scroll",
+    "Real company account signs in and the artwork releases its rendering resources on unmount",
+    "Lost or unavailable WebGL falls back to original static planet and still exposes login"
+  ],
+  "consoleErrors": [],
+  "externalRequests": []
+}

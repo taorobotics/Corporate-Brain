@@ -267,7 +267,7 @@ async function waitFor(test, label, timeout = 12000) {
   );
   assert.equal(
     await js(
-      "getComputedStyle(document.querySelector('.auth-card .brand-mark')).backgroundColor.replaceAll(' ', '')",
+      "getComputedStyle(document.querySelector('.login-surface .brand-mark')).backgroundColor.replaceAll(' ', '')",
     ),
     "rgba(0,0,0,0)",
     "Login logo must show the page through its transparent spaces",

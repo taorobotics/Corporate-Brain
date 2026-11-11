@@ -117,6 +117,7 @@ export default function EntryExperience({
       data-phase={phase}
       data-intro-done={introDone}
       data-exit={exiting}
+      data-auth-surface={!!children}
     >
       <div ref={host} className="entry-scene-host" />
       <WindowTitleBar />
