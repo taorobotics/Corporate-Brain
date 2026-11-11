@@ -1,0 +1,172 @@
+{
+  "version": "0.34.2",
+  "result": "passed",
+  "verifiedAt": "2026-11-11T15:30:24.317Z",
+  "sourceCommit": "5aaba1cf8df70efdd7536469b18afb34397addbf",
+  "release": {
+    "id": 441840257,
+    "url": "https://github.com/taorobotics/Corporate-Brain/releases/tag/v0.34.2",
+    "assetsVerified": 13,
+    "latestVerified": true
+  },
+  "workflow": {
+    "id": 43043908052,
+    "url": "https://github.com/taorobotics/Corporate-Brain/actions/runs/43043908052",
+    "conclusion": "success",
+    "attempt": 1,
+    "allJobsPassed": true
+  },
+  "local": {
+    "initialServerTests": 206,
+    "nasTests": 8,
+    "actualArtwork": {
+      "result": "passed",
+      "version": "0.34.2",
+      "runtime": "Real Electron + production bundle + disposable company API",
+      "capability": "webgl",
+      "checks": [
+        "Approved production artwork contains no logo, lettering or demo account; initialized company exposes login only",
+        "Real WebGL frames, pointer follow, manual pause, system reduced motion and hidden-window pause verified",
+        "Real API rejects incorrect password without entering workspace; visibility toggle and administrator reset guidance work",
+        "Light/dark themes and 390px layout keep the real form accessible without horizontal scroll",
+        "Real company account signs in and the artwork releases its rendering resources on unmount",
+        "Lost or unavailable WebGL falls back to original static planet and still exposes login"
+      ],
+      "consoleErrors": [],
+      "externalRequests": []
+    },
+    "latestFullDesktopAttempt": "Blocked by this Windows session clipboard; not marked passed locally. Complete native suites passed on all three CI platforms.",
+    "sourceHistoryCommitsScanned": 211,
+    "historyLeaks": 0
+  },
+  "native": {
+    "windows-verification-x64.json": {
+      "sourceCommit": "5aaba1cf8df70efdd7536469b18afb34397addbf",
+      "desktopChecks": 68,
+      "artworkCapability": "webgl",
+      "artworkChecks": 6,
+      "installerChecks": 20,
+      "handoffChecks": 8,
+      "signing": "NotSigned"
+    },
+    "macos-verification-arm64.json": {
+      "sourceCommit": "5aaba1cf8df70efdd7536469b18afb34397addbf",
+      "desktopChecks": 66,
+      "artworkCapability": "webgl",
+      "artworkChecks": 6,
+      "signing": "ad-hoc"
+    },
+    "macos-verification-x64.json": {
+      "sourceCommit": "5aaba1cf8df70efdd7536469b18afb34397addbf",
+      "desktopChecks": 66,
+      "artworkCapability": "fallback",
+      "artworkChecks": 6,
+      "signing": "ad-hoc"
+    },
+    "server-verification.json": {
+      "sourceCommit": "5aaba1cf8df70efdd7536469b18afb34397addbf",
+      "signing": null
+    }
+  },
+  "macMini": {
+    "businessVersion": "0.34.2",
+    "installerVersion": "0.34.2",
+    "consistentBackupCreated": true,
+    "dataPreserved": true,
+    "modelSettingsPreserved": true,
+    "modelCredentialsPreserved": true,
+    "counts": {
+      "users": 224,
+      "departments": 13,
+      "nas_sources": 14,
+      "skills": 3,
+      "feedback": 0,
+      "community_plugins": 0
+    },
+    "strictHttps": true,
+    "compiledAssetsVerified": 6,
+    "actualClient": {
+      "version": "0.34.2",
+      "result": "passed",
+      "strictHttps": true,
+      "productionServer": true,
+      "realElectronClient": true,
+      "realWebGL": true,
+      "framesAdvanced": true,
+      "companyLogoOutsideArtwork": true,
+      "noDemoAccount": true,
+      "themeSwitch": true,
+      "employeeChatAccessed": false,
+      "productionModelsCalled": false,
+      "consoleErrors": [],
+      "verifiedAt": "2026-11-11T15:26:43.759Z"
+    },
+    "oldUpdater": {
+      "version": "0.34.2",
+      "result": "passed",
+      "checkedAt": "2026-11-11T15:26:02.048Z",
+      "actualPriorVersionModule": true,
+      "currentClientSeesNoUpdate": true,
+      "installed0340SeesUpdate": true,
+      "results": [
+        {
+          "target": "win32-x64",
+          "version": "0.34.2",
+          "bytes": 120059748,
+          "sha256": "de57a39b6f1884b7fcad4ea25b4d45d7ffef858f7afd899ff444b6fe326306b2",
+          "oldClientVersion": "0.33.12",
+          "state": "ready",
+          "installerExecuted": false
+        },
+        {
+          "target": "darwin-arm64",
+          "version": "0.34.2",
+          "bytes": 139918955,
+          "sha256": "682961b7b00e03639de871fdef736a0bfc796928cdf49fc6d7e2c554f8b43f77",
+          "oldClientVersion": "0.33.12",
+          "state": "ready",
+          "installerExecuted": false
+        },
+        {
+          "target": "darwin-x64",
+          "version": "0.34.2",
+          "bytes": 145450666,
+          "sha256": "a190d61c3bb7a862aa8d483808e725bf135db14f04cb3d0ea5dfcef2a9dcb7f9",
+          "oldClientVersion": "0.33.12",
+          "state": "ready",
+          "installerExecuted": false
+        }
+      ]
+    },
+    "independentDependenciesInstalled": true
+  },
+  "cloud": {
+    "version": "0.34.2",
+    "result": "passed",
+    "assets": [
+      {
+        "target": "win32-x64",
+        "name": "Corporate-Brain-Setup-0.34.2-x64.exe",
+        "bytes": 120059748,
+        "sha256": "de57a39b6f1884b7fcad4ea25b4d45d7ffef858f7afd899ff444b6fe326306b2"
+      },
+      {
+        "target": "darwin-arm64",
+        "name": "Corporate-Brain-0.34.2-macOS-arm64.dmg",
+        "bytes": 139918955,
+        "sha256": "682961b7b00e03639de871fdef736a0bfc796928cdf49fc6d7e2c554f8b43f77"
+      },
+      {
+        "target": "darwin-x64",
+        "name": "Corporate-Brain-0.34.2-macOS-x64.dmg",
+        "bytes": 145450666,
+        "sha256": "a190d61c3bb7a862aa8d483808e725bf135db14f04cb3d0ea5dfcef2a9dcb7f9"
+      }
+    ],
+    "checkedAt": "2026-11-11T15:28:04.886Z"
+  },
+  "signing": {
+    "windows": "NotSigned",
+    "macOS": "ad-hoc; not notarized"
+  }
+}
