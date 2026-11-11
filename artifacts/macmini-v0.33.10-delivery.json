@@ -1,0 +1,143 @@
+{
+  "version": "0.33.10",
+  "result": "passed",
+  "verifiedAt": "2026-11-11T04:46:37.252Z",
+  "sourceCommit": "3c71645aa639b41ed7698f68f2a06a0bcb21b631",
+  "release": {
+    "id": 441235814,
+    "url": "https://github.com/taorobotics/Corporate-Brain/releases/tag/v0.33.10",
+    "assetsVerified": 13,
+    "latestVerified": true
+  },
+  "workflow": {
+    "id": 42958759046,
+    "url": "https://github.com/taorobotics/Corporate-Brain/actions/runs/42958759046",
+    "attempt": 1,
+    "conclusion": "success",
+    "allJobsPassed": true
+  },
+  "local": {
+    "nodeTests": 198,
+    "nasTests": 8,
+    "desktopChecks": 64,
+    "historyCommitsScanned": 202,
+    "historyLeaks": 0
+  },
+  "native": {
+    "windows-verification-x64.json": {
+      "sourceCommit": "3c71645aa639b41ed7698f68f2a06a0bcb21b631",
+      "desktopChecks": 64,
+      "installerChecks": 20,
+      "updateHandoffChecks": 8,
+      "signature": "NotSigned"
+    },
+    "macos-verification-arm64.json": {
+      "sourceCommit": "3c71645aa639b41ed7698f68f2a06a0bcb21b631",
+      "desktopChecks": 62,
+      "signature": "ad-hoc"
+    },
+    "macos-verification-x64.json": {
+      "sourceCommit": "3c71645aa639b41ed7698f68f2a06a0bcb21b631",
+      "desktopChecks": 62,
+      "signature": "ad-hoc"
+    },
+    "server-verification.json": {
+      "sourceCommit": "3c71645aa639b41ed7698f68f2a06a0bcb21b631",
+      "signature": null
+    }
+  },
+  "macMini": {
+    "businessVersion": "0.33.10",
+    "installerVersion": "0.33.10",
+    "strictHttpsVerified": true,
+    "consistentBackupCreated": true,
+    "dataPreserved": true,
+    "modelSettingsPreserved": true,
+    "modelCredentialsPreserved": true,
+    "counts": {
+      "users": 224,
+      "departments": 13,
+      "nas_sources": 14,
+      "skills": 3,
+      "feedback": 0
+    },
+    "recentChats": {
+      "version": "0.33.10",
+      "result": "passed",
+      "strictHttps": true,
+      "servedBuildMatchesRelease": true,
+      "servedAssetsVerified": 2,
+      "recentUiPresent": true,
+      "deployedActivitySortVerified": true,
+      "chatStorage": "device-only",
+      "realEmployeeRecordsAccessed": false,
+      "modelGenerationCalled": false,
+      "checkedAt": "2026-11-11T04:34:37.710Z"
+    },
+    "oldUpdater": {
+      "version": "0.33.10",
+      "result": "passed",
+      "checkedAt": "2026-11-11T04:37:35.628Z",
+      "actualPriorVersionModule": true,
+      "currentClientSeesNoUpdate": true,
+      "results": [
+        {
+          "target": "win32-x64",
+          "version": "0.33.10",
+          "bytes": 120059277,
+          "sha256": "5aab76c8343a0a6f19713eb7d86aacd641d3af6e8d3a67bdace0df8cfb750cea",
+          "oldClientVersion": "0.33.9",
+          "state": "ready",
+          "installerExecuted": false
+        },
+        {
+          "target": "darwin-arm64",
+          "version": "0.33.10",
+          "bytes": 139921539,
+          "sha256": "a70e28cd7b440a7aaa644d3bb81163babc4128f0884634625204660ca1e69369",
+          "oldClientVersion": "0.33.9",
+          "state": "ready",
+          "installerExecuted": false
+        },
+        {
+          "target": "darwin-x64",
+          "version": "0.33.10",
+          "bytes": 145433988,
+          "sha256": "7fe53de58d2bb552e4212b8784a8e7de008a4d2623771d22057c6201f3248fdf",
+          "oldClientVersion": "0.33.9",
+          "state": "ready",
+          "installerExecuted": false
+        }
+      ]
+    }
+  },
+  "cloud": {
+    "version": "0.33.10",
+    "result": "passed",
+    "assets": [
+      {
+        "target": "win32-x64",
+        "name": "Corporate-Brain-Setup-0.33.10-x64.exe",
+        "bytes": 120059277,
+        "sha256": "5aab76c8343a0a6f19713eb7d86aacd641d3af6e8d3a67bdace0df8cfb750cea"
+      },
+      {
+        "target": "darwin-arm64",
+        "name": "Corporate-Brain-0.33.10-macOS-arm64.dmg",
+        "bytes": 139921539,
+        "sha256": "a70e28cd7b440a7aaa644d3bb81163babc4128f0884634625204660ca1e69369"
+      },
+      {
+        "target": "darwin-x64",
+        "name": "Corporate-Brain-0.33.10-macOS-x64.dmg",
+        "bytes": 145433988,
+        "sha256": "7fe53de58d2bb552e4212b8784a8e7de008a4d2623771d22057c6201f3248fdf"
+      }
+    ],
+    "checkedAt": "2026-11-11T04:45:59.833Z"
+  },
+  "signing": {
+    "windows": "NotSigned",
+    "macOS": "ad-hoc; not notarized"
+  }
+}
