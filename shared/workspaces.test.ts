@@ -7,7 +7,57 @@ import {
   estimateTokens,
   normalizeLocalState,
   addLocalProject,
+  recentConversations,
 } from "./workspaces";
+
+test("recent chats span projects, sort by latest valid message with creation fallback, preserve ties and never mutate storage order", () => {
+  const conversation = (
+    id: string,
+    createdAt: string,
+    times: string[] = [],
+  ) => ({
+    id,
+    title: id,
+    workspaceId: id,
+    createdAt,
+    messages: times.map((at) => ({
+      id: at,
+      role: "user" as const,
+      content: id,
+      at,
+    })),
+  });
+  const old = conversation("old", "2025-01-01", [
+    "2026-01-04",
+    "bad",
+    "2026-01-02",
+  ]);
+  const newer = conversation("new", "2026-01-03");
+  const tie = conversation("tie", "2026-01-03");
+  const broken = conversation("broken", "bad", ["bad"]);
+  const input = [broken, newer, old, tie];
+  assert.deepEqual(
+    recentConversations(input).map((c) => c.id),
+    ["old", "new", "tie", "broken"],
+  );
+  assert.deepEqual(
+    input.map((c) => c.id),
+    ["broken", "new", "old", "tie"],
+  );
+  const resumed = {
+    ...newer,
+    messages: [
+      {
+        id: "reply",
+        role: "assistant" as const,
+        content: "reply",
+        at: "2026-01-05",
+      },
+    ],
+  };
+  assert.equal(recentConversations([old, resumed])[0], resumed);
+  assert.deepEqual(recentConversations([]), []);
+});
 
 test("workspace normalization creates a default workspace and migrates legacy modes", () => {
   const state = normalizeLocalState({

@@ -557,6 +557,17 @@ async function waitFor(test, label, timeout = 12000) {
     win,
     selectOption,
   });
+  await require("./verify-recent-chats.cjs")({
+    js,
+    click,
+    fill,
+    waitFor,
+    request,
+    capture,
+    checks,
+    win,
+    selectOption,
+  });
   // This disposable client receives explicit fixtures, never invented production activity.
   await js(`(() => {
     window.__loadingOriginalFetch = window.fetch;

@@ -268,6 +268,28 @@ html.sidebar-resizing * {
   scrollbar-color: color-mix(in srgb, var(--accent) 18%, transparent)
     transparent;
 }
+.application.employee-app .history > .section-label,
+.application.employee-app .history-search {
+  flex-shrink: 0;
+}
+.application.employee-app .project-conversations {
+  flex: 0 1 auto;
+  max-height: 44%;
+  min-height: 0;
+}
+.application.employee-app .recent-label {
+  margin-top: 14px;
+  margin-bottom: 5px;
+}
+.application.employee-app .recent-conversations {
+  min-height: 0;
+}
+.application.employee-app .recent-conversations button {
+  min-height: 34px;
+  padding: 8px 9px;
+  font-size: 12px;
+  margin-bottom: 3px;
+}
 .sidebar-update-label,
 .sidebar-update-version {
   display: none;

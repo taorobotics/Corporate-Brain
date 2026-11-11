@@ -1,4 +1,5 @@
 import type {
+  Conversation,
   DshMode,
   LocalState,
   LocalWorkspace,
@@ -6,6 +7,21 @@ import type {
 } from "./types";
 import { DEFAULT_SKIN, normalizeSkin } from "./skins";
 import { normalizeTrace } from "./chat-progress";
+
+export function recentConversations(
+  conversations: Conversation[],
+): Conversation[] {
+  return conversations
+    .map((conversation) => ({
+      conversation,
+      time: conversation.messages.reduce(
+        (latest, message) => Math.max(latest, Date.parse(message.at) || 0),
+        Date.parse(conversation.createdAt) || 0,
+      ),
+    }))
+    .sort((a, b) => b.time - a.time)
+    .map(({ conversation }) => conversation);
+}
 
 export const DSH_MODE_OPTIONS: ReadonlyArray<{
   value: DshMode;

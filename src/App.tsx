@@ -1,4 +1,4 @@
-import { useEffect, useLayoutEffect, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import {
   ArrowLeft,
   ArrowRight,
@@ -59,7 +59,7 @@ import EntryExperience from "./EntryExperience";
 import { Avatar } from "./Profile";
 import GeneralFeedback from "./GeneralFeedback";
 import { useProduction, type ProductionController } from "./Production";
-import { addLocalProject } from "../shared/workspaces";
+import { addLocalProject, recentConversations } from "../shared/workspaces";
 import ResizableSidebar from "./ResizableSidebar";
 import { isSettingsPage } from "./SettingsLayout";
 
@@ -124,6 +124,16 @@ export default function App() {
   const notify = (message: string) => setToast(message);
   const updates = useDesktopUpdates(!!user && !user.mustChange);
   const production = useProduction(user, state);
+  const recent = useMemo(
+    () => recentConversations(state.conversations),
+    [state.conversations],
+  );
+  const recentMatches = recent.filter((c) =>
+    [c.title, state.workspaces.find((w) => w.id === c.workspaceId)?.name ?? ""]
+      .join(" ")
+      .toLowerCase()
+      .includes(historySearch.toLowerCase()),
+  );
   async function createProject() {
     if (creatingWorkspace.current) return;
     if (!window.brainDesktop) {
@@ -827,7 +837,10 @@ export default function App() {
                       value={historySearch}
                       onChange={(e) => setHistorySearch(e.target.value)}
                     />
-                    <div className="history-list">
+                    <div
+                      className="history-list project-conversations"
+                      aria-label="项目对话"
+                    >
                       {state.workspaces.map((workspace) => {
                         const numberedName =
                           workspace.name.match(/^(.*) (\(\d+\))$/);
@@ -942,12 +955,43 @@ export default function App() {
                           </section>
                         );
                       })}
-                      {!state.conversations.length && (
+                    </div>
+                    <div className="section-label recent-label">最近</div>
+                    <nav
+                      className="history-list recent-conversations"
+                      aria-label="最近对话"
+                    >
+                      {recentMatches.map((c) => (
+                        <button
+                          key={c.id}
+                          data-recent-conversation-id={c.id}
+                          title={`${c.title}\n${state.workspaces.find((w) => w.id === c.workspaceId)?.name ?? ""}`}
+                          aria-current={
+                            conversationId === c.id && page === "chat"
+                              ? "page"
+                              : undefined
+                          }
+                          className={
+                            conversationId === c.id && page === "chat"
+                              ? "selected"
+                              : ""
+                          }
+                          onClick={() => {
+                            setConversationId(c.id);
+                            navigate("chat");
+                          }}
+                        >
+                          {c.title}
+                        </button>
+                      ))}
+                      {!recentMatches.length && (
                         <p className="history-hint">
-                          在项目中开始你的第一个对话
+                          {historySearch
+                            ? "没有匹配的对话"
+                            : "还没有对话，点击“新建对话”开始"}
                         </p>
                       )}
-                    </div>
+                    </nav>
                   </div>
                 </>
               )}
