@@ -668,7 +668,9 @@ export default function Workspace(props: WorkspaceProps) {
         progress({
           type: "tool",
           id: routingId,
-          name: "识别需求并选择能力",
+          name: plan.routingFallback
+            ? "调度暂不可用，继续普通对话"
+            : "识别需求并选择能力",
           status: "done",
         });
       if (plan.skillIds?.length)

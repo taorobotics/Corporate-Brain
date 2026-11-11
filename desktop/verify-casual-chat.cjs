@@ -16,7 +16,8 @@ module.exports = async ({
 }) => {
   const folder = join(dir, "casual-project"),
     requests = [];
-  let malformedRouting = false;
+  let malformedRouting = false,
+    resetRouting = false;
   await fs.mkdir(folder);
   const canonicalFolder = await fs.realpath(folder);
   await fs.writeFile(
@@ -29,6 +30,10 @@ module.exports = async ({
     const body = JSON.parse(raw);
     requests.push(body);
     if (body.messages[0]?.content.includes("You route tasks")) {
+      if (resetRouting) {
+        req.socket.destroy();
+        return;
+      }
       const context = JSON.parse(body.messages[1].content),
         latest = context.messages.at(-1).content;
       const needsProject = latest.includes("项目");
@@ -227,6 +232,7 @@ module.exports = async ({
     assert.ok(JSON.stringify(requests[5]).includes("VIDEO_PROMPT_FIXTURE"));
     const readsBeforeIdentity = reads;
     for (const question of [
+      "您好，你是谁？",
       "您好，我现在用的什么模型呢？",
       "版本是多少啊？",
       "？？版本号多少啊？",
@@ -278,6 +284,30 @@ module.exports = async ({
       false,
     );
     await capture("router-fallback-conversation-light.png");
+    resetRouting = true;
+    await fill('[aria-label="任务输入"]', "结合上下文继续解释智能体的特点");
+    await click("发送任务");
+    await waitFor(
+      () =>
+        js(
+          `(async()=>{const s=await window.brainDesktop.readState(${JSON.stringify(actor.id)}),c=s.conversations.find(c=>c.id===${JSON.stringify(greeting.id)});return !document.querySelector('.chat-loading')&&c.messages.length===${beforeFallback + 4}&&c.messages.at(-1).content.includes('在需要时调用工具')&&c.messages.at(-1).trace.status==='done'&&c.messages.at(-1).trace.items.some(i=>i.name==='调度暂不可用，继续普通对话')})()`,
+        ),
+      "network routing outage still produces a real contextual answer",
+    );
+    assert.equal(
+      requests.length,
+      11,
+      "two bounded routing attempts and one actual answer",
+    );
+    assert.equal(reads, readsBeforeIdentity);
+    assert.ok(
+      JSON.stringify(requests[10]).includes("结合上下文继续解释智能体的特点"),
+    );
+    assert.equal(
+      await js("document.body.innerText.includes('智能调度连接失败或超时')"),
+      false,
+    );
+    await capture("router-network-recovery-light.png");
     checks.push(
       "Standalone greetings use one actual streamed model request, no router, project scan, installed skill or export task; acknowledgements do not reuse prior attachments or video prompts",
     );
@@ -286,6 +316,9 @@ module.exports = async ({
     );
     checks.push(
       "Selected-model questions and repeated version follow-ups return actual current configuration with zero upstream calls; malformed router JSON still permits a real streamed answer without project scans or workflow execution",
+    );
+    checks.push(
+      "Exact reported greeting/identity question bypasses upstream planning; repeated router socket failures recover with a contextual streamed reply, visible fallback status and no local project scan or workflow execution",
     );
   } finally {
     fs.readFile = originalRead;

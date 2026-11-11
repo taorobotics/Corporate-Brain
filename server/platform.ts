@@ -48,6 +48,8 @@ import {
 } from "./model-services";
 import {
   modelFetch,
+  modelConnectionErrorCode,
+  retryModelConnection,
   modelUsesCustomDns,
   privateModelProxy,
   type ModelTransport,
@@ -238,6 +240,7 @@ export function createPlatform(
     secureCookies?: boolean;
     updates?: import("./updates").UpdateOptions;
     chatTimeouts?: { idleMs?: number; maxMs?: number };
+    routingTimeoutMs?: number;
     skillLibrary?: SkillLibraryOptions;
     nas?: NasOptions;
     dsh?: Pick<DshManager, "runDetailed" | "close">;
@@ -1180,11 +1183,13 @@ export function createPlatform(
       if (!res.writableEnded) controller.abort();
     };
     res.on("close", disconnected);
+    const timeout = AbortSignal.timeout(options.routingTimeoutMs ?? 45000);
+    const fallback = (reason: string) => {
+      store.audit(actor.id, "model.task_routing_fallback." + reason, row.id);
+      return res.json({ ...answerPlan, routingFallback: true });
+    };
     try {
-      const signal = AbortSignal.any([
-        controller.signal,
-        AbortSignal.timeout(45000),
-      ]);
+      const signal = AbortSignal.any([controller.signal, timeout]);
       let structured = true;
       const request = () =>
         fetchModel(row, `${row.base_url}/chat/completions`, {
@@ -1242,21 +1247,7 @@ export function createPlatform(
             ],
           }),
         });
-      let response: Awaited<ReturnType<ModelTransport>>;
-      try {
-        response = await request();
-      } catch (error) {
-        const code = error as { cause?: { code?: string }; code?: string };
-        if (
-          signal.aborted ||
-          !["ECONNRESET", "EPIPE", "UND_ERR_SOCKET"].includes(
-            code.cause?.code ?? code.code ?? "",
-          )
-        )
-          throw error;
-        // Planning cannot create work. Retry a reset once, within the same deadline.
-        response = await request();
-      }
+      let response = await retryModelConnection(request, signal);
       if ([400, 422].includes(response.status)) {
         const detail = (await response
           .clone()
@@ -1264,7 +1255,9 @@ export function createPlatform(
           .catch(() => ({}))) as Row;
         if (
           detail?.error?.param === "response_format" ||
-          (/response_format|json_object/i.test(String(detail?.error?.message)) &&
+          (/response_format|json_object/i.test(
+            String(detail?.error?.message),
+          ) &&
             /unsupported|not support|unknown|不支持/i.test(
               String(detail?.error?.message),
             ))
@@ -1273,6 +1266,10 @@ export function createPlatform(
           structured = false;
           response = await request();
         }
+      }
+      if ([408, 429, 500, 502, 503, 504].includes(response.status)) {
+        await response.body?.cancel();
+        return fallback("http_" + response.status);
       }
       if (!response.ok)
         fail(
@@ -1289,8 +1286,7 @@ export function createPlatform(
       } catch (error) {
         if (signal.aborted) throw error;
         // An invalid decision must never invoke tools or block an ordinary reply.
-        store.audit(actor.id, "model.task_routing_fallback", row.id);
-        return res.json(answerPlan);
+        return fallback("invalid_response");
       }
       preserveNasFilenames(
         plan,
@@ -1374,6 +1370,10 @@ export function createPlatform(
     } catch (error) {
       if (error instanceof ApiError || error instanceof SkillUseError)
         throw error;
+      if (controller.signal.aborted || res.destroyed) return;
+      if (timeout.aborted) return fallback("timeout");
+      const code = modelConnectionErrorCode(error);
+      if (code) return fallback(code);
       if (!res.destroyed)
         fail(502, "智能调度连接失败或超时，请重试；原需求已保存在本机");
     } finally {
@@ -1575,7 +1575,7 @@ export function createPlatform(
       const escape = (value: string) =>
         value.replace(/[\\`*_{}\[\]<>]/g, "\\$&");
       let content: string | undefined = modelIdentity
-        ? `当前会话选择的是 **${escape(row.name)}**，配置的模型标识为 **${escape(row.model)}**。\n\n这是当前选中的模型配置；中转内部实际运行的底层版本由供应商提供，平台无法仅凭标识独立核验。`
+        ? `我是公司大脑助手。当前会话选择的是 **${escape(row.name)}**，配置的模型标识为 **${escape(row.model)}**。\n\n这是当前选中的模型配置；中转内部实际运行的底层版本由供应商提供，平台无法仅凭标识独立核验。`
         : undefined;
       let draftIncomplete = false;
       let productionTaskId: string | undefined;
@@ -1673,37 +1673,37 @@ export function createPlatform(
             ],
           };
         });
-        const providerResponse = await fetchModel(
-          row,
-          `${row.base_url}/chat/completions`,
-          {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              Authorization: `Bearer ${store.decrypt(row.secret)}`,
-            },
-            body: JSON.stringify({
-              model: row.model,
-              messages: casual
-                ? [
-                    { role: "system", content: CASUAL_REPLY_INSTRUCTION },
-                    directMessages[lastUserIndex],
-                  ]
-                : answerOnly
+        const providerResponse = await retryModelConnection(
+          () =>
+            fetchModel(row, `${row.base_url}/chat/completions`, {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${store.decrypt(row.secret)}`,
+              },
+              body: JSON.stringify({
+                model: row.model,
+                messages: casual
                   ? [
-                      { role: "system", content: ANSWER_INSTRUCTION },
-                      ...directMessages,
+                      { role: "system", content: CASUAL_REPLY_INSTRUCTION },
+                      directMessages[lastUserIndex],
                     ]
-                  : directMessages,
-              ...(casual &&
-              String(row.model).toLowerCase().startsWith("deepseek")
-                ? { thinking: { type: "disabled" } }
-                : {}),
-              stream: Boolean(streaming),
+                  : answerOnly
+                    ? [
+                        { role: "system", content: ANSWER_INSTRUCTION },
+                        ...directMessages,
+                      ]
+                    : directMessages,
+                ...(casual &&
+                String(row.model).toLowerCase().startsWith("deepseek")
+                  ? { thinking: { type: "disabled" } }
+                  : {}),
+                stream: Boolean(streaming),
+              }),
+              signal,
+              redirect: "error",
             }),
-            signal,
-            redirect: "error",
-          },
+          signal,
         );
         if (!providerResponse.ok)
           fail(

@@ -191,6 +191,42 @@ export type ModelTransport = (
   url: string,
   init: RequestInit,
 ) => Promise<Response>;
+
+export function modelConnectionErrorCode(error: unknown) {
+  const value = error as { cause?: { code?: string }; code?: string } | null;
+  const code = value?.cause?.code ?? value?.code ?? "";
+  return [
+    "ECONNRESET",
+    "EPIPE",
+    "ECONNREFUSED",
+    "ENETUNREACH",
+    "EHOSTUNREACH",
+    "ETIMEDOUT",
+    "EAI_AGAIN",
+    "ENOTFOUND",
+    "UND_ERR_SOCKET",
+    "UND_ERR_CONNECT_TIMEOUT",
+    "UND_ERR_HEADERS_TIMEOUT",
+  ].includes(code)
+    ? code
+    : undefined;
+}
+
+/** Only retry connection failure before receiving headers, never a partial reply or tool run. */
+export async function retryModelConnection(
+  request: () => Promise<Response>,
+  signal: AbortSignal,
+) {
+  signal.throwIfAborted();
+  try {
+    return await request();
+  } catch (error) {
+    signal.throwIfAborted();
+    if (!modelConnectionErrorCode(error)) throw error;
+    return request();
+  }
+}
+
 export const modelFetch: ModelTransport = async (row, url, init) => {
   refreshDohHosts();
   if (!row.owner_user_id || row.source_service_id)

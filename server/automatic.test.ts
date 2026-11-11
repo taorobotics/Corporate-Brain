@@ -42,6 +42,10 @@ test("model identity and version follow-ups use only relevant user context", () 
     "你是什么模型？",
     "当前模型版本是多少？",
     "What model are you?",
+    "您好，你是谁？",
+    "你是谁呀？",
+    "请介绍一下你自己",
+    "Hi, who are you?",
   ])
     assert.equal(isModelIdentityQuestion([u(text)]), true, text);
   const identity = [u("您好，我现在用的什么模型呢？")];
@@ -65,6 +69,8 @@ test("model identity and version follow-ups use only relevant user context", () 
     "分析模型性能",
     "读取项目中的模型配置",
     "公司大脑客户端版本是多少？",
+    "您好，你是谁？顺便帮我读取项目文件",
+    "你好，帮我介绍一下你自己的技能中心",
   ])
     assert.equal(isModelIdentityQuestion([u(text)]), false, text);
   assert.equal(
@@ -179,6 +185,7 @@ test("greetings use one real provider reply without routing, coding-agent startu
     { role: "user", content: "您好，我现在用的什么模型呢？" },
   ];
   for (const content of [
+    "您好，你是谁？",
     "您好，我现在用的什么模型呢？",
     "版本是多少啊？",
     "？？版本号多少啊？",
@@ -539,7 +546,11 @@ test("automatic routing uses the selected authorized model, validates decisions 
   assert.equal(transportCalls - before, 2);
   failure = "reset-always";
   before = transportCalls;
-  assert.equal((await post("/generate/plan", body, employee)).status, 502);
+  const disconnectedPlan = await post("/generate/plan", body, employee);
+  assert.equal(disconnectedPlan.status, 200);
+  assert.equal(disconnectedPlan.data.routingFallback, true);
+  assert.equal(disconnectedPlan.data.execution, "answer");
+  assert.deepEqual(disconnectedPlan.data.skillIds, []);
   assert.equal(
     transportCalls - before,
     2,
@@ -643,4 +654,304 @@ test("automatic routing uses the selected authorized model, validates decisions 
     mode: "standard",
     seconds: 10,
   });
+});
+
+test("routing network and deadline failures allow a real answer while cancellation, configuration errors and partial replies never retry execution", async (t) => {
+  let failure = "",
+    routingCalls = 0,
+    chatCalls = 0,
+    agentCalls = 0;
+  let lastChat: any;
+  let routingStarted = () => {};
+  const platform = createPlatform({
+    database: ":memory:",
+    routingTimeoutMs: 80,
+    dsh: {
+      runDetailed: async () => {
+        agentCalls++;
+        throw Error("Must not execute on fallback");
+      },
+      close: async () => {},
+    },
+    modelTransport: async (_row, _url, init) => {
+      const body = JSON.parse(String(init.body));
+      if (!body.messages[0].content.includes("You route tasks")) {
+        chatCalls++;
+        lastChat = body;
+        if (failure === "chat-reset-once") {
+          failure = "";
+          throw new TypeError("Synthetic connection reset", {
+            cause: { code: "ECONNRESET" },
+          });
+        }
+        if (failure === "partial") {
+          const stream = new ReadableStream({
+            start(controller) {
+              controller.enqueue(
+                new TextEncoder().encode(
+                  'data: {"choices":[{"delta":{"content":"已收到的部分"}}]}\n\n',
+                ),
+              );
+              controller.close();
+            },
+          });
+          return new Response(stream, {
+            headers: { "Content-Type": "text/event-stream" },
+          });
+        }
+        return Response.json({
+          choices: [
+            {
+              message: {
+                content: "这是模型结合上下文与当前附件的真实测试回复。",
+              },
+            },
+          ],
+        });
+      }
+      routingCalls++;
+      routingStarted();
+      if (failure === "deadline" || failure === "cancel") {
+        return new Promise<Response>((_resolve, reject) => {
+          const abort = () => reject(init.signal!.reason);
+          if (init.signal!.aborted) abort();
+          else init.signal!.addEventListener("abort", abort, { once: true });
+        });
+      }
+      if (failure === "body-deadline")
+        return new Response(
+          new ReadableStream({
+            start(controller) {
+              init.signal!.addEventListener(
+                "abort",
+                () => controller.error(init.signal!.reason),
+                { once: true },
+              );
+            },
+          }),
+          { headers: { "Content-Type": "application/json" } },
+        );
+      if (failure.startsWith("http-"))
+        return Response.json(
+          { error: { message: "PRIVATE_UPSTREAM_DETAIL" } },
+          { status: Number(failure.slice(5)) },
+        );
+      if (failure === "invalid")
+        return Response.json({
+          choices: [{ message: { content: "not a routing decision" } }],
+        });
+      if (failure)
+        throw new TypeError("PRIVATE_CONNECTION_DETAIL", {
+          cause: { code: failure },
+        });
+      return Response.json({
+        choices: [
+          { message: { content: '{"kind":"chat","execution":"answer"}' } },
+        ],
+      });
+    },
+  });
+  const server = createServer(platform.app).listen(0, "127.0.0.1");
+  await once(server, "listening");
+  t.after(async () => {
+    server.closeAllConnections();
+    server.close();
+    await platform.production.close();
+    await platform.library.close();
+    platform.store.close();
+  });
+  const base = `http://127.0.0.1:${(server.address() as any).port}/api`;
+  const post = async (path: string, body: any, cookie = "") => {
+    const response = await fetch(base + path, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Cookie: cookie },
+      body: JSON.stringify(body),
+    });
+    return {
+      status: response.status,
+      data: await response.json(),
+      cookie: response.headers.get("set-cookie")?.split(";")[0] ?? "",
+    };
+  };
+  const account = {
+    username: "outage-qa",
+    password: randomBytes(20).toString("hex"),
+  };
+  await post("/bootstrap", {
+    ...account,
+    name: "Outage QA",
+    companyName: "Synthetic",
+  });
+  const cookie = (await post("/auth/login", account)).cookie;
+  const connection = (
+    await post(
+      "/connections",
+      {
+        name: "Outage model",
+        model: "claude-sonnet-5-5",
+        baseUrl: "https://model.example/v1",
+        kind: "chat",
+        apiKey: "synthetic-only",
+        departments: [],
+      },
+      cookie,
+    )
+  ).data;
+  const messages = [
+    { role: "user", content: "背景说明：这里讨论的是智能体。" },
+    { role: "assistant", content: "可以结合工具理解。" },
+    { role: "user", content: "结合这份附件解释一下区别" },
+  ];
+  const body = {
+    connectionId: connection.id,
+    messages,
+    attachments: [{ name: "current.txt", source: "current" }],
+    project: { name: "Old video task", hasFolder: true },
+    skillMode: "auto",
+  };
+  for (const scenario of [
+    "UND_ERR_CONNECT_TIMEOUT",
+    "ECONNRESET",
+    "EAI_AGAIN",
+    "deadline",
+    "body-deadline",
+    "http-408",
+    "http-429",
+    "http-503",
+    "invalid",
+  ]) {
+    failure = scenario;
+    const before = routingCalls;
+    const planned = await post("/generate/plan", body, cookie);
+    assert.equal(planned.status, 200, scenario);
+    assert.equal(planned.data.routingFallback, true, scenario);
+    assert.equal(planned.data.execution, "answer");
+    assert.equal(planned.data.workspaceContext, false);
+    assert.equal(planned.data.usePreviousAttachments, false);
+    assert.deepEqual(planned.data.skillIds, []);
+    assert.equal(planned.data.connectionId, connection.id);
+    assert.equal(
+      routingCalls - before,
+      ["UND_ERR_CONNECT_TIMEOUT", "ECONNRESET", "EAI_AGAIN"].includes(scenario)
+        ? 2
+        : 1,
+    );
+    const answer = await post(
+      "/generate/chat",
+      {
+        connectionId: planned.data.connectionId,
+        messages,
+        execution: planned.data.execution,
+        skillIds: planned.data.skillIds,
+        attachments: [
+          { name: "current.txt", content: "CURRENT_ATTACHMENT_FIXTURE" },
+        ],
+      },
+      cookie,
+    );
+    assert.equal(answer.status, 200);
+    assert.match(answer.data.content, /真实测试回复/);
+    assert.match(JSON.stringify(lastChat.messages), /背景说明/);
+    assert.match(
+      JSON.stringify(lastChat.messages),
+      /CURRENT_ATTACHMENT_FIXTURE/,
+    );
+    assert.equal(agentCalls, 0);
+  }
+  for (const status of [400, 401, 403, 404]) {
+    failure = "http-" + status;
+    const before = routingCalls;
+    const denied = await post("/generate/plan", body, cookie);
+    assert.equal(denied.status, 502);
+    assert.match(denied.data.error, new RegExp(String(status)));
+    assert.doesNotMatch(JSON.stringify(denied), /PRIVATE_UPSTREAM_DETAIL/);
+    assert.equal(routingCalls - before, 1);
+  }
+  failure = "chat-reset-once";
+  let beforeChat = chatCalls;
+  const reply = await post(
+    "/generate/chat",
+    { connectionId: connection.id, messages, execution: "answer" },
+    cookie,
+  );
+  assert.equal(reply.status, 200);
+  assert.equal(
+    chatCalls - beforeChat,
+    2,
+    "plain chat can recover a connection failure before receiving a reply",
+  );
+  failure = "partial";
+  beforeChat = chatCalls;
+  const partial = await fetch(base + "/generate/chat", {
+    method: "POST",
+    headers: {
+      Cookie: cookie,
+      "Content-Type": "application/json",
+      Accept: "application/x-ndjson",
+    },
+    body: JSON.stringify({
+      connectionId: connection.id,
+      messages,
+      execution: "answer",
+    }),
+  });
+  const events = (await partial.text())
+    .trim()
+    .split("\n")
+    .filter(Boolean)
+    .map((v) => JSON.parse(v));
+  assert.ok(events.some((e) => e.type === "text" && e.text === "已收到的部分"));
+  assert.ok(events.some((e) => e.type === "error"));
+  assert.equal(
+    chatCalls - beforeChat,
+    1,
+    "partial output is preserved without replaying the request",
+  );
+  failure = "cancel";
+  const started = new Promise<void>((resolve) => {
+    routingStarted = resolve;
+  });
+  const controller = new AbortController();
+  const beforeRouting = routingCalls;
+  const auditsBefore = (
+    platform.store.db
+      .prepare(
+        "SELECT COUNT(*) AS n FROM audit WHERE action LIKE 'model.task_routing_fallback.%'",
+      )
+      .get() as any
+  ).n;
+  const pending = fetch(base + "/generate/plan", {
+    method: "POST",
+    headers: { Cookie: cookie, "Content-Type": "application/json" },
+    body: JSON.stringify(body),
+    signal: controller.signal,
+  });
+  await started;
+  controller.abort();
+  await assert.rejects(pending, { name: "AbortError" });
+  await new Promise((resolve) => setTimeout(resolve, 100));
+  assert.equal(
+    routingCalls - beforeRouting,
+    1,
+    "cancelled requests do not retry",
+  );
+  assert.equal(
+    (
+      platform.store.db
+        .prepare(
+          "SELECT COUNT(*) AS n FROM audit WHERE action LIKE 'model.task_routing_fallback.%'",
+        )
+        .get() as any
+    ).n,
+    auditsBefore,
+    "cancellation does not become a fallback answer",
+  );
+  assert.equal(
+    (
+      platform.store.db
+        .prepare("SELECT COUNT(*) AS n FROM production_tasks")
+        .get() as any
+    ).n,
+    0,
+  );
 });
