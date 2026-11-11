@@ -75,6 +75,9 @@ module.exports = async function ({
   );
   const beforeModel = (await saved()).settings.model;
   await js(
+    `document.querySelector('[data-provider-id="service:${service.id}"] > summary').click()`,
+  );
+  await js(
     `Array.from(document.querySelectorAll('.connection-card')).find(el=>el.textContent.includes('qa-image')).querySelector('button').click()`,
   );
   await waitFor(

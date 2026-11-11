@@ -2327,6 +2327,74 @@ code {
 .model-service-list:empty {
   display: none;
 }
+.provider-connection-group {
+  border: 1px solid var(--line);
+  border-radius: 11px;
+  background: var(--panel);
+  overflow: hidden;
+}
+.provider-connection-group > summary {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 18px 20px;
+  cursor: pointer;
+  list-style: none;
+}
+.provider-connection-group > summary::-webkit-details-marker {
+  display: none;
+}
+.provider-connection-group > summary:hover {
+  background: color-mix(in srgb, var(--active) 40%, transparent);
+}
+.provider-connection-group > summary:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: -3px;
+}
+.provider-connection-group > summary strong {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.provider-model-count {
+  margin-left: auto;
+  color: var(--muted);
+  font-size: 12px;
+  white-space: nowrap;
+}
+.provider-disclosure {
+  flex-shrink: 0;
+}
+.provider-connection-group[open] > summary .provider-disclosure {
+  transform: rotate(90deg);
+}
+.provider-connection-models {
+  border-top: 1px solid var(--line);
+  padding: 0 20px;
+}
+.provider-connection-models .connection-card {
+  border: 0;
+  border-radius: 0;
+  padding: 18px 0;
+  background: transparent;
+  flex-wrap: wrap;
+}
+.provider-connection-models .connection-card + .connection-card {
+  border-top: 1px solid var(--line);
+}
+.provider-connection-models h3 {
+  overflow-wrap: anywhere;
+}
+.service-model-details {
+  margin: 10px 0;
+}
+.service-model-details > summary {
+  cursor: pointer;
+  color: var(--muted);
+  font-size: 12px;
+}
+.service-model-details[open] > summary {
+  margin-bottom: 10px;
+}
 .model-service-fields {
   border: 0;
   padding: 0;

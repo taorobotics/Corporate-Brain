@@ -121,6 +121,17 @@ module.exports = async function ({
     );
     await key("Escape");
     await key("Escape");
+    await require("./verify-model-services.cjs")({
+      js,
+      waitFor,
+      capture,
+      key,
+      checks,
+      win,
+      request,
+      service,
+      models,
+    });
     checks.push(
       "Provider model menu: one LinoRoute row, real pointer hover opens right submenu, 30-model list scrolls, chosen connection persists with radio mark, keyboard and click opening work, narrow collision stays inside viewport",
     );

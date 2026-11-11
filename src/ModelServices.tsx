@@ -382,8 +382,9 @@ export function ModelServiceDialog({
           <p className="muted model-service-help">
             官方选项使用各服务商的 OpenAI
             兼容接口。模型列表与可调用权限以所填密钥为准；图片生成技能需要支持
-            images/generations 并返回 base64
-            图片。配置后自动加入{personal ? "个人" : "公司"}技能，在对话中按需调用。获取列表不会发起内容生成。
+            images/generations 并返回 base64 图片。配置后自动加入
+            {personal ? "个人" : "公司"}
+            技能，在对话中按需调用。获取列表不会发起内容生成。
           </p>
           {!personal && (
             <Field label="允许使用的部门（不选表示全公司）">
@@ -511,14 +512,17 @@ export function ModelServiceCards({
                 <span className="badge">{s.models.length} 个模型</span>
               </h3>
               <p>{s.baseUrl}</p>
-              <div className="service-model-tags">
-                {s.models.map((m) => (
-                  <span className="badge" key={m.kind + m.model}>
-                    {m.kind === "image" ? "图片技能 · " : ""}
-                    {m.model}
-                  </span>
-                ))}
-              </div>
+              <details className="service-model-details">
+                <summary>查看 {s.models.length} 个模型</summary>
+                <div className="service-model-tags">
+                  {s.models.map((m) => (
+                    <span className="badge" key={m.kind + m.model}>
+                      {m.kind === "image" ? "图片技能 · " : ""}
+                      {m.model}
+                    </span>
+                  ))}
+                </div>
+              </details>
               <small>
                 {personal
                   ? "仅自己可用"
@@ -572,7 +576,11 @@ export function ModelServiceCards({
           saved={async () => {
             await refresh();
             await load();
-            notify(personal ? "个人模型已保存，可在对话中选择。" : "模型配置已保存，员工可在对话中选择已授权的模型。");
+            notify(
+              personal
+                ? "个人模型已保存，可在对话中选择。"
+                : "模型配置已保存，员工可在对话中选择已授权的模型。",
+            );
           }}
         />
       )}

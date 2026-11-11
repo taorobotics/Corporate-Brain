@@ -38,6 +38,7 @@ import {
 import { SelectField } from "./Dropdown";
 import SkillPicker from "./SkillPicker";
 import ModelPicker from "./ModelPicker";
+import { connectionGroups } from "../shared/model-groups";
 import { EmployeeModelServices } from "./ModelServices";
 import {
   ChatProduction,
@@ -2053,46 +2054,73 @@ export default function Workspace(props: WorkspaceProps) {
                   }
                 />
               ) : (
-                <div className="connection-list">
-                  {connections
-                    .filter((c) => !c.personal)
-                    .map((c) => (
-                      <div className="connection-card" key={c.id}>
-                        <span className="card-icon">
-                          <Plug size={24} />
-                        </span>
-                        <div>
-                          <h3>{c.name}</h3>
-                          <p>
-                            {c.model} ·{" "}
-                            {c.kind === "chat" ? "对话" : "图片生成技能"}
-                          </p>
-                          <small>{c.baseUrl}</small>
+                <div className="connection-list provider-connection-list">
+                  {connectionGroups(connections.filter((c) => !c.personal)).map(
+                    (group) => (
+                      <details
+                        className="provider-connection-group"
+                        key={group.id}
+                        data-provider-id={group.id}
+                      >
+                        <summary>
+                          <span className="card-icon">
+                            <Plug size={24} />
+                          </span>
+                          <strong>{group.label}</strong>
+                          {group.id === "provider:linoroute" && (
+                            <span className="provider-recommended">推荐</span>
+                          )}
+                          <span className="provider-model-count">
+                            {group.models.length} 个模型
+                          </span>
+                          <CaretRight
+                            className="provider-disclosure"
+                            size={18}
+                          />
+                        </summary>
+                        <div className="provider-connection-models">
+                          {group.models.map((c) => (
+                            <div
+                              className="connection-card"
+                              key={c.id}
+                              data-connection-id={c.id}
+                            >
+                              <div>
+                                <h3>{c.name}</h3>
+                                <p>
+                                  {c.model} ·{" "}
+                                  {c.kind === "chat" ? "对话" : "图片生成技能"}
+                                </p>
+                                <small>{c.baseUrl}</small>
+                              </div>
+                              <span className="badge">公司连接</span>
+                              <Button
+                                onClick={() => {
+                                  if (c.kind === "image") {
+                                    patchSettings({
+                                      skillMode: "manual",
+                                      skillIds: [
+                                        ...new Set([...selectedSkillIds, c.id]),
+                                      ].slice(-16),
+                                    });
+                                    navigate("chat");
+                                    notify(
+                                      "图片技能已就绪，直接在对话中提出配图需求。",
+                                    );
+                                  } else {
+                                    patchSettings({ model: c.id });
+                                    notify("已设置为对话模型。");
+                                  }
+                                }}
+                              >
+                                {c.kind === "image" ? "使用图片技能" : "选用"}
+                              </Button>
+                            </div>
+                          ))}
                         </div>
-                        <span className="badge">公司连接</span>
-                        <Button
-                          onClick={() => {
-                            if (c.kind === "image") {
-                              patchSettings({
-                                skillMode: "manual",
-                                skillIds: [
-                                  ...new Set([...selectedSkillIds, c.id]),
-                                ].slice(-16),
-                              });
-                              navigate("chat");
-                              notify(
-                                "图片技能已就绪，直接在对话中提出配图需求。",
-                              );
-                            } else {
-                              patchSettings({ model: c.id });
-                              notify("已设置为对话模型。");
-                            }
-                          }}
-                        >
-                          {c.kind === "image" ? "使用图片技能" : "选用"}
-                        </Button>
-                      </div>
-                    ))}
+                      </details>
+                    ),
+                  )}
                 </div>
               )}
               <div className="notice">
