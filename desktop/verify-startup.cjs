@@ -16,6 +16,11 @@ process.env.BRAIN_VERIFY = "1";
 app.disableHardwareAcceleration();
 let server;
 const checks = [];
+if (process.env.BRAIN_VERIFY_VERBOSE === "1")
+  checks.push = (...items) => {
+    for (const item of items) console.log("Startup QA completed: " + item);
+    return Array.prototype.push.apply(checks, items);
+  };
 async function waitFor(check, label) {
   const until = Date.now() + 10000;
   while (Date.now() < until) {

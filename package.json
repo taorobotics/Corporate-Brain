@@ -1,6 +1,6 @@
 {
   "name": "corporate-brain",
-  "version": "0.34.6",
+  "version": "0.34.7",
   "private": true,
   "license": "MIT",
   "repository": {
@@ -22,7 +22,7 @@
     "legal:prepare": "node scripts/prepare-legal.mjs",
     "start": "tsx server/index.ts",
     "test": "tsx --test --test-concurrency=1 server/platform.test.ts server/community-plugins.test.ts server/model-services.test.ts server/personal-models.test.ts server/image-skills.test.ts server/accounts.test.ts server/automatic.test.ts server/company-context.test.ts server/nas-documents.test.ts server/skill-use.test.ts server/skills-chat.test.ts server/profile.test.ts server/production.test.ts server/production-output.test.ts desktop/production.test.cjs server/skill-import.test.ts server/nas.test.ts server/documents.test.ts server/updates.test.ts server/dsh.test.ts server/dsh-output.test.ts server/chat-stream.test.ts server/chat-deadline.test.ts server/env.test.ts server/deepseek-sync.test.ts shared/workspace-context.test.ts shared/workspaces.test.ts shared/message-time.test.ts shared/chat-headlines.test.ts src/automatic.test.ts shared/skins.test.ts shared/model-groups.test.ts desktop/updates.test.cjs desktop/install.test.cjs desktop/clipboard.test.cjs && node scripts/test-nas-worker.mjs",
-    "test:desktop": "node scripts/prepare-legal.mjs && electron desktop/verify-startup.cjs && electron desktop/verify.cjs && electron desktop/verify-auth-artwork.cjs",
+    "test:desktop": "node scripts/prepare-legal.mjs && electron desktop/verify-startup.cjs && electron desktop/verify.cjs && electron desktop/verify-auth-artwork.cjs && electron desktop/verify-startup-animation.cjs",
     "test:dsh": "node scripts/verify-dsh.mjs",
     "deepseek:check": "node scripts/check-deepseek-config.mjs",
     "version:bump": "node scripts/version.mjs",

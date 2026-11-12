@@ -139,7 +139,10 @@ try {
   assert.equal(authArtworkVerification.version, version);
   const startupVerification = JSON.parse(await readFile('artifacts/startup-verification.json', 'utf8'));
   assert.equal(startupVerification.result, 'passed');
-  const report = { version, architecture: arch, platform: process.platform, os: command('sw_vers', ['-productVersion']).trim(), sourceCommit: command('git', ['rev-parse', 'HEAD']).trim(), workflowRun: process.env.GITHUB_RUN_ID || null, createdAt: new Date().toISOString(), artifact: basename(dmg), bytes: (await readFile(dmg)).length, sha256, signing: 'ad-hoc', developerIdSigned: false, notarized: false, physicalEmployeeMacTested: false, files, checks, firstLaunch: page, desktopVerification: desktop, startupVerification, authArtworkVerification };
+  const startupAnimationVerification = JSON.parse(await readFile('artifacts/startup-animation-verification.json', 'utf8'));
+  assert.equal(startupAnimationVerification.result, 'passed');
+  assert.equal(startupAnimationVerification.version, version);
+  const report = { version, architecture: arch, platform: process.platform, os: command('sw_vers', ['-productVersion']).trim(), sourceCommit: command('git', ['rev-parse', 'HEAD']).trim(), workflowRun: process.env.GITHUB_RUN_ID || null, createdAt: new Date().toISOString(), artifact: basename(dmg), bytes: (await readFile(dmg)).length, sha256, signing: 'ad-hoc', developerIdSigned: false, notarized: false, physicalEmployeeMacTested: false, files, checks, firstLaunch: page, desktopVerification: desktop, startupVerification, authArtworkVerification, startupAnimationVerification };
   await writeFile(`release/macos-verification-${arch}.json`, JSON.stringify(report, null, 2) + '\n');
   await writeFile(`release/SHA256SUMS-macOS-${arch}.txt`, `${sha256}  ${basename(dmg)}\n`);
   console.log(JSON.stringify({ artifact: basename(dmg), sha256, checks, desktopChecks: desktop.checks.length }, null, 2));

@@ -230,6 +230,12 @@ module.exports = async ({
     assert.ok(reads > 0);
     assert.equal(requests.length, 6);
     assert.ok(JSON.stringify(requests[5]).includes("VIDEO_PROMPT_FIXTURE"));
+    // A painted streamed answer can precede the queued native disk write.
+    // Establish a durable baseline before comparing exact message counts.
+    await waitFor(
+      () => js(`(async()=>{const s=await window.brainDesktop.readState(${JSON.stringify(actor.id)}),c=s.conversations.find(c=>c.id===${JSON.stringify(greeting.id)});return c.messages.at(-1)?.role==='assistant'&&c.messages.at(-1).content.includes('资料中的视频任务不代表本轮')})()`),
+      "project reply persisted before identity assertions",
+    );
     const readsBeforeIdentity = reads;
     for (const question of [
       "您好，你是谁？",

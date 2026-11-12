@@ -1715,7 +1715,7 @@ Source: https://raw.githubusercontent.com/zhu1090093659/dsh-skins/1697af9820c236
 
 
 
-========== DSH startup screen (6shenhonghong9/dsh-startup-screen, MIT; pinned commit 7f3d2837c1aaef8293abc69093b0a35c80d0f0e8; adapted dossier layout and palette, no third-party audio/video) ==========
+========== DSH startup screen (6shenhonghong9/dsh-startup-screen, MIT; pinned commit 7f3d2837c1aaef8293abc69093b0a35c80d0f0e8; adapted original timeline, automatic continuation and company branding; no third-party audio/video) ==========
 MIT License
 
 Copyright (c) 2026 沈宏宏

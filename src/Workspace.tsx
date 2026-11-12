@@ -90,6 +90,7 @@ import {
 import "./attachments.css";
 import Profile, { Avatar } from "./Profile";
 import CommunityPlugins from "./CommunityPlugins";
+import EntryExperience from "./EntryExperience";
 
 type ComposerDraft = {
   text: string;
@@ -161,6 +162,7 @@ export default function Workspace(props: WorkspaceProps) {
     [skillDraft, setSkillDraft] = useState<Draft | null>(null),
     [detail, setDetail] = useState<Skill | null>(null);
   const [importSkill, setImportSkill] = useState(false);
+  const [startupPreview, setStartupPreview] = useState(false);
   const [pendingReplies, setPendingReplies] = useState<
     Record<string, PendingReply>
   >({});
@@ -979,6 +981,9 @@ export default function Workspace(props: WorkspaceProps) {
   );
   return (
     <>
+      {startupPreview && (
+        <EntryExperience phase="ready" theme={state.settings.theme} detail="" onEntered={() => setStartupPreview(false)} />
+      )}
       {page === "chat" && (
         <div className={`chat-layout ${preview ? "has-preview" : ""}`}>
           <section className={`chat ${emptyChat ? "is-empty" : ""}`}>
@@ -1915,17 +1920,10 @@ export default function Workspace(props: WorkspaceProps) {
                 <div className="setting-row">
                   <div>
                     <span>启动动画</span>
-                    <small>DSH 技术档案风格 · 跟随外观设置 · 可随时跳过</small>
+                    <small>原版技术档案动效 · 自动播放 · 跟随外观设置</small>
                   </div>
                   <Button
-                    onClick={() =>
-                      void window.brainDesktop
-                        ?.writeAppearance?.(state.settings.theme)
-                        .then(() => window.brainDesktop?.previewStartup?.())
-                        .catch(() =>
-                          notify("启动动画暂时无法预览，请稍后重试。"),
-                        )
-                    }
+                    onClick={() => setStartupPreview(true)}
                   >
                     预览启动动画
                   </Button>

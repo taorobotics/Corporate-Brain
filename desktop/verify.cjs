@@ -116,10 +116,14 @@ async function waitFor(test, label, timeout = 12000) {
     js(`!!document.querySelector(".chat.is-empty [data-chat-headline]")`);
   const has = (text) =>
     js(`document.body.innerText.includes(${JSON.stringify(text)})`);
-  const click = (text) =>
-    js(
+  const click = async (text) => {
+    // Model actual user input: an authenticated animation keeps the workspace
+    // inert until handoff, even though programmatic DOM clicks could bypass it.
+    await revealed();
+    return js(
       `(() => { const item = Array.from(document.querySelectorAll('button,[role="menuitem"]')).find(b => b.textContent.trim() === ${JSON.stringify(text)} || b.getAttribute('aria-label') === ${JSON.stringify(text)}); if (!item) throw new Error('Button missing: ' + ${JSON.stringify(text)}); item.click(); })()`,
     );
+  };
   const fill = async (selector, value) => {
     await revealed();
     return js(
@@ -302,7 +306,7 @@ async function waitFor(test, label, timeout = 12000) {
   await waitFor(welcome, "initialized workspace");
   await revealed();
   checks.push(
-    "Direct authentication and profile preparation enter the workspace without automatic cinematic startup",
+    "Authentication and profile preparation complete the automatic startup sequence and enable workspace input without manual confirmation",
   );
   checks.push("First administrator setup and login through UI");
   await require("./verify-collaboration.cjs")({

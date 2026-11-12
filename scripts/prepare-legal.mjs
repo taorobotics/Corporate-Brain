@@ -98,7 +98,7 @@ notices += `\n\n========== Noto Sans SC (SIL Open Font License 1.1) ==========\n
 notices += `\n\n========== Inter (SIL Open Font License 1.1) ==========\n${await readFile("desktop/fonts/Inter-OFL.txt", "utf8")}\n`;
 notices += `\n\n========== Grok Ball (tycoding/grok-ball, MIT; pinned commit de368ce3acdc5a70e871ee46ebbe8f60b11d3d6a) ==========\n${await readFile("src/vendor/grok-ball.LICENSE", "utf8")}\n`;
 notices += `\n\n========== DSH skin catalog, selected artwork and Claude fonts ==========\n${await readFile("src/vendor/dsh-skins.LICENSE", "utf8")}\n`;
-notices += `\n\n========== DSH startup screen (6shenhonghong9/dsh-startup-screen, MIT; pinned commit 7f3d2837c1aaef8293abc69093b0a35c80d0f0e8; adapted dossier layout and palette, no third-party audio/video) ==========\n${await readFile("src/vendor/dsh-startup.LICENSE", "utf8")}\n`;
+notices += `\n\n========== DSH startup screen (6shenhonghong9/dsh-startup-screen, MIT; pinned commit 7f3d2837c1aaef8293abc69093b0a35c80d0f0e8; adapted original timeline, automatic continuation and company branding; no third-party audio/video) ==========\n${await readFile("src/vendor/dsh-startup.LICENSE", "utf8")}\n`;
 notices += `\n\n========== DeepSeek Harness chat indicator (@deepseek-ai/dsh-client-ui-primitives@0.2.0-rc.2, MIT; adapted FishLogo, StateDot and TextShimmer; https://github.com/deepseek-ai/deepseek-harness) ==========\n${await readFile("src/vendor/dsh-chat.LICENSE", "utf8")}\n`;
 // Normalize formatting only; retain all upstream copyright and license wording.
 notices += `\n\n========== IPAS profile avatars ==========\n${await readFile("src/vendor/ipas-avatars.NOTICE", "utf8")}\n`;

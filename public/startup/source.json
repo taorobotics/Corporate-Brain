@@ -1,0 +1,20 @@
+{
+  "source": "https://github.com/6shenhonghong9/dsh-startup-screen",
+  "commit": "7f3d2837c1aaef8293abc69093b0a35c80d0f0e8",
+  "license": "MIT",
+  "changes": [
+    "Company transparent logo and brand",
+    "Automatic continuation of both decorative confirmations",
+    "Silent animation, original audio/video excluded",
+    "Separate document and authenticated workspace handoff"
+  ],
+  "files": {
+    "runtime.js": "6e5b5a601cf5b2ffc61be935b51dc7a53ad7ea2128dd11241a5f550a6ee1a61a",
+    "original.css": "23bcdca47ceee897b3acb7263760650d9ebe46c3147842c3219a95309e46f7e8",
+    "controls.css": "1a31710e19f3de17ba73d679b787aa5283c6d60303e769382b93bae7c2f73f50",
+    "LICENSE.txt": "9bbdfb8e1b847a8a9f614b95110fff653733ecd1fe86d04ac8836788f71ec736",
+    "bridge.js": "e1cdbc280187afd7c381a57568fafd81833c42ab04b12f560ef07ee8c80203f0",
+    "host.css": "59c2b6bb7ced840d2f9bb7037a785aee857ca281fb0fc5b078e33e0a97a56d7d",
+    "index.html": "c75631f2d7c4d159214d9f3e8fc74ee154873a08d96df1372ea90874de3b7d7f"
+  }
+}

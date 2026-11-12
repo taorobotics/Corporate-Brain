@@ -1,6 +1,7 @@
-import { useEffect, useRef, type ReactNode } from "react";
+import { useRef, type ReactNode } from "react";
 import "./entry.css";
 import { WindowTitleBar } from "./WindowControls";
+import StartupAnimation from "./StartupAnimation";
 
 export type EntryPhase =
   "connecting" | "auth" | "verifying" | "profile" | "ready" | "error";
@@ -23,11 +24,6 @@ export default function EntryExperience({
 }) {
   const exit = useRef(onEntered);
   exit.current = onEntered;
-  useEffect(() => {
-    if (phase !== "ready") return;
-    const frame = requestAnimationFrame(() => exit.current?.());
-    return () => cancelAnimationFrame(frame);
-  }, [phase]);
   const title = headline || (phase === "error"
     ? "暂时无法连接公司服务器"
     : phase === "connecting"
@@ -44,7 +40,9 @@ export default function EntryExperience({
       <WindowTitleBar />
       {children ? (
         <div className="entry-form-stage">{children}</div>
-      ) : phase !== "ready" && (
+      ) : phase === "ready" ? (
+        <StartupAnimation theme={theme} onFinished={() => exit.current?.()} />
+      ) : (
         <div className="entry-connection" role="status" aria-live="polite">
           <h1>{title}</h1>
           <p>{detail}</p>

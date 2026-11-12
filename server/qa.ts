@@ -1,5 +1,6 @@
 // A disposable server for Electron interaction tests; never opens the company's database.
 import { createPlatform } from "./platform";
+import { companyStatic } from "./static";
 import { modelFetch } from "./model-transport";
 import express from "express";
 import { resolve, join } from "node:path";
@@ -251,7 +252,7 @@ app.post("/image-skill-fixture/images/generations", (req, res) => {
 app.get("/image-skill-fixture/stats", (_req, res) =>
   res.json({ images: imageSkillCalls }),
 );
-app.use(express.static(resolve("dist")));
+app.use(companyStatic());
 app.get("/{*path}", (_req, res) => res.sendFile(resolve("dist/index.html")));
 const server = app.listen(0, "127.0.0.1", () => {
   const port = (server.address() as any).port;

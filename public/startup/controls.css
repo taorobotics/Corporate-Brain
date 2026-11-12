@@ -1,0 +1,124 @@
+/* Corporate Brain local UI review. Upstream motion stylesheet is preserved. */
+#dsh-startup-root {
+  --company-control-width: min(380px, calc(100vw - 64px));
+  --company-enter: cubic-bezier(.23, 1, .32, 1);
+}
+#dsh-startup-root .dsu-brand-1 { font-size: 31px; }
+#dsh-startup-root .dsu-brand-2 {
+  font-family: var(--font-ui);
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: .19em;
+  margin: 8px 0 5px;
+}
+#dsh-startup-root .dsu-meta { font-size: 9px; letter-spacing: .12em; }
+#dsh-startup-root .dsu-foot { font-size: 10px; letter-spacing: .16em; }
+#dsh-startup-root[data-company-phase="grant"] .dsu-center { top: 38%; }
+#dsh-startup-root[data-company-phase="confirm"] .dsu-center { top: 30%; }
+#dsh-startup-root[data-company-phase="grant"] .dsu-action { top: 51%; }
+#dsh-startup-root[data-company-phase="confirm"] .dsu-action { top: 42%; }
+#dsh-startup-root:is([data-company-phase="grant"], [data-company-phase="confirm"]) .dsu-status {
+  font-size: clamp(27px, 2.7vw, 39px);
+  font-family: var(--font-ui);
+  font-weight: 500;
+  letter-spacing: .1em;
+  text-indent: .1em;
+  line-height: 1.45;
+}
+#dsh-startup-root:is([data-company-phase="grant"], [data-company-phase="confirm"]) .dsu-sub-en {
+  font-size: 10px;
+  letter-spacing: .25em;
+  text-indent: .25em;
+  color: var(--dsu-muted);
+  margin-top: 12px;
+}
+#dsh-startup-root:is([data-company-phase="grant"], [data-company-phase="confirm"]) .dsu-rule.dsu-in {
+  width: var(--company-control-width);
+  transition: none;
+  margin-top: 24px;
+}
+#dsh-startup-root .dsu-action { gap: 16px; }
+#dsh-startup-root .dsu-btn {
+  width: var(--company-control-width);
+  min-height: 70px;
+  border: 1px solid var(--dsu-ink);
+  border-radius: 0;
+  background: var(--dsu-ink);
+  color: var(--dsu-box-ink);
+  padding: 15px 23px;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  gap: 5px;
+  text-align: left;
+  letter-spacing: .04em;
+  box-shadow: none;
+  transition: transform 120ms var(--company-enter), opacity 160ms ease;
+}
+#dsh-startup-root .dsu-btn::before {
+  background: linear-gradient(90deg, rgba(255,255,255,.12), rgba(255,255,255,.035));
+  transition: transform 220ms var(--company-enter);
+}
+#dsh-startup-root .dsu-btn::after {
+  content: "→";
+  position: absolute;
+  right: 23px;
+  top: 50%;
+  z-index: 1;
+  font-family: var(--font-ui);
+  font-size: 24px;
+  font-weight: 400;
+  line-height: 1;
+  transform: translateY(-50%);
+  transition: transform 160ms var(--company-enter);
+}
+#dsh-startup-root .dsu-btn:hover::after { transform: translate(3px, -50%); }
+#dsh-startup-root .dsu-btn:active { transform: translateY(1px) scale(.995); }
+#dsh-startup-root .dsu-btn:focus-visible { outline: 2px solid var(--dsu-accent); outline-offset: 5px; }
+#dsh-startup-root .dsu-btn.dsu-pulse { animation: none; box-shadow: none; }
+#dsh-startup-root .dsu-btn-zh { font-size: 15px; line-height: 1.4; font-weight: 550; letter-spacing: .07em; }
+#dsh-startup-root .dsu-btn-en { font-size: 9px; line-height: 1.5; letter-spacing: .2em; opacity: .6; }
+#dsh-startup-root .dsu-btn:hover .dsu-btn-en { opacity: .72; }
+#dsh-startup-root .dsu-card {
+  width: var(--company-control-width);
+  min-width: 0;
+  padding: 3px 20px;
+  border: 1px solid var(--dsu-hair);
+  border-radius: 0;
+  background: rgba(255,255,255,.14);
+}
+#dsh-startup-root .dsu-card-row {
+  min-height: 42px;
+  align-items: center;
+  padding: 10px 0;
+  gap: 20px;
+  font-size: 12px;
+  letter-spacing: .04em;
+}
+#dsh-startup-root .dsu-card-row b {
+  font-family: var(--font-ui);
+  font-size: 14px;
+  font-weight: 550;
+  letter-spacing: .04em;
+}
+#dsh-startup-root .dsu-hint { font-size: 10px; line-height: 1.8; letter-spacing: .02em; }
+#dsh-startup-root .dsu-hint kbd { border-radius: 0; font-size: 9px; padding: 2px 4px; margin: 0 2px; }
+#dsh-startup-root.dsu-dark .dsu-card { background: rgba(255,255,255,.025); }
+@media (max-height: 720px) {
+  #dsh-startup-root[data-company-phase="grant"] .dsu-center { top: 36%; }
+  #dsh-startup-root[data-company-phase="confirm"] .dsu-center { top: 30%; }
+  #dsh-startup-root[data-company-phase="confirm"] .dsu-action { top: 43%; }
+  #dsh-startup-root .dsu-btn { min-height: 62px; padding-top: 11px; padding-bottom: 11px; }
+  #dsh-startup-root .dsu-action { gap: 12px; }
+  #dsh-startup-root .dsu-card-row { min-height: 36px; padding: 7px 0; }
+}
+@media (max-width: 600px) {
+  #dsh-startup-root { --company-control-width: min(340px, calc(100vw - 48px)); }
+  #dsh-startup-root .dsu-brand { top: 32px; left: 24px; }
+  #dsh-startup-root .dsu-brand-1 { font-size: 23px; }
+  #dsh-startup-root .dsu-brand-2 { font-size: 8px; }
+  #dsh-startup-root .dsu-brand-3 { font-size: 23px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  #dsh-startup-root .dsu-btn, #dsh-startup-root .dsu-btn::before, #dsh-startup-root .dsu-btn::after { transition: none; }
+}

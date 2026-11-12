@@ -317,7 +317,7 @@ async function waitFor(test, label, timeout = 15000) {
   await checkLayout(1280,720);
   win.setMinimumSize(360, 500);
   win.setContentSize(390, 844);
-  await delay(350);
+  await waitFor(() => js(`innerWidth<=390`), "native narrow resize has reached the renderer");
   assert.equal(
     await js(
       `document.querySelector('.login-surface').scrollWidth<=innerWidth`,
