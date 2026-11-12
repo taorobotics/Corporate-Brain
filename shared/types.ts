@@ -120,6 +120,8 @@ export type LocalState = {
     skin?: string;
     appearanceVersion?: number;
     sidebarWidth?: number;
+    sidebarProjectsCollapsed?: boolean;
+    sidebarRecentCollapsed?: boolean;
     model: string;
     mode: DshMode;
     skillMode?: "auto" | "manual";

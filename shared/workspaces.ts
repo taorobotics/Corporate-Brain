@@ -182,6 +182,8 @@ export function normalizeLocalState(
           ? DEFAULT_SKIN
           : normalizeSkin(settings.skin),
       appearanceVersion: 1,
+      sidebarProjectsCollapsed: settings.sidebarProjectsCollapsed === true,
+      sidebarRecentCollapsed: settings.sidebarRecentCollapsed === true,
       sidebarWidth:
         typeof settings.sidebarWidth === "number" &&
         Number.isFinite(settings.sidebarWidth)

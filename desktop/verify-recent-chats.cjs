@@ -99,6 +99,28 @@ module.exports = async ({
     );
     assert.deepEqual((await order()).slice(0, 3), [old.id, newer.id, empty.id]);
     await capture("recent-chats-light.png");
+    await js(`document.querySelector('[aria-controls="sidebar-project-list"]').click()`);
+    assert.equal(await js(`getComputedStyle(document.querySelector('#sidebar-project-list')).display==='none'&&!document.querySelector('#sidebar-recent-list').hidden`), true);
+    await js(`document.querySelector('[aria-controls="sidebar-recent-list"]').click()`);
+    assert.equal(await js(`getComputedStyle(document.querySelector('#sidebar-recent-list')).display==='none'`), true);
+    await waitFor(() => js(`window.brainDesktop.readState(${JSON.stringify(actor.id)}).then(s=>s.settings.sidebarProjectsCollapsed===true&&s.settings.sidebarRecentCollapsed===true)`), 'section collapse preferences saved');
+    await js(`location.reload()`);
+    await waitFor(() => js(`!document.querySelector('.entry-experience')&&document.querySelector('#sidebar-project-list')?.hidden&&document.querySelector('#sidebar-recent-list')?.hidden`), 'both collapsed sections restored');
+    await capture('sidebar-sections-collapsed.png');
+    win.webContents.focus();
+    await js(`document.querySelector('[aria-controls="sidebar-recent-list"]').focus()`);
+    assert.equal(await js(`document.activeElement.getAttribute('aria-controls')`), 'sidebar-recent-list');
+    if (!win.webContents.debugger.isAttached()) win.webContents.debugger.attach('1.3');
+    await win.webContents.debugger.sendCommand('Input.dispatchKeyEvent', { type: 'keyDown', key: 'Enter', code: 'Enter', windowsVirtualKeyCode: 13, text: '\r', unmodifiedText: '\r' });
+    await win.webContents.debugger.sendCommand('Input.dispatchKeyEvent', { type: 'keyUp', key: 'Enter', code: 'Enter', windowsVirtualKeyCode: 13 });
+    await waitFor(() => js(`document.querySelector('[aria-controls="sidebar-recent-list"]').getAttribute('aria-expanded')==='true'`), 'keyboard expands recent chats');
+    assert.equal(await js(`document.querySelector('#sidebar-project-list').hidden`), true);
+    await js(`document.querySelector('[aria-controls="sidebar-project-list"]').click()`);
+    const beforeCollapse = await js(`document.querySelector('#sidebar-project-list').getBoundingClientRect().height`);
+    await js(`document.querySelector('[aria-controls="sidebar-recent-list"]').click()`);
+    assert.equal(await js(`document.querySelector('#sidebar-project-list').getBoundingClientRect().height>${beforeCollapse}`), true);
+    await js(`document.querySelector('[aria-controls="sidebar-recent-list"]').click()`);
+    checks.push('Projects and recent chat sections independently collapse, release unused space, persist per local account across reload, preserve visible search and support native keyboard activation without deleting chats');
     await fill(".history-search", "recentprojectb");
     assert.deepEqual(await order(), [newer.id]);
     await js(

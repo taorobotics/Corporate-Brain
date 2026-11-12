@@ -168,7 +168,13 @@ export default function App() {
       const folder = await window.brainDesktop.selectDirectory();
       if (!folder || loadedProfile.current !== owner) return;
       const id = crypto.randomUUID();
-      setState((s) => addLocalProject(s, folder, id));
+      setState((s) => {
+        const next = addLocalProject(s, folder, id);
+        return {
+          ...next,
+          settings: { ...next.settings, sidebarProjectsCollapsed: false },
+        };
+      });
       setCollapsedWorkspaces((ids) => ids.filter((item) => item !== id));
       newConversation();
       setHistorySearch("");
@@ -844,9 +850,36 @@ export default function App() {
                     <NotePencil size={18} />
                     <span>新建对话</span>
                   </button>
-                  <div className="history">
+                  <div
+                    className="history"
+                    data-recent-collapsed={!!state.settings.sidebarRecentCollapsed}
+                  >
+                    <input
+                      className="history-search"
+                      aria-label="搜索项目或对话"
+                      placeholder="搜索项目或对话"
+                      value={historySearch}
+                      onChange={(e) => setHistorySearch(e.target.value)}
+                    />
                     <div className="section-label">
-                      项目
+                      <button
+                        type="button"
+                        className="history-section-toggle"
+                        aria-label={`${state.settings.sidebarProjectsCollapsed ? "展开" : "收起"}项目列表`}
+                        aria-expanded={!state.settings.sidebarProjectsCollapsed}
+                        aria-controls="sidebar-project-list"
+                        onClick={() => setState((s) => ({
+                          ...s,
+                          settings: { ...s.settings, sidebarProjectsCollapsed: !s.settings.sidebarProjectsCollapsed },
+                        }))}
+                      >
+                        <CaretDown
+                          size={12}
+                          aria-hidden
+                          style={{ transform: state.settings.sidebarProjectsCollapsed ? "rotate(-90deg)" : undefined }}
+                        />
+                        项目
+                      </button>
                       <span>仅本机</span>
                       <IconButton
                         label="新建项目"
@@ -855,16 +888,11 @@ export default function App() {
                         <Plus size={16} />
                       </IconButton>
                     </div>
-                    <input
-                      className="history-search"
-                      aria-label="搜索项目或对话"
-                      placeholder="搜索项目或对话"
-                      value={historySearch}
-                      onChange={(e) => setHistorySearch(e.target.value)}
-                    />
                     <div
+                      id="sidebar-project-list"
                       className="history-list project-conversations"
                       aria-label="项目对话"
+                      hidden={!!state.settings.sidebarProjectsCollapsed}
                     >
                       {state.workspaces.map((workspace) => {
                         const numberedName =
@@ -981,10 +1009,31 @@ export default function App() {
                         );
                       })}
                     </div>
-                    <div className="section-label recent-label">最近</div>
+                    <div className="section-label recent-label">
+                      <button
+                        type="button"
+                        className="history-section-toggle"
+                        aria-label={`${state.settings.sidebarRecentCollapsed ? "展开" : "收起"}最近对话`}
+                        aria-expanded={!state.settings.sidebarRecentCollapsed}
+                        aria-controls="sidebar-recent-list"
+                        onClick={() => setState((s) => ({
+                          ...s,
+                          settings: { ...s.settings, sidebarRecentCollapsed: !s.settings.sidebarRecentCollapsed },
+                        }))}
+                      >
+                        <CaretDown
+                          size={12}
+                          aria-hidden
+                          style={{ transform: state.settings.sidebarRecentCollapsed ? "rotate(-90deg)" : undefined }}
+                        />
+                        最近
+                      </button>
+                    </div>
                     <nav
+                      id="sidebar-recent-list"
                       className="history-list recent-conversations"
                       aria-label="最近对话"
+                      hidden={!!state.settings.sidebarRecentCollapsed}
                     >
                       {recentMatches.map((c) => (
                         <button

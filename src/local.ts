@@ -12,6 +12,8 @@ export const emptyState = (): LocalState => ({
     theme: "default",
     skin: DEFAULT_SKIN,
     appearanceVersion: 1,
+    sidebarProjectsCollapsed: false,
+    sidebarRecentCollapsed: false,
     model: "",
     mode: "standard",
   },

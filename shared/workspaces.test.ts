@@ -253,6 +253,20 @@ test("sidebar widths survive profile restore while invalid imported widths use s
   );
 });
 
+test("sidebar sections restore independently and reject non-boolean imported preferences", () => {
+  const state = normalizeLocalState({ settings: { sidebarProjectsCollapsed: true, sidebarRecentCollapsed: false } } as any);
+  const restored = normalizeLocalState(JSON.parse(JSON.stringify(state)));
+  assert.equal(restored.settings.sidebarProjectsCollapsed, true);
+  assert.equal(restored.settings.sidebarRecentCollapsed, false);
+  assert.equal(normalizeLocalState({}).settings.sidebarProjectsCollapsed, false);
+  assert.equal(normalizeLocalState({}).settings.sidebarRecentCollapsed, false);
+  for (const value of [undefined, null, "true", 1, [], {}]) {
+    const settings = normalizeLocalState({ settings: { sidebarProjectsCollapsed: value, sidebarRecentCollapsed: value } } as any).settings;
+    assert.equal(settings.sidebarProjectsCollapsed, false);
+    assert.equal(settings.sidebarRecentCollapsed, false);
+  }
+});
+
 test("installed skill preferences default to automatic and restore an explicit multi-selection per profile", () => {
   assert.equal(normalizeLocalState({}).settings.skillMode, "auto");
   const state = normalizeLocalState({
