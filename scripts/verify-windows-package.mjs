@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import { createHash } from 'node:crypto';
 import { execFileSync } from 'node:child_process';
 import { readFile, writeFile } from 'node:fs/promises';
-import { resolve } from 'node:path';
+import { normalize, resolve } from 'node:path';
 import { listPackage, extractFile } from '@electron/asar';
 import { legalFiles } from './legal-files.mjs';
 import { brandFiles } from './brand-files.mjs';
@@ -22,7 +22,8 @@ const allowed = [...fontFiles, 'main.cjs', 'updates.cjs', 'install.cjs', 'produc
 assert.deepEqual(files, [...allowed, ...brandFiles].sort());
 assert.equal(JSON.parse(extractFile(asar, 'package.json').toString()).version, version);
 assert.equal(JSON.parse(await readFile(resolve('release/win-unpacked/resources/company-server.json'), 'utf8')).url, process.env.BRAIN_APP_URL || '', 'Packaged company connection must match the configured release destination');
-for (const file of files) assert.deepEqual(extractFile(asar, file), await readFile(resolve('desktop', file)), `Packaged source differs: ${file}`);
+// ASAR traverses nested directories using the host path separator.
+for (const file of files) assert.deepEqual(extractFile(asar, normalize(file)), await readFile(resolve('desktop', file)), `Packaged source differs: ${file}`);
 const desktopVerification = JSON.parse(await readFile('artifacts/desktop-verification.json', 'utf8'));
 const authArtworkVerification = JSON.parse(await readFile('artifacts/auth-artwork-verification.json', 'utf8'));
 assert.equal(authArtworkVerification.result, 'passed');

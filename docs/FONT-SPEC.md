@@ -1,6 +1,6 @@
 # 公司大脑字体
 
-自 0.34.11 起，按用户指定的“第三期 CycleAI”方法接入 Noto Sans SC：使用 Google Fonts 官方原始 Unicode 分片，项目本地托管，不向外部字体网站发送请求。
+自 0.34.12 起，按用户指定的“第三期 CycleAI”方法接入 Noto Sans SC：使用 Google Fonts 官方原始 Unicode 分片，项目本地托管，不向外部字体网站发送请求。
 
 ## 显示范围
 
