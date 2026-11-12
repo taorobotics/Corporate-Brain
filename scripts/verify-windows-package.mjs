@@ -6,6 +6,7 @@ import { resolve } from 'node:path';
 import { listPackage, extractFile } from '@electron/asar';
 import { legalFiles } from './legal-files.mjs';
 import { brandFiles } from './brand-files.mjs';
+import { verifyPackagedConnection } from './verify-packaged-connection.mjs';
 
 assert.equal(process.platform, 'win32');
 assert.equal(process.arch, 'x64');
@@ -67,6 +68,7 @@ report.handoffVerification = handoffVerification;
 report.startupVerification = startupVerification;
 report.authArtworkVerification = authArtworkVerification;
 report.startupAnimationVerification = startupAnimationVerification;
+report.visibleConnectionVerification = await verifyPackagedConnection(resolve('release/win-unpacked', `${product}.exe`));
 report.disposableWindowsLifecycleTested = true;
 report.checks.push('Real native wizard, staged cancellation, v0.9.0 upgrade, launch and uninstall on a disposable Windows runner');
 await writeFile('release/windows-verification-x64.json', JSON.stringify(report, null, 2) + '\n');

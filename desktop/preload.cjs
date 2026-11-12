@@ -27,9 +27,11 @@ window.addEventListener(
         return;
       signaled = true;
       observer.disconnect();
-      requestAnimationFrame(() =>
-        requestAnimationFrame(() => ipcRenderer.send("startup:painted")),
-      );
+      // A native startup view fully covers this page. Chromium may mark it
+      // hidden and suspend animation frames until that view is removed, so
+      // waiting for a frame here would deadlock the handoff. The committed
+      // document's first content is the readiness signal, independent of paint.
+      ipcRenderer.send("startup:painted");
     };
     const observer = new MutationObserver(painted);
     observer.observe(document.documentElement, {

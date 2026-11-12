@@ -133,7 +133,7 @@ async function waitFor(check, label) {
   // stop only the deliberately hung subresource before executeJavaScript calls.
   win.webContents.stop();
   checks.push(
-    "Painted app reveals immediately while a subresource is pending; no intro delay or blank navigation",
+    "Content-ready app reveals immediately while a subresource is pending; no intro delay or blank navigation",
   );
   assert.equal(
     await win.webContents.executeJavaScript(

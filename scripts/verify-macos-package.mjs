@@ -11,6 +11,7 @@ import { basename, join, resolve } from 'node:path';
 import { listPackage, extractFile } from '@electron/asar';
 import { legalFiles } from './legal-files.mjs';
 import { brandFiles } from './brand-files.mjs';
+import { verifyPackagedConnection } from './verify-packaged-connection.mjs';
 
 assert.equal(process.platform, 'darwin', 'Run package checks on macOS');
 const arch = process.env.TARGET_ARCH || process.arch;
@@ -142,13 +143,21 @@ try {
   const startupAnimationVerification = JSON.parse(await readFile('artifacts/startup-animation-verification.json', 'utf8'));
   assert.equal(startupAnimationVerification.result, 'passed');
   assert.equal(startupAnimationVerification.version, version);
+  socket?.close(); socket = null;
+  if (child && child.exitCode === null && child.signalCode === null) {
+    child.kill('SIGTERM');
+    await Promise.race([once(child, 'exit'), new Promise(resolve => setTimeout(resolve, 3000))]);
+    if (child.exitCode === null && child.signalCode === null) { child.kill('SIGKILL'); await once(child, 'exit'); }
+  }
+  const visibleConnectionVerification = await verifyPackagedConnection(binary);
   const report = { version, architecture: arch, platform: process.platform, os: command('sw_vers', ['-productVersion']).trim(), sourceCommit: command('git', ['rev-parse', 'HEAD']).trim(), workflowRun: process.env.GITHUB_RUN_ID || null, createdAt: new Date().toISOString(), artifact: basename(dmg), bytes: (await readFile(dmg)).length, sha256, signing: 'ad-hoc', developerIdSigned: false, notarized: false, physicalEmployeeMacTested: false, files, checks, firstLaunch: page, desktopVerification: desktop, startupVerification, authArtworkVerification, startupAnimationVerification };
+  report.visibleConnectionVerification = visibleConnectionVerification;
   await writeFile(`release/macos-verification-${arch}.json`, JSON.stringify(report, null, 2) + '\n');
   await writeFile(`release/SHA256SUMS-macOS-${arch}.txt`, `${sha256}  ${basename(dmg)}\n`);
   console.log(JSON.stringify({ artifact: basename(dmg), sha256, checks, desktopChecks: desktop.checks.length }, null, 2));
 } finally {
   socket?.close();
-  if (child && child.exitCode === null) {
+  if (child && child.exitCode === null && child.signalCode === null) {
     child.kill('SIGTERM');
     await Promise.race([once(child, 'exit'), new Promise(resolve => setTimeout(resolve, 5000))]);
     if (child.exitCode === null) child.kill('SIGKILL');
