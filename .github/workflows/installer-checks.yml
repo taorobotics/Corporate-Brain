@@ -14,6 +14,7 @@ jobs:
       # Exercise a configured client, including offline startup, without relying
       # on a production service. The disposable package is never distributed.
       BRAIN_APP_URL: http://127.0.0.1:4173
+      BRAIN_VERIFY_VERBOSE: '1'
     steps:
       - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09
         with:
@@ -42,6 +43,8 @@ jobs:
         with:
           name: windows-installer-diagnostics
           path: |
+            artifacts/desktop-verification.json
+            artifacts/screenshots/desktop-failure.png
             artifacts/installer-verification.json
             artifacts/installer-timeout.json
             artifacts/screenshots/installer-*.png

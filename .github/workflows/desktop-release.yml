@@ -125,6 +125,8 @@ jobs:
         with:
           name: windows-lifecycle-${{ env.RELEASE_TAG }}-${{ github.run_attempt }}
           path: |
+            artifacts/desktop-verification.json
+            artifacts/screenshots/desktop-failure.png
             artifacts/installer-verification.json
             artifacts/installer-timeout.json
             artifacts/update-handoff-verification.json

@@ -12,6 +12,11 @@ app.disableHardwareAcceleration();
 app.commandLine.appendSwitch("disable-webgl");
 const errors = [],
   checks = [];
+if (process.env.BRAIN_VERIFY_VERBOSE === "1")
+  checks.push = (...items) => {
+    for (const item of items) console.log("QA completed: " + item);
+    return Array.prototype.push.apply(checks, items);
+  };
 let server;
 let captureRetries = 0;
 async function captureImage(contents, rectangle) {
@@ -93,7 +98,14 @@ async function waitFor(test, label, timeout = 12000) {
     )
       errors.push(event.message);
   });
-  const js = (code) => web.executeJavaScript(code, true);
+  const js = async (code) => {
+    try {
+      return await web.executeJavaScript(code, true);
+    } catch (error) {
+      console.error("Failed isolated QA script: " + code);
+      throw error;
+    }
+  };
   const revealed = () =>
     waitFor(
       () =>
@@ -1843,6 +1855,7 @@ async function waitFor(test, label, timeout = 12000) {
   app.exit(0);
 })().catch(async (error) => {
   console.error(error.stack);
+  console.error(JSON.stringify({ checksCompleted: checks.length, lastCheck: checks.at(-1), rendererErrors: errors }));
   const currentWindow = BrowserWindow.getAllWindows()[0];
   if (currentWindow) {
     console.error(
@@ -1852,6 +1865,9 @@ async function waitFor(test, label, timeout = 12000) {
         )
         .catch(() => "no diagnostic page"),
     );
+    try {
+      await fs.writeFile(resolve(__dirname, "../artifacts/screenshots/desktop-failure.png"), (await currentWindow.webContents.capturePage()).toPNG());
+    } catch {}
   }
   if (server) server.kill();
   try {
