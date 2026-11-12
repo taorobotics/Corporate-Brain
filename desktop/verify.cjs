@@ -1581,6 +1581,8 @@ async function waitFor(test, label, timeout = 12000) {
     "CSS.getPlatformFontsForNode",
     { nodeId: fontNode.nodeId },
   );
+  assert.ok(actualFonts.fonts.some(font => /Noto Sans SC/.test(font.familyName) && font.isCustomFont && font.glyphCount > 0), 'Settings text actually renders with bundled Noto Sans SC');
+  checks.push('Actual settings glyphs render with the self-hosted Noto Sans SC font');
   await fs.writeFile(
     resolve(__dirname, "../artifacts/ui-fonts.json"),
     JSON.stringify(actualFonts, null, 2),

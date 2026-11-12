@@ -168,9 +168,7 @@
   --paper-muted: #787a6d;
   --paper-back: #d7d4c9;
   --paper-middle: #eeece3;
-  --login-font:
-    Inter, "Noto Sans SC", "PingFang SC", "Microsoft YaHei UI",
-    "Microsoft YaHei", sans-serif;
+  --login-font: var(--font-ui);
   --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
   position: relative;
   isolation: isolate;

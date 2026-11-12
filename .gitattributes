@@ -1,4 +1,8 @@
 * text=auto eol=lf
+
+# Preserve original upstream font license bytes, including trailing whitespace.
+desktop/fonts/noto-sans-sc/**/OFL.txt -whitespace
+public/fonts/noto-sans-sc/**/OFL.txt -whitespace
 *.png binary
 *.woff2 binary
 artifacts/fixtures/*.pdf binary

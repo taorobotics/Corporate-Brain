@@ -118,6 +118,16 @@ async function waitFor(test, label, timeout = 15000) {
   // Audit a fresh document only after that navigation has reached login and
   // released its overlay, otherwise two loadURL calls can abort each other.
   await loginReady();
+  await js('document.fonts.ready.then(()=>true)');
+  assert.match(await js("getComputedStyle(document.querySelector('.login-submit')).fontFamily"), /^"?Noto Sans SC"?,/);
+  const fontSource = JSON.parse(await fs.readFile(resolve('public/fonts/noto-sans-sc/v41/provenance.json'), 'utf8'));
+  const fontUrl = origin + '/fonts/noto-sans-sc/v41/' + fontSource.files[0].file;
+  const fontResponse = await fetch(fontUrl);
+  assert.equal(fontResponse.status, 200);
+  assert.equal(fontResponse.headers.get('cache-control'), 'public, max-age=31536000, immutable');
+  assert.equal(Buffer.from(await fontResponse.arrayBuffer()).subarray(0, 4).toString(), 'wOF2');
+  assert.equal((await fetch(fontUrl, { headers: { 'If-None-Match': fontResponse.headers.get('etag'), 'Cache-Control': 'max-age=0' } })).status, 304);
+  checks.push('Login uses local Noto Sans SC; original Unicode font subsets have fingerprinted one-year immutable caching and conditional 304 reuse');
   await waitFor(
     () => !win.contentView.children.some(view =>
       view.webContents?.getURL().includes("startup.html")),

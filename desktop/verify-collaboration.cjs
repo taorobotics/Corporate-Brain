@@ -20,7 +20,7 @@ module.exports = async ({ js, click, waitFor, capture, win, checks }) => {
       headerBorder:getComputedStyle(app.querySelector('.chat-header')).borderBottomWidth,
       composerWidth:app.querySelector('.composer').getBoundingClientRect().width,
       font:getComputedStyle(app).fontFamily,
-      fonts:[...document.fonts].filter(f=>['Inter','Noto Sans SC'].includes(f.family)).map(f=>({family:f.family,status:f.status})),
+      fonts:[...document.fonts].filter(f=>f.family==='Noto Sans SC'&&f.status==='loaded').map(f=>({family:f.family,status:f.status})),
       nav:app.querySelectorAll('.activity-rail > button').length,
       automaticLabels:app.querySelectorAll('.composer-automatic').length};
   })()`);
@@ -29,8 +29,8 @@ module.exports = async ({ js, click, waitFor, capture, win, checks }) => {
   assert.equal(shape.adjacent, true);
   assert.equal(shape.headerBorder, "0px");
   assert.ok(shape.composerWidth >= 600, JSON.stringify(shape));
-  assert.match(shape.font, /Inter.*Noto Sans SC/);
-  assert.ok(shape.fonts.every((f) => f.status === "loaded"));
+  assert.match(shape.font, /^"?Noto Sans SC"?,/);
+  assert.ok(shape.fonts.length > 0, 'Visible UI uses the bundled Noto Sans SC subsets');
   assert.equal(shape.automaticLabels, 0);
   assert.equal(shape.nav, 6);
   await capture("collaboration-cloud-home.png");
@@ -89,6 +89,6 @@ module.exports = async ({ js, click, waitFor, capture, win, checks }) => {
     win.setContentSize(...originalSize);
   }
   checks.push(
-    "Approved collaboration layout: Cloud palette, full Noto/Inter fonts, separate activity rail, additive project navigation, compact composer, hidden redundant automatic label, borderless chat heading and real narrow window/rail collapse",
+    "Approved collaboration layout: Cloud palette, self-hosted Noto Sans SC Unicode subsets, separate activity rail, additive project navigation, compact composer, hidden redundant automatic label, borderless chat heading and real narrow window/rail collapse",
   );
 };

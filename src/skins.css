@@ -73,7 +73,7 @@
   color: var(--ink);
 }
 :root[data-skin="claude"] {
-  font-family: "Skin Inter", var(--font-ui);
+  font-family: var(--font-ui);
 }
 :root[data-skin="claude"]
   :is(.chat-welcome h1, .message.assistant .message-markdown) {
@@ -83,7 +83,7 @@
   font-family: "Skin Mono", monospace;
 }
 :root[data-skin-variant="technical"] .chat-welcome h1 {
-  font-family: "Skin Mono", var(--font-ui);
+  font-family: var(--font-ui);
 }
 :root[data-skin-variant="technical"] .chat {
   background-image:

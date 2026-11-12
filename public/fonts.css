@@ -1,20 +1,6 @@
-/* Self-hosted, full fonts keep the approved typography consistent on each OS.
-   Swap keeps first paint independent of font loading. */
-@font-face {
-  font-family: "Inter";
-  src: url("./fonts/Inter-VF.woff2") format("woff2");
-  font-style: normal;
-  font-weight: 100 900;
-  font-display: swap;
-}
-@font-face {
-  font-family: "Noto Sans SC";
-  src: url("./fonts/NotoSansSC-VF.woff2") format("woff2");
-  font-style: normal;
-  font-weight: 100 900;
-  font-display: swap;
-}
+/* Self-hosted Unicode subsets load only the glyph ranges used by the page. */
+@import url("./fonts/noto-sans-sc/v41/noto-sans-sc.3bcf594a184524ef.css");
 
 :root {
-  --font-ui: "Inter", "Noto Sans SC", "PingFang SC", "Microsoft YaHei", "Segoe UI", Arial, sans-serif;
+  --font-ui: "Noto Sans SC", "PingFang SC", "Microsoft YaHei", "Segoe UI", Arial, sans-serif;
 }
