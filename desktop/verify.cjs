@@ -247,11 +247,11 @@ async function waitFor(test, label, timeout = 12000) {
       js(
         `document.querySelector('.entry-experience')?.dataset.introDone === 'true'`,
       ),
-    "cinematic intro completes without blocking login indefinitely",
+    "login form is immediately interactive without an intro",
   );
   assert.equal(
     await js(
-      `!!document.querySelector('brain-entry-scene') && !document.querySelector('.loading-screen')`,
+      `!document.querySelector('brain-entry-scene,.entry-skip,.loading-screen') && !document.querySelector('.entry-form-stage[inert]')`,
     ),
     true,
   );
@@ -290,7 +290,7 @@ async function waitFor(test, label, timeout = 12000) {
   await waitFor(welcome, "initialized workspace");
   await revealed();
   checks.push(
-    "Shared cinematic startup, authentication, profile preparation and welcome reveal replace the old loading screen",
+    "Direct authentication and profile preparation enter the workspace without automatic cinematic startup",
   );
   checks.push("First administrator setup and login through UI");
   await require("./verify-collaboration.cjs")({

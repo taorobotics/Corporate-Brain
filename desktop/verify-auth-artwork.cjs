@@ -10,7 +10,8 @@ process.env.BRAIN_VERIFY = "1";
 let server, win;
 const checks = [],
   errors = [],
-  requests = [];
+  requests = [],
+  layouts = [];
 const delay = (ms) => new Promise((done) => setTimeout(done, ms));
 async function waitFor(test, label, timeout = 15000) {
   const end = Date.now() + timeout;
@@ -113,7 +114,62 @@ async function waitFor(test, label, timeout = 15000) {
     assert.equal(pixels.isEmpty(), false);
     await fs.writeFile(join(screenshots, name), pixels.toPNG());
   };
+  await web.debugger.sendCommand("Page.enable");
+  await web.debugger.sendCommand("Page.addScriptToEvaluateOnNewDocument", {
+    source: `window.__entryAudit={oldScene:false,inertForm:false,firstForm:0};
+      new MutationObserver(()=>{
+        const audit=window.__entryAudit;
+        audit.oldScene ||= !!document.querySelector('brain-entry-scene,.entry-scene-host,.entry-skip');
+        audit.inertForm ||= !!document.querySelector('.entry-form-stage[inert]');
+        if(!audit.firstForm && document.querySelector('.login-submit'))audit.firstForm=performance.now();
+      }).observe(document,{subtree:true,childList:true,attributes:true});`,
+  });
+  await web.loadURL(origin);
   await loginReady();
+  const entry = await js(`({...window.__entryAudit,authEnd:performance.getEntriesByType('resource').find(r=>r.name.endsWith('/api/auth/me'))?.responseEnd})`);
+  assert.equal(entry.oldScene, false);
+  assert.equal(entry.inertForm, false);
+  assert.ok(entry.firstForm > 0);
+  assert.ok(entry.authEnd > 0 && entry.firstForm - entry.authEnd < 2500,
+    "Login mounts promptly after authentication without the 3.6 second intro");
+  checks.push("Cold logged-out navigation never mounts the old intro, skip button or inert form and exposes login immediately after account check");
+  win.setMinimumSize(320, 400);
+  async function checkLayout(width, height, zoom = 1, fits = true) {
+    web.setZoomFactor(zoom);
+    win.setContentSize(width, height);
+    await delay(250);
+    const layout = await js(`(()=>{
+      const stage=document.querySelector('.entry-form-stage');
+      stage.scrollTop=0;
+      const controls=['input[name=username]','input[name=password]','.login-submit','.auth-legal','.theme-toggle'].map(s=>{
+        const r=document.querySelector(s).getBoundingClientRect();
+        return {selector:s,left:r.left,top:r.top,right:r.right,bottom:r.bottom};
+      });
+      return {width:innerWidth,height:innerHeight,scrollHeight:stage.scrollHeight,clientHeight:stage.clientHeight,
+        scrollWidth:stage.scrollWidth,clientWidth:stage.clientWidth,scrollbar:getComputedStyle(stage).scrollbarWidth,controls};
+    })()`);
+    layouts.push({window:[width,height],zoom,...layout});
+    assert.ok(layout.scrollWidth <= layout.clientWidth + 1, JSON.stringify(layout));
+    assert.equal(layout.scrollbar, "none");
+    if (fits) {
+      assert.ok(layout.scrollHeight <= layout.clientHeight + 1, "Login genuinely fits viewport: " + JSON.stringify(layout));
+      for (const control of layout.controls)
+        assert.ok(control.left >= 0 && control.top >= 0 && control.right <= layout.width + 1 && control.bottom <= layout.height + 1,
+          "Visible login control: " + JSON.stringify(control));
+    } else {
+      await js(`document.querySelector('.auth-legal').focus()`);
+      const reachable = await js(`(()=>{const r=document.querySelector('.auth-legal').getBoundingClientRect();return r.top>=0 && r.bottom<=innerHeight})()`);
+      assert.equal(reachable, true, "Very small windows can still reach the footer by keyboard and scrolling");
+    }
+  }
+  for (const [width,height,zoom] of [
+    [1762,965,1],[1468,804,1],[1366,768,1],[1280,720,1],[1024,640,1],
+    [1440,900,1.25],[1440,900,1.5],[390,844,1],[390,667,1],
+  ]) await checkLayout(width,height,zoom);
+  await checkLayout(390,480,1.5,false);
+  await checkLayout(1440,900);
+  await capture("login-production-fit.png");
+  checks.push("Desktop, narrow and 125%/150% layouts genuinely fit without page scrolling or clipped controls; extreme zoom retains keyboard/scroll access without scrollbar chrome");
   await waitFor(
     async () => ["webgl", "fallback"].includes((await state())?.mode),
     "artwork capability",
@@ -249,6 +305,7 @@ async function waitFor(test, label, timeout = 15000) {
   checks.push(
     "Real API rejects incorrect password without entering workspace; visibility toggle and administrator reset guidance work",
   );
+  await checkLayout(1280,720);
   win.setMinimumSize(360, 500);
   win.setContentSize(390, 844);
   await delay(350);
@@ -339,6 +396,7 @@ async function waitFor(test, label, timeout = 15000) {
     checks,
     consoleErrors: errors,
     externalRequests: external,
+    layouts,
   };
   await fs.writeFile(
     resolve(__dirname, "../artifacts/auth-artwork-verification.json"),

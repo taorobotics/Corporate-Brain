@@ -1,11 +1,37 @@
 body {
   margin: 0;
-  background: transparent;
+  background: #eceae6;
   color: #20221e;
   font-family: var(--font-ui);
 }
 :root[data-theme="dark"] body {
   color: #f0efe9;
+  background: #131315;
+}
+body.animation-preview {
+  background: transparent;
+}
+#connection {
+  box-sizing: border-box;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 60px 32px;
+  text-align: center;
+}
+#connection h1 {
+  font-size: 20px;
+  font-weight: 500;
+  margin: 0;
+}
+#connection p {
+  max-width: 460px;
+  font-size: 14px;
+  line-height: 1.8;
+  opacity: 0.7;
+  margin: 14px 0 0;
 }
 [hidden] {
   display: none !important;
@@ -49,8 +75,8 @@ button {
   letter-spacing: 2px;
   margin-left: 15px;
 }
-body:not(.intro-done) .window-controls,
-body:not(.intro-done) .native-skip {
+body.animation-preview:not(.intro-done) .window-controls,
+body.animation-preview:not(.intro-done) .native-skip {
   color: #f0efe9;
 }
 #actions {

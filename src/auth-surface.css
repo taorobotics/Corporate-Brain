@@ -4,14 +4,10 @@
   display: block;
   transform: none;
   overflow: auto;
+  scrollbar-width: none;
   z-index: 2;
 }
-.entry-experience[data-auth-surface="true"][data-intro-done="true"]
-  .entry-scene-host {
-  visibility: hidden;
-}
-.entry-experience[data-auth-surface="true"][data-intro-done="true"]
-  .entry-skip {
+.entry-experience[data-auth-surface="true"] .entry-form-stage::-webkit-scrollbar {
   display: none;
 }
 .entry-experience .auth.login-surface.login-scene {
@@ -38,9 +34,9 @@
 .auth.login-surface.login-scene .brand-motion-stage {
   position: relative;
   width: 100%;
-  height: 400px;
+  height: auto;
   flex: 1;
-  min-height: 360px;
+  min-height: clamp(220px, 38svh, 360px);
 }
 .auth.login-surface.login-scene .brand-visual {
   --ease-in-out: cubic-bezier(0.77, 0, 0.175, 1);
@@ -107,6 +103,7 @@
   font-size: 11px;
   min-height: 44px;
   float: none;
+  margin: 0 0 0 auto;
 }
 .auth.login-surface.login-scene .login-error {
   color: var(--auth-error);
@@ -181,7 +178,7 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding: 112px 68px 26px;
+  padding: clamp(104px, 12svh, 120px) 68px clamp(12px, 2.5svh, 26px);
   background-color: var(--dsu-bg-2);
   background-image:
     radial-gradient(
@@ -343,7 +340,7 @@
   flex: 1;
   display: flex;
   align-items: center;
-  padding: 32px 0 72px;
+  padding: 16px 0 20px;
 }
 .auth.login-surface.login-scene .studio-assembly {
   position: relative;
@@ -368,7 +365,7 @@
 .auth.login-surface.login-scene .studio-layout {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  min-height: 590px;
+  min-height: clamp(440px, 64svh, 590px);
   border: 1px solid var(--dsu-hair);
   background: var(--auth-surface);
   box-shadow:
@@ -814,14 +811,15 @@
 }
 @media (max-width: 850px) {
   .auth.login-surface.login-scene {
-    padding: 102px 38px 24px;
+    padding-left: 38px;
+    padding-right: 38px;
   }
   .auth.login-surface.login-scene .login-main {
-    padding: 26px 0 45px;
+    padding: 16px 0 20px;
   }
   .auth.login-surface.login-scene .studio-layout {
     grid-template-columns: 0.82fr 1fr;
-    min-height: 555px;
+    min-height: clamp(400px, 64svh, 555px);
   }
   .auth.login-surface.login-scene .login-sheet {
     padding: 40px 30px 0;
@@ -850,11 +848,12 @@
 }
 @media (max-width: 650px) {
   .auth.login-surface.login-scene {
-    padding: 104px 28px 22px;
+    padding-left: 28px;
+    padding-right: 28px;
   }
   .auth.login-surface.login-scene .login-main {
     width: min(430px, 100%);
-    padding: 22px 0 40px;
+    padding: 16px 0 20px;
   }
   .auth.login-surface.login-scene .studio-layout {
     display: block;
@@ -920,25 +919,25 @@
     padding-right: 23px;
   }
 }
-@media (max-height: 720px) and (min-width: 651px) {
+@media (max-height: 760px) {
   .auth.login-surface.login-scene {
-    padding-top: 86px;
-    padding-bottom: 18px;
+    padding-top: 104px;
+    padding-bottom: 12px;
   }
   .auth.login-surface.login-scene .login-main {
-    padding: 14px 0 16px;
+    padding: 12px 0;
   }
   .auth.login-surface.login-scene .login-sheet {
-    padding-top: 29px;
+    padding-top: 24px;
   }
   .auth.login-surface.login-scene .studio-layout {
-    min-height: 480px;
+    min-height: 0;
   }
   .auth.login-surface.login-scene .login-heading {
-    margin-bottom: 23px;
+    margin-bottom: 20px;
   }
   .auth.login-surface.login-scene .heading-mark {
-    margin-bottom: 14px;
+    margin-bottom: 12px;
   }
   .auth.login-surface.login-scene .login-heading h1 {
     font-size: 29px;
@@ -947,10 +946,13 @@
     margin-top: 8px;
   }
   .auth.login-surface.login-scene .login-field + .login-field {
-    margin-top: 19px;
+    margin-top: 16px;
   }
   .auth.login-surface.login-scene .login-submit {
-    margin-top: 23px;
+    margin-top: 20px;
+  }
+  .auth.login-surface.login-scene .login-content {
+    padding-bottom: 20px;
   }
   .auth.login-surface.login-scene .login-demo {
     margin: 8px 0 15px;
@@ -983,7 +985,7 @@
 }
 .auth.login-surface.login-scene .sculpture-host {
   isolation: isolate;
-  min-height: 360px;
+  min-height: clamp(220px, 38svh, 360px);
 }
 .auth.login-surface.login-scene .sculpture-ambient {
   position: absolute;
@@ -1063,11 +1065,34 @@
 }
 @media (max-width: 850px) {
   .auth.login-surface.login-scene .sculpture-host {
-    min-height: 320px;
+    min-height: clamp(220px, 38svh, 320px);
   }
 }
-@media (max-height: 720px) and (min-width: 651px) {
+@media (max-height: 760px) and (min-width: 651px) {
   .auth.login-surface.login-scene .sculpture-host {
-    min-height: 280px;
+    min-height: 220px;
+  }
+}
+@media (max-height: 640px) {
+  .auth.login-surface.login-scene .login-main {
+    padding: 8px 0;
+  }
+  .auth.login-surface.login-scene .login-sheet {
+    padding-top: 20px;
+  }
+  .auth.login-surface.login-scene .input-wrap input {
+    height: 44px;
+  }
+  .auth.login-surface.login-scene .login-submit {
+    min-height: 48px;
+    margin-top: 18px;
+    padding-top: 11px;
+    padding-bottom: 11px;
+  }
+  .auth.login-surface.login-scene .login-content {
+    padding-bottom: 16px;
+  }
+  .auth.login-surface.login-scene .sheet-footer {
+    min-height: 44px;
   }
 }

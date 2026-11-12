@@ -71,31 +71,24 @@ async function waitFor(check, label) {
   await waitFor(
     async () =>
       (await evalOverlay("document.body.innerText")).includes(
-        "正在打开公司大脑",
+        "正在连接公司工作空间",
       ),
-    "local animation while server pending",
+    "quiet local connection while server pending",
   );
   assert.equal(
     await evalOverlay("document.documentElement.dataset.theme"),
     "light",
   );
   assert.equal(await evalOverlay("typeof window.brainDesktop"), "undefined");
-  await waitFor(
-    () =>
-      evalOverlay(
-        "Array.from(document.querySelectorAll('.entry-logo')).length === 2 && Array.from(document.querySelectorAll('.entry-logo')).every(img => img.complete && img.naturalWidth === 512)",
-      ),
-    "bundled company logo loads offline under startup CSP",
-  );
   assert.equal(
     await evalOverlay(
-      "getComputedStyle(document.querySelector('.entry-logo-wrap')).backgroundColor.replaceAll(' ', '')",
+      "document.querySelector('brain-entry-scene,.entry-logo') === null && document.getElementById('skip').hidden",
     ),
-    "rgba(0,0,0,0)",
-    "Startup logo must not have a white plate",
+    true,
+    "Ordinary startup must never construct the old logo or animation",
   );
   checks.push(
-    "Warm startup remains responsive offline; default ignores dark OS; minimal isolated preload",
+    "Quiet startup has no old intro or skip button; default ignores dark OS; minimal isolated preload",
   );
   const shots = resolve("artifacts/screenshots");
   await mkdir(shots, { recursive: true });
@@ -116,19 +109,16 @@ async function waitFor(check, label) {
       }
     }
   }
-  await new Promise((done) => setTimeout(done, 3700));
   await capture("client-startup.png");
-  await evalOverlay("document.getElementById('skip').click()");
-  await waitFor(
-    async () => startupState(win)?.skipped,
-    "skip acknowledged without exposing empty page",
-  );
+  assert.ok(startupState(win), "Unpainted company navigation stays covered");
+  const readyAt = Date.now();
   mode = "ready";
   for (const res of pending) reply(res);
   await waitFor(
     async () => !startupState(win),
     "rendered company UI revealed before resource load finishes",
   );
+  assert.ok(Date.now() - readyAt < 2500, "No 3.6 second intro delay after paint");
   assert.equal(stalledImage, true);
   assert.equal(
     win.webContents.isLoading(),
@@ -138,7 +128,7 @@ async function waitFor(check, label) {
   // stop only the deliberately hung subresource before executeJavaScript calls.
   win.webContents.stop();
   checks.push(
-    "Painted app reveals while a subresource is still pending; skip never exposes a blank navigation",
+    "Painted app reveals immediately while a subresource is pending; no intro delay or blank navigation",
   );
   assert.equal(
     await win.webContents.executeJavaScript(
@@ -194,6 +184,10 @@ async function waitFor(check, label) {
   assert.equal(
     await evalOverlay("document.documentElement.dataset.theme"),
     "dark",
+  );
+  await waitFor(
+    () => evalOverlay("document.querySelectorAll('.entry-logo').length === 2 && Array.from(document.querySelectorAll('.entry-logo')).every(img => img.complete && img.naturalWidth === 512)"),
+    "explicit preview still loads bundled logos under CSP",
   );
   await new Promise((done) => setTimeout(done, 3700));
   await capture("client-startup-dark.png");

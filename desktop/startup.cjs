@@ -71,7 +71,8 @@ async function loadCompanyWindow(
 ) {
   sessions.get(owner)?.dispose();
   if (owner.isDestroyed()) return;
-  const context = { startedAt: Date.now(), skipped: false };
+  // Ordinary launches have no intro, including when an older server is loaded.
+  const context = { startedAt: Date.now(), skipped: !preview };
   entryContexts.set(owner, context);
   const view = new WebContentsView({
     webPreferences: {
@@ -86,7 +87,7 @@ async function loadCompanyWindow(
   const theme = readAppearance(address);
   view.setBackgroundColor(theme === "dark" ? "#0b0b0c" : "#e5e3df");
   let disposed = false,
-    skipped = false,
+    skipped = !preview,
     cancelAttempt,
     wakeDelay;
   const timers = new Set();
@@ -146,6 +147,7 @@ async function loadCompanyWindow(
         theme,
         version: require("./package.json").version,
         startedAt: String(context.startedAt),
+        preview: preview ? "1" : "0",
       },
     });
     if (!active()) return;
@@ -215,12 +217,7 @@ async function loadCompanyWindow(
         });
         if (!active()) return;
         send({ phase: "ready", attempt, skipped, detail: "工作空间已就绪" });
-        if (skipped) session.dispose();
-        else
-          later(() => {
-            session.dispose();
-            if (!owner.isDestroyed()) owner.webContents.focus();
-          }, 240);
+        session.dispose();
         return;
       } catch (error) {
         if (!active()) return;
