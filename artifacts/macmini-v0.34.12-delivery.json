@@ -1,0 +1,333 @@
+{
+  "version": "0.34.12",
+  "result": "passed",
+  "verifiedAt": "2026-11-12T08:54:49.047Z",
+  "sourceCommit": "33f0d54e3522b216b138ebba9dbe1e44ad8741ed",
+  "release": {
+    "id": 442668049,
+    "url": "https://github.com/taorobotics/Corporate-Brain/releases/tag/v0.34.12",
+    "assetsVerified": 13,
+    "latestVerified": true
+  },
+  "workflow": {
+    "id": 43183076971,
+    "url": "https://github.com/taorobotics/Corporate-Brain/actions/runs/43183076971/attempts/1",
+    "conclusion": "success",
+    "attempt": 1,
+    "allJobsPassed": true
+  },
+  "local": {
+    "productionBuild": true,
+    "fontRendering": {
+      "fonts": [
+        {
+          "familyName": "Noto Sans SC Thin",
+          "glyphCount": 15,
+          "isCustomFont": true,
+          "postScriptName": "Noto-Sans-SC-Thin-SemiBold"
+        },
+        {
+          "familyName": "Noto Sans SC Thin",
+          "glyphCount": 103,
+          "isCustomFont": true,
+          "postScriptName": "Noto-Sans-SC-Thin"
+        }
+      ]
+    },
+    "fontPackagePaths": {
+      "version": "0.34.12",
+      "result": "passed",
+      "unmodifiedPathFailureReproduced": true,
+      "normalizedNestedPathsVerified": true,
+      "fontFilesVerified": 107,
+      "allPackageFilesVerified": 132
+    },
+    "localFullDesktopLimitation": "v0.34.11: 61 checks passed including the font layout and actual glyph checks; the subsequent system clipboard snapshot failed locally. Complete native desktop checks are required in platform CI.",
+    "installedWindows": {
+      "version": "0.34.12",
+      "result": "passed",
+      "verifiedAt": "2026-11-12T08:43:48.821Z",
+      "officialInstallerSha256": "c2c991a5a578461052b1b9bcd5d8cbf0628fad244e83a54d88ed4322fe7bb89e",
+      "installedPreloadMatchesTag": true,
+      "existingInstallDirectoryPreserved": true,
+      "companyAddressPreserved": true,
+      "localProfilesPreserved": 5,
+      "existingConversationsPreserved": 26,
+      "existingMessagesPreserved": 96,
+      "installerExitCode": 0,
+      "automaticRestartRequested": true
+    },
+    "automaticAnimation": {
+      "version": "0.34.12",
+      "result": "passed",
+      "platform": "win32",
+      "checkedAt": "2026-11-12T08:26:02.898Z",
+      "checks": [
+        "Actual production static headers prohibit embedding the app and allow only the bundled animation document on the same origin",
+        "Unauthenticated launch and an incorrect real password remain on login and never start the decorative confirmation sequence",
+        "light: genuine authenticated startup traverses both confirmations and all original stages with zero clicks/keys, rejects forged completion messages, then removes the animation and restores workspace input",
+        "dark: genuine authenticated startup traverses both confirmations and all original stages with zero clicks/keys, rejects forged completion messages, then removes the animation and restores workspace input",
+        "Settings uses the same original automatic animation without a skip button, returns without navigation or reload, and retains the accessible Escape exit",
+        "A real blocked runtime resource releases the decorative overlay automatically and leaves the authenticated settings usable",
+        "System reduced-motion preference bypasses the decorative sequence without waiting"
+      ],
+      "layouts": [
+        {
+          "theme": "light",
+          "clicks": 0,
+          "keys": 0,
+          "phases": [
+            "需要访问许可",
+            "身份资料确认",
+            "接收访问需求",
+            "开始读取权限",
+            "读取完毕 · 核验通过"
+          ]
+        },
+        {
+          "theme": "dark",
+          "clicks": 0,
+          "keys": 0,
+          "phases": [
+            "需要访问许可",
+            "身份资料确认",
+            "接收访问需求",
+            "开始读取权限",
+            "读取完毕 · 核验通过"
+          ]
+        }
+      ],
+      "consoleErrors": [],
+      "externalRequests": [],
+      "productionModelsCalled": false,
+      "systemPermissionsRequested": false
+    },
+    "fullPlatformSuites": "Complete server, desktop, profile, production and native installer suites verified in platform CI",
+    "sourceHistoryCommitsScanned": 227,
+    "historyLeaks": 0
+  },
+  "native": {
+    "windows-verification-x64.json": {
+      "sourceCommit": "33f0d54e3522b216b138ebba9dbe1e44ad8741ed",
+      "desktopChecks": 69,
+      "artworkCapability": "webgl",
+      "artworkChecks": 9,
+      "installerChecks": 20,
+      "handoffChecks": 8,
+      "visibleConnection": {
+        "result": "passed",
+        "normalPackagedMode": true,
+        "offscreen": false,
+        "forcedBackgroundRendering": false,
+        "cases": [
+          {
+            "minimized": false,
+            "visibilityBefore": "hidden",
+            "contentToHandoffMs": 95,
+            "coverRemoved": true,
+            "navigationCount": 1,
+            "pendingResourceDidNotBlock": true
+          },
+          {
+            "minimized": true,
+            "visibilityBefore": "hidden",
+            "contentToHandoffMs": 84,
+            "coverRemoved": true,
+            "navigationCount": 1,
+            "pendingResourceDidNotBlock": true
+          }
+        ]
+      },
+      "automaticAnimationChecks": 7,
+      "signing": "NotSigned"
+    },
+    "macos-verification-arm64.json": {
+      "sourceCommit": "33f0d54e3522b216b138ebba9dbe1e44ad8741ed",
+      "desktopChecks": 67,
+      "artworkCapability": "webgl",
+      "artworkChecks": 9,
+      "visibleConnection": {
+        "result": "passed",
+        "normalPackagedMode": true,
+        "offscreen": false,
+        "forcedBackgroundRendering": false,
+        "cases": [
+          {
+            "minimized": false,
+            "visibilityBefore": "visible",
+            "contentToHandoffMs": 88,
+            "coverRemoved": true,
+            "navigationCount": 1,
+            "pendingResourceDidNotBlock": true
+          },
+          {
+            "minimized": true,
+            "visibilityBefore": "hidden",
+            "contentToHandoffMs": 82,
+            "coverRemoved": true,
+            "navigationCount": 1,
+            "pendingResourceDidNotBlock": true
+          }
+        ]
+      },
+      "automaticAnimationChecks": 7,
+      "signing": "ad-hoc"
+    },
+    "macos-verification-x64.json": {
+      "sourceCommit": "33f0d54e3522b216b138ebba9dbe1e44ad8741ed",
+      "desktopChecks": 67,
+      "artworkCapability": "fallback",
+      "artworkChecks": 9,
+      "visibleConnection": {
+        "result": "passed",
+        "normalPackagedMode": true,
+        "offscreen": false,
+        "forcedBackgroundRendering": false,
+        "cases": [
+          {
+            "minimized": false,
+            "visibilityBefore": "visible",
+            "contentToHandoffMs": 85,
+            "coverRemoved": true,
+            "navigationCount": 1,
+            "pendingResourceDidNotBlock": true
+          },
+          {
+            "minimized": true,
+            "visibilityBefore": "hidden",
+            "contentToHandoffMs": 86,
+            "coverRemoved": true,
+            "navigationCount": 1,
+            "pendingResourceDidNotBlock": true
+          }
+        ]
+      },
+      "automaticAnimationChecks": 7,
+      "signing": "ad-hoc"
+    },
+    "server-verification.json": {
+      "sourceCommit": "33f0d54e3522b216b138ebba9dbe1e44ad8741ed",
+      "signing": null
+    }
+  },
+  "macMini": {
+    "businessVersion": "0.34.12",
+    "installerVersion": "0.34.12",
+    "consistentBackupCreated": true,
+    "dataPreserved": true,
+    "modelSettingsPreserved": true,
+    "modelCredentialsPreserved": true,
+    "counts": {
+      "users": 224,
+      "departments": 13,
+      "nas_sources": 14,
+      "skills": 3,
+      "feedback": 0,
+      "community_plugins": 0
+    },
+    "strictHttps": true,
+    "compiledAssetsVerified": 4,
+    "fontVerification": {
+      "family": "Noto Sans SC",
+      "providerVersion": "v41",
+      "subsets": 101,
+      "verifiedSubsets": 101,
+      "woff2Bytes": 4500544,
+      "localOnly": true,
+      "immutable": true
+    },
+    "actualClient": {
+      "version": "0.34.12",
+      "clientVersion": "0.34.12",
+      "uiFont": {
+        "family": "Noto Sans SC",
+        "actuallyRendered": true,
+        "loadedSubsets": 8,
+        "availableSubsets": 101,
+        "onlyRequiredSubsetsLoaded": true
+      },
+      "result": "passed",
+      "verifiedAt": "2026-11-12T08:45:11.494Z",
+      "strictHttps": true,
+      "productionServer": true,
+      "realElectronClient": true,
+      "realPackagedMode": true,
+      "offscreen": false,
+      "forcedBackgroundRendering": false,
+      "startupCoverRemoved": true,
+      "loginDisplayed": true,
+      "connectionMs": 2802,
+      "authenticationRequired": true,
+      "noUnauthenticatedIntro": true,
+      "employeeChatAccessed": false,
+      "productionModelsCalled": false
+    },
+    "oldUpdater": {
+      "version": "0.34.12",
+      "result": "passed",
+      "checkedAt": "2026-11-12T08:42:47.006Z",
+      "actualPriorVersionModule": true,
+      "currentClientSeesNoUpdate": true,
+      "installed03410SeesUpdate": true,
+      "results": [
+        {
+          "target": "win32-x64",
+          "version": "0.34.12",
+          "bytes": 116749517,
+          "sha256": "c2c991a5a578461052b1b9bcd5d8cbf0628fad244e83a54d88ed4322fe7bb89e",
+          "oldClientVersion": "0.33.12",
+          "state": "ready",
+          "installerExecuted": false
+        },
+        {
+          "target": "darwin-arm64",
+          "version": "0.34.12",
+          "bytes": 136606940,
+          "sha256": "e540807171ca365c9dee0f28e79ea6ea574af17acbb925a4191ed8ef8459904a",
+          "oldClientVersion": "0.33.12",
+          "state": "ready",
+          "installerExecuted": false
+        },
+        {
+          "target": "darwin-x64",
+          "version": "0.34.12",
+          "bytes": 142119402,
+          "sha256": "a773d45a21b0417cde414fc9f69504a260f0c8a648e524cbd34126de90b76c29",
+          "oldClientVersion": "0.33.12",
+          "state": "ready",
+          "installerExecuted": false
+        }
+      ]
+    },
+    "independentDependenciesInstalled": true
+  },
+  "cloud": {
+    "version": "0.34.12",
+    "result": "passed",
+    "assets": [
+      {
+        "target": "win32-x64",
+        "name": "Corporate-Brain-Setup-0.34.12-x64.exe",
+        "bytes": 116749517,
+        "sha256": "c2c991a5a578461052b1b9bcd5d8cbf0628fad244e83a54d88ed4322fe7bb89e"
+      },
+      {
+        "target": "darwin-arm64",
+        "name": "Corporate-Brain-0.34.12-macOS-arm64.dmg",
+        "bytes": 136606940,
+        "sha256": "e540807171ca365c9dee0f28e79ea6ea574af17acbb925a4191ed8ef8459904a"
+      },
+      {
+        "target": "darwin-x64",
+        "name": "Corporate-Brain-0.34.12-macOS-x64.dmg",
+        "bytes": 142119402,
+        "sha256": "a773d45a21b0417cde414fc9f69504a260f0c8a648e524cbd34126de90b76c29"
+      }
+    ],
+    "checkedAt": "2026-11-12T08:54:32.724Z"
+  },
+  "signing": {
+    "windows": "NotSigned",
+    "macOS": "ad-hoc; not notarized"
+  }
+}
