@@ -1,0 +1,292 @@
+{
+  "version": "0.34.10",
+  "result": "passed",
+  "verifiedAt": "2026-11-12T07:43:28.286Z",
+  "sourceCommit": "041b80ee9adf865cddbdc8ec95ed1f7d42ec09ff",
+  "release": {
+    "id": 442605685,
+    "url": "https://github.com/taorobotics/Corporate-Brain/releases/tag/v0.34.10",
+    "assetsVerified": 13,
+    "latestVerified": true
+  },
+  "workflow": {
+    "id": 43174110737,
+    "url": "https://github.com/taorobotics/Corporate-Brain/actions/runs/43174110737/attempts/1",
+    "conclusion": "success",
+    "attempt": 1,
+    "allJobsPassed": true
+  },
+  "local": {
+    "productionBuild": true,
+    "installedWindows": {
+      "version": "0.34.10",
+      "result": "passed",
+      "verifiedAt": "2026-11-12T07:33:43.603Z",
+      "officialInstallerSha256": "c4a6f6033aba012986beb45591ac5f31fb5e00b5381ae1a28968811f3f41025b",
+      "installedPreloadMatchesTag": true,
+      "existingInstallDirectoryPreserved": true,
+      "companyAddressPreserved": true,
+      "localProfilesPreserved": 5,
+      "existingConversationsPreserved": 26,
+      "existingMessagesPreserved": 96,
+      "installerExitCode": 0,
+      "automaticRestartRequested": true
+    },
+    "automaticAnimation": {
+      "version": "0.34.10",
+      "result": "passed",
+      "platform": "win32",
+      "checkedAt": "2026-11-12T07:15:10.435Z",
+      "checks": [
+        "Actual production static headers prohibit embedding the app and allow only the bundled animation document on the same origin",
+        "Unauthenticated launch and an incorrect real password remain on login and never start the decorative confirmation sequence",
+        "light: genuine authenticated startup traverses both confirmations and all original stages with zero clicks/keys, rejects forged completion messages, then removes the animation and restores workspace input",
+        "dark: genuine authenticated startup traverses both confirmations and all original stages with zero clicks/keys, rejects forged completion messages, then removes the animation and restores workspace input",
+        "Settings uses the same original automatic animation without a skip button, returns without navigation or reload, and retains the accessible Escape exit",
+        "A real blocked runtime resource releases the decorative overlay automatically and leaves the authenticated settings usable",
+        "System reduced-motion preference bypasses the decorative sequence without waiting"
+      ],
+      "layouts": [
+        {
+          "theme": "light",
+          "clicks": 0,
+          "keys": 0,
+          "phases": [
+            "需要访问许可",
+            "身份资料确认",
+            "接收访问需求",
+            "开始读取权限",
+            "读取完毕 · 核验通过"
+          ]
+        },
+        {
+          "theme": "dark",
+          "clicks": 0,
+          "keys": 0,
+          "phases": [
+            "需要访问许可",
+            "身份资料确认",
+            "接收访问需求",
+            "开始读取权限",
+            "读取完毕 · 核验通过"
+          ]
+        }
+      ],
+      "consoleErrors": [],
+      "externalRequests": [],
+      "productionModelsCalled": false,
+      "systemPermissionsRequested": false
+    },
+    "fullPlatformSuites": "Complete server, desktop, profile, production and native installer suites verified in platform CI",
+    "sourceHistoryCommitsScanned": 224,
+    "historyLeaks": 0
+  },
+  "native": {
+    "windows-verification-x64.json": {
+      "sourceCommit": "041b80ee9adf865cddbdc8ec95ed1f7d42ec09ff",
+      "desktopChecks": 68,
+      "artworkCapability": "webgl",
+      "artworkChecks": 8,
+      "installerChecks": 20,
+      "handoffChecks": 8,
+      "visibleConnection": {
+        "result": "passed",
+        "normalPackagedMode": true,
+        "offscreen": false,
+        "forcedBackgroundRendering": false,
+        "cases": [
+          {
+            "minimized": false,
+            "visibilityBefore": "hidden",
+            "contentToHandoffMs": 85,
+            "coverRemoved": true,
+            "navigationCount": 1,
+            "pendingResourceDidNotBlock": true
+          },
+          {
+            "minimized": true,
+            "visibilityBefore": "hidden",
+            "contentToHandoffMs": 94,
+            "coverRemoved": true,
+            "navigationCount": 1,
+            "pendingResourceDidNotBlock": true
+          }
+        ]
+      },
+      "automaticAnimationChecks": 7,
+      "signing": "NotSigned"
+    },
+    "macos-verification-arm64.json": {
+      "sourceCommit": "041b80ee9adf865cddbdc8ec95ed1f7d42ec09ff",
+      "desktopChecks": 66,
+      "artworkCapability": "webgl",
+      "artworkChecks": 8,
+      "visibleConnection": {
+        "result": "passed",
+        "normalPackagedMode": true,
+        "offscreen": false,
+        "forcedBackgroundRendering": false,
+        "cases": [
+          {
+            "minimized": false,
+            "visibilityBefore": "visible",
+            "contentToHandoffMs": 86,
+            "coverRemoved": true,
+            "navigationCount": 1,
+            "pendingResourceDidNotBlock": true
+          },
+          {
+            "minimized": true,
+            "visibilityBefore": "hidden",
+            "contentToHandoffMs": 83,
+            "coverRemoved": true,
+            "navigationCount": 1,
+            "pendingResourceDidNotBlock": true
+          }
+        ]
+      },
+      "automaticAnimationChecks": 7,
+      "signing": "ad-hoc"
+    },
+    "macos-verification-x64.json": {
+      "sourceCommit": "041b80ee9adf865cddbdc8ec95ed1f7d42ec09ff",
+      "desktopChecks": 66,
+      "artworkCapability": "fallback",
+      "artworkChecks": 8,
+      "visibleConnection": {
+        "result": "passed",
+        "normalPackagedMode": true,
+        "offscreen": false,
+        "forcedBackgroundRendering": false,
+        "cases": [
+          {
+            "minimized": false,
+            "visibilityBefore": "visible",
+            "contentToHandoffMs": 83,
+            "coverRemoved": true,
+            "navigationCount": 1,
+            "pendingResourceDidNotBlock": true
+          },
+          {
+            "minimized": true,
+            "visibilityBefore": "hidden",
+            "contentToHandoffMs": 84,
+            "coverRemoved": true,
+            "navigationCount": 1,
+            "pendingResourceDidNotBlock": true
+          }
+        ]
+      },
+      "automaticAnimationChecks": 7,
+      "signing": "ad-hoc"
+    },
+    "server-verification.json": {
+      "sourceCommit": "041b80ee9adf865cddbdc8ec95ed1f7d42ec09ff",
+      "signing": null
+    }
+  },
+  "macMini": {
+    "businessVersion": "0.34.10",
+    "installerVersion": "0.34.10",
+    "consistentBackupCreated": true,
+    "dataPreserved": true,
+    "modelSettingsPreserved": true,
+    "modelCredentialsPreserved": true,
+    "counts": {
+      "users": 224,
+      "departments": 13,
+      "nas_sources": 14,
+      "skills": 3,
+      "feedback": 0,
+      "community_plugins": 0
+    },
+    "strictHttps": true,
+    "compiledAssetsVerified": 6,
+    "actualClient": {
+      "version": "0.34.10",
+      "clientVersion": "0.34.10",
+      "result": "passed",
+      "verifiedAt": "2026-11-12T07:34:59.855Z",
+      "strictHttps": true,
+      "productionServer": true,
+      "realElectronClient": true,
+      "realPackagedMode": true,
+      "offscreen": false,
+      "forcedBackgroundRendering": false,
+      "startupCoverRemoved": true,
+      "loginDisplayed": true,
+      "connectionMs": 1844,
+      "authenticationRequired": true,
+      "noUnauthenticatedIntro": true,
+      "employeeChatAccessed": false,
+      "productionModelsCalled": false
+    },
+    "oldUpdater": {
+      "version": "0.34.10",
+      "result": "passed",
+      "checkedAt": "2026-11-12T07:32:38.182Z",
+      "actualPriorVersionModule": true,
+      "currentClientSeesNoUpdate": true,
+      "installed0348SeesUpdate": true,
+      "results": [
+        {
+          "target": "win32-x64",
+          "version": "0.34.10",
+          "bytes": 120060330,
+          "sha256": "c4a6f6033aba012986beb45591ac5f31fb5e00b5381ae1a28968811f3f41025b",
+          "oldClientVersion": "0.33.12",
+          "state": "ready",
+          "installerExecuted": false
+        },
+        {
+          "target": "darwin-arm64",
+          "version": "0.34.10",
+          "bytes": 139923914,
+          "sha256": "5ca0c8a22af526c6cadcf04da0d7ff87f417bdcd9f6ca4158accebb553b15c7b",
+          "oldClientVersion": "0.33.12",
+          "state": "ready",
+          "installerExecuted": false
+        },
+        {
+          "target": "darwin-x64",
+          "version": "0.34.10",
+          "bytes": 145457869,
+          "sha256": "1795700b2cd25dce1bbdb54d5f9c6020e1b9d076b0ab6779953a5243161a12b0",
+          "oldClientVersion": "0.33.12",
+          "state": "ready",
+          "installerExecuted": false
+        }
+      ]
+    },
+    "independentDependenciesInstalled": true
+  },
+  "cloud": {
+    "version": "0.34.10",
+    "result": "passed",
+    "assets": [
+      {
+        "target": "win32-x64",
+        "name": "Corporate-Brain-Setup-0.34.10-x64.exe",
+        "bytes": 120060330,
+        "sha256": "c4a6f6033aba012986beb45591ac5f31fb5e00b5381ae1a28968811f3f41025b"
+      },
+      {
+        "target": "darwin-arm64",
+        "name": "Corporate-Brain-0.34.10-macOS-arm64.dmg",
+        "bytes": 139923914,
+        "sha256": "5ca0c8a22af526c6cadcf04da0d7ff87f417bdcd9f6ca4158accebb553b15c7b"
+      },
+      {
+        "target": "darwin-x64",
+        "name": "Corporate-Brain-0.34.10-macOS-x64.dmg",
+        "bytes": 145457869,
+        "sha256": "1795700b2cd25dce1bbdb54d5f9c6020e1b9d076b0ab6779953a5243161a12b0"
+      }
+    ],
+    "checkedAt": "2026-11-12T07:43:17.634Z"
+  },
+  "signing": {
+    "windows": "NotSigned",
+    "macOS": "ad-hoc; not notarized"
+  }
+}
