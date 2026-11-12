@@ -164,7 +164,7 @@ async function waitFor(test, label, timeout = 15000) {
   }
   for (const [width,height,zoom] of [
     [1762,965,1],[1468,804,1],[1366,768,1],[1280,720,1],[1024,640,1],
-    [1440,900,1.25],[1440,900,1.5],[390,844,1],[390,667,1],
+    [1440,900,1.25],[1440,900,1.5],[1152,547,1],[960,456,1],[390,844,1],[390,667,1],
   ]) await checkLayout(width,height,zoom);
   await checkLayout(390,480,1.5,false);
   await checkLayout(1440,900);

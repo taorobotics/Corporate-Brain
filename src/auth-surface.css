@@ -1096,3 +1096,57 @@
     min-height: 44px;
   }
 }
+@media (max-height: 600px) {
+  .auth.login-surface.login-scene .login-main {
+    padding: 6px 0;
+  }
+  .auth.login-surface.login-scene .login-sheet {
+    padding-top: 16px;
+  }
+  .auth.login-surface.login-scene .heading-mark {
+    display: none;
+  }
+  .auth.login-surface.login-scene .login-heading {
+    margin-bottom: 16px;
+  }
+  .auth.login-surface.login-scene .login-heading h1 {
+    font-size: 26px;
+  }
+  .auth.login-surface.login-scene .field-heading {
+    min-height: 18px;
+    margin-bottom: 6px;
+  }
+  .auth.login-surface.login-scene .login-field + .login-field {
+    margin-top: 12px;
+  }
+  .auth.login-surface.login-scene .login-submit {
+    margin-top: 16px;
+  }
+  .auth.login-surface.login-scene .login-content {
+    padding-bottom: 12px;
+  }
+  .auth.login-surface.login-scene .sheet-footer {
+    min-height: 40px;
+  }
+}
+@media (max-height: 540px) {
+  .auth.login-surface.login-scene {
+    padding-top: 96px;
+    padding-bottom: 8px;
+  }
+  .auth.login-surface.login-scene .login-main {
+    width: min(430px, 100%);
+    padding: 4px 0;
+  }
+  .auth.login-surface.login-scene .studio-layout {
+    grid-template-columns: 1fr;
+  }
+  .auth.login-surface.login-scene .brand-visual,
+  .auth.login-surface.login-scene .sheet-footer,
+  .auth.login-surface.login-scene .login-heading p {
+    display: none;
+  }
+  .auth.login-surface.login-scene .login-heading {
+    margin-bottom: 12px;
+  }
+}
