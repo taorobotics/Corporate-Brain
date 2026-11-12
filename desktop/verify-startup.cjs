@@ -124,6 +124,7 @@ async function waitFor(check, label) {
     "rendered company UI revealed before resource load finishes",
   );
   assert.ok(Date.now() - readyAt < 2500, "No 3.6 second intro delay after paint");
+  await waitFor(async () => stalledImage, "deliberately slow image request started");
   assert.equal(stalledImage, true);
   assert.equal(
     win.webContents.isLoading(),

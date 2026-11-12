@@ -90,6 +90,7 @@ export async function verifyPackagedConnection(binary) {
       }, 'native cover removed without waiting for animation frames', 6000);
       const elapsed = Date.now() - readyAt;
       assert.equal(pageRequests, 1, 'No timeout/retry navigation is needed for an already usable page');
+      await until(() => pending.size > 0, 'deliberately pending image request started');
       assert.ok(pending.size > 0, 'Handoff must not wait for the deliberately pending image');
       cases.push({ minimized, visibilityBefore, contentToHandoffMs: elapsed, coverRemoved: true, navigationCount: pageRequests, pendingResourceDidNotBlock: true });
       await cdp('Browser.close', {}).catch(() => {});
