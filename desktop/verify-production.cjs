@@ -201,7 +201,7 @@ const wait = async (fn, label, ms = 45000) => {
     await web.debugger.sendCommand("Emulation.setFocusEmulationEnabled", {
       enabled: true,
     });
-    const js = (source) => web.executeJavaScript(source, true);
+    const js = (source) => require("./verify-navigation.cjs")(web, source);
     const capture = async () => {
       for (let attempt = 0; attempt < 3; attempt++) {
         win.showInactive();

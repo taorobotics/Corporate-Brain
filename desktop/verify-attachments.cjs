@@ -62,7 +62,7 @@ const wait = async (test, label, timeout = 45000) => {
       )
         errors.push(event.message);
     });
-    const js = (source) => web.executeJavaScript(source, true);
+    const js = (source) => require("./verify-navigation.cjs")(web, source);
     const click = (label) =>
       js(
         `(()=>{const b=[...document.querySelectorAll('button')].find(x=>x.getAttribute('aria-label')===${JSON.stringify(label)}||x.textContent.trim()===${JSON.stringify(label)});if(!b)throw Error('Button missing: '+${JSON.stringify(label)});b.click();return true})()`,

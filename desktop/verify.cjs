@@ -100,7 +100,7 @@ async function waitFor(test, label, timeout = 12000) {
   });
   const js = async (code) => {
     try {
-      return await web.executeJavaScript(code, true);
+      return await require("./verify-navigation.cjs")(web, code);
     } catch (error) {
       console.error("Failed isolated QA script: " + code);
       throw error;

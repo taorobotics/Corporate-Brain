@@ -142,7 +142,7 @@ module.exports = async function ({
     await waitFor(
       () =>
         js(
-          `!!document.querySelector('.model-service-list')&&!document.querySelector('.entry-experience')`,
+          `[...document.querySelectorAll('.model-service-list .connection-card')].some(card=>card.querySelector('h3')?.textContent.includes(${JSON.stringify(service.name)})&&[...card.querySelectorAll('button')].some(button=>button.textContent.trim()==='管理模型'))&&!document.querySelector('.entry-experience')`,
         ),
       "picker fixture restored",
     );

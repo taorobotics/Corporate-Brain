@@ -63,7 +63,7 @@ const wait = async (fn, label, timeout = 45000) => {
       )
         errors.push(event.message);
     });
-    const js = (source) => web.executeJavaScript(source, true);
+    const js = (source) => require("./verify-navigation.cjs")(web, source);
     const capture = async () => {
       win.showInactive();
       for (let attempt = 0; attempt < 3; attempt++) {
