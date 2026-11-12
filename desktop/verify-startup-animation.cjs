@@ -74,6 +74,7 @@ async function until(test, label, timeout = 25000) {
     await until(() => !!child(), theme + ' animation document');
     await until(() => child()?.executeJavaScript(`!!window.__DSH_STARTUP_API__`), theme + ' original runtime');
     const frame = child();
+    assert.equal(await js(`!!document.querySelector('.startup-animation-skip')`), false, 'Automatic startup has no skip button');
     assert.equal(await frame.executeJavaScript('typeof window.brainDesktop'), 'undefined', 'Animation has no native file or account IPC bridge');
     assert.equal(await frame.executeJavaScript('window.__DSH_STARTUP_API__.config.requireInteraction'), false);
     assert.equal(await frame.executeJavaScript('window.__DSH_STARTUP_API__.config.theme'), theme);
@@ -102,10 +103,12 @@ async function until(test, label, timeout = 25000) {
   await preview(); await until(() => !!child(), 'preview animation');
   await until(() => js(`!document.querySelector('.startup-animation')`), 'preview automatically returns');
   assert.equal(await js(`location.hash`), '#settings');
-  await preview(); await until(() => js(`!!document.querySelector('.startup-animation-skip')`), 'preview skip');
-  await js(`document.querySelector('.startup-animation-skip').click()`);
-  await until(() => js(`!document.querySelector('.startup-animation')`), 'skip returns');
-  checks.push('Settings uses the same original automatic animation, returns without navigation or reload, and its single skip action closes immediately');
+  await preview(); await until(() => !!child(), 'preview keyboard exit');
+  assert.equal(await js(`!!document.querySelector('.startup-animation-skip')`), false, 'Settings preview has no skip button');
+  web.sendInputEvent({ type: 'keyDown', keyCode: 'Escape' });
+  web.sendInputEvent({ type: 'keyUp', keyCode: 'Escape' });
+  await until(() => js(`!document.querySelector('.startup-animation')`), 'keyboard returns');
+  checks.push('Settings uses the same original automatic animation without a skip button, returns without navigation or reload, and retains the accessible Escape exit');
   expectedFailure = true;
   await preview();
   await until(() => js(`!document.querySelector('.startup-animation')`), 'failed runtime releases preview', 5000);

@@ -55,9 +55,6 @@ export default function StartupAnimation({
         referrerPolicy="no-referrer"
         onError={() => finish.current()}
       />
-      <button className="startup-animation-skip" onClick={() => finish.current()}>
-        跳过动画 <kbd>Esc</kbd>
-      </button>
     </div>
   );
 }
