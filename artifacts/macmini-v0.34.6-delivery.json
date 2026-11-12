@@ -1,0 +1,947 @@
+{
+  "version": "0.34.6",
+  "result": "passed",
+  "verifiedAt": "2026-11-12T04:16:21.836Z",
+  "sourceCommit": "4abe27c1d13b55426dbfaafa2e210131f338a4b6",
+  "release": {
+    "id": 442471527,
+    "url": "https://github.com/taorobotics/Corporate-Brain/releases/tag/v0.34.6",
+    "assetsVerified": 13,
+    "latestVerified": true
+  },
+  "workflow": {
+    "id": 43150235691,
+    "url": "https://github.com/taorobotics/Corporate-Brain/actions/runs/43150235691/attempts/2",
+    "conclusion": "success",
+    "attempt": 2,
+    "allJobsPassed": true,
+    "firstAttempt": {
+      "conclusion": "failure",
+      "failedPlatform": "macOS arm64",
+      "failedCheck": "390px login artwork visibility after resizing",
+      "sameImmutableSourceRerunPassed": true
+    }
+  },
+  "local": {
+    "initialServerTests": 206,
+    "nasTests": 8,
+    "actualArtwork": {
+      "result": "passed",
+      "version": "0.34.6",
+      "runtime": "Real Electron + production bundle + disposable company API",
+      "capability": "webgl",
+      "checks": [
+        "Cold logged-out navigation never mounts the old intro, skip button or inert form and exposes login immediately after account check",
+        "Desktop, narrow and 125%/150% layouts genuinely fit without page scrolling or clipped controls; extreme zoom retains keyboard/scroll access without scrollbar chrome",
+        "Approved production artwork contains no logo, lettering or demo account; initialized company exposes login only",
+        "Real WebGL frames, pointer follow, manual pause, system reduced motion and hidden-window pause verified",
+        "Real API rejects incorrect password without entering workspace; visibility toggle and administrator reset guidance work",
+        "Light/dark themes and 390px layout keep the real form accessible without horizontal scroll",
+        "Real company account signs in and the artwork releases its rendering resources on unmount",
+        "Lost or unavailable WebGL falls back to original static planet and still exposes login"
+      ],
+      "consoleErrors": [],
+      "externalRequests": [],
+      "layouts": [
+        {
+          "window": [
+            1762,
+            965
+          ],
+          "zoom": 1,
+          "width": 1762,
+          "height": 965,
+          "scrollHeight": 965,
+          "clientHeight": 965,
+          "scrollWidth": 1762,
+          "clientWidth": 1762,
+          "scrollbar": "none",
+          "controls": [
+            {
+              "selector": "input[name=username]",
+              "left": 943,
+              "top": 440.515625,
+              "right": 1350,
+              "bottom": 492.515625
+            },
+            {
+              "selector": "input[name=password]",
+              "left": 943,
+              "top": 547.515625,
+              "right": 1350,
+              "bottom": 599.515625
+            },
+            {
+              "selector": ".login-submit",
+              "left": 943,
+              "top": 627.515625,
+              "right": 1350,
+              "bottom": 681.515625
+            },
+            {
+              "selector": ".auth-legal",
+              "left": 1627,
+              "top": 896.875,
+              "right": 1694,
+              "bottom": 940.875
+            },
+            {
+              "selector": ".theme-toggle",
+              "left": 1672,
+              "top": 50,
+              "right": 1716,
+              "bottom": 94
+            }
+          ]
+        },
+        {
+          "window": [
+            1468,
+            804
+          ],
+          "zoom": 1,
+          "width": 1468,
+          "height": 804,
+          "scrollHeight": 804,
+          "clientHeight": 804,
+          "scrollWidth": 1468,
+          "clientWidth": 1468,
+          "scrollbar": "none",
+          "controls": [
+            {
+              "selector": "input[name=username]",
+              "left": 796,
+              "top": 370.046875,
+              "right": 1203,
+              "bottom": 422.046875
+            },
+            {
+              "selector": "input[name=password]",
+              "left": 796,
+              "top": 477.046875,
+              "right": 1203,
+              "bottom": 529.046875
+            },
+            {
+              "selector": ".login-submit",
+              "left": 796,
+              "top": 557.046875,
+              "right": 1203,
+              "bottom": 611.046875
+            },
+            {
+              "selector": ".auth-legal",
+              "left": 1333,
+              "top": 739.90625,
+              "right": 1400,
+              "bottom": 783.90625
+            },
+            {
+              "selector": ".theme-toggle",
+              "left": 1378,
+              "top": 50,
+              "right": 1422,
+              "bottom": 94
+            }
+          ]
+        },
+        {
+          "window": [
+            1366,
+            768
+          ],
+          "zoom": 1,
+          "width": 1366,
+          "height": 768,
+          "scrollHeight": 768,
+          "clientHeight": 768,
+          "scrollWidth": 1366,
+          "clientWidth": 1366,
+          "scrollbar": "none",
+          "controls": [
+            {
+              "selector": "input[name=username]",
+              "left": 745,
+              "top": 355.5,
+              "right": 1152,
+              "bottom": 407.5
+            },
+            {
+              "selector": "input[name=password]",
+              "left": 745,
+              "top": 462.5,
+              "right": 1152,
+              "bottom": 514.5
+            },
+            {
+              "selector": ".login-submit",
+              "left": 745,
+              "top": 542.5,
+              "right": 1152,
+              "bottom": 596.5
+            },
+            {
+              "selector": ".auth-legal",
+              "left": 1231,
+              "top": 704.8125,
+              "right": 1298,
+              "bottom": 748.8125
+            },
+            {
+              "selector": ".theme-toggle",
+              "left": 1276,
+              "top": 50,
+              "right": 1320,
+              "bottom": 94
+            }
+          ]
+        },
+        {
+          "window": [
+            1280,
+            720
+          ],
+          "zoom": 1,
+          "width": 1280,
+          "height": 720,
+          "scrollHeight": 720,
+          "clientHeight": 720,
+          "scrollWidth": 1280,
+          "clientWidth": 1280,
+          "scrollbar": "none",
+          "controls": [
+            {
+              "selector": "input[name=username]",
+              "left": 702,
+              "top": 318.984375,
+              "right": 1109,
+              "bottom": 370.984375
+            },
+            {
+              "selector": "input[name=password]",
+              "left": 702,
+              "top": 417.984375,
+              "right": 1109,
+              "bottom": 469.984375
+            },
+            {
+              "selector": ".login-submit",
+              "left": 702,
+              "top": 489.984375,
+              "right": 1109,
+              "bottom": 543.984375
+            },
+            {
+              "selector": ".auth-legal",
+              "left": 1145,
+              "top": 664,
+              "right": 1212,
+              "bottom": 708
+            },
+            {
+              "selector": ".theme-toggle",
+              "left": 1190,
+              "top": 50,
+              "right": 1234,
+              "bottom": 94
+            }
+          ]
+        },
+        {
+          "window": [
+            1024,
+            640
+          ],
+          "zoom": 1,
+          "width": 1024,
+          "height": 640,
+          "scrollHeight": 640,
+          "clientHeight": 640,
+          "scrollWidth": 1024,
+          "clientWidth": 1024,
+          "scrollbar": "none",
+          "controls": [
+            {
+              "selector": "input[name=username]",
+              "left": 554,
+              "top": 291.984375,
+              "right": 927,
+              "bottom": 335.984375
+            },
+            {
+              "selector": "input[name=password]",
+              "left": 554,
+              "top": 382.984375,
+              "right": 927,
+              "bottom": 426.984375
+            },
+            {
+              "selector": ".login-submit",
+              "left": 554,
+              "top": 444.984375,
+              "right": 927,
+              "bottom": 492.984375
+            },
+            {
+              "selector": ".auth-legal",
+              "left": 903,
+              "top": 584,
+              "right": 970,
+              "bottom": 628
+            },
+            {
+              "selector": ".theme-toggle",
+              "left": 934,
+              "top": 50,
+              "right": 978,
+              "bottom": 94
+            }
+          ]
+        },
+        {
+          "window": [
+            1440,
+            900
+          ],
+          "zoom": 1.25,
+          "width": 1152,
+          "height": 720,
+          "scrollHeight": 720,
+          "clientHeight": 720,
+          "scrollWidth": 1152,
+          "clientWidth": 1152,
+          "scrollbar": "none",
+          "controls": [
+            {
+              "selector": "input[name=username]",
+              "left": 638,
+              "top": 319,
+              "right": 1021.2000122070312,
+              "bottom": 371
+            },
+            {
+              "selector": "input[name=password]",
+              "left": 638,
+              "top": 418,
+              "right": 1021.2000122070312,
+              "bottom": 470
+            },
+            {
+              "selector": ".login-submit",
+              "left": 638,
+              "top": 490,
+              "right": 1021.2000122070312,
+              "bottom": 544
+            },
+            {
+              "selector": ".auth-legal",
+              "left": 1017,
+              "top": 664,
+              "right": 1084,
+              "bottom": 708
+            },
+            {
+              "selector": ".theme-toggle",
+              "left": 1062,
+              "top": 50,
+              "right": 1106,
+              "bottom": 94
+            }
+          ]
+        },
+        {
+          "window": [
+            1440,
+            900
+          ],
+          "zoom": 1.5,
+          "width": 960,
+          "height": 600,
+          "scrollHeight": 600,
+          "clientHeight": 600,
+          "scrollWidth": 960,
+          "clientWidth": 960,
+          "scrollbar": "none",
+          "controls": [
+            {
+              "selector": "input[name=username]",
+              "left": 522,
+              "top": 265.8958435058594,
+              "right": 863.3333435058594,
+              "bottom": 309.8958435058594
+            },
+            {
+              "selector": "input[name=password]",
+              "left": 522,
+              "top": 347.6875,
+              "right": 863.3333435058594,
+              "bottom": 391.6875
+            },
+            {
+              "selector": ".login-submit",
+              "left": 522,
+              "top": 407.6875,
+              "right": 863.3333435058594,
+              "bottom": 455.6875
+            },
+            {
+              "selector": ".auth-legal",
+              "left": 839,
+              "top": 544,
+              "right": 906,
+              "bottom": 588
+            },
+            {
+              "selector": ".theme-toggle",
+              "left": 870,
+              "top": 50,
+              "right": 914,
+              "bottom": 94
+            }
+          ]
+        },
+        {
+          "window": [
+            1152,
+            547
+          ],
+          "zoom": 1,
+          "width": 1152,
+          "height": 547,
+          "scrollHeight": 547,
+          "clientHeight": 547,
+          "scrollWidth": 1152,
+          "clientWidth": 1152,
+          "scrollbar": "none",
+          "controls": [
+            {
+              "selector": "input[name=username]",
+              "left": 638,
+              "top": 239.390625,
+              "right": 1021,
+              "bottom": 283.390625
+            },
+            {
+              "selector": "input[name=password]",
+              "left": 638,
+              "top": 321.1875,
+              "right": 1021,
+              "bottom": 365.1875
+            },
+            {
+              "selector": ".login-submit",
+              "left": 638,
+              "top": 381.1875,
+              "right": 1021,
+              "bottom": 429.1875
+            },
+            {
+              "selector": ".auth-legal",
+              "left": 1017,
+              "top": 491,
+              "right": 1084,
+              "bottom": 535
+            },
+            {
+              "selector": ".theme-toggle",
+              "left": 1062,
+              "top": 50,
+              "right": 1106,
+              "bottom": 94
+            }
+          ]
+        },
+        {
+          "window": [
+            960,
+            456
+          ],
+          "zoom": 1,
+          "width": 960,
+          "height": 456,
+          "scrollHeight": 456,
+          "clientHeight": 456,
+          "scrollWidth": 960,
+          "clientWidth": 960,
+          "scrollbar": "none",
+          "controls": [
+            {
+              "selector": "input[name=username]",
+              "left": 308,
+              "top": 194.1875,
+              "right": 652,
+              "bottom": 238.1875
+            },
+            {
+              "selector": "input[name=password]",
+              "left": 308,
+              "top": 275.984375,
+              "right": 652,
+              "bottom": 319.984375
+            },
+            {
+              "selector": ".login-submit",
+              "left": 308,
+              "top": 335.984375,
+              "right": 652,
+              "bottom": 383.984375
+            },
+            {
+              "selector": ".auth-legal",
+              "left": 839,
+              "top": 404,
+              "right": 906,
+              "bottom": 448
+            },
+            {
+              "selector": ".theme-toggle",
+              "left": 870,
+              "top": 50,
+              "right": 914,
+              "bottom": 94
+            }
+          ]
+        },
+        {
+          "window": [
+            390,
+            844
+          ],
+          "zoom": 1,
+          "width": 390,
+          "height": 844,
+          "scrollHeight": 844,
+          "clientHeight": 844,
+          "scrollWidth": 390,
+          "clientWidth": 390,
+          "scrollbar": "none",
+          "controls": [
+            {
+              "selector": "input[name=username]",
+              "left": 59,
+              "top": 371.046875,
+              "right": 331,
+              "bottom": 423.046875
+            },
+            {
+              "selector": "input[name=password]",
+              "left": 59,
+              "top": 478.046875,
+              "right": 331,
+              "bottom": 530.046875
+            },
+            {
+              "selector": ".login-submit",
+              "left": 59,
+              "top": 558.046875,
+              "right": 331,
+              "bottom": 612.046875
+            },
+            {
+              "selector": ".auth-legal",
+              "left": 295,
+              "top": 778.90625,
+              "right": 362,
+              "bottom": 822.90625
+            },
+            {
+              "selector": ".theme-toggle",
+              "left": 322,
+              "top": 50,
+              "right": 366,
+              "bottom": 94
+            }
+          ]
+        },
+        {
+          "window": [
+            390,
+            667
+          ],
+          "zoom": 1,
+          "width": 390,
+          "height": 667,
+          "scrollHeight": 667,
+          "clientHeight": 667,
+          "scrollWidth": 390,
+          "clientWidth": 390,
+          "scrollbar": "none",
+          "controls": [
+            {
+              "selector": "input[name=username]",
+              "left": 59,
+              "top": 291.59375,
+              "right": 331,
+              "bottom": 343.59375
+            },
+            {
+              "selector": "input[name=password]",
+              "left": 59,
+              "top": 390.59375,
+              "right": 331,
+              "bottom": 442.59375
+            },
+            {
+              "selector": ".login-submit",
+              "left": 59,
+              "top": 462.59375,
+              "right": 331,
+              "bottom": 516.59375
+            },
+            {
+              "selector": ".auth-legal",
+              "left": 295,
+              "top": 611,
+              "right": 362,
+              "bottom": 655
+            },
+            {
+              "selector": ".theme-toggle",
+              "left": 322,
+              "top": 50,
+              "right": 366,
+              "bottom": 94
+            }
+          ]
+        },
+        {
+          "window": [
+            390,
+            480
+          ],
+          "zoom": 1.5,
+          "width": 260,
+          "height": 320,
+          "scrollHeight": 449,
+          "clientHeight": 320,
+          "scrollWidth": 260,
+          "clientWidth": 260,
+          "scrollbar": "none",
+          "controls": [
+            {
+              "selector": "input[name=username]",
+              "left": 45.66666793823242,
+              "top": 190.8541717529297,
+              "right": 214.3333396911621,
+              "bottom": 234.8541717529297
+            },
+            {
+              "selector": "input[name=password]",
+              "left": 45.66666793823242,
+              "top": 272.6458435058594,
+              "right": 214.3333396911621,
+              "bottom": 316.6458435058594
+            },
+            {
+              "selector": ".login-submit",
+              "left": 45.66666793823242,
+              "top": 332.6458435058594,
+              "right": 214.3333396911621,
+              "bottom": 380.6458435058594
+            },
+            {
+              "selector": ".auth-legal",
+              "left": 170,
+              "top": 397.3125,
+              "right": 237,
+              "bottom": 441.3125
+            },
+            {
+              "selector": ".theme-toggle",
+              "left": 192,
+              "top": 50,
+              "right": 236,
+              "bottom": 94
+            }
+          ]
+        },
+        {
+          "window": [
+            1440,
+            900
+          ],
+          "zoom": 1,
+          "width": 1440,
+          "height": 900,
+          "scrollHeight": 900,
+          "clientHeight": 900,
+          "scrollWidth": 1440,
+          "clientWidth": 1440,
+          "scrollbar": "none",
+          "controls": [
+            {
+              "selector": "input[name=username]",
+              "left": 782,
+              "top": 411.9375,
+              "right": 1189,
+              "bottom": 463.9375
+            },
+            {
+              "selector": "input[name=password]",
+              "left": 782,
+              "top": 518.9375,
+              "right": 1189,
+              "bottom": 570.9375
+            },
+            {
+              "selector": ".login-submit",
+              "left": 782,
+              "top": 598.9375,
+              "right": 1189,
+              "bottom": 652.9375
+            },
+            {
+              "selector": ".auth-legal",
+              "left": 1305,
+              "top": 833.5,
+              "right": 1372,
+              "bottom": 877.5
+            },
+            {
+              "selector": ".theme-toggle",
+              "left": 1350,
+              "top": 50,
+              "right": 1394,
+              "bottom": 94
+            }
+          ]
+        },
+        {
+          "window": [
+            1280,
+            720
+          ],
+          "zoom": 1,
+          "width": 1280,
+          "height": 720,
+          "scrollHeight": 720,
+          "clientHeight": 720,
+          "scrollWidth": 1280,
+          "clientWidth": 1280,
+          "scrollbar": "none",
+          "controls": [
+            {
+              "selector": "input[name=username]",
+              "left": 702,
+              "top": 299.9375,
+              "right": 1109,
+              "bottom": 351.9375
+            },
+            {
+              "selector": "input[name=password]",
+              "left": 702,
+              "top": 398.9375,
+              "right": 1109,
+              "bottom": 450.9375
+            },
+            {
+              "selector": ".login-submit",
+              "left": 702,
+              "top": 509.03125,
+              "right": 1109,
+              "bottom": 563.03125
+            },
+            {
+              "selector": ".auth-legal",
+              "left": 1145,
+              "top": 664,
+              "right": 1212,
+              "bottom": 708
+            },
+            {
+              "selector": ".theme-toggle",
+              "left": 1190,
+              "top": 50,
+              "right": 1234,
+              "bottom": 94
+            }
+          ]
+        }
+      ]
+    },
+    "latestFullDesktopAttempt": "passed: complete local desktop, profile, production and startup checks",
+    "startup": {
+      "result": "passed",
+      "checks": [
+        "Quiet startup has no old intro or skip button; default ignores dark OS; minimal isolated preload",
+        "Painted app reveals immediately while a subresource is pending; no intro delay or blank navigation",
+        "Remote renderer is rejected by startup-only retry IPC",
+        "Timeout leaves actionable local screen and real retry button reconnects",
+        "Transient HTTP 503 automatically retries and recovers",
+        "Explicit dark persists per company; invalid preferences rejected; preview closes without navigation",
+        "Default restores warm appearance; reduced-motion disables rotation",
+        "Superseded attempts cannot replace a successful newer navigation",
+        "Certificate failures never bypass TLS; closing cancels attempts and destroys overlay"
+      ],
+      "productionModelsCalled": false
+    },
+    "sourceHistoryCommitsScanned": 217,
+    "historyLeaks": 0
+  },
+  "native": {
+    "windows-verification-x64.json": {
+      "sourceCommit": "4abe27c1d13b55426dbfaafa2e210131f338a4b6",
+      "desktopChecks": 68,
+      "artworkCapability": "webgl",
+      "artworkChecks": 8,
+      "installerChecks": 20,
+      "handoffChecks": 8,
+      "signing": "NotSigned"
+    },
+    "macos-verification-arm64.json": {
+      "sourceCommit": "4abe27c1d13b55426dbfaafa2e210131f338a4b6",
+      "desktopChecks": 66,
+      "artworkCapability": "webgl",
+      "artworkChecks": 8,
+      "signing": "ad-hoc"
+    },
+    "macos-verification-x64.json": {
+      "sourceCommit": "4abe27c1d13b55426dbfaafa2e210131f338a4b6",
+      "desktopChecks": 66,
+      "artworkCapability": "fallback",
+      "artworkChecks": 8,
+      "signing": "ad-hoc"
+    },
+    "server-verification.json": {
+      "sourceCommit": "4abe27c1d13b55426dbfaafa2e210131f338a4b6",
+      "signing": null
+    }
+  },
+  "macMini": {
+    "businessVersion": "0.34.6",
+    "installerVersion": "0.34.6",
+    "consistentBackupCreated": true,
+    "dataPreserved": true,
+    "modelSettingsPreserved": true,
+    "modelCredentialsPreserved": true,
+    "counts": {
+      "users": 224,
+      "departments": 13,
+      "nas_sources": 14,
+      "skills": 3,
+      "feedback": 0,
+      "community_plugins": 0
+    },
+    "strictHttps": true,
+    "compiledAssetsVerified": 6,
+    "actualClient": {
+      "version": "0.34.6",
+      "result": "passed",
+      "strictHttps": true,
+      "productionServer": true,
+      "realElectronClient": true,
+      "realWebGL": true,
+      "framesAdvanced": true,
+      "companyLogoOutsideArtwork": true,
+      "noDemoAccount": true,
+      "themeSwitch": true,
+      "noAutomaticIntro": true,
+      "layouts": [
+        {
+          "width": 1468,
+          "height": 804,
+          "zoom": 1,
+          "scrollHeight": 804,
+          "clientHeight": 804,
+          "scrollWidth": 1468,
+          "clientWidth": 1468,
+          "scrollbar": "none",
+          "buttonBottom": 611.046875
+        },
+        {
+          "width": 1280,
+          "height": 720,
+          "zoom": 1,
+          "scrollHeight": 720,
+          "clientHeight": 720,
+          "scrollWidth": 1280,
+          "clientWidth": 1280,
+          "scrollbar": "none",
+          "buttonBottom": 543.984375
+        },
+        {
+          "width": 1440,
+          "height": 600,
+          "zoom": 1.5,
+          "scrollHeight": 600,
+          "clientHeight": 600,
+          "scrollWidth": 960,
+          "clientWidth": 960,
+          "scrollbar": "none",
+          "buttonBottom": 455.6875
+        }
+      ],
+      "employeeChatAccessed": false,
+      "productionModelsCalled": false,
+      "consoleErrors": [],
+      "verifiedAt": "2026-11-12T04:09:19.983Z"
+    },
+    "oldUpdater": {
+      "version": "0.34.6",
+      "result": "passed",
+      "checkedAt": "2026-11-12T04:09:07.388Z",
+      "actualPriorVersionModule": true,
+      "currentClientSeesNoUpdate": true,
+      "installed0342SeesUpdate": true,
+      "results": [
+        {
+          "target": "win32-x64",
+          "version": "0.34.6",
+          "bytes": 120060185,
+          "sha256": "1108bbc31486052484f29a7cd0c86522d7b8fe051ee744e9f686cdc27689908c",
+          "oldClientVersion": "0.33.12",
+          "state": "ready",
+          "installerExecuted": false
+        },
+        {
+          "target": "darwin-arm64",
+          "version": "0.34.6",
+          "bytes": 139919191,
+          "sha256": "40deb4550e4842e5dd1da64dc178bd32c1394814b841b6772e040c539333562f",
+          "oldClientVersion": "0.33.12",
+          "state": "ready",
+          "installerExecuted": false
+        },
+        {
+          "target": "darwin-x64",
+          "version": "0.34.6",
+          "bytes": 145451021,
+          "sha256": "11baef2944dc6660e6abf05052d2e310c234492d32f6b930a42489846ff01fe2",
+          "oldClientVersion": "0.33.12",
+          "state": "ready",
+          "installerExecuted": false
+        }
+      ]
+    },
+    "independentDependenciesInstalled": true
+  },
+  "cloud": {
+    "version": "0.34.6",
+    "result": "passed",
+    "assets": [
+      {
+        "target": "win32-x64",
+        "name": "Corporate-Brain-Setup-0.34.6-x64.exe",
+        "bytes": 120060185,
+        "sha256": "1108bbc31486052484f29a7cd0c86522d7b8fe051ee744e9f686cdc27689908c"
+      },
+      {
+        "target": "darwin-arm64",
+        "name": "Corporate-Brain-0.34.6-macOS-arm64.dmg",
+        "bytes": 139919191,
+        "sha256": "40deb4550e4842e5dd1da64dc178bd32c1394814b841b6772e040c539333562f"
+      },
+      {
+        "target": "darwin-x64",
+        "name": "Corporate-Brain-0.34.6-macOS-x64.dmg",
+        "bytes": 145451021,
+        "sha256": "11baef2944dc6660e6abf05052d2e310c234492d32f6b930a42489846ff01fe2"
+      }
+    ],
+    "checkedAt": "2026-11-12T04:16:14.467Z"
+  },
+  "signing": {
+    "windows": "NotSigned",
+    "macOS": "ad-hoc; not notarized"
+  }
+}
