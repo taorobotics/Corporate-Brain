@@ -1,0 +1,275 @@
+{
+  "version": "0.34.13",
+  "result": "passed",
+  "verifiedAt": "2026-11-12T09:31:47.050Z",
+  "sourceCommit": "188a8b10252ef33b4cf5bb8b73392c02c248dd39",
+  "release": {
+    "id": 442705777,
+    "url": "https://github.com/taorobotics/Corporate-Brain/releases/tag/v0.34.13",
+    "assetsVerified": 13,
+    "latestVerified": true
+  },
+  "workflow": {
+    "id": 43188398547,
+    "url": "https://github.com/taorobotics/Corporate-Brain/actions/runs/43188398547/attempts/1",
+    "conclusion": "success",
+    "attempt": 1,
+    "allJobsPassed": true
+  },
+  "local": {
+    "productionBuild": true,
+    "sidebarSections": {
+      "version": "0.34.13",
+      "result": "passed",
+      "checks": [
+        "Projects and recent chat sections independently collapse, release unused space, persist per local account across reload, preserve visible search and support native keyboard activation without deleting chats",
+        "Recent chats: all local project conversations sorted by last message across projects, stable creation fallback and reload; collapsed projects do not hide recents, title/project search and no-match/empty states, owning project and selected chat restored, markup remains plain text; separate scrolling and actual dark 700px layout; synthetic records only"
+      ],
+      "actualElectron": true,
+      "syntheticCompany": true,
+      "productionModelsCalled": false,
+      "checkedAt": "2026-11-12T09:01:47.264Z"
+    },
+    "unitSuite": "npm test passed",
+    "installedWindows": {
+      "version": "0.34.13",
+      "result": "passed",
+      "verifiedAt": "2026-11-12T09:25:00.888Z",
+      "officialInstallerSha256": "5bd93a9dbe83a43b5d56ca93b7b78d95c514e08c3328bba996d543a090f0efba",
+      "installedPreloadMatchesTag": true,
+      "existingInstallDirectoryPreserved": true,
+      "companyAddressPreserved": true,
+      "localProfilesPreserved": 5,
+      "existingConversationsPreserved": 26,
+      "existingMessagesPreserved": 96,
+      "installerExitCode": 0,
+      "automaticRestartRequested": true
+    },
+    "sourceHistoryCommitsScanned": 229,
+    "historyLeaks": 0
+  },
+  "native": {
+    "windows-verification-x64.json": {
+      "sourceCommit": "188a8b10252ef33b4cf5bb8b73392c02c248dd39",
+      "desktopChecks": 70,
+      "artworkCapability": "webgl",
+      "artworkChecks": 9,
+      "installerChecks": 20,
+      "handoffChecks": 8,
+      "visibleConnection": {
+        "result": "passed",
+        "normalPackagedMode": true,
+        "offscreen": false,
+        "forcedBackgroundRendering": false,
+        "cases": [
+          {
+            "minimized": false,
+            "visibilityBefore": "hidden",
+            "contentToHandoffMs": 84,
+            "coverRemoved": true,
+            "navigationCount": 1,
+            "pendingResourceDidNotBlock": true
+          },
+          {
+            "minimized": true,
+            "visibilityBefore": "hidden",
+            "contentToHandoffMs": 94,
+            "coverRemoved": true,
+            "navigationCount": 1,
+            "pendingResourceDidNotBlock": true
+          }
+        ]
+      },
+      "automaticAnimationChecks": 7,
+      "signing": "NotSigned"
+    },
+    "macos-verification-arm64.json": {
+      "sourceCommit": "188a8b10252ef33b4cf5bb8b73392c02c248dd39",
+      "desktopChecks": 68,
+      "artworkCapability": "webgl",
+      "artworkChecks": 9,
+      "visibleConnection": {
+        "result": "passed",
+        "normalPackagedMode": true,
+        "offscreen": false,
+        "forcedBackgroundRendering": false,
+        "cases": [
+          {
+            "minimized": false,
+            "visibilityBefore": "visible",
+            "contentToHandoffMs": 85,
+            "coverRemoved": true,
+            "navigationCount": 1,
+            "pendingResourceDidNotBlock": true
+          },
+          {
+            "minimized": true,
+            "visibilityBefore": "hidden",
+            "contentToHandoffMs": 82,
+            "coverRemoved": true,
+            "navigationCount": 1,
+            "pendingResourceDidNotBlock": true
+          }
+        ]
+      },
+      "automaticAnimationChecks": 7,
+      "signing": "ad-hoc"
+    },
+    "macos-verification-x64.json": {
+      "sourceCommit": "188a8b10252ef33b4cf5bb8b73392c02c248dd39",
+      "desktopChecks": 68,
+      "artworkCapability": "fallback",
+      "artworkChecks": 9,
+      "visibleConnection": {
+        "result": "passed",
+        "normalPackagedMode": true,
+        "offscreen": false,
+        "forcedBackgroundRendering": false,
+        "cases": [
+          {
+            "minimized": false,
+            "visibilityBefore": "visible",
+            "contentToHandoffMs": 103,
+            "coverRemoved": true,
+            "navigationCount": 1,
+            "pendingResourceDidNotBlock": true
+          },
+          {
+            "minimized": true,
+            "visibilityBefore": "hidden",
+            "contentToHandoffMs": 412,
+            "coverRemoved": true,
+            "navigationCount": 1,
+            "pendingResourceDidNotBlock": true
+          }
+        ]
+      },
+      "automaticAnimationChecks": 7,
+      "signing": "ad-hoc"
+    },
+    "server-verification.json": {
+      "sourceCommit": "188a8b10252ef33b4cf5bb8b73392c02c248dd39",
+      "signing": null
+    }
+  },
+  "macMini": {
+    "businessVersion": "0.34.13",
+    "installerVersion": "0.34.13",
+    "consistentBackupCreated": true,
+    "dataPreserved": true,
+    "modelSettingsPreserved": true,
+    "modelCredentialsPreserved": true,
+    "counts": {
+      "users": 224,
+      "departments": 13,
+      "nas_sources": 14,
+      "skills": 3,
+      "feedback": 0,
+      "community_plugins": 0
+    },
+    "strictHttps": true,
+    "compiledAssetsVerified": 4,
+    "fontVerification": {
+      "family": "Noto Sans SC",
+      "providerVersion": "v41",
+      "subsets": 101,
+      "verifiedSubsets": 101,
+      "woff2Bytes": 4500544,
+      "localOnly": true,
+      "immutable": true
+    },
+    "actualClient": {
+      "version": "0.34.13",
+      "clientVersion": "0.34.13",
+      "uiFont": {
+        "family": "Noto Sans SC",
+        "actuallyRendered": true,
+        "loadedSubsets": 8,
+        "availableSubsets": 101,
+        "onlyRequiredSubsetsLoaded": true
+      },
+      "result": "passed",
+      "verifiedAt": "2026-11-12T09:25:57.356Z",
+      "strictHttps": true,
+      "productionServer": true,
+      "realElectronClient": true,
+      "realPackagedMode": true,
+      "offscreen": false,
+      "forcedBackgroundRendering": false,
+      "startupCoverRemoved": true,
+      "loginDisplayed": true,
+      "connectionMs": 1915,
+      "authenticationRequired": true,
+      "noUnauthenticatedIntro": true,
+      "employeeChatAccessed": false,
+      "productionModelsCalled": false
+    },
+    "oldUpdater": {
+      "version": "0.34.13",
+      "result": "passed",
+      "checkedAt": "2026-11-12T09:24:16.399Z",
+      "actualPriorVersionModule": true,
+      "currentClientSeesNoUpdate": true,
+      "installed03412SeesUpdate": true,
+      "results": [
+        {
+          "target": "win32-x64",
+          "version": "0.34.13",
+          "bytes": 116749530,
+          "sha256": "5bd93a9dbe83a43b5d56ca93b7b78d95c514e08c3328bba996d543a090f0efba",
+          "oldClientVersion": "0.33.12",
+          "state": "ready",
+          "installerExecuted": false
+        },
+        {
+          "target": "darwin-arm64",
+          "version": "0.34.13",
+          "bytes": 136606946,
+          "sha256": "e40111885a8234f432bf4f99824bb4590270ce5f23f05f9c961307c4c4e80970",
+          "oldClientVersion": "0.33.12",
+          "state": "ready",
+          "installerExecuted": false
+        },
+        {
+          "target": "darwin-x64",
+          "version": "0.34.13",
+          "bytes": 142119449,
+          "sha256": "e412b37fe095b3566a515b09c86ae6088b7f3e3a8fe340520c624f16de26834d",
+          "oldClientVersion": "0.33.12",
+          "state": "ready",
+          "installerExecuted": false
+        }
+      ]
+    },
+    "independentDependenciesInstalled": true
+  },
+  "cloud": {
+    "version": "0.34.13",
+    "result": "passed",
+    "assets": [
+      {
+        "target": "win32-x64",
+        "name": "Corporate-Brain-Setup-0.34.13-x64.exe",
+        "bytes": 116749530,
+        "sha256": "5bd93a9dbe83a43b5d56ca93b7b78d95c514e08c3328bba996d543a090f0efba"
+      },
+      {
+        "target": "darwin-arm64",
+        "name": "Corporate-Brain-0.34.13-macOS-arm64.dmg",
+        "bytes": 136606946,
+        "sha256": "e40111885a8234f432bf4f99824bb4590270ce5f23f05f9c961307c4c4e80970"
+      },
+      {
+        "target": "darwin-x64",
+        "name": "Corporate-Brain-0.34.13-macOS-x64.dmg",
+        "bytes": 142119449,
+        "sha256": "e412b37fe095b3566a515b09c86ae6088b7f3e3a8fe340520c624f16de26834d"
+      }
+    ],
+    "checkedAt": "2026-11-12T09:31:23.204Z"
+  },
+  "signing": {
+    "windows": "NotSigned",
+    "macOS": "ad-hoc; not notarized"
+  }
+}
