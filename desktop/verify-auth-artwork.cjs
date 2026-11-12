@@ -114,6 +114,15 @@ async function waitFor(test, label, timeout = 15000) {
     assert.equal(pixels.isEmpty(), false);
     await fs.writeFile(join(screenshots, name), pixels.toPNG());
   };
+  // The native connection view starts its own first navigation asynchronously.
+  // Audit a fresh document only after that navigation has reached login and
+  // released its overlay, otherwise two loadURL calls can abort each other.
+  await loginReady();
+  await waitFor(
+    () => !win.contentView.children.some(view =>
+      view.webContents?.getURL().includes("startup.html")),
+    "initial native navigation has revealed login",
+  );
   await web.debugger.sendCommand("Page.enable");
   await web.debugger.sendCommand("Page.addScriptToEvaluateOnNewDocument", {
     source: `window.__entryAudit={oldScene:false,inertForm:false,firstForm:0};
